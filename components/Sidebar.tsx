@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { FaUpload, FaSearch, FaMap, FaList, FaVoteYea, FaBars, FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaUpload, FaSearch, FaMap, FaList, FaVoteYea, FaBars, FaTimes, FaChevronLeft, FaChevronRight, FaHeadphones, FaUser, FaQuestionCircle } from 'react-icons/fa';
 
 const menuItems = [
   { name: 'Upload Songs', icon: FaUpload, href: '/upload' },
@@ -8,6 +8,9 @@ const menuItems = [
   { name: 'Progress Map', icon: FaMap, href: '/progress' },
   { name: 'Playlists', icon: FaList, href: '/playlists' },
   { name: 'Vote on Songs', icon: FaVoteYea, href: '/vote' },
+  { name: 'Listen', icon: FaHeadphones, href: '/listen' },
+  { name: 'Profile', icon: FaUser, href: '/profile' },
+  { name: 'How To', icon: FaQuestionCircle, href: '/how-to' },
 ];
 
 interface SidebarProps {
