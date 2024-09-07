@@ -1,21 +1,25 @@
 import Head from 'next/head';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { ModeToggle } from '../components/ModeToggle';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
       <Head>
         <title>BibleChorus - Home</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main className="text-center">
+        <div className="absolute top-4 right-4">
+          <ModeToggle />
+        </div>
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-5xl font-bold text-gray-800 mb-8"
+          className="text-5xl font-bold text-gray-800 dark:text-gray-100 mb-8"
         >
           Welcome to BibleChorus
         </motion.h1>
@@ -23,7 +27,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-xl text-gray-600 mb-8"
+          className="text-xl text-gray-600 dark:text-gray-300 mb-8"
         >
           Explore, sing, and share your favorite Bible songs
         </motion.p>

@@ -44,7 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobileOpen, setI
       </button>
 
       <div
-        className={`fixed top-0 left-0 h-full bg-white shadow-lg transition-all duration-300 ease-in-out z-40 
+        className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ease-in-out z-40 
           ${isMobileOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'} 
           ${isOpen ? 'lg:w-64' : 'lg:w-16'}
           ${!isMobileOpen && !isOpen ? 'lg:w-0 lg:-translate-x-full' : ''}`}
@@ -54,17 +54,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobileOpen, setI
           <div className="h-16"></div>
           
           {/* Separator line */}
-          <div className="border-b border-gray-200 mb-4"></div>
+          <div className="border-b border-gray-200 dark:border-gray-700 mb-4"></div>
           
           {menuItems.map((item) => (
             <div
               key={item.name}
               onClick={() => handleItemClick(item.href)}
-              className={`flex items-center py-2 px-2 text-gray-700 hover:bg-purple-100 rounded-md cursor-pointer
+              className={`flex items-center py-2 px-2 text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900 rounded-md cursor-pointer
                 ${isOpen ? 'lg:px-4' : 'lg:px-2 lg:justify-center'}
                 h-10 overflow-hidden whitespace-nowrap`}
             >
-              <item.icon className="text-xl text-purple-600 flex-shrink-0" />
+              <item.icon className="text-xl text-purple-600 dark:text-purple-400 flex-shrink-0" />
               <span className={`ml-4 transition-opacity duration-300
                 ${isOpen ? 'opacity-100 lg:inline' : 'opacity-0 lg:hidden'}
                 ${isMobileOpen ? 'inline' : 'hidden'}`}>
