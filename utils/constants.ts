@@ -69,3 +69,21 @@ export const AI_VIDEO_MODELS = [
   'Runway Gen3',
   'Sora'
 ];
+
+export const BIBLE_TRANSLATIONS = [
+  'KJV', // King James Version
+  'NIV', // New International Version
+  'ESV', // English Standard Version
+  'NKJV', // New King James Version
+  'NLT', // New Living Translation
+  'NASB', // New American Standard Bible
+  'CSB', // Christian Standard Bible
+  'NRSV', // New Revised Standard Version
+  'MSG', // The Message
+  'AMP', // Amplified Bible
+  'ASV', // American Standard Version
+  'YLT', // Young's Literal Translation
+  'HCSB', // Holman Christian Standard Bible
+  'NET', // New English Translation
+  'RSV', // Revised Standard Version
+];
