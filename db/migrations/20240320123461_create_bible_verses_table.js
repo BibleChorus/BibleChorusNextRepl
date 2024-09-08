@@ -4,7 +4,7 @@ exports.up = function(knex) {
     table.string('book', 50).notNullable();
     table.integer('chapter').notNullable();
     table.integer('verse').notNullable();
-    table.text('text').notNullable();
+    table.text('KJV_text').notNullable();
     table.unique(['book', 'chapter', 'verse']);
   });
 };
