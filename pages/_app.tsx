@@ -1,6 +1,6 @@
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
-import Layout from '../components/Layout'
+import Layout from '../components/layout'  // Updated import path
 import { useRouter } from 'next/router'
 import { ThemeProvider } from 'next-themes'
 

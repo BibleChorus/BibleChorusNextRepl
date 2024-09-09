@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ModeToggle } from '../components/ModeToggle';
+import { ModeToggle } from '../components/mode-toggle';
 
 export default function Home() {
   return (
