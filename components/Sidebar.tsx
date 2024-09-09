@@ -1,6 +1,8 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import { FaUpload, FaSearch, FaMap, FaList, FaVoteYea, FaBars, FaTimes, FaChevronLeft, FaChevronRight, FaHeadphones, FaUser, FaQuestionCircle } from 'react-icons/fa';
+import Image from 'next/image'; // Add this import
+import Link from 'next/link'; // Add this import
 
 const menuItems = [
   { name: 'Upload Songs', icon: FaUpload, href: '/upload' },
@@ -53,8 +55,28 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobileOpen, setI
           ${!isMobileOpen && !isOpen ? 'lg:w-0 lg:-translate-x-full' : ''}`}
       >
         <div className={`p-4 h-full overflow-y-auto ${isMobileOpen ? 'block' : 'hidden lg:block'}`}>
-          {/* Spacer for toggle button */}
-          <div className="h-16"></div>
+          {/* Reduced spacer for toggle button */}
+          <div className="h-12"></div>
+          
+          {/* BibleChorus icon and text */}
+          <Link href="/" className={`flex items-center py-2 px-2 mb-4 text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900 rounded-md cursor-pointer
+            ${isOpen ? 'lg:px-4' : 'lg:px-2 lg:justify-center'}
+            h-10 overflow-hidden whitespace-nowrap`}>
+            <div className="w-6 h-6 flex items-center justify-center">
+              <Image
+                src="/biblechorus-icon.png"
+                alt="BibleChorus"
+                width={24}
+                height={24}
+                className="flex-shrink-0"
+              />
+            </div>
+            <span className={`ml-4 font-semibold transition-opacity duration-300
+              ${isOpen ? 'opacity-100 lg:inline' : 'opacity-0 lg:hidden'}
+              ${isMobileOpen ? 'inline' : 'hidden'}`}>
+              BibleChorus
+            </span>
+          </Link>
           
           {/* Separator line */}
           <div className="border-b border-gray-200 dark:border-gray-700 mb-4"></div>
@@ -67,7 +89,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobileOpen, setI
                 ${isOpen ? 'lg:px-4' : 'lg:px-2 lg:justify-center'}
                 h-10 overflow-hidden whitespace-nowrap`}
             >
-              <item.icon className="text-xl text-purple-600 dark:text-purple-400 flex-shrink-0" />
+              <div className="w-6 h-6 flex items-center justify-center">
+                <item.icon className="text-xl text-purple-600 dark:text-purple-400 flex-shrink-0" />
+              </div>
               <span className={`ml-4 transition-opacity duration-300
                 ${isOpen ? 'opacity-100 lg:inline' : 'opacity-0 lg:hidden'}
                 ${isMobileOpen ? 'inline' : 'hidden'}`}>

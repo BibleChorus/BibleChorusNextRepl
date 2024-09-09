@@ -31,7 +31,7 @@ export default function RootLayout({ children, className = '' }: LayoutProps) {
           />
           <div className={`transition-all duration-300 ${isOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
             <div className="container mx-auto px-4 py-8">
-              <div className="flex justify-end mb-4">
+              <div className="flex justify-end items-center mb-4">
                 <ThemeToggle />
               </div>
               <main className={className}>
