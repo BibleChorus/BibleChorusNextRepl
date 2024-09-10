@@ -6,6 +6,7 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { UserAuthForm } from "@/components/user-auth-form"
+import { ScriptureScroll } from "@/components/scripture-scroll"
 
 // Define metadata as a constant (not exported)
 const metadata: Metadata = {
@@ -27,8 +28,8 @@ export default function AuthenticationPage() {
       >
         Home
       </Link>
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
-        <div className="absolute inset-0 bg-zinc-900" />
+      <div className="relative hidden h-full flex-col bg-lavender-100 dark:bg-zinc-800 p-10 text-gray-800 dark:text-white dark:border-r lg:flex rounded-lg">
+        <div className="absolute inset-0 bg-lavender-100 dark:bg-zinc-800 rounded-lg" />
         <div className="relative z-20 flex items-center text-lg font-medium">
           <Image
             src="/biblechorus-icon.png"
@@ -39,13 +40,8 @@ export default function AuthenticationPage() {
           />
           BibleChorus
         </div>
-        <div className="relative z-20 mt-auto">
-          <blockquote className="space-y-2">
-            <p className="text-lg">
-              &ldquo;BibleChorus has revolutionized how I engage with scripture through music. It's an incredible platform for both worship and study.&rdquo;
-            </p>
-            <footer className="text-sm">Sarah Johnson, Worship Leader</footer>
-          </blockquote>
+        <div className="relative z-20 flex-grow mt-4" style={{ height: 'calc(100% - 60px)' }}>
+          <ScriptureScroll />
         </div>
       </div>
       <div className="w-full p-8 lg:p-8">

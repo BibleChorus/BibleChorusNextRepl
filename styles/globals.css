@@ -52,6 +52,9 @@ a {
     --ring: 222.2 84% 4.9%;
  
     --radius: 0.5rem;
+
+    --lavender-50: 240 67% 98%;
+    --lavender-100: 240 67% 94%;
   }
  
   .dark {
@@ -92,4 +95,15 @@ a {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Add these styles to your existing globals.css file */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;1,300;1,400&display=swap');
+
+.scripture-scroll {
+  font-family: 'Playfair Display', serif;
+}
+
+.scripture-scroll p {
+  font-family: 'Merriweather', serif;
 }

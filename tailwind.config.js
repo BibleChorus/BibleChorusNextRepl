@@ -51,6 +51,10 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        lavender: {
+          50: 'hsl(var(--lavender-50))',
+          100: 'hsl(var(--lavender-100))',
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
