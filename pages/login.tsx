@@ -14,69 +14,67 @@ const metadata: Metadata = {
 
 export default function AuthenticationPage() {
   return (
-    <>
-      <div className="container relative hidden h-[800px] flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-        <Link
-          href="/"
-          className={cn(
-            buttonVariants({ variant: "ghost" }),
-            "absolute right-4 top-4 md:right-8 md:top-8"
-          )}
-        >
-          Home
-        </Link>
-        <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
-          <div className="absolute inset-0 bg-zinc-900" />
-          <div className="relative z-20 flex items-center text-lg font-medium">
-            <Image
-              src="/biblechorus-icon.png"
-              alt="BibleChorus"
-              width={40}
-              height={40}
-              className="mr-2"
-            />
-            BibleChorus
-          </div>
-          <div className="relative z-20 mt-auto">
-            <blockquote className="space-y-2">
-              <p className="text-lg">
-                &ldquo;BibleChorus has revolutionized how I engage with scripture through music. It's an incredible platform for both worship and study.&rdquo;
-              </p>
-              <footer className="text-sm">Sarah Johnson, Worship Leader</footer>
-            </blockquote>
-          </div>
+    <div className="container relative min-h-screen flex flex-col items-center justify-center lg:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+      <Link
+        href="/"
+        className={cn(
+          buttonVariants({ variant: "ghost" }),
+          "absolute right-4 top-4 md:right-8 md:top-8"
+        )}
+      >
+        Home
+      </Link>
+      <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
+        <div className="absolute inset-0 bg-zinc-900" />
+        <div className="relative z-20 flex items-center text-lg font-medium">
+          <Image
+            src="/biblechorus-icon.png"
+            alt="BibleChorus"
+            width={40}
+            height={40}
+            className="mr-2"
+          />
+          BibleChorus
         </div>
-        <div className="lg:p-8">
-          <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-            <div className="flex flex-col space-y-2 text-center">
-              <h1 className="text-2xl font-semibold tracking-tight">
-                Sign in to your account
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Enter your email below to sign in to your account
-              </p>
-            </div>
-            <UserAuthForm />
-            <p className="px-8 text-center text-sm text-muted-foreground">
-              By clicking continue, you agree to our{" "}
-              <Link
-                href="/terms"
-                className="underline underline-offset-4 hover:text-primary"
-              >
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link
-                href="/privacy"
-                className="underline underline-offset-4 hover:text-primary"
-              >
-                Privacy Policy
-              </Link>
-              .
+        <div className="relative z-20 mt-auto">
+          <blockquote className="space-y-2">
+            <p className="text-lg">
+              &ldquo;BibleChorus has revolutionized how I engage with scripture through music. It's an incredible platform for both worship and study.&rdquo;
             </p>
-          </div>
+            <footer className="text-sm">Sarah Johnson, Worship Leader</footer>
+          </blockquote>
         </div>
       </div>
-    </>
+      <div className="w-full p-8 lg:p-8">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+          <div className="flex flex-col space-y-2 text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Sign in to your account
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Enter your email below to sign in to your account
+            </p>
+          </div>
+          <UserAuthForm />
+          <p className="px-8 text-center text-sm text-muted-foreground">
+            By clicking continue, you agree to our{" "}
+            <Link
+              href="/terms"
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/privacy"
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }
