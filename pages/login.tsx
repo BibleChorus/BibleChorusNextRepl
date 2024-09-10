@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
+import { useState } from "react"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -13,6 +14,8 @@ const metadata: Metadata = {
 }
 
 export default function AuthenticationPage() {
+  const [isLogin, setIsLogin] = useState(true)
+
   return (
     <div className="container relative min-h-screen flex flex-col items-center justify-center lg:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
       <Link
@@ -49,13 +52,24 @@ export default function AuthenticationPage() {
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Sign in to your account
+              {isLogin ? "Sign in to your account" : "Create an account"}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Enter your email below to sign in to your account
+              {isLogin 
+                ? "Enter your email below to sign in to your account"
+                : "Enter your details below to create your account"}
             </p>
           </div>
-          <UserAuthForm />
+          <UserAuthForm isLogin={isLogin} />
+          <p className="px-8 text-center text-sm text-muted-foreground">
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <button
+              onClick={() => setIsLogin(!isLogin)}
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              {isLogin ? "Sign Up" : "Sign In"}
+            </button>
+          </p>
           <p className="px-8 text-center text-sm text-muted-foreground">
             By clicking continue, you agree to our{" "}
             <Link

@@ -9,15 +9,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
+interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
+  isLogin: boolean
+}
 
-export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
+export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault()
     setIsLoading(true)
 
+    // TODO: Implement actual login/signup logic here
     setTimeout(() => {
       setIsLoading(false)
     }, 3000)
@@ -27,6 +30,22 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
     <div className={cn("grid gap-6", className)} {...props}>
       <form onSubmit={onSubmit}>
         <div className="grid gap-2">
+          {!isLogin && (
+            <div className="grid gap-1">
+              <Label className="sr-only" htmlFor="name">
+                Name
+              </Label>
+              <Input
+                id="name"
+                placeholder="John Doe"
+                type="text"
+                autoCapitalize="words"
+                autoComplete="name"
+                autoCorrect="off"
+                disabled={isLoading}
+              />
+            </div>
+          )}
           <div className="grid gap-1">
             <Label className="sr-only" htmlFor="email">
               Email
@@ -41,11 +60,25 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
               disabled={isLoading}
             />
           </div>
+          <div className="grid gap-1">
+            <Label className="sr-only" htmlFor="password">
+              Password
+            </Label>
+            <Input
+              id="password"
+              placeholder="Password"
+              type="password"
+              autoCapitalize="none"
+              autoComplete={isLogin ? "current-password" : "new-password"}
+              autoCorrect="off"
+              disabled={isLoading}
+            />
+          </div>
           <Button disabled={isLoading}>
             {isLoading && (
               <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
             )}
-            Sign In with Email
+            {isLogin ? "Sign In" : "Sign Up"}
           </Button>
         </div>
       </form>
