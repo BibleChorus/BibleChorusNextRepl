@@ -12,7 +12,10 @@ export default function Home() {
       </Head>
 
       <main className="text-center">
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 flex items-center space-x-4">
+          <Link href="/login" className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200">
+            Login
+          </Link>
           <ModeToggle />
         </div>
         <motion.h1
