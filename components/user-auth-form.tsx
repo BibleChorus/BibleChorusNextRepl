@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { signIn } from "next-auth/react"
+import { useRouter } from 'next/router'
 
 import { cn } from "@/lib/utils"
 import { Icons } from "@/components/icons"
@@ -15,15 +16,42 @@ interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
+  const [formData, setFormData] = React.useState({
+    username: '',
+    email: '',
+    password: '',
+  })
+  const router = useRouter()
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value })
+  }
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault()
     setIsLoading(true)
 
-    // TODO: Implement actual login/signup logic here
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 3000)
+    try {
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Handle successful login/registration (e.g., store user data, redirect)
+        router.push('/dashboard') // Redirect to dashboard or home page
+      } else {
+        // Handle errors (e.g., show error message)
+        console.error('Authentication failed')
+      }
+    } catch (error) {
+      console.error('Error during authentication:', error)
+    }
+
+    setIsLoading(false)
   }
 
   return (
@@ -36,13 +64,14 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
                 Name
               </Label>
               <Input
-                id="name"
-                placeholder="John Doe"
+                id="username"
+                placeholder="Username"
                 type="text"
                 autoCapitalize="words"
-                autoComplete="name"
+                autoComplete="username"
                 autoCorrect="off"
                 disabled={isLoading}
+                onChange={handleInputChange}
               />
             </div>
           )}
@@ -58,6 +87,7 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
               autoComplete="email"
               autoCorrect="off"
               disabled={isLoading}
+              onChange={handleInputChange}
             />
           </div>
           <div className="grid gap-1">
@@ -72,6 +102,7 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
               autoComplete={isLogin ? "current-password" : "new-password"}
               autoCorrect="off"
               disabled={isLoading}
+              onChange={handleInputChange}
             />
           </div>
           <Button disabled={isLoading}>
