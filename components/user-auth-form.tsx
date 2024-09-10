@@ -1,27 +1,28 @@
 "use client"
 
 import * as React from "react"
-import { signIn } from "next-auth/react"
 import { useRouter } from 'next/router'
-
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from "@/lib/utils"
 import { Icons } from "@/components/icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { signIn } from 'next-auth/react';
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
   isLogin: boolean
 }
 
 export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps) {
-  const [isLoading, setIsLoading] = React.useState<boolean>(false)
+  const [isLoading, setIsLoading] = React.useState(false)
   const [formData, setFormData] = React.useState({
     username: '',
     email: '',
     password: '',
   })
   const router = useRouter()
+  const { login } = useAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value })
@@ -41,10 +42,9 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
 
       if (response.ok) {
         const data = await response.json()
-        // Handle successful login/registration (e.g., store user data, redirect)
-        router.push('/dashboard') // Redirect to dashboard or home page
+        login(data.user);
+        router.push('/profile')
       } else {
-        // Handle errors (e.g., show error message)
         console.error('Authentication failed')
       }
     } catch (error) {
@@ -60,9 +60,7 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
         <div className="grid gap-2">
           {!isLogin && (
             <div className="grid gap-1">
-              <Label className="sr-only" htmlFor="name">
-                Name
-              </Label>
+              <Label className="sr-only" htmlFor="username">Username</Label>
               <Input
                 id="username"
                 placeholder="Username"
@@ -76,9 +74,7 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
             </div>
           )}
           <div className="grid gap-1">
-            <Label className="sr-only" htmlFor="email">
-              Email
-            </Label>
+            <Label className="sr-only" htmlFor="email">Email</Label>
             <Input
               id="email"
               placeholder="name@example.com"
@@ -91,9 +87,7 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
             />
           </div>
           <div className="grid gap-1">
-            <Label className="sr-only" htmlFor="password">
-              Password
-            </Label>
+            <Label className="sr-only" htmlFor="password">Password</Label>
             <Input
               id="password"
               placeholder="Password"
@@ -106,9 +100,7 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
             />
           </div>
           <Button disabled={isLoading}>
-            {isLoading && (
-              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-            )}
+            {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
             {isLogin ? "Sign In" : "Sign Up"}
           </Button>
         </div>
@@ -124,19 +116,11 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
         </div>
       </div>
       <Button variant="outline" type="button" disabled={isLoading} onClick={() => signIn('google')}>
-        {isLoading ? (
-          <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Icons.google className="mr-2 h-4 w-4" />
-        )}{" "}
+        {isLoading ? <Icons.spinner className="mr-2 h-4 w-4 animate-spin" /> : <Icons.google className="mr-2 h-4 w-4" />}
         Google
       </Button>
       <Button variant="outline" type="button" disabled={isLoading} onClick={() => signIn('apple')}>
-        {isLoading ? (
-          <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Icons.apple className="mr-2 h-4 w-4" />
-        )}{" "}
+        {isLoading ? <Icons.spinner className="mr-2 h-4 w-4 animate-spin" /> : <Icons.apple className="mr-2 h-4 w-4" />}
         Apple
       </Button>
     </div>

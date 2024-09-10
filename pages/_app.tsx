@@ -1,9 +1,10 @@
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
-import Layout from '../components/layout'  // Updated import path
+import Layout from '../components/layout'
 import { useRouter } from 'next/router'
 import { ThemeProvider } from 'next-themes'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter()
@@ -14,15 +15,17 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Head>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        {isHomePage ? (
-          <Component {...pageProps} />
-        ) : (
-          <Layout>
+      <AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {isHomePage ? (
             <Component {...pageProps} />
-          </Layout>
-        )}
-      </ThemeProvider>
+          ) : (
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          )}
+        </ThemeProvider>
+      </AuthProvider>
     </>
   )
 }

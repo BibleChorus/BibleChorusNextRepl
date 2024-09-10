@@ -1,8 +1,11 @@
 import { Inter } from 'next/font/google'
 import { ThemeProvider } from "@/components/theme-provider"
-import React, { useState, ReactNode } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { AuthButtons } from '@/components/AuthButtons';
+import { UserDropdown } from '@/components/UserDropdown';
+import { useAuth } from '@/contexts/AuthContext';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -14,6 +17,7 @@ interface LayoutProps {
 export default function RootLayout({ children, className = '' }: LayoutProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <div className={inter.className}>
@@ -31,7 +35,12 @@ export default function RootLayout({ children, className = '' }: LayoutProps) {
           />
           <div className={`transition-all duration-300 ${isOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
             <div className="container mx-auto px-4 py-8">
-              <div className="flex justify-end items-center mb-4">
+              <div className="flex justify-end items-center mb-4 space-x-4">
+                {user ? (
+                  <UserDropdown user={user} />
+                ) : (
+                  <AuthButtons />
+                )}
                 <ThemeToggle />
               </div>
               <main className={className}>
