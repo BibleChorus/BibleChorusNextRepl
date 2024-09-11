@@ -1,7 +1,8 @@
 import { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from 'next/router'
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -16,6 +17,21 @@ const metadata: Metadata = {
 
 export default function AuthenticationPage() {
   const [isLogin, setIsLogin] = useState(true)
+  const router = useRouter()
+
+  useEffect(() => {
+    const view = router.query.view as string
+    if (view === 'signup') {
+      setIsLogin(false)
+    } else if (view === 'login') {
+      setIsLogin(true)
+    }
+  }, [router.query.view])
+
+  const toggleView = () => {
+    setIsLogin(!isLogin)
+    router.push(`/login?view=${isLogin ? 'signup' : 'login'}`, undefined, { shallow: true })
+  }
 
   return (
     <div className="container relative min-h-screen flex flex-col items-center justify-center lg:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
@@ -60,7 +76,7 @@ export default function AuthenticationPage() {
           <p className="px-8 text-center text-sm text-muted-foreground">
             {isLogin ? "Don't have an account? " : "Already have an account? "}
             <button
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={toggleView}
               className="underline underline-offset-4 hover:text-primary"
             >
               {isLogin ? "Sign Up" : "Sign In"}

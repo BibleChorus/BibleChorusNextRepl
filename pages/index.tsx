@@ -2,8 +2,13 @@ import Head from 'next/head';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ModeToggle } from '../components/mode-toggle';
+import { useAuth } from '@/contexts/AuthContext';
+import { AuthButtons } from '@/components/AuthButtons';
+import { UserDropdown } from '@/components/UserDropdown';
 
 export default function Home() {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
       <Head>
@@ -13,9 +18,11 @@ export default function Home() {
 
       <main className="text-center">
         <div className="absolute top-4 right-4 flex items-center space-x-4">
-          <Link href="/login" className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200">
-            Login
-          </Link>
+          {user ? (
+            <UserDropdown user={user} />
+          ) : (
+            <AuthButtons />
+          )}
           <ModeToggle />
         </div>
         <motion.h1
