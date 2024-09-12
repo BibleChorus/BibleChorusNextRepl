@@ -107,3 +107,12 @@ a {
 .scripture-scroll p {
   font-family: 'Merriweather', serif;
 }
+
+/* Add these new styles for form labels and messages */
+.form-label {
+  color: inherit !important;
+}
+
+.form-message {
+  color: hsl(var(--destructive));
+}
