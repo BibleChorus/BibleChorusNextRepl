@@ -1,22 +1,66 @@
 import Head from 'next/head'
 import { useState } from 'react'
+import { useForm, FormProvider } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
+import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
+
+const formSchema = z.object({
+  // Step 1: AI Info
+  ai_used_for_lyrics: z.boolean(),
+  music_ai_generated: z.boolean(),
+  lyric_ai_prompt: z.string().optional(),
+  music_ai_prompt: z.string().optional(),
+  music_model_used: z.string().optional(),
+
+  // Step 2: Song Info
+  title: z.string().min(1, "Title is required"),
+  artist: z.string().min(1, "Artist is required"),
+  genre: z.string().min(1, "Genre is required"),
+  lyrics: z.string().min(1, "Lyrics are required"),
+
+  // Step 3: Bible Info
+  bible_translation_used: z.string().min(1, "Bible translation is required"),
+  lyrics_scripture_adherence: z.enum([
+    "The lyrics follow the scripture word-for-word",
+    "The lyrics closely follow the scripture passage",
+    "The lyrics are creatively inspired by the scripture passage"
+  ]),
+  is_continuous_passage: z.boolean(),
+  bible_book: z.string().min(1, "Bible book is required"),
+  bible_chapter: z.string().min(1, "Chapter is required"),
+  bible_verse_start: z.string().min(1, "Starting verse is required"),
+  bible_verse_end: z.string().optional(),
+
+  // Step 4: Upload
+  audio_file: z.instanceof(File).optional(),
+  song_art_file: z.instanceof(File).optional(),
+})
 
 export default function Upload() {
-  const [file, setFile] = useState<File | null>(null)
+  const [currentStep, setCurrentStep] = useState(0)
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      ai_used_for_lyrics: false,
+      music_ai_generated: false,
+      is_continuous_passage: false,
+    },
+  })
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFile(e.target.files[0])
-    }
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    console.log(values)
+    // Handle form submission here
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    // Handle file upload logic here
-  }
+  const steps = ["AI Info", "Song Info", "Bible Info", "Upload"]
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 p-8">
@@ -28,45 +72,271 @@ export default function Upload() {
       <main className="container mx-auto">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8">Upload Songs</h1>
         
-        <Tabs defaultValue="about" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="about">About</TabsTrigger>
-            <TabsTrigger value="upload">Upload</TabsTrigger>
-          </TabsList>
-          <TabsContent value="about">
-            <div className="prose dark:prose-invert">
-              <h2>Why We Need Detailed Information</h2>
-              <p>At BibleChorus, we believe in providing a comprehensive and transparent platform for sharing Bible-inspired music. The detailed information we collect serves several important purposes:</p>
-              <ul>
-                <li><strong>Accuracy and Attribution:</strong> We want to ensure that each song is properly credited to its artist and that the Bible passages used are correctly identified.</li>
-                <li><strong>AI Transparency:</strong> In the age of AI-generated content, we believe it's important to disclose when AI has been used in the creation of lyrics or music.</li>
-                <li><strong>Categorization:</strong> Detailed genre and style information helps users find the type of music they're looking for more easily.</li>
-                <li><strong>Scripture Adherence:</strong> Understanding how closely the lyrics follow scripture helps users choose songs that align with their preferences for scriptural interpretation.</li>
-                <li><strong>Educational Value:</strong> Information about the creative process, including AI prompts used, can be educational for other artists and curious listeners.</li>
-                <li><strong>Quality Control:</strong> Knowing the Bible translation and whether a passage is continuous helps ensure the integrity of the scriptural content.</li>
-              </ul>
-              <p>By providing this information, you're contributing to a rich, informative database that serves both listeners and fellow artists in the Christian music community.</p>
-            </div>
-          </TabsContent>
-          <TabsContent value="upload">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Choose a file
-                </label>
-                <Input
-                  id="file-upload"
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleFileChange}
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <Tabs value={steps[currentStep]} className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                {steps.map((step, index) => (
+                  <TabsTrigger
+                    key={step}
+                    value={step}
+                    disabled={index > currentStep}
+                    onClick={() => setCurrentStep(index)}
+                  >
+                    {step}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              <TabsContent value="AI Info">
+                <FormField
+                  control={form.control}
+                  name="ai_used_for_lyrics"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">AI Used for Lyrics</FormLabel>
+                        <FormDescription>
+                          Was AI used to generate the lyrics?
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <Button type="submit">
-                Upload
+                <FormField
+                  control={form.control}
+                  name="music_ai_generated"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">AI Generated Music</FormLabel>
+                        <FormDescription>
+                          Was the music generated by AI?
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                {/* Add more AI-related fields here */}
+              </TabsContent>
+
+              <TabsContent value="Song Info">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Song Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter song title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="artist"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Artist</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter artist name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="genre"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Genre</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a genre" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {GENRES.map((genre) => (
+                            <SelectItem key={genre} value={genre}>
+                              {genre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lyrics"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lyrics</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter song lyrics"
+                          className="min-h-[200px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              <TabsContent value="Bible Info">
+                <FormField
+                  control={form.control}
+                  name="bible_translation_used"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bible Translation</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a translation" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {BIBLE_TRANSLATIONS.map((translation) => (
+                            <SelectItem key={translation} value={translation}>
+                              {translation}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lyrics_scripture_adherence"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Scripture Adherence</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select adherence level" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="The lyrics follow the scripture word-for-word">
+                            Word-for-word
+                          </SelectItem>
+                          <SelectItem value="The lyrics closely follow the scripture passage">
+                            Close paraphrase
+                          </SelectItem>
+                          <SelectItem value="The lyrics are creatively inspired by the scripture passage">
+                            Creative inspiration
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="is_continuous_passage"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Continuous Passage</FormLabel>
+                        <FormDescription>
+                          Is this a continuous passage?
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                {/* Add more Bible-related fields here */}
+              </TabsContent>
+
+              <TabsContent value="Upload">
+                <FormField
+                  control={form.control}
+                  name="audio_file"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Audio File</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="file"
+                          accept="audio/*"
+                          onChange={(e) => field.onChange(e.target.files?.[0])}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="song_art_file"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Song Art</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => field.onChange(e.target.files?.[0])}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex justify-between">
+              <Button
+                type="button"
+                onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                disabled={currentStep === 0}
+              >
+                Previous
               </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
+              {currentStep < steps.length - 1 ? (
+                <Button
+                  type="button"
+                  onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+                >
+                  Next
+                </Button>
+              ) : (
+                <Button type="submit">Submit</Button>
+              )}
+            </div>
+          </form>
+        </FormProvider>
       </main>
     </div>
   )
