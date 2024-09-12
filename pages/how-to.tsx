@@ -10,14 +10,14 @@ export default function HowTo() {
   ]
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <Head>
         <title>BibleChorus - How To</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="container mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8">How To Use BibleChorus</h1>
+      <main className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-8 pt-4 sm:pt-6 md:pt-8 lg:pt-10 xl:pt-12">How To Use BibleChorus</h1>
         <ol className="space-y-6">
           {steps.map((step, index) => (
             <li key={index} className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md shadow-md">

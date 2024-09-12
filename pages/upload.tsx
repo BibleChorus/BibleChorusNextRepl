@@ -63,17 +63,17 @@ export default function Upload() {
   const steps = ["AI Info", "Song Info", "Bible Info", "Upload"]
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <Head>
         <title>BibleChorus - Upload Songs</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="container mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8">Upload Songs</h1>
+      <main className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-8 pt-4 sm:pt-6 md:pt-8 lg:pt-10 xl:pt-12">Upload Songs</h1>
         
         <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-8">
             <Tabs value={steps[currentStep]} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 {steps.map((step, index) => (
@@ -261,7 +261,7 @@ export default function Upload() {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-base">Continuous Passage</FormLabel>
+                        <FormLabel className="text-sm sm:text-base">Continuous Passage</FormLabel>
                         <FormDescription>
                           Is this a continuous passage?
                         </FormDescription>

@@ -9,14 +9,14 @@ export default function Playlists() {
   ]
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <Head>
         <title>BibleChorus - Playlists</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="container mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8">Your Playlists</h1>
+      <main className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-8 pt-4 sm:pt-6 md:pt-8 lg:pt-10 xl:pt-12">Your Playlists</h1>
         <ul className="space-y-4">
           {playlists.map((playlist) => (
             <li key={playlist.id}>

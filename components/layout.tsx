@@ -78,8 +78,8 @@ export default function RootLayout({ children, className = '' }: LayoutProps) {
               </div>
             </div>
             {/* Main content */}
-            <div className={`container mx-auto px-4 pt-20 pb-8 ${isOpen ? 'lg:mr-64' : 'lg:mr-16'}`}>
-              <main className={className}>
+            <div className={`container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12 pt-20 pb-8 ${isOpen ? 'lg:mr-64' : 'lg:mr-16'}`}>
+              <main className={`${className} max-w-full mx-auto`}>
                 {children}
               </main>
             </div>
