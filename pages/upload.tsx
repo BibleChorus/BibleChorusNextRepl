@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -7,10 +7,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Check, ChevronsUpDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
 import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
+import { cn } from "@/lib/utils"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const formSchema = z.object({
   // Step 1: AI Info
@@ -55,6 +69,42 @@ export default function Upload() {
     },
     mode: "onChange", // This enables real-time validation
   })
+
+  const [openGenre, setOpenGenre] = useState(false)
+  const [openTranslation, setOpenTranslation] = useState(false)
+  const [genreSearch, setGenreSearch] = useState('')
+  const [translationSearch, setTranslationSearch] = useState('')
+
+  const filteredGenres = useCallback(() => {
+    return GENRES.filter(genre =>
+      genre.toLowerCase().includes(genreSearch.toLowerCase())
+    )
+  }, [genreSearch])
+
+  const filteredTranslations = useCallback(() => {
+    return BIBLE_TRANSLATIONS.filter(translation =>
+      translation.toLowerCase().includes(translationSearch.toLowerCase())
+    )
+  }, [translationSearch])
+
+  const genreRef = useRef<HTMLDivElement>(null)
+  const translationRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (genreRef.current && !genreRef.current.contains(event.target as Node)) {
+        setOpenGenre(false)
+      }
+      if (translationRef.current && !translationRef.current.contains(event.target as Node)) {
+        setOpenTranslation(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     console.log(values)
@@ -163,22 +213,56 @@ export default function Upload() {
                   control={form.control}
                   name="genre"
                   render={({ field }) => (
-                    <FormItem className="rounded-lg border p-4">
+                    <FormItem className="flex flex-col rounded-lg border p-4">
                       <FormLabel className="form-label">Genre</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a genre" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {GENRES.map((genre) => (
-                            <SelectItem key={genre} value={genre}>
-                              {genre}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={openGenre} onOpenChange={setOpenGenre}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openGenre}
+                              className="w-full justify-between"
+                            >
+                              {field.value || "Select genre..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <div className="p-2">
+                            <Input
+                              placeholder="Search genre..."
+                              value={genreSearch}
+                              onChange={(e) => setGenreSearch(e.target.value)}
+                              className="mb-2"
+                            />
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {filteredGenres().map((genre) => (
+                                <div
+                                  key={genre}
+                                  className={cn(
+                                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                                    field.value === genre && "bg-accent"
+                                  )}
+                                  onClick={() => {
+                                    field.onChange(genre)
+                                    setOpenGenre(false)
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      field.value === genre ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {genre}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage className="form-message" />
                     </FormItem>
                   )}
@@ -207,22 +291,56 @@ export default function Upload() {
                   control={form.control}
                   name="bible_translation_used"
                   render={({ field }) => (
-                    <FormItem className="rounded-lg border p-4">
+                    <FormItem className="flex flex-col rounded-lg border p-4">
                       <FormLabel className="form-label">Bible Translation</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a translation" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {BIBLE_TRANSLATIONS.map((translation) => (
-                            <SelectItem key={translation} value={translation}>
-                              {translation}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={openTranslation} onOpenChange={setOpenTranslation}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openTranslation}
+                              className="w-full justify-between"
+                            >
+                              {field.value || "Select translation..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <div className="p-2">
+                            <Input
+                              placeholder="Search translation..."
+                              value={translationSearch}
+                              onChange={(e) => setTranslationSearch(e.target.value)}
+                              className="mb-2"
+                            />
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {filteredTranslations().map((translation) => (
+                                <div
+                                  key={translation}
+                                  className={cn(
+                                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                                    field.value === translation && "bg-accent"
+                                  )}
+                                  onClick={() => {
+                                    field.onChange(translation)
+                                    setOpenTranslation(false)
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      field.value === translation ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {translation}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage className="form-message" />
                     </FormItem>
                   )}
