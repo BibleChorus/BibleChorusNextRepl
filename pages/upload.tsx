@@ -19,7 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
 import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
@@ -37,7 +37,7 @@ const formSchema = z.object({
   // Step 2: Song Info
   title: z.string().min(1, "Title is required"),
   artist: z.string().min(1, "Artist is required"),
-  genre: z.string().min(1, "Genre is required"),
+  genre: z.string().min(1, "At least one genre is required"),
   lyrics: z.string().min(1, "Lyrics are required"),
 
   // Step 3: Bible Info
@@ -74,6 +74,7 @@ export default function Upload() {
   const [openTranslation, setOpenTranslation] = useState(false)
   const [genreSearch, setGenreSearch] = useState('')
   const [translationSearch, setTranslationSearch] = useState('')
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([])
 
   const filteredGenres = useCallback(() => {
     return GENRES.filter(genre =>
@@ -105,6 +106,24 @@ export default function Upload() {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
+
+  const handleGenreToggle = (genre: string) => {
+    let updatedGenres: string[];
+    if (selectedGenres.includes(genre)) {
+      // Remove the genre if it's already selected
+      updatedGenres = selectedGenres.filter(g => g !== genre);
+    } else {
+      // Add the genre if it's not already selected
+      updatedGenres = [...selectedGenres, genre];
+    }
+    setSelectedGenres(updatedGenres);
+    form.setValue('genre', updatedGenres.join(', '), { shouldValidate: true });
+  }
+
+  const clearGenres = () => {
+    setSelectedGenres([]);
+    form.setValue('genre', '', { shouldValidate: true });
+  }
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     console.log(values)
@@ -214,7 +233,7 @@ export default function Upload() {
                   name="genre"
                   render={({ field }) => (
                     <FormItem className="flex flex-col rounded-lg border p-4">
-                      <FormLabel className="form-label">Genre</FormLabel>
+                      <FormLabel className="form-label">Genre(s)</FormLabel>
                       <Popover open={openGenre} onOpenChange={setOpenGenre}>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -224,38 +243,43 @@ export default function Upload() {
                               aria-expanded={openGenre}
                               className="w-full justify-between"
                             >
-                              {field.value || "Select genre..."}
+                              {selectedGenres.length > 0
+                                ? `${selectedGenres.length} selected`
+                                : "Select genres..."}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-full p-0">
                           <div className="p-2">
-                            <Input
-                              placeholder="Search genre..."
-                              value={genreSearch}
-                              onChange={(e) => setGenreSearch(e.target.value)}
-                              className="mb-2"
-                            />
+                            <div className="flex items-center justify-between pb-2">
+                              <Input
+                                placeholder="Search genres..."
+                                value={genreSearch}
+                                onChange={(e) => setGenreSearch(e.target.value)}
+                                className="mr-2"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={clearGenres}
+                              >
+                                Clear
+                              </Button>
+                            </div>
                             <div className="max-h-[200px] overflow-y-auto">
                               {filteredGenres().map((genre) => (
                                 <div
                                   key={genre}
                                   className={cn(
                                     "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                                    field.value === genre && "bg-accent"
+                                    selectedGenres.includes(genre) && "bg-accent"
                                   )}
-                                  onClick={() => {
-                                    field.onChange(genre)
-                                    setOpenGenre(false)
-                                  }}
+                                  onClick={() => handleGenreToggle(genre)}
                                 >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      field.value === genre ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
+                                  <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                    {selectedGenres.includes(genre) && <Check className="h-3 w-3" />}
+                                  </div>
                                   {genre}
                                 </div>
                               ))}
@@ -263,6 +287,34 @@ export default function Upload() {
                           </div>
                         </PopoverContent>
                       </Popover>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {selectedGenres.map((genre) => (
+                          <div
+                            key={genre}
+                            className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                          >
+                            {genre}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-1 h-4 w-4 p-0"
+                              onClick={() => handleGenreToggle(genre)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                        {selectedGenres.length > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={clearGenres}
+                            className="mt-1"
+                          >
+                            Clear All
+                          </Button>
+                        )}
+                      </div>
                       <FormMessage className="form-message" />
                     </FormItem>
                   )}
