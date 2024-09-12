@@ -1,6 +1,7 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { FaUpload, FaSearch, FaMap, FaList, FaVoteYea, FaBars, FaTimes, FaChevronLeft, FaChevronRight, FaHeadphones, FaUser, FaQuestionCircle } from 'react-icons/fa';
+import { FaUpload, FaSearch, FaMap, FaList, FaVoteYea, FaHeadphones, FaUser, FaQuestionCircle, FaTimes } from 'react-icons/fa';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import Image from 'next/image'; // Add this import
 import Link from 'next/link'; // Add this import
 
@@ -32,29 +33,29 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobileOpen, setI
 
   return (
     <>
-      {/* Mobile toggle button */}
-      <button
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="fixed top-4 left-4 z-50 p-2 bg-purple-600 text-white rounded-md lg:hidden"
-      >
-        {isMobileOpen ? <FaTimes /> : <FaBars />}
-      </button>
-
-      {/* Desktop toggle button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 p-2 bg-purple-600 text-white rounded-md hidden lg:block"
-      >
-        {isOpen ? <FaChevronLeft /> : <FaChevronRight />}
-      </button>
-
       <div
-        className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ease-in-out z-40 
+        className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ease-in-out z-[55] 
           ${isMobileOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'} 
           ${isOpen ? 'lg:w-64' : 'lg:w-16'}
           ${!isMobileOpen && !isOpen ? 'lg:w-0 lg:-translate-x-full' : ''}`}
       >
         <div className={`p-4 h-full overflow-y-auto ${isMobileOpen ? 'block' : 'hidden lg:block'}`}>
+          {/* Close button for mobile view */}
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="absolute top-4 right-4 p-2 text-gray-600 dark:text-gray-400 lg:hidden"
+          >
+            <FaTimes className="h-6 w-6" />
+          </button>
+
+          {/* Toggle button for desktop view */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="absolute top-4 right-4 p-2 text-gray-600 dark:text-gray-400 hidden lg:block"
+          >
+            {isOpen ? <PanelLeftClose className="h-6 w-6" /> : <PanelLeftOpen className="h-6 w-6" />}
+          </button>
+
           {/* Reduced spacer for toggle button */}
           <div className="h-12"></div>
           

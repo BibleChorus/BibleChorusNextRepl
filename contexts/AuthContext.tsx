@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 
 interface User {
   username: string;
+  email: string;
   profile_image_url?: string;
 }
 
