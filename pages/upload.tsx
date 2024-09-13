@@ -245,7 +245,7 @@ export default function Upload() {
   const { data: bibleVerses, isLoading } = useQuery(
     ['bibleVerses', selectedBibleBooks, selectedChapters],
     async () => {
-      if (selectedBibleBooks.length === 0) return []
+      if (selectedBibleBooks.length === 0) return {}
       const verses = await Promise.all(
         selectedBibleBooks.flatMap(book => 
           (selectedChapters[book] || []).map(chapter => 
@@ -253,7 +253,16 @@ export default function Upload() {
           )
         )
       );
-      return verses.flatMap(response => response.data);
+      return verses.reduce((acc, response) => {
+        const verses = response.data;
+        if (verses.length > 0) {
+          const book = verses[0].book;
+          const chapter = verses[0].chapter;
+          if (!acc[book]) acc[book] = {};
+          acc[book][chapter] = verses;
+        }
+        return acc;
+      }, {} as Record<string, Record<number, any[]>>);
     },
     { enabled: selectedBibleBooks.length > 0 && Object.keys(selectedChapters).length > 0 }
   )
@@ -263,12 +272,18 @@ export default function Upload() {
   const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>([])
 
   const filteredBibleVerses = useCallback(() => {
-    if (!bibleVerses) return []
-    return bibleVerses.filter((verse: any) =>
-      verse.KJV_text.toLowerCase().includes(bibleVerseSearch.toLowerCase()) ||
-      `${verse.book} ${verse.chapter}:${verse.verse}`.toLowerCase().includes(bibleVerseSearch.toLowerCase())
-    )
-  }, [bibleVerses, bibleVerseSearch])
+    if (!bibleVerses) return {}
+    return Object.entries(bibleVerses).reduce((acc, [book, chapters]) => {
+      acc[book] = Object.entries(chapters).reduce((chapterAcc, [chapter, verses]) => {
+        chapterAcc[chapter] = verses.filter((verse: any) =>
+          verse.KJV_text.toLowerCase().includes(bibleVerseSearch.toLowerCase()) ||
+          `${verse.book} ${verse.chapter}:${verse.verse}`.toLowerCase().includes(bibleVerseSearch.toLowerCase())
+        );
+        return chapterAcc;
+      }, {} as Record<string, any[]>);
+      return acc;
+    }, {} as Record<string, Record<string, any[]>>);
+  }, [bibleVerses, bibleVerseSearch]);
 
   const bibleVerseRef = useRef<HTMLDivElement>(null)
   const bibleBookRef = useRef<HTMLDivElement>(null)
@@ -733,7 +748,7 @@ export default function Upload() {
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
+                          <PopoverContent className="w-full p-0" style={{ maxWidth: '80vw' }}>
                             <div className="p-2">
                               <div className="flex items-center justify-between pb-2">
                                 <Input
@@ -750,7 +765,7 @@ export default function Upload() {
                                   Clear All
                                 </Button>
                               </div>
-                              <div className="max-h-[200px] overflow-y-auto">
+                              <div className="max-h-[300px] overflow-y-auto">
                                 {isLoadingChapters ? (
                                   <div>Loading chapters...</div>
                                 ) : (
@@ -830,7 +845,7 @@ export default function Upload() {
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-full p-0" ref={bibleVerseRef}>
+                        <PopoverContent className="w-full p-0" style={{ maxWidth: '80vw' }}>
                           <div className="p-2">
                             <div className="flex items-center justify-between pb-2">
                               <Input
@@ -844,29 +859,37 @@ export default function Upload() {
                                 size="sm"
                                 onClick={clearBibleVerses}
                               >
-                                Clear
+                                Clear All
                               </Button>
                             </div>
-                            <div className="max-h-[200px] overflow-y-auto">
+                            <div className="max-h-[300px] overflow-y-auto">
                               {isLoading ? (
-                                <div>Loading...</div>
+                                <div>Loading verses...</div>
                               ) : (
-                                (bibleVerses ?? []).filter((verse: any) =>
-                                  verse.KJV_text.toLowerCase().includes(bibleVerseSearch.toLowerCase()) ||
-                                  `${verse.book} ${verse.chapter}:${verse.verse}`.toLowerCase().includes(bibleVerseSearch.toLowerCase())
-                                ).map((verse: any) => (
-                                  <div
-                                    key={`${verse.book} ${verse.chapter}:${verse.verse}`}
-                                    className={cn(
-                                      "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                                      selectedBibleVerses.includes(`${verse.book} ${verse.chapter}:${verse.verse}`) && "bg-accent"
-                                    )}
-                                    onClick={() => handleBibleVerseToggle(`${verse.book} ${verse.chapter}:${verse.verse}`)}
-                                  >
-                                    <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                                      {selectedBibleVerses.includes(`${verse.book} ${verse.chapter}:${verse.verse}`) && <Check className="h-3 w-3" />}
-                                    </div>
-                                    {`${verse.book} ${verse.chapter}:${verse.verse}`}
+                                Object.entries(filteredBibleVerses()).map(([book, chapters]) => (
+                                  <div key={book} className="mb-4">
+                                    {Object.entries(chapters).map(([chapter, verses]) => (
+                                      <div key={`${book}-${chapter}`} className="mb-2">
+                                        <h4 className="font-semibold mb-1">{`${book} ${chapter}`}</h4>
+                                        <div className="flex flex-wrap gap-1">
+                                          {verses.map((verse: any) => (
+                                            <div
+                                              key={`${book}-${chapter}-${verse.verse}`}
+                                              className={cn(
+                                                "flex items-center rounded-md px-2 py-1 hover:bg-accent cursor-pointer",
+                                                selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && "bg-accent"
+                                              )}
+                                              onClick={() => handleBibleVerseToggle(`${book} ${chapter}:${verse.verse}`)}
+                                            >
+                                              <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                                {selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && <Check className="h-3 w-3" />}
+                                              </div>
+                                              {verse.verse}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ))}
                                   </div>
                                 ))
                               )}
