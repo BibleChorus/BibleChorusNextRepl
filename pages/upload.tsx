@@ -36,7 +36,7 @@ const formSchema = z.object({
 
   // Step 2: Song Info
   title: z.string().min(1, "Title is required"),
-  artist: z.string().min(1, "Artist is required"),
+  artist: z.string().optional(),
   genre: z.string().min(1, "At least one genre is required"),
   lyrics: z.string().min(1, "Lyrics are required"),
 
@@ -52,6 +52,7 @@ const formSchema = z.object({
   bible_chapter: z.string().min(1, "Chapter is required"),
   bible_verse_start: z.string().min(1, "Starting verse is required"),
   bible_verse_end: z.string().optional(),
+  bible_books: z.string().min(1, "At least one Bible book is required"),
 
   // Step 4: Upload
   audio_file: z.instanceof(File).optional(),
@@ -166,6 +167,53 @@ export default function Upload() {
     }
     form.trigger("lyric_ai_prompt");
   }, [watchAiUsedForLyrics, form]);
+
+  const [openBibleBooks, setOpenBibleBooks] = useState(false)
+  const [bibleBookSearch, setBibleBookSearch] = useState('')
+  const [selectedBibleBooks, setSelectedBibleBooks] = useState<string[]>([])
+
+  const filteredBibleBooks = useCallback(() => {
+    return BIBLE_BOOKS.filter(book =>
+      book.toLowerCase().includes(bibleBookSearch.toLowerCase())
+    )
+  }, [bibleBookSearch])
+
+  const bibleBookRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (genreRef.current && !genreRef.current.contains(event.target as Node)) {
+        setOpenGenre(false)
+      }
+      if (translationRef.current && !translationRef.current.contains(event.target as Node)) {
+        setOpenTranslation(false)
+      }
+      if (bibleBookRef.current && !bibleBookRef.current.contains(event.target as Node)) {
+        setOpenBibleBooks(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  const handleBibleBookToggle = (book: string) => {
+    let updatedBooks: string[];
+    if (selectedBibleBooks.includes(book)) {
+      updatedBooks = selectedBibleBooks.filter(b => b !== book);
+    } else {
+      updatedBooks = [...selectedBibleBooks, book];
+    }
+    setSelectedBibleBooks(updatedBooks);
+    form.setValue('bible_books', updatedBooks.join(', '), { shouldValidate: true });
+  }
+
+  const clearBibleBooks = () => {
+    setSelectedBibleBooks([]);
+    form.setValue('bible_books', '', { shouldValidate: true });
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -364,7 +412,7 @@ export default function Upload() {
                   name="artist"
                   render={({ field }) => (
                     <FormItem className="rounded-lg border p-4">
-                      <FormLabel className="form-label">Artist</FormLabel>
+                      <FormLabel className="form-label">Artist (optional)</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter artist name" {...field} />
                       </FormControl>
@@ -586,6 +634,97 @@ export default function Upload() {
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="bible_books"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col rounded-lg border p-4">
+                      <FormLabel className="form-label">Bible Book(s) Included</FormLabel>
+                      <Popover open={openBibleBooks} onOpenChange={setOpenBibleBooks}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openBibleBooks}
+                              className="w-full justify-between"
+                            >
+                              {selectedBibleBooks.length > 0
+                                ? `${selectedBibleBooks.length} selected`
+                                : "Select Bible books..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <div className="p-2">
+                            <div className="flex items-center justify-between pb-2">
+                              <Input
+                                placeholder="Search Bible books..."
+                                value={bibleBookSearch}
+                                onChange={(e) => setBibleBookSearch(e.target.value)}
+                                className="mr-2"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={clearBibleBooks}
+                              >
+                                Clear
+                              </Button>
+                            </div>
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {filteredBibleBooks().map((book) => (
+                                <div
+                                  key={book}
+                                  className={cn(
+                                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                                    selectedBibleBooks.includes(book) && "bg-accent"
+                                  )}
+                                  onClick={() => handleBibleBookToggle(book)}
+                                >
+                                  <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                    {selectedBibleBooks.includes(book) && <Check className="h-3 w-3" />}
+                                  </div>
+                                  {book}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {selectedBibleBooks.map((book) => (
+                          <div
+                            key={book}
+                            className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                          >
+                            {book}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-1 h-4 w-4 p-0"
+                              onClick={() => handleBibleBookToggle(book)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                        {selectedBibleBooks.length > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={clearBibleBooks}
+                            className="mt-1"
+                          >
+                            Clear All
+                          </Button>
+                        )}
+                      </div>
+                      <FormMessage className="form-message" />
                     </FormItem>
                   )}
                 />
