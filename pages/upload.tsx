@@ -642,294 +642,378 @@ export default function Upload() {
               </TabsContent>
 
               <TabsContent value="Bible Info">
-                <FormField
-                  control={form.control}
-                  name="bible_books"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col rounded-lg border p-4">
-                      <FormLabel className="form-label">Bible Book(s) Included</FormLabel>
-                      <Popover open={openBibleBooks} onOpenChange={setOpenBibleBooks}>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={openBibleBooks}
-                              className="w-full justify-between"
-                            >
-                              {selectedBibleBooks.length > 0
-                                ? `${selectedBibleBooks.length} selected`
-                                : "Select Bible books..."}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0" ref={bibleBookRef}>
-                          <div className="p-2">
-                            <div className="flex items-center justify-between pb-2">
-                              <Input
-                                placeholder="Search Bible books..."
-                                value={bibleBookSearch}
-                                onChange={(e) => setBibleBookSearch(e.target.value)}
-                                className="mr-2"
-                              />
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={clearBibleBooks}
-                              >
-                                Clear
-                              </Button>
-                            </div>
-                            <div className="max-h-[200px] overflow-y-auto">
-                              {filteredBibleBooks().map((book) => (
-                                <div
-                                  key={book}
-                                  className={cn(
-                                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                                    selectedBibleBooks.includes(book) && "bg-accent"
-                                  )}
-                                  onClick={() => handleBibleBookToggle(book)}
-                                >
-                                  <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                                    {selectedBibleBooks.includes(book) && <Check className="h-3 w-3" />}
-                                  </div>
-                                  {book}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {selectedBibleBooks.map((book) => (
-                          <div
-                            key={book}
-                            className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
-                          >
-                            {book}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="ml-1 h-4 w-4 p-0"
-                              onClick={() => handleBibleBookToggle(book)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                      <FormMessage className="form-message" />
-                    </FormItem>
-                  )}
-                />
-
-                {selectedBibleBooks.length > 0 && (
-                  <FormField
-                    control={form.control}
-                    name="bible_chapters"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col rounded-lg border p-4">
-                        <FormLabel className="form-label">Chapters</FormLabel>
-                        <Popover open={openChapters} onOpenChange={setOpenChapters}>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={openChapters}
-                                className="w-full justify-between"
-                                disabled={selectedBibleBooks.length === 0}
-                              >
-                                {Object.values(selectedChapters).flat().length > 0
-                                  ? `${Object.values(selectedChapters).flat().length} selected`
-                                  : "Select chapters..."}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0" style={{ maxWidth: '80vw' }}>
-                            <div className="p-2">
-                              <div className="flex items-center justify-between pb-2">
-                                <Input
-                                  placeholder="Search chapters..."
-                                  value={chapterSearch}
-                                  onChange={(e) => setChapterSearch(e.target.value)}
-                                  className="mr-2"
-                                />
+                <div className="flex flex-col">
+                  <div className="flex flex-col rounded-lg border p-4">
+                    <FormField
+                      control={form.control}
+                      name="bible_books"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="form-label">Bible Book(s) Included</FormLabel>
+                          <Popover open={openBibleBooks} onOpenChange={setOpenBibleBooks}>
+                            <PopoverTrigger asChild>
+                              <FormControl>
                                 <Button
                                   variant="outline"
-                                  size="sm"
-                                  onClick={clearChapters}
+                                  role="combobox"
+                                  aria-expanded={openBibleBooks}
+                                  className="w-full justify-between"
                                 >
-                                  Clear All
+                                  {selectedBibleBooks.length > 0
+                                    ? `${selectedBibleBooks.length} selected`
+                                    : "Select Bible books..."}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
-                              </div>
-                              <div className="max-h-[300px] overflow-y-auto">
-                                {isLoadingChapters ? (
-                                  <div>Loading chapters...</div>
-                                ) : (
-                                  Object.entries(filteredChapters()).map(([book, chapters]) => (
-                                    <div key={book} className="mb-2">
-                                      <h4 className="font-semibold mb-1">{book}</h4>
-                                      <div className="flex flex-wrap gap-1">
-                                        {chapters.map((chapter) => (
-                                          <div
-                                            key={`${book}-${chapter}`}
-                                            className={cn(
-                                              "flex items-center rounded-md px-2 py-1 hover:bg-accent cursor-pointer",
-                                              (selectedChapters[book] || []).includes(chapter) && "bg-accent"
-                                            )}
-                                            onClick={() => handleChapterToggle(book, chapter)}
-                                          >
-                                            <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                                              {(selectedChapters[book] || []).includes(chapter) && <Check className="h-3 w-3" />}
-                                            </div>
-                                            {chapter}
-                                          </div>
-                                        ))}
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0" ref={bibleBookRef}>
+                              <div className="p-2">
+                                <div className="flex items-center justify-between pb-2">
+                                  <Input
+                                    placeholder="Search Bible books..."
+                                    value={bibleBookSearch}
+                                    onChange={(e) => setBibleBookSearch(e.target.value)}
+                                    className="mr-2"
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={clearBibleBooks}
+                                  >
+                                    Clear
+                                  </Button>
+                                </div>
+                                <div className="max-h-[200px] overflow-y-auto">
+                                  {filteredBibleBooks().map((book) => (
+                                    <div
+                                      key={book}
+                                      className={cn(
+                                        "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                                        selectedBibleBooks.includes(book) && "bg-accent"
+                                      )}
+                                      onClick={() => handleBibleBookToggle(book)}
+                                    >
+                                      <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                        {selectedBibleBooks.includes(book) && <Check className="h-3 w-3" />}
                                       </div>
+                                      {book}
                                     </div>
-                                  ))
-                                )}
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {Object.entries(selectedChapters).map(([book, chapters]) =>
-                            chapters.map((chapter) => (
+                            </PopoverContent>
+                          </Popover>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {selectedBibleBooks.map((book) => (
                               <div
-                                key={`${book}-${chapter}`}
+                                key={book}
                                 className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
                               >
-                                {`${book} ${chapter}`}
+                                {book}
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   className="ml-1 h-4 w-4 p-0"
-                                  onClick={() => handleChapterToggle(book, chapter)}
+                                  onClick={() => handleBibleBookToggle(book)}
                                 >
                                   <X className="h-3 w-3" />
                                 </Button>
                               </div>
-                            ))
-                          )}
-                        </div>
-                        <FormMessage className="form-message" />
-                      </FormItem>
-                    )}
-                  />
-                )}
+                            ))}
+                          </div>
+                          <FormMessage className="form-message" />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="bible_verses"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col rounded-lg border p-4">
-                      <FormLabel className="form-label">Bible Verses Covered</FormLabel>
-                      <Popover open={openBibleVerses} onOpenChange={setOpenBibleVerses}>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={openBibleVerses}
-                              className="w-full justify-between"
-                              disabled={!selectedBibleBooks.length || !Object.keys(selectedChapters).length}
-                            >
-                              {selectedBibleVerses.length > 0
-                                ? `${selectedBibleVerses.length} selected`
-                                : "Select Bible verses..."}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0" style={{ maxWidth: '80vw' }}>
-                          <div className="p-2">
-                            <div className="flex items-center justify-between pb-2">
-                              <Input
-                                placeholder="Search Bible verses..."
-                                value={bibleVerseSearch}
-                                onChange={(e) => setBibleVerseSearch(e.target.value)}
-                                className="mr-2"
-                              />
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={clearBibleVerses}
-                              >
-                                Clear All
-                              </Button>
-                            </div>
-                            <div className="max-h-[300px] overflow-y-auto">
-                              {isLoading ? (
-                                <div>Loading verses...</div>
-                              ) : (
-                                Object.entries(filteredBibleVerses()).map(([book, chapters]) => (
-                                  <div key={book} className="mb-4">
-                                    {Object.entries(chapters).map(([chapter, verses]) => (
-                                      <div key={`${book}-${chapter}`} className="mb-2">
-                                        <h4 className="font-semibold mb-1">{`${book} ${chapter}`}</h4>
-                                        <div className="flex flex-wrap gap-1">
-                                          {verses.map((verse: any) => (
-                                            <div
-                                              key={`${book}-${chapter}-${verse.verse}`}
-                                              className={cn(
-                                                "flex items-center rounded-md px-2 py-1 hover:bg-accent cursor-pointer",
-                                                selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && "bg-accent"
-                                              )}
-                                              onClick={() => handleBibleVerseToggle(`${book} ${chapter}:${verse.verse}`)}
-                                            >
-                                              <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                                                {selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && <Check className="h-3 w-3" />}
+                    {selectedBibleBooks.length > 0 && (
+                      <FormField
+                        control={form.control}
+                        name="bible_chapters"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="form-label">Chapters</FormLabel>
+                            <Popover open={openChapters} onOpenChange={setOpenChapters}>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={openChapters}
+                                    className="w-full justify-between"
+                                    disabled={selectedBibleBooks.length === 0}
+                                  >
+                                    {Object.values(selectedChapters).flat().length > 0
+                                      ? `${Object.values(selectedChapters).flat().length} selected`
+                                      : "Select chapters..."}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-full p-0" style={{ maxWidth: '80vw' }}>
+                                <div className="p-2">
+                                  <div className="flex items-center justify-between pb-2">
+                                    <Input
+                                      placeholder="Search chapters..."
+                                      value={chapterSearch}
+                                      onChange={(e) => setChapterSearch(e.target.value)}
+                                      className="mr-2"
+                                    />
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={clearChapters}
+                                    >
+                                      Clear All
+                                    </Button>
+                                  </div>
+                                  <div className="max-h-[300px] overflow-y-auto">
+                                    {isLoadingChapters ? (
+                                      <div>Loading chapters...</div>
+                                    ) : (
+                                      Object.entries(filteredChapters()).map(([book, chapters]) => (
+                                        <div key={book} className="mb-2">
+                                          <h4 className="font-semibold mb-1">{book}</h4>
+                                          <div className="flex flex-wrap gap-1">
+                                            {chapters.map((chapter) => (
+                                              <div
+                                                key={`${book}-${chapter}`}
+                                                className={cn(
+                                                  "flex items-center rounded-md px-2 py-1 hover:bg-accent cursor-pointer",
+                                                  (selectedChapters[book] || []).includes(chapter) && "bg-accent"
+                                                )}
+                                                onClick={() => handleChapterToggle(book, chapter)}
+                                              >
+                                                <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                                  {(selectedChapters[book] || []).includes(chapter) && <Check className="h-3 w-3" />}
+                                                </div>
+                                                {chapter}
                                               </div>
-                                              {verse.verse}
-                                            </div>
-                                          ))}
+                                            ))}
+                                          </div>
                                         </div>
-                                      </div>
-                                    ))}
+                                      ))
+                                    )}
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {Object.entries(selectedChapters).map(([book, chapters]) =>
+                                chapters.map((chapter) => (
+                                  <div
+                                    key={`${book}-${chapter}`}
+                                    className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                                  >
+                                    {`${book} ${chapter}`}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="ml-1 h-4 w-4 p-0"
+                                      onClick={() => handleChapterToggle(book, chapter)}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
                                   </div>
                                 ))
                               )}
                             </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {selectedBibleVerses.map((verse) => (
-                          <div
-                            key={verse}
-                            className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
-                          >
-                            {verse}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="ml-1 h-4 w-4 p-0"
-                              onClick={() => handleBibleVerseToggle(verse)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                        {selectedBibleVerses.length > 0 && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={clearBibleVerses}
-                            className="mt-1"
-                          >
-                            Clear All
-                          </Button>
+                            <FormMessage className="form-message" />
+                          </FormItem>
                         )}
-                      </div>
-                      <FormMessage className="form-message" />
-                    </FormItem>
-                  )}
-                />
-                {/* Add more Bible-related fields here */}
+                      />
+                    )}
+
+                    <FormField
+                      control={form.control}
+                      name="bible_verses"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="form-label">Bible Verses Covered</FormLabel>
+                          <Popover open={openBibleVerses} onOpenChange={setOpenBibleVerses}>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={openBibleVerses}
+                                  className="w-full justify-between"
+                                  disabled={!selectedBibleBooks.length || !Object.keys(selectedChapters).length}
+                                >
+                                  {selectedBibleVerses.length > 0
+                                    ? `${selectedBibleVerses.length} selected`
+                                    : "Select Bible verses..."}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0" style={{ maxWidth: '80vw' }}>
+                              <div className="p-2">
+                                <div className="flex items-center justify-between pb-2">
+                                  <Input
+                                    placeholder="Search Bible verses..."
+                                    value={bibleVerseSearch}
+                                    onChange={(e) => setBibleVerseSearch(e.target.value)}
+                                    className="mr-2"
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={clearBibleVerses}
+                                  >
+                                    Clear All
+                                  </Button>
+                                </div>
+                                <div className="max-h-[300px] overflow-y-auto">
+                                  {isLoading ? (
+                                    <div>Loading verses...</div>
+                                  ) : (
+                                    Object.entries(filteredBibleVerses()).map(([book, chapters]) => (
+                                      <div key={book} className="mb-4">
+                                        {Object.entries(chapters).map(([chapter, verses]) => (
+                                          <div key={`${book}-${chapter}`} className="mb-2">
+                                            <h4 className="font-semibold mb-1">{`${book} ${chapter}`}</h4>
+                                            <div className="flex flex-wrap gap-1">
+                                              {verses.map((verse: any) => (
+                                                <div
+                                                  key={`${book}-${chapter}-${verse.verse}`}
+                                                  className={cn(
+                                                    "flex items-center rounded-md px-2 py-1 hover:bg-accent cursor-pointer",
+                                                    selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && "bg-accent"
+                                                  )}
+                                                  onClick={() => handleBibleVerseToggle(`${book} ${chapter}:${verse.verse}`)}
+                                                >
+                                                  <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                                    {selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && <Check className="h-3 w-3" />}
+                                                  </div>
+                                                  {verse.verse}
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {selectedBibleVerses.map((verse) => (
+                              <div
+                                key={verse}
+                                className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                              >
+                                {verse}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="ml-1 h-4 w-4 p-0"
+                                  onClick={() => handleBibleVerseToggle(verse)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                            {selectedBibleVerses.length > 0 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={clearBibleVerses}
+                                className="mt-1"
+                              >
+                                Clear All
+                              </Button>
+                            )}
+                          </div>
+                          <FormMessage className="form-message" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="flex flex-col rounded-lg border p-4">
+                    <FormField
+                      control={form.control}
+                      name="bible_translation_used"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="form-label">Bible Translation Used</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Bible translation" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {BIBLE_TRANSLATIONS.map((translation) => (
+                                <SelectItem key={translation} value={translation}>
+                                  {translation}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="form-message" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="flex flex-col rounded-lg border p-4">
+                    <FormField
+                      control={form.control}
+                      name="lyrics_scripture_adherence"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="form-label">Scripture Adherence</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select adherence level" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="The lyrics follow the scripture word-for-word">
+                                Word-for-word
+                              </SelectItem>
+                              <SelectItem value="The lyrics closely follow the scripture passage">
+                                Close paraphrase
+                              </SelectItem>
+                              <SelectItem value="The lyrics are creatively inspired by the scripture passage">
+                                Creative inspiration
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="form-message" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="flex flex-col rounded-lg border p-4">
+                    <FormField
+                      control={form.control}
+                      name="is_continuous_passage"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between">
+                          <div className="space-y-0.5">
+                            <FormLabel className="form-label text-sm sm:text-base">Continuous Passage</FormLabel>
+                            <FormDescription>
+                              Is this a continuous passage?
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
               </TabsContent>
 
               <TabsContent value="Upload">
