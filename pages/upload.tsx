@@ -22,9 +22,11 @@ import {
 import { Check, ChevronsUpDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
-import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS, BIBLE_VERSES } from "@/lib/constants"
+import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useQuery } from 'react-query'
+import axios from 'axios'
 
 const formSchema = z.object({
   // Step 1: AI Info
@@ -220,13 +222,28 @@ export default function Upload() {
   const [bibleVerseSearch, setBibleVerseSearch] = useState('')
   const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>([])
 
+  const [selectedBook, setSelectedBook] = useState<string | null>(null)
+  const [selectedChapter, setSelectedChapter] = useState<string | null>(null)
+
+  const { data: bibleVerses, isLoading } = useQuery(
+    ['bibleVerses', selectedBook, selectedChapter],
+    async () => {
+      if (!selectedBook) return []
+      const response = await axios.get('/api/bible-verses', {
+        params: { book: selectedBook, chapter: selectedChapter },
+      })
+      return response.data
+    },
+    { enabled: !!selectedBook }
+  )
+
   const filteredBibleVerses = useCallback(() => {
-    if (selectedBibleBooks.length === 0) return [];
-    return BIBLE_VERSES.filter(verse =>
-      selectedBibleBooks.includes(verse.book) &&
-      verse.reference.toLowerCase().includes(bibleVerseSearch.toLowerCase())
+    if (!bibleVerses) return []
+    return bibleVerses.filter((verse: any) =>
+      verse.KJV_text.toLowerCase().includes(bibleVerseSearch.toLowerCase()) ||
+      `${verse.book} ${verse.chapter}:${verse.verse}`.toLowerCase().includes(bibleVerseSearch.toLowerCase())
     )
-  }, [bibleVerseSearch, selectedBibleBooks])
+  }, [bibleVerses, bibleVerseSearch])
 
   const bibleVerseRef = useRef<HTMLDivElement>(null)
 
@@ -696,91 +713,65 @@ export default function Upload() {
                   render={({ field }) => (
                     <FormItem className="flex flex-col rounded-lg border p-4">
                       <FormLabel className="form-label">Bible Book(s) Included</FormLabel>
-                      <Popover open={openBibleBooks} onOpenChange={setOpenBibleBooks}>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={openBibleBooks}
-                              className="w-full justify-between"
-                            >
-                              {selectedBibleBooks.length > 0
-                                ? `${selectedBibleBooks.length} selected`
-                                : "Select Bible books..."}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0">
-                          <div className="p-2">
-                            <div className="flex items-center justify-between pb-2">
-                              <Input
-                                placeholder="Search Bible books..."
-                                value={bibleBookSearch}
-                                onChange={(e) => setBibleBookSearch(e.target.value)}
-                                className="mr-2"
-                              />
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={clearBibleBooks}
-                              >
-                                Clear
-                              </Button>
-                            </div>
-                            <div className="max-h-[200px] overflow-y-auto">
-                              {filteredBibleBooks().map((book) => (
-                                <div
-                                  key={book}
-                                  className={cn(
-                                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                                    selectedBibleBooks.includes(book) && "bg-accent"
-                                  )}
-                                  onClick={() => handleBibleBookToggle(book)}
-                                >
-                                  <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                                    {selectedBibleBooks.includes(book) && <Check className="h-3 w-3" />}
-                                  </div>
-                                  {book}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {selectedBibleBooks.map((book) => (
-                          <div
-                            key={book}
-                            className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
-                          >
-                            {book}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="ml-1 h-4 w-4 p-0"
-                              onClick={() => handleBibleBookToggle(book)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                        {selectedBibleBooks.length > 0 && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={clearBibleBooks}
-                            className="mt-1"
-                          >
-                            Clear All
-                          </Button>
-                        )}
-                      </div>
+                      <Select
+                        onValueChange={(value) => {
+                          setSelectedBook(value)
+                          setSelectedChapter(null)
+                          field.onChange(value)
+                        }}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a Bible book" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {BIBLE_BOOKS.map((book) => (
+                            <SelectItem key={book} value={book}>
+                              {book}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage className="form-message" />
                     </FormItem>
                   )}
                 />
+
+                {selectedBook && (
+                  <FormField
+                    control={form.control}
+                    name="bible_chapter"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col rounded-lg border p-4">
+                        <FormLabel className="form-label">Chapter</FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            setSelectedChapter(value)
+                            field.onChange(value)
+                          }}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a chapter" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Array.from({ length: 150 }, (_, i) => i + 1).map((chapter) => (
+                              <SelectItem key={chapter} value={chapter.toString()}>
+                                {chapter}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="form-message" />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 <FormField
                   control={form.control}
                   name="bible_verses"
@@ -795,7 +786,7 @@ export default function Upload() {
                               role="combobox"
                               aria-expanded={openBibleVerses}
                               className="w-full justify-between"
-                              disabled={selectedBibleBooks.length === 0}
+                              disabled={!selectedBook}
                             >
                               {selectedBibleVerses.length > 0
                                 ? `${selectedBibleVerses.length} selected`
@@ -822,21 +813,25 @@ export default function Upload() {
                               </Button>
                             </div>
                             <div className="max-h-[200px] overflow-y-auto">
-                              {filteredBibleVerses().map((verse) => (
-                                <div
-                                  key={verse.reference}
-                                  className={cn(
-                                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                                    selectedBibleVerses.includes(verse.reference) && "bg-accent"
-                                  )}
-                                  onClick={() => handleBibleVerseToggle(verse.reference)}
-                                >
-                                  <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                                    {selectedBibleVerses.includes(verse.reference) && <Check className="h-3 w-3" />}
+                              {isLoading ? (
+                                <div>Loading...</div>
+                              ) : (
+                                filteredBibleVerses().map((verse: any) => (
+                                  <div
+                                    key={`${verse.book} ${verse.chapter}:${verse.verse}`}
+                                    className={cn(
+                                      "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                                      selectedBibleVerses.includes(`${verse.book} ${verse.chapter}:${verse.verse}`) && "bg-accent"
+                                    )}
+                                    onClick={() => handleBibleVerseToggle(`${verse.book} ${verse.chapter}:${verse.verse}`)}
+                                  >
+                                    <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                      {selectedBibleVerses.includes(`${verse.book} ${verse.chapter}:${verse.verse}`) && <Check className="h-3 w-3" />}
+                                    </div>
+                                    {`${verse.book} ${verse.chapter}:${verse.verse}`}
                                   </div>
-                                  {verse.reference}
-                                </div>
-                              ))}
+                                ))
+                              )}
                             </div>
                           </div>
                         </PopoverContent>
