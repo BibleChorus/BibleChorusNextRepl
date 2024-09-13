@@ -22,7 +22,7 @@ import {
 import { Check, ChevronsUpDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
-import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
+import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS, BIBLE_VERSES } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -53,6 +53,7 @@ const formSchema = z.object({
   bible_verse_start: z.string().min(1, "Starting verse is required"),
   bible_verse_end: z.string().optional(),
   bible_books: z.string().min(1, "At least one Bible book is required"),
+  bible_verses: z.string().min(1, "At least one Bible verse is required"),
 
   // Step 4: Upload
   audio_file: z.instanceof(File).optional(),
@@ -213,6 +214,58 @@ export default function Upload() {
   const clearBibleBooks = () => {
     setSelectedBibleBooks([]);
     form.setValue('bible_books', '', { shouldValidate: true });
+  }
+
+  const [openBibleVerses, setOpenBibleVerses] = useState(false)
+  const [bibleVerseSearch, setBibleVerseSearch] = useState('')
+  const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>([])
+
+  const filteredBibleVerses = useCallback(() => {
+    if (selectedBibleBooks.length === 0) return [];
+    return BIBLE_VERSES.filter(verse =>
+      selectedBibleBooks.includes(verse.book) &&
+      verse.reference.toLowerCase().includes(bibleVerseSearch.toLowerCase())
+    )
+  }, [bibleVerseSearch, selectedBibleBooks])
+
+  const bibleVerseRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (genreRef.current && !genreRef.current.contains(event.target as Node)) {
+        setOpenGenre(false)
+      }
+      if (translationRef.current && !translationRef.current.contains(event.target as Node)) {
+        setOpenTranslation(false)
+      }
+      if (bibleBookRef.current && !bibleBookRef.current.contains(event.target as Node)) {
+        setOpenBibleBooks(false)
+      }
+      if (bibleVerseRef.current && !bibleVerseRef.current.contains(event.target as Node)) {
+        setOpenBibleVerses(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  const handleBibleVerseToggle = (verse: string) => {
+    let updatedVerses: string[];
+    if (selectedBibleVerses.includes(verse)) {
+      updatedVerses = selectedBibleVerses.filter(v => v !== verse);
+    } else {
+      updatedVerses = [...selectedBibleVerses, verse];
+    }
+    setSelectedBibleVerses(updatedVerses);
+    form.setValue('bible_verses', updatedVerses.join(', '), { shouldValidate: true });
+  }
+
+  const clearBibleVerses = () => {
+    setSelectedBibleVerses([]);
+    form.setValue('bible_verses', '', { shouldValidate: true });
   }
 
   return (
@@ -718,6 +771,98 @@ export default function Upload() {
                             variant="outline"
                             size="sm"
                             onClick={clearBibleBooks}
+                            className="mt-1"
+                          >
+                            Clear All
+                          </Button>
+                        )}
+                      </div>
+                      <FormMessage className="form-message" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="bible_verses"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col rounded-lg border p-4">
+                      <FormLabel className="form-label">Bible Verses Covered</FormLabel>
+                      <Popover open={openBibleVerses} onOpenChange={setOpenBibleVerses}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openBibleVerses}
+                              className="w-full justify-between"
+                              disabled={selectedBibleBooks.length === 0}
+                            >
+                              {selectedBibleVerses.length > 0
+                                ? `${selectedBibleVerses.length} selected`
+                                : "Select Bible verses..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0" ref={bibleVerseRef}>
+                          <div className="p-2">
+                            <div className="flex items-center justify-between pb-2">
+                              <Input
+                                placeholder="Search Bible verses..."
+                                value={bibleVerseSearch}
+                                onChange={(e) => setBibleVerseSearch(e.target.value)}
+                                className="mr-2"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={clearBibleVerses}
+                              >
+                                Clear
+                              </Button>
+                            </div>
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {filteredBibleVerses().map((verse) => (
+                                <div
+                                  key={verse.reference}
+                                  className={cn(
+                                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                                    selectedBibleVerses.includes(verse.reference) && "bg-accent"
+                                  )}
+                                  onClick={() => handleBibleVerseToggle(verse.reference)}
+                                >
+                                  <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                    {selectedBibleVerses.includes(verse.reference) && <Check className="h-3 w-3" />}
+                                  </div>
+                                  {verse.reference}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {selectedBibleVerses.map((verse) => (
+                          <div
+                            key={verse}
+                            className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                          >
+                            {verse}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-1 h-4 w-4 p-0"
+                              onClick={() => handleBibleVerseToggle(verse)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                        {selectedBibleVerses.length > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={clearBibleVerses}
                             className="mt-1"
                           >
                             Clear All
