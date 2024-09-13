@@ -30,9 +30,9 @@ const formSchema = z.object({
   // Step 1: AI Info
   ai_used_for_lyrics: z.boolean(),
   music_ai_generated: z.boolean(),
-  lyric_ai_prompt: z.string().optional(),
-  music_model_used: z.string().optional(),
-  music_ai_prompt: z.string().optional(),
+  lyric_ai_prompt: z.string().min(1, "Lyric AI prompt is required"),
+  music_model_used: z.string().min(1, "Music model is required"),
+  music_ai_prompt: z.string().min(1, "Music AI prompt is required"),
 
   // Step 2: Song Info
   title: z.string().min(1, "Title is required"),
@@ -57,15 +57,20 @@ const formSchema = z.object({
   audio_file: z.instanceof(File).optional(),
   song_art_file: z.instanceof(File).optional(),
 }).refine((data) => {
-  if (data.ai_used_for_lyrics && (!data.lyric_ai_prompt || data.lyric_ai_prompt.trim() === '')) {
+  if (data.ai_used_for_lyrics && (!data.lyric_ai_prompt || data.lyric_ai_prompt.trim().length === 0)) {
     return false;
   }
-  if (data.music_ai_generated && (!data.music_model_used || !data.music_ai_prompt || data.music_ai_prompt.trim() === '')) {
-    return false;
+  if (data.music_ai_generated) {
+    if (!data.music_model_used || data.music_model_used.trim().length === 0) {
+      return false;
+    }
+    if (!data.music_ai_prompt || data.music_ai_prompt.trim().length === 0) {
+      return false;
+    }
   }
   return true;
 }, {
-  message: "AI prompts and model are required when AI is used",
+  message: "Required fields are missing",
   path: ["lyric_ai_prompt", "music_model_used", "music_ai_prompt"],
 });
 
@@ -138,9 +143,17 @@ export default function Upload() {
     form.setValue('genre', '', { shouldValidate: true });
   }
 
+  const [showValidationMessages, setShowValidationMessages] = useState(false)
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     console.log(values)
     // Handle form submission here
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setShowValidationMessages(true)
+    form.handleSubmit(onSubmit)(e)
   }
 
   const steps = ["AI Info", "Song Info", "Bible Info", "Upload"]
@@ -149,7 +162,7 @@ export default function Upload() {
 
   useEffect(() => {
     if (!watchAiUsedForLyrics) {
-      form.setValue("lyric_ai_prompt", undefined);
+      form.setValue("lyric_ai_prompt", undefined ?? "");
     }
     form.trigger("lyric_ai_prompt");
   }, [watchAiUsedForLyrics, form]);
@@ -165,7 +178,7 @@ export default function Upload() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-8 pt-4 sm:pt-6 md:pt-8 lg:pt-10 xl:pt-12">Upload Songs</h1>
         
         <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-8">
             <Tabs value={steps[currentStep]} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 {steps.map((step, index) => (
@@ -198,7 +211,7 @@ export default function Upload() {
                             onCheckedChange={(checked) => {
                               field.onChange(checked);
                               if (!checked) {
-                                form.setValue("lyric_ai_prompt", undefined, { shouldValidate: true });
+                                form.setValue("lyric_ai_prompt", undefined ?? "", { shouldValidate: true });
                               } else {
                                 form.trigger("lyric_ai_prompt");
                               }
@@ -221,11 +234,14 @@ export default function Upload() {
                                   value={field.value || ""}
                                   onChange={(e) => {
                                     field.onChange(e);
-                                    form.trigger("lyric_ai_prompt");
+                                    if (showValidationMessages) {
+                                      form.trigger();
+                                    }
                                   }}
+                                  required={form.watch("ai_used_for_lyrics")}
                                 />
                               </FormControl>
-                              <FormMessage />
+                              {showValidationMessages && <FormMessage />}
                             </FormItem>
                           )}
                         />
@@ -251,8 +267,8 @@ export default function Upload() {
                             onCheckedChange={(checked) => {
                               field.onChange(checked);
                               if (!checked) {
-                                form.setValue("music_model_used", undefined, { shouldValidate: true });
-                                form.setValue("music_ai_prompt", undefined, { shouldValidate: true });
+                                form.setValue("music_model_used", "", { shouldValidate: true });
+                                form.setValue("music_ai_prompt", "", { shouldValidate: true });
                               } else {
                                 form.trigger("music_model_used");
                                 form.trigger("music_ai_prompt");
@@ -269,7 +285,16 @@ export default function Upload() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>AI Music Model</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select 
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    if (showValidationMessages) {
+                                      form.trigger();
+                                    }
+                                  }}
+                                  value={field.value}
+                                  required={form.watch("music_ai_generated")}
+                                >
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select AI music model" />
@@ -283,7 +308,7 @@ export default function Upload() {
                                     ))}
                                   </SelectContent>
                                 </Select>
-                                <FormMessage />
+                                {showValidationMessages && <FormMessage />}
                               </FormItem>
                             )}
                           />
@@ -301,11 +326,14 @@ export default function Upload() {
                                     value={field.value || ""}
                                     onChange={(e) => {
                                       field.onChange(e);
-                                      form.trigger("music_ai_prompt");
+                                      if (showValidationMessages) {
+                                        form.trigger();
+                                      }
                                     }}
+                                    required={form.watch("music_ai_generated")}
                                   />
                                 </FormControl>
-                                <FormMessage />
+                                {showValidationMessages && <FormMessage />}
                               </FormItem>
                             )}
                           />
