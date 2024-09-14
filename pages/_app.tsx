@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import { ThemeProvider } from 'next-themes'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { QueryClient, QueryClientProvider } from 'react-query'
+import { Toaster } from "@/components/ui/sonner"
 
 const queryClient = new QueryClient()
 
@@ -29,6 +30,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           )}
         </ThemeProvider>
       </AuthProvider>
+      <Toaster />
     </QueryClientProvider>
   )
 }

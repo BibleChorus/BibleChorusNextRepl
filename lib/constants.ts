@@ -86,10 +86,5 @@ export const BIBLE_TRANSLATIONS = [
   'HCSB', // Holman Christian Standard Bible
   'NET', // New English Translation
   'RSV', // Revised Standard Version
-];
-
-export const BIBLE_VERSES = [
-  { book: 'Genesis', reference: 'Genesis 1:1' },
-  { book: 'Genesis', reference: 'Genesis 1:2' },
-  // ... add more verses for each book
+  'Other', // Other Bible Translation
 ];

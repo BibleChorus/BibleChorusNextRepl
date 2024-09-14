@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useQuery } from 'react-query'
 import axios from 'axios'
+import { toast } from "sonner";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 
 const formSchema = z.object({
   // Step 1: AI Info
@@ -98,6 +100,7 @@ export default function Upload() {
   const [genreSearch, setGenreSearch] = useState('')
   const [translationSearch, setTranslationSearch] = useState('')
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
+  const [selectedTranslation, setSelectedTranslation] = useState<string>('')
 
   const filteredGenres = useCallback(() => {
     return GENRES.filter(genre =>
@@ -164,6 +167,41 @@ export default function Upload() {
   const steps = ["AI Info", "Song Info", "Bible Info", "Upload"]
 
   const watchAiUsedForLyrics = form.watch("ai_used_for_lyrics");
+  const watchScriptureAdherence = form.watch("lyrics_scripture_adherence");
+
+  const handleAILyricsChange = (checked: boolean) => {
+    if (watchScriptureAdherence === "The lyrics follow the scripture word-for-word") {
+      toast.info("Cannot enable AI for lyrics when Word-for-word adherence is selected.", {
+        duration: 5000,
+        action: {
+          label: "Close",
+          onClick: () => toast.dismiss(),
+        },
+      });
+    } else {
+      form.setValue("ai_used_for_lyrics", checked);
+      if (!checked) {
+        form.setValue("lyric_ai_prompt", undefined ?? "", { shouldValidate: true });
+      } else {
+        form.trigger("lyric_ai_prompt");
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (watchScriptureAdherence === "The lyrics follow the scripture word-for-word") {
+      if (watchAiUsedForLyrics) {
+        form.setValue("ai_used_for_lyrics", false);
+        toast.info("AI used for lyrics has been set to No as Word-for-word adherence was selected.", {
+          duration: 5000,
+          action: {
+            label: "Close",
+            onClick: () => toast.dismiss(),
+          },
+        });
+      }
+    }
+  }, [watchScriptureAdherence, watchAiUsedForLyrics, form]);
 
   useEffect(() => {
     if (!watchAiUsedForLyrics) {
@@ -364,19 +402,26 @@ export default function Upload() {
                             Was AI used to generate the lyrics?
                           </FormDescription>
                         </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={(checked) => {
-                              field.onChange(checked);
-                              if (!checked) {
-                                form.setValue("lyric_ai_prompt", undefined ?? "", { shouldValidate: true });
-                              } else {
-                                form.trigger("lyric_ai_prompt");
-                              }
-                            }}
-                          />
-                        </FormControl>
+                        <HoverCard>
+                          <HoverCardTrigger asChild>
+                            <div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={handleAILyricsChange}
+                                  disabled={watchScriptureAdherence === "The lyrics follow the scripture word-for-word"}
+                                />
+                              </FormControl>
+                            </div>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-80">
+                            {watchScriptureAdherence === "The lyrics follow the scripture word-for-word" ? (
+                              <p>Cannot enable AI for lyrics when Word-for-word adherence is selected.</p>
+                            ) : (
+                              <p>Toggle to indicate if AI was used to generate the lyrics.</p>
+                            )}
+                          </HoverCardContent>
+                        </HoverCard>
                       </div>
                       {watchAiUsedForLyrics && (
                         <FormField
@@ -940,20 +985,66 @@ export default function Upload() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="form-label">Bible Translation Used</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Bible translation" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {BIBLE_TRANSLATIONS.map((translation) => (
-                                <SelectItem key={translation} value={translation}>
-                                  {translation}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <Popover open={openTranslation} onOpenChange={setOpenTranslation}>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={openTranslation}
+                                  className="w-full justify-between"
+                                >
+                                  {field.value || "Select Bible translation..."}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0" ref={translationRef}>
+                              <div className="p-2">
+                                <div className="flex items-center justify-between pb-2">
+                                  <Input
+                                    placeholder="Search translations..."
+                                    value={translationSearch}
+                                    onChange={(e) => setTranslationSearch(e.target.value)}
+                                    className="mr-2"
+                                  />
+                                  {field.value && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        field.onChange('')
+                                        setSelectedTranslation('')
+                                      }}
+                                    >
+                                      Clear
+                                    </Button>
+                                  )}
+                                </div>
+                                <div className="max-h-[200px] overflow-y-auto">
+                                  {filteredTranslations().map((translation) => (
+                                    <div
+                                      key={translation}
+                                      className={cn(
+                                        "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                                        field.value === translation && "bg-accent"
+                                      )}
+                                      onClick={() => {
+                                        field.onChange(translation)
+                                        setSelectedTranslation(translation)
+                                        setOpenTranslation(false)
+                                      }}
+                                    >
+                                      <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                        {field.value === translation && <Check className="h-3 w-3" />}
+                                      </div>
+                                      {translation}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
                           <FormMessage className="form-message" />
                         </FormItem>
                       )}
@@ -967,7 +1058,22 @@ export default function Upload() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="form-label">Scripture Adherence</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select 
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              if (value === "The lyrics follow the scripture word-for-word" && watchAiUsedForLyrics) {
+                                form.setValue("ai_used_for_lyrics", false);
+                                toast.info("AI used for lyrics has been set to No as Word-for-word adherence was selected.", {
+                                  duration: 5000,
+                                  action: {
+                                    label: "Close",
+                                    onClick: () => toast.dismiss(),
+                                  },
+                                });
+                              }
+                            }} 
+                            defaultValue={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select adherence level" />
