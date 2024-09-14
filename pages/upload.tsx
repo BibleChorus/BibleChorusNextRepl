@@ -357,12 +357,52 @@ export default function Upload() {
     }
     setSelectedBibleVerses(updatedVerses);
     form.setValue('bible_verses', updatedVerses.join(', '), { shouldValidate: true });
-  }
+    
+    const isContinuous = areVersesContinuous(updatedVerses);
+    form.setValue('is_continuous_passage', isContinuous, { shouldValidate: true });
+  };
 
   const clearBibleVerses = () => {
     setSelectedBibleVerses([]);
     form.setValue('bible_verses', '', { shouldValidate: true });
   }
+
+  const areVersesContinuous = (verses: string[]) => {
+    if (verses.length === 0) return false;
+    const sortedVerses = verses.sort((a, b) => {
+      const [bookA, chapterVerseA] = a.split(' ');
+      const [bookB, chapterVerseB] = b.split(' ');
+      if (bookA !== bookB) return bookA.localeCompare(bookB);
+      const [chapterA, verseA] = chapterVerseA.split(':').map(Number);
+      const [chapterB, verseB] = chapterVerseB.split(':').map(Number);
+      if (chapterA !== chapterB) return chapterA - chapterB;
+      return verseA - verseB;
+    });
+
+    let prevBook = '', prevChapter = 0, prevVerse = 0;
+    for (let i = 0; i < sortedVerses.length; i++) {
+      const [book, chapterVerse] = sortedVerses[i].split(' ');
+      const [chapter, verse] = chapterVerse.split(':').map(Number);
+      
+      if (i > 0) {
+        if (book !== prevBook) return false;
+        if (chapter === prevChapter && verse !== prevVerse + 1) return false;
+        if (chapter !== prevChapter && (chapter !== prevChapter + 1 || verse !== 1)) return false;
+      }
+
+      prevBook = book;
+      prevChapter = chapter;
+      prevVerse = verse;
+    }
+    return true;
+  };
+
+  useEffect(() => {
+    if (selectedBibleVerses.length > 0) {
+      const isContinuous = areVersesContinuous(selectedBibleVerses);
+      form.setValue('is_continuous_passage', isContinuous, { shouldValidate: true });
+    }
+  }, [selectedBibleVerses, form]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -1068,7 +1108,7 @@ export default function Upload() {
                                   action: {
                                     label: "Close",
                                     onClick: () => toast.dismiss(),
-                                  },
+                                  } as any,
                                 });
                               }
                             }} 
@@ -1102,17 +1142,19 @@ export default function Upload() {
                       control={form.control}
                       name="is_continuous_passage"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between">
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
-                            <FormLabel className="form-label text-sm sm:text-base">Continuous Passage</FormLabel>
+                            <FormLabel className="text-base">Continuous Passage</FormLabel>
                             <FormDescription>
-                              Is this a continuous passage?
+                              Is this a continuous passage of scripture?
                             </FormDescription>
                           </div>
                           <FormControl>
                             <Switch
                               checked={field.value}
                               onCheckedChange={field.onChange}
+                              disabled={selectedBibleVerses.length > 0}
+                              aria-readonly={selectedBibleVerses.length > 0}
                             />
                           </FormControl>
                         </FormItem>
