@@ -727,7 +727,7 @@ export default function Upload() {
               </TabsContent>
 
               <TabsContent value="Bible Info">
-                <div className="flex flex-col">
+                <div className="flex flex-col space-y-4">
                   <div className="flex flex-col rounded-lg border p-4">
                     <FormField
                       control={form.control}
@@ -1108,7 +1108,7 @@ export default function Upload() {
                                   action: {
                                     label: "Close",
                                     onClick: () => toast.dismiss(),
-                                  } as any,
+                                  },
                                 });
                               }
                             }} 
@@ -1142,7 +1142,7 @@ export default function Upload() {
                       control={form.control}
                       name="is_continuous_passage"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <FormItem className="flex flex-row items-center justify-between">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base">Continuous Passage</FormLabel>
                             <FormDescription>
