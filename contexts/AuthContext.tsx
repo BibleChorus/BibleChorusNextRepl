@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
 interface User {
+  id: string; // Add the id field
   username: string;
   email: string;
   profile_image_url?: string;

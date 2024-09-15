@@ -9,10 +9,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { fileType, fileExtension, title } = req.body;
+  const { fileType, fileExtension, title, userId } = req.body;
 
-  if (!fileType || !fileExtension) {
-    return res.status(400).json({ message: 'File type and extension are required' });
+  if (!fileType || !fileExtension || !userId) {
+    return res.status(400).json({ message: 'File type, extension, and user ID are required' });
   }
 
   // Format current date and time
@@ -28,13 +28,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let fileKey: string;
 
   if (fileType.startsWith('audio/')) {
-    // Audio files: uploads/user/audio/yyyyMMddhhMMss.FILENAME.EXT
+    // Audio files: uploads/userId/audio/yyyyMMddhhMMss.FILENAME.EXT
     fileName = `${formattedDate}.${sanitizedTitle}.${fileExtension}`;
-    fileKey = `uploads/audio_files/${fileName}`;
+    fileKey = `uploads/${userId}/audio/${fileName}`;
   } else if (fileType.startsWith('image/')) {
-    // Image files: uploads/user/song_art/yyyyMMddhhMMss.FILENAME.EXT
+    // Image files: uploads/userId/song_art/yyyyMMddhhMMss.FILENAME.EXT
     fileName = `${formattedDate}.${sanitizedTitle}.${fileExtension}`;
-    fileKey = `uploads/images/song_art/${fileName}`;
+    fileKey = `uploads/${userId}/song_art/${fileName}`;
   } else {
     return res.status(400).json({ message: 'Unsupported file type' });
   }
@@ -42,6 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   console.log('Received fileType:', fileType);
   console.log('Received fileExtension:', fileExtension);
   console.log('Received title:', title);
+  console.log('Received userId:', userId);
 
   const command = new PutObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET_NAME,

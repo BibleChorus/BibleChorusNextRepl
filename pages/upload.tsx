@@ -30,6 +30,7 @@ import axios from 'axios'
 import { toast } from "sonner";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Progress } from "@/components/ui/progress"
+import { useAuth } from '@/contexts/AuthContext';
 
 const formSchema = z.object({
   // Step 1: AI Info
@@ -87,6 +88,7 @@ const formSchema = z.object({
 });
 
 export default function Upload() {
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -179,6 +181,7 @@ export default function Upload() {
         fileType: file.type, // Changed from 'audio'/'image' to actual MIME type (e.g., 'audio/wav')
         fileExtension,
         title,
+        userId: user?.id, // Add this line to send the user ID
       });
 
       // Upload the file to S3
