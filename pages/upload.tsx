@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useForm, FormProvider, Controller } from "react-hook-form"
+import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -29,6 +29,7 @@ import { useQuery } from 'react-query'
 import axios from 'axios'
 import { toast } from "sonner";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
+import { Progress } from "@/components/ui/progress"
 
 const formSchema = z.object({
   // Step 1: AI Info
@@ -63,6 +64,10 @@ const formSchema = z.object({
   // Step 4: Upload
   audio_file: z.instanceof(File).optional(),
   song_art_file: z.instanceof(File).optional(),
+
+  // Include URLs after upload
+  audio_url: z.string().optional(),
+  song_art_url: z.string().optional(),
 }).refine((data) => {
   if (data.ai_used_for_lyrics && (!data.lyric_ai_prompt || data.lyric_ai_prompt.trim().length === 0)) {
     return false;
@@ -153,10 +158,67 @@ export default function Upload() {
 
   const [showValidationMessages, setShowValidationMessages] = useState(false)
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values)
-    // Handle form submission here
-  }
+  const [audioUploadProgress, setAudioUploadProgress] = useState(0);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
+  const [audioUploadStatus, setAudioUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [imageUploadStatus, setImageUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+
+  const uploadFile = async (file: File, fileType: 'audio' | 'image') => {
+    const fileExtension = file.name.split('.').pop();
+    const contentType = file.type;
+    const setProgress = fileType === 'audio' ? setAudioUploadProgress : setImageUploadProgress;
+    const setStatus = fileType === 'audio' ? setAudioUploadStatus : setImageUploadStatus;
+
+    // Retrieve the title from the form
+    const title = form.getValues("title") || file.name.split('.')[0];
+
+    try {
+      setStatus('uploading');
+      // Include title in the upload-url request
+      const { data } = await axios.post('/api/upload-url', {
+        fileType: file.type, // Changed from 'audio'/'image' to actual MIME type (e.g., 'audio/wav')
+        fileExtension,
+        title,
+      });
+
+      // Upload the file to S3
+      await axios.put(data.signedUrl, file, {
+        headers: {
+          'Content-Type': contentType,
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total!);
+          setProgress(percentCompleted);
+        },
+      });
+
+      setStatus('success');
+      return data.fileKey;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setStatus('error');
+      throw error;
+    }
+  };
+
+  // Remove upload logic from onSubmit to prevent duplicate uploads
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      // Ensure that audio_url and song_art_url are already set via upload handlers
+      const formData = {
+        ...values,
+        // audio_url and song_art_url are set during file upload
+      };
+
+      // Send the form data to your backend
+      await axios.post('/api/submit-song', formData);
+
+      toast.success('Song uploaded successfully!');
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Error uploading song. Please try again.');
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -375,6 +437,7 @@ export default function Upload() {
       if (bookA !== bookB) return bookA.localeCompare(bookB);
       const [chapterA, verseA] = chapterVerseA.split(':').map(Number);
       const [chapterB, verseB] = chapterVerseB.split(':').map(Number);
+      
       if (chapterA !== chapterB) return chapterA - chapterB;
       return verseA - verseB;
     });
@@ -1182,6 +1245,7 @@ export default function Upload() {
               </TabsContent>
 
               <TabsContent value="Upload">
+                {/* Audio File Upload */}
                 <FormField
                   control={form.control}
                   name="audio_file"
@@ -1192,13 +1256,39 @@ export default function Upload() {
                         <Input
                           type="file"
                           accept="audio/*"
-                          onChange={(e) => field.onChange(e.target.files?.[0])}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              field.onChange(file);
+                              setAudioUploadStatus('uploading');
+                              setAudioUploadProgress(0);
+                              try {
+                                const fileKey = await uploadFile(file, 'audio');
+                                form.setValue('audio_url', fileKey, { shouldValidate: true });
+                                setAudioUploadStatus('success');
+                              } catch (error) {
+                                setAudioUploadStatus('error');
+                              }
+                            }
+                          }}
                         />
                       </FormControl>
+                      {audioUploadStatus !== 'idle' && (
+                        <div className="mt-2">
+                          <Progress value={audioUploadProgress} className="w-full" />
+                          <p className="text-sm mt-1">
+                            {audioUploadStatus === 'uploading' && `Uploading: ${audioUploadProgress}%`}
+                            {audioUploadStatus === 'success' && 'Upload successful!'}
+                            {audioUploadStatus === 'error' && 'Upload failed. Please try again.'}
+                          </p>
+                        </div>
+                      )}
                       <FormMessage className="form-message" />
                     </FormItem>
                   )}
                 />
+
+                {/* Song Art Upload */}
                 <FormField
                   control={form.control}
                   name="song_art_file"
@@ -1209,9 +1299,33 @@ export default function Upload() {
                         <Input
                           type="file"
                           accept="image/*"
-                          onChange={(e) => field.onChange(e.target.files?.[0])}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              field.onChange(file);
+                              setImageUploadStatus('uploading');
+                              setImageUploadProgress(0);
+                              try {
+                                const fileKey = await uploadFile(file, 'image');
+                                form.setValue('song_art_url', fileKey, { shouldValidate: true });
+                                setImageUploadStatus('success');
+                              } catch (error) {
+                                setImageUploadStatus('error');
+                              }
+                            }
+                          }}
                         />
                       </FormControl>
+                      {imageUploadStatus !== 'idle' && (
+                        <div className="mt-2">
+                          <Progress value={imageUploadProgress} className="w-full" />
+                          <p className="text-sm mt-1">
+                            {imageUploadStatus === 'uploading' && `Uploading: ${imageUploadProgress}%`}
+                            {imageUploadStatus === 'success' && 'Upload successful!'}
+                            {imageUploadStatus === 'error' && 'Upload failed. Please try again.'}
+                          </p>
+                        </div>
+                      )}
                       <FormMessage className="form-message" />
                     </FormItem>
                   )}
