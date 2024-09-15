@@ -1290,6 +1290,9 @@ export default function Upload() {
                                     setAudioUploadStatus('idle');
                                     setAudioUploadProgress(0);
                                     toast.success('Audio file removed successfully');
+                                    // Reset the file input
+                                    const fileInput = document.querySelector('input[type="file"][accept="audio/*"]') as HTMLInputElement;
+                                    if (fileInput) fileInput.value = '';
                                   } else {
                                     throw new Error(response.data.message || 'Failed to remove audio file');
                                   }
@@ -1361,6 +1364,9 @@ export default function Upload() {
                                     setImageUploadStatus('idle');
                                     setImageUploadProgress(0);
                                     toast.success('Song art removed successfully');
+                                    // Reset the file input
+                                    const fileInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
+                                    if (fileInput) fileInput.value = '';
                                   } else {
                                     throw new Error(response.data.message || 'Failed to remove song art');
                                   }
