@@ -19,7 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, X } from "lucide-react"
+import { Check, ChevronsUpDown, X, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
 import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
@@ -1256,25 +1256,53 @@ export default function Upload() {
                     <FormItem className="rounded-lg border p-4">
                       <FormLabel className="form-label">Audio File</FormLabel>
                       <FormControl>
-                        <Input
-                          type="file"
-                          accept="audio/*"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              field.onChange(file);
-                              setAudioUploadStatus('uploading');
-                              setAudioUploadProgress(0);
-                              try {
-                                const fileKey = await uploadFile(file, 'audio');
-                                form.setValue('audio_url', fileKey, { shouldValidate: true });
-                                setAudioUploadStatus('success');
-                              } catch (error) {
-                                setAudioUploadStatus('error');
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            type="file"
+                            accept="audio/*"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                field.onChange(file);
+                                setAudioUploadStatus('uploading');
+                                setAudioUploadProgress(0);
+                                try {
+                                  const fileKey = await uploadFile(file, 'audio');
+                                  form.setValue('audio_url', fileKey, { shouldValidate: true });
+                                  setAudioUploadStatus('success');
+                                } catch (error) {
+                                  setAudioUploadStatus('error');
+                                }
                               }
-                            }
-                          }}
-                        />
+                            }}
+                          />
+                          {audioUploadStatus === 'success' && (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              onClick={async () => {
+                                try {
+                                  const response = await axios.delete('/api/delete-file', { data: { fileKey: form.getValues('audio_url') } });
+                                  if (response.status === 200) {
+                                    form.setValue('audio_file', undefined, { shouldValidate: true });
+                                    form.setValue('audio_url', undefined, { shouldValidate: true });
+                                    setAudioUploadStatus('idle');
+                                    setAudioUploadProgress(0);
+                                    toast.success('Audio file removed successfully');
+                                  } else {
+                                    throw new Error(response.data.message || 'Failed to remove audio file');
+                                  }
+                                } catch (error) {
+                                  console.error('Error removing audio file:', error.response?.data || error.message);
+                                  toast.error(`Failed to remove audio file: ${error.response?.data?.message || error.message}`);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </FormControl>
                       {audioUploadStatus !== 'idle' && (
                         <div className="mt-2">
@@ -1299,25 +1327,53 @@ export default function Upload() {
                     <FormItem className="rounded-lg border p-4">
                       <FormLabel className="form-label">Song Art</FormLabel>
                       <FormControl>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              field.onChange(file);
-                              setImageUploadStatus('uploading');
-                              setImageUploadProgress(0);
-                              try {
-                                const fileKey = await uploadFile(file, 'image');
-                                form.setValue('song_art_url', fileKey, { shouldValidate: true });
-                                setImageUploadStatus('success');
-                              } catch (error) {
-                                setImageUploadStatus('error');
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                field.onChange(file);
+                                setImageUploadStatus('uploading');
+                                setImageUploadProgress(0);
+                                try {
+                                  const fileKey = await uploadFile(file, 'image');
+                                  form.setValue('song_art_url', fileKey, { shouldValidate: true });
+                                  setImageUploadStatus('success');
+                                } catch (error) {
+                                  setImageUploadStatus('error');
+                                }
                               }
-                            }
-                          }}
-                        />
+                            }}
+                          />
+                          {imageUploadStatus === 'success' && (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              onClick={async () => {
+                                try {
+                                  const response = await axios.delete('/api/delete-file', { data: { fileKey: form.getValues('song_art_url') } });
+                                  if (response.status === 200) {
+                                    form.setValue('song_art_file', undefined, { shouldValidate: true });
+                                    form.setValue('song_art_url', undefined, { shouldValidate: true });
+                                    setImageUploadStatus('idle');
+                                    setImageUploadProgress(0);
+                                    toast.success('Song art removed successfully');
+                                  } else {
+                                    throw new Error(response.data.message || 'Failed to remove song art');
+                                  }
+                                } catch (error) {
+                                  console.error('Error removing song art:', error.response?.data || error.message);
+                                  toast.error(`Failed to remove song art: ${error.response?.data?.message || error.message}`);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </FormControl>
                       {imageUploadStatus !== 'idle' && (
                         <div className="mt-2">
