@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useForm, FormProvider } from "react-hook-form"
+import { useForm, FormProvider, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -727,7 +727,7 @@ export default function Upload() {
               </TabsContent>
 
               <TabsContent value="Bible Info">
-                <div className="flex flex-col space-y-4">
+                <div className="flex flex-col space-y-0">
                   <div className="flex flex-col rounded-lg border p-4">
                     <FormField
                       control={form.control}
@@ -1149,14 +1149,31 @@ export default function Upload() {
                               Is this a continuous passage of scripture?
                             </FormDescription>
                           </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              disabled={selectedBibleVerses.length > 0}
-                              aria-readonly={selectedBibleVerses.length > 0}
-                            />
-                          </FormControl>
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <div>
+                                <FormControl>
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    disabled={selectedBibleVerses.length > 0}
+                                    aria-readonly={selectedBibleVerses.length > 0}
+                                  />
+                                </FormControl>
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-80">
+                              {selectedBibleVerses.length > 0 ? (
+                                field.value ? (
+                                  <p>This is set to true because the selected Bible verses form a continuous passage.</p>
+                                ) : (
+                                  <p>This is set to false because the selected Bible verses do not form a continuous passage.</p>
+                                )
+                              ) : (
+                                <p>Select Bible verses to determine if they form a continuous passage.</p>
+                              )}
+                            </HoverCardContent>
+                          </HoverCard>
                         </FormItem>
                       )}
                     />
