@@ -3,6 +3,10 @@ import { useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 
+interface UploadProgressBarProps {
+  onProgressChange: (progress: number) => void;
+}
+
 const steps = [
   { name: "AI Info", fields: ["ai_used_for_lyrics", "music_ai_generated", "lyric_ai_prompt", "music_model_used", "music_ai_prompt"] },
   { name: "Song Info", fields: ["title", "genre", "lyrics"] },
@@ -10,7 +14,7 @@ const steps = [
   { name: "Upload", fields: ["audio_url", "song_art_url"] }
 ];
 
-const UploadProgressBar: React.FC = () => {
+const UploadProgressBar: React.FC<UploadProgressBarProps> = ({ onProgressChange }) => {
   const { watch } = useFormContext();
   const watchedFields = watch();
   const [progress, setProgress] = useState(0);
@@ -37,7 +41,8 @@ const UploadProgressBar: React.FC = () => {
   useEffect(() => {
     const newProgress = calculateProgress();
     setProgress(newProgress);
-  }, [watchedFields]);
+    onProgressChange(newProgress); // Emit progress to parent
+  }, [watchedFields, onProgressChange]);
 
   return (
     <div className="w-full space-y-2">

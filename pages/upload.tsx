@@ -34,6 +34,7 @@ import { ImageCropper } from '@/components/ImageCropper'
 import { useAuth } from '@/contexts/AuthContext';
 import { Modal } from '@/components/Modal'
 import UploadProgressBar from '@/components/UploadProgressBar';
+import GradientButton from '@/components/GradientButton'; // Import GradientButton
 
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -96,6 +97,8 @@ const formSchema = z.object({
 export default function Upload() {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0)
+  const [progress, setProgress] = useState(0); // Add progress state
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -574,7 +577,7 @@ export default function Upload() {
         
         <FormProvider {...form}>
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-8">
-            <UploadProgressBar />
+            <UploadProgressBar onProgressChange={setProgress} /> {/* Pass setProgress */}
             
             <Tabs value={steps[currentStep]} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
@@ -1505,14 +1508,17 @@ export default function Upload() {
               </TabsContent>
             </Tabs>
 
-            <div className="flex justify-between">
-              <Button
-                type="button"
-                onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-                disabled={currentStep === 0}
-              >
-                Previous
-              </Button>
+            <div className="flex justify-between items-center">
+              {currentStep > 0 ? (
+                <Button
+                  type="button"
+                  onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                >
+                  Previous
+                </Button>
+              ) : (
+                <div /> // Empty div as placeholder when there's no Previous button
+              )}
               {currentStep < steps.length - 1 ? (
                 <Button
                   type="button"
@@ -1521,7 +1527,9 @@ export default function Upload() {
                   Next
                 </Button>
               ) : (
-                <Button type="submit">Submit</Button>
+                <GradientButton type="submit" progress={progress}>
+                  Submit
+                </GradientButton>
               )}
             </div>
           </form>
