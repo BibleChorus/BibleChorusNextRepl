@@ -55,6 +55,12 @@ module.exports = {
           50: 'hsl(var(--lavender-50))',
           100: 'hsl(var(--lavender-100))',
         },
+        purple: {
+          500: '#8B5CF6', // Adjust this color as needed
+        },
+        pink: {
+          500: '#EC4899', // Adjust this color as needed
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

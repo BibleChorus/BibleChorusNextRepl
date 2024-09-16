@@ -33,6 +33,7 @@ import { Progress } from "@/components/ui/progress"
 import { ImageCropper } from '@/components/ImageCropper'
 import { useAuth } from '@/contexts/AuthContext';
 import { Modal } from '@/components/Modal'
+import UploadProgressBar from '@/components/UploadProgressBar';
 
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -241,6 +242,14 @@ export default function Upload() {
       setStatus('success');
       setUploadedFiles(prev => [...prev, data.fileKey]);
       console.log('File uploaded:', data.fileKey);
+
+      // Set the corresponding form field
+      if (fileType === 'audio') {
+        form.setValue('audio_url', data.fileKey, { shouldValidate: true });
+      } else if (fileType === 'image') {
+        form.setValue('song_art_url', data.fileKey, { shouldValidate: true });
+      }
+
       return data.fileKey;
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -538,12 +547,10 @@ export default function Upload() {
     setCroppedImage(croppedFile)
     setIsModalOpen(false)
     
-    // Start upload process
     setImageUploadStatus('uploading')
     setImageUploadProgress(0)
     try {
-      const fileKey = await uploadFile(croppedFile, 'image')
-      form.setValue('song_art_url', fileKey, { shouldValidate: true })
+      await uploadFile(croppedFile, 'image')
       setImageUploadStatus('success')
     } catch (error) {
       setImageUploadStatus('error')
@@ -567,6 +574,8 @@ export default function Upload() {
         
         <FormProvider {...form}>
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-8">
+            <UploadProgressBar />
+            
             <Tabs value={steps[currentStep]} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 {steps.map((step, index) => (
@@ -1356,8 +1365,7 @@ export default function Upload() {
                                 setAudioUploadStatus('uploading');
                                 setAudioUploadProgress(0);
                                 try {
-                                  const fileKey = await uploadFile(file, 'audio');
-                                  form.setValue('audio_url', fileKey, { shouldValidate: true });
+                                  await uploadFile(file, 'audio');
                                   setAudioUploadStatus('success');
                                 } catch (error) {
                                   setAudioUploadStatus('error');
