@@ -34,6 +34,9 @@ import { ImageCropper } from '@/components/ImageCropper'
 import { useAuth } from '@/contexts/AuthContext';
 import { Modal } from '@/components/Modal'
 
+const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
+const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
 const formSchema = z.object({
   // Step 1: AI Info
   ai_used_for_lyrics: z.boolean(),
@@ -193,21 +196,33 @@ export default function Upload() {
     const setProgress = fileType === 'audio' ? setAudioUploadProgress : setImageUploadProgress;
     const setStatus = fileType === 'audio' ? setAudioUploadStatus : setImageUploadStatus;
 
+    // Check file size
+    const maxSize = fileType === 'audio' ? MAX_AUDIO_FILE_SIZE : MAX_IMAGE_FILE_SIZE;
+    if (file.size > maxSize) {
+      const sizeInMB = maxSize / (1024 * 1024);
+      toast.error(`File size exceeds the limit of ${sizeInMB}MB`);
+      setStatus('error');
+      return;
+    }
+
     // Retrieve the title from the form
     const title = form.getValues("title") || file.name.split('.')[0];
 
     try {
       setStatus('uploading');
-      // Include title in the upload-url request
+      // Include title and fileSize in the upload-url request
       const { data } = await axios.post('/api/upload-url', {
-        fileType: file.type, // Changed from 'audio'/'image' to actual MIME type (e.g., 'audio/wav')
+        fileType: file.type,
         fileExtension,
         title,
-        userId: user?.id, // Add this line to send the user ID
+        userId: user?.id,
+        fileSize: file.size,
       });
 
+      console.log('Received signed URL:', data.signedUrl); // Add this line for debugging
+
       // Upload the file to S3
-      await axios.put(data.signedUrl, file, {
+      const uploadResponse = await axios.put(data.signedUrl, file, {
         headers: {
           'Content-Type': contentType,
         },
@@ -217,13 +232,23 @@ export default function Upload() {
         },
       });
 
+      console.log('S3 upload response:', uploadResponse); // Add this line for debugging
+
+      if (uploadResponse.status !== 200) {
+        throw new Error(`S3 upload failed with status ${uploadResponse.status}`);
+      }
+
       setStatus('success');
       setUploadedFiles(prev => [...prev, data.fileKey]);
-      console.log('File uploaded:', data.fileKey); // For debugging
+      console.log('File uploaded:', data.fileKey);
       return data.fileKey;
     } catch (error) {
       console.error('Error uploading file:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', error.response?.data);
+      }
       setStatus('error');
+      toast.error(`Upload failed: ${error.message}`);
       throw error;
     }
   };
@@ -1323,6 +1348,10 @@ export default function Upload() {
                             onChange={async (e) => {
                               const file = e.target.files?.[0];
                               if (file) {
+                                if (file.size > MAX_AUDIO_FILE_SIZE) {
+                                  toast.error("Audio file size exceeds the limit of 200MB");
+                                  return;
+                                }
                                 field.onChange(file);
                                 setAudioUploadStatus('uploading');
                                 setAudioUploadProgress(0);
@@ -1394,7 +1423,16 @@ export default function Upload() {
                           <Input
                             type="file"
                             accept="image/*"
-                            onChange={handleFileChange}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                if (file.size > MAX_IMAGE_FILE_SIZE) {
+                                  toast.error("Image file size exceeds the limit of 5MB");
+                                  return;
+                                }
+                                handleFileChange(e);
+                              }
+                            }}
                           />
                           {imageUploadStatus === 'success' && croppedImage && (
                             <>

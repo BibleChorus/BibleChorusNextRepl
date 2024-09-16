@@ -4,15 +4,26 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import s3Client from '@/lib/s3';
 import { v4 as uuidv4 } from 'uuid';
 
+// Add these constants at the top of the file
+const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
+const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { fileType, fileExtension, title, userId } = req.body;
+  const { fileType, fileExtension, title, userId, fileSize } = req.body;
 
-  if (!fileType || !fileExtension || !userId) {
-    return res.status(400).json({ message: 'File type, extension, and user ID are required' });
+  if (!fileType || !fileExtension || !userId || !fileSize) {
+    return res.status(400).json({ message: 'File type, extension, user ID, and file size are required' });
+  }
+
+  // Check file size
+  const maxSize = fileType.startsWith('audio/') ? MAX_AUDIO_FILE_SIZE : MAX_IMAGE_FILE_SIZE;
+  if (parseInt(fileSize) > maxSize) {
+    const sizeInMB = maxSize / (1024 * 1024);
+    return res.status(400).json({ message: `File size exceeds the limit of ${sizeInMB}MB` });
   }
 
   // Format current date and time
@@ -51,7 +62,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   try {
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    const signedUrl = await getSignedUrl(s3Client, command, { 
+      expiresIn: 3600,
+      signingRegion: process.env.AWS_REGION,
+    });
+
+    // Remove the content-length restriction
     res.status(200).json({ signedUrl, fileKey });
   } catch (error) {
     console.error('Error generating signed URL:', error);
