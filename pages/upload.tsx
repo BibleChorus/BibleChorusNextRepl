@@ -167,6 +167,26 @@ export default function Upload() {
   const [audioUploadStatus, setAudioUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [imageUploadStatus, setImageUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
 
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (uploadedFiles.length > 0) {
+        const data = JSON.stringify({ fileKeys: uploadedFiles });
+        navigator.sendBeacon('/api/cleanup-unsubmitted-files', data);
+        
+        // For debugging purposes
+        console.log('Sending cleanup request for files:', uploadedFiles);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [uploadedFiles]);
+
   const uploadFile = async (file: File, fileType: 'audio' | 'image') => {
     const fileExtension = file.name.split('.').pop();
     const contentType = file.type;
@@ -198,6 +218,8 @@ export default function Upload() {
       });
 
       setStatus('success');
+      setUploadedFiles(prev => [...prev, data.fileKey]);
+      console.log('File uploaded:', data.fileKey); // For debugging
       return data.fileKey;
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -206,7 +228,6 @@ export default function Upload() {
     }
   };
 
-  // Remove upload logic from onSubmit to prevent duplicate uploads
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       // Ensure that audio_url and song_art_url are already set via upload handlers
@@ -219,6 +240,8 @@ export default function Upload() {
       await axios.post('/api/submit-song', formData);
 
       toast.success('Song uploaded successfully!');
+      setUploadedFiles([]); // Clear the uploaded files list after successful submission
+      console.log('Form submitted, clearing uploaded files list');
     } catch (error) {
       console.error('Error submitting form:', error);
       toast.error('Error uploading song. Please try again.');
