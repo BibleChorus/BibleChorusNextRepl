@@ -30,7 +30,9 @@ import axios from 'axios'
 import { toast } from "sonner";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Progress } from "@/components/ui/progress"
+import { ImageCropper } from '@/components/ImageCropper'
 import { useAuth } from '@/contexts/AuthContext';
+import { Modal } from '@/components/Modal'
 
 const formSchema = z.object({
   // Step 1: AI Info
@@ -469,6 +471,41 @@ export default function Upload() {
       form.setValue('is_continuous_passage', isContinuous, { shouldValidate: true });
     }
   }, [selectedBibleVerses, form]);
+
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
+  const [croppedImage, setCroppedImage] = useState<File | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const imageUrl = URL.createObjectURL(file)
+      setCropImageUrl(imageUrl)
+      setIsModalOpen(true)
+    }
+  }
+
+  const handleCropComplete = async (croppedImageBlob: Blob) => {
+    const croppedFile = new File([croppedImageBlob], 'cropped_image.jpg', { type: 'image/jpeg' })
+    setCroppedImage(croppedFile)
+    setIsModalOpen(false)
+    
+    // Start upload process
+    setImageUploadStatus('uploading')
+    setImageUploadProgress(0)
+    try {
+      const fileKey = await uploadFile(croppedFile, 'image')
+      form.setValue('song_art_url', fileKey, { shouldValidate: true })
+      setImageUploadStatus('success')
+    } catch (error) {
+      setImageUploadStatus('error')
+    }
+  }
+
+  const handleCropCancel = () => {
+    setCropImageUrl(null)
+    setIsModalOpen(false)
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -1334,67 +1371,68 @@ export default function Upload() {
                           <Input
                             type="file"
                             accept="image/*"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                field.onChange(file);
-                                setImageUploadStatus('uploading');
-                                setImageUploadProgress(0);
-                                try {
-                                  const fileKey = await uploadFile(file, 'image');
-                                  form.setValue('song_art_url', fileKey, { shouldValidate: true });
-                                  setImageUploadStatus('success');
-                                } catch (error) {
-                                  setImageUploadStatus('error');
-                                }
-                              }
-                            }}
+                            onChange={handleFileChange}
                           />
-                          {imageUploadStatus === 'success' && (
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              onClick={async () => {
-                                try {
-                                  const response = await axios.delete('/api/delete-file', { data: { fileKey: form.getValues('song_art_url') } });
-                                  if (response.status === 200) {
-                                    form.setValue('song_art_file', undefined, { shouldValidate: true });
-                                    form.setValue('song_art_url', undefined, { shouldValidate: true });
-                                    setImageUploadStatus('idle');
-                                    setImageUploadProgress(0);
-                                    toast.success('Song art removed successfully');
-                                    // Reset the file input
-                                    const fileInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
-                                    if (fileInput) fileInput.value = '';
-                                  } else {
-                                    throw new Error(response.data.message || 'Failed to remove song art');
+                          {imageUploadStatus === 'success' && croppedImage && (
+                            <>
+                              <img src={URL.createObjectURL(croppedImage)} alt="Uploaded Song Art" className="w-14 h-14 object-cover rounded" />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                onClick={async () => {
+                                  try {
+                                    const response = await axios.delete('/api/delete-file', { data: { fileKey: form.getValues('song_art_url') } });
+                                    if (response.status === 200) {
+                                      form.setValue('song_art_file', undefined, { shouldValidate: true });
+                                      form.setValue('song_art_url', undefined, { shouldValidate: true });
+                                      setImageUploadStatus('idle');
+                                      setImageUploadProgress(0);
+                                      setCroppedImage(null);
+                                      toast.success('Song art removed successfully');
+                                      // Reset the file input
+                                      const fileInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
+                                      if (fileInput) fileInput.value = '';
+                                    } else {
+                                      throw new Error(response.data.message || 'Failed to remove song art');
+                                    }
+                                  } catch (error) {
+                                    console.error('Error removing song art:', error.response?.data || error.message);
+                                    toast.error(`Failed to remove song art: ${error.response?.data?.message || error.message}`);
                                   }
-                                } catch (error) {
-                                  console.error('Error removing song art:', error.response?.data || error.message);
-                                  toast.error(`Failed to remove song art: ${error.response?.data?.message || error.message}`);
-                                }
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
                           )}
                         </div>
                       </FormControl>
-                      {imageUploadStatus !== 'idle' && (
-                        <div className="mt-2">
-                          <Progress value={imageUploadProgress} className="w-full" />
-                          <p className="text-sm mt-1">
-                            {imageUploadStatus === 'uploading' && `Uploading: ${imageUploadProgress}%`}
-                            {imageUploadStatus === 'success' && 'Upload successful!'}
-                            {imageUploadStatus === 'error' && 'Upload failed. Please try again.'}
-                          </p>
-                        </div>
-                      )}
                       <FormMessage className="form-message" />
                     </FormItem>
                   )}
                 />
+
+                <Modal isOpen={isModalOpen} onClose={handleCropCancel}>
+                  {cropImageUrl && (
+                    <ImageCropper
+                      imageUrl={cropImageUrl}
+                      onCropComplete={handleCropComplete}
+                      onCancel={handleCropCancel}
+                    />
+                  )}
+                </Modal>
+
+                {imageUploadStatus !== 'idle' && (
+                  <div className="mt-2">
+                    <Progress value={imageUploadProgress} className="w-full" />
+                    <p className="text-sm mt-1">
+                      {imageUploadStatus === 'uploading' && `Uploading: ${imageUploadProgress}%`}
+                      {imageUploadStatus === 'success' && 'Upload successful!'}
+                      {imageUploadStatus === 'error' && 'Upload failed. Please try again.'}
+                    </p>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
 
