@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Modal } from '@/components/Modal'
 import UploadProgressBar from '@/components/UploadProgressBar';
 import GradientButton from '@/components/GradientButton'; // Import GradientButton
+import UploadInfoDialog from '@/components/UploadInfoDialog';
 
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -567,7 +568,10 @@ export default function Upload() {
 
       <main className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12">
         <div className="flex justify-between items-center mb-4 sm:mb-8 pt-4 sm:pt-6 md:pt-8 lg:pt-10 xl:pt-12">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">Upload Songs</h1>
+          <div className="flex items-center">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mr-2">Upload Songs</h1>
+            <UploadInfoDialog />
+          </div>
           {progress === 100 && (
             <GradientButton type="submit" progress={progress} onClick={handleSubmit}>
               Submit
