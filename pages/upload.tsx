@@ -29,6 +29,7 @@ import { Modal } from '@/components/Modal'
 import UploadProgressBar from '@/components/UploadProgressBar';
 import GradientButton from '@/components/GradientButton'; // Import GradientButton
 import UploadInfoDialog from '@/components/UploadInfoDialog';
+import { useRouter } from 'next/router'
 
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -99,8 +100,15 @@ export default function Upload() {
       ai_used_for_lyrics: false,
       music_ai_generated: false,
       is_continuous_passage: false,
-      music_model_used: undefined,
-      music_ai_prompt: undefined,
+      music_model_used: '',
+      music_ai_prompt: '',
+      title: '',
+      artist: '',
+      genre: '',
+      lyrics: '',
+      bible_translation_used: '',
+      lyrics_scripture_adherence: "The lyrics closely follow the scripture passage",
+      lyric_ai_prompt: '',
     },
     mode: "onChange", // This enables real-time validation
   })
@@ -188,6 +196,11 @@ export default function Upload() {
     };
   }, [uploadedFiles]);
 
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [audioFileKey, setAudioFileKey] = useState<string | null>(null);
+  const [imageFileKey, setImageFileKey] = useState<string | null>(null);
+
   const uploadFile = async (file: File, fileType: 'audio' | 'image') => {
     const fileExtension = file.name.split('.').pop();
     const contentType = file.type;
@@ -200,7 +213,7 @@ export default function Upload() {
       const sizeInMB = maxSize / (1024 * 1024);
       toast.error(`File size exceeds the limit of ${sizeInMB}MB`);
       setStatus('error');
-      return;
+      return null;
     }
 
     // Retrieve the title from the form
@@ -217,7 +230,7 @@ export default function Upload() {
         fileSize: file.size,
       });
 
-      console.log('Received signed URL:', data.signedUrl); // Add this line for debugging
+      console.log('Received signed URL:', data.signedUrl);
 
       // Upload the file to S3
       const uploadResponse = await axios.put(data.signedUrl, file, {
@@ -230,7 +243,7 @@ export default function Upload() {
         },
       });
 
-      console.log('S3 upload response:', uploadResponse); // Add this line for debugging
+      console.log('S3 upload response:', uploadResponse);
 
       if (uploadResponse.status !== 200) {
         throw new Error(`S3 upload failed with status ${uploadResponse.status}`);
@@ -240,12 +253,16 @@ export default function Upload() {
       setUploadedFiles(prev => [...prev, data.fileKey]);
       console.log('File uploaded:', data.fileKey);
 
-      // Set the corresponding form field
       if (fileType === 'audio') {
+        setAudioFileKey(data.fileKey);
         form.setValue('audio_url', data.fileKey, { shouldValidate: true });
-      } else if (fileType === 'image') {
+      } else {
+        setImageFileKey(data.fileKey);
         form.setValue('song_art_url', data.fileKey, { shouldValidate: true });
       }
+
+      // Update overall form progress
+      updateFormProgress();
 
       return data.fileKey;
     } catch (error) {
@@ -255,32 +272,143 @@ export default function Upload() {
       }
       setStatus('error');
       toast.error(`Upload failed: ${error.message}`);
-      throw error;
+      return null;
     }
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  // Add this function to update the overall form progress
+  const updateFormProgress = () => {
+    const totalSteps = 4; // AI Info, Song Info, Bible Info, Upload
+    let completedSteps = 0;
+
+    // Check if AI Info is complete
+    if (form.getValues('ai_used_for_lyrics') !== undefined &&
+        form.getValues('music_ai_generated') !== undefined) {
+      completedSteps++;
+    }
+
+    // Check if Song Info is complete
+    if (form.getValues('title') && form.getValues('genre') && form.getValues('lyrics')) {
+      completedSteps++;
+    }
+
+    // Check if Bible Info is complete
+    if (form.getValues('bible_translation_used') && form.getValues('lyrics_scripture_adherence') &&
+        selectedBibleVerses.length > 0) {
+      completedSteps++;
+    }
+
+    // Check if Upload is complete
+    if (form.getValues('audio_url') && form.getValues('song_art_url')) {
+      completedSteps++;
+    }
+
+    const newProgress = (completedSteps / totalSteps) * 100;
+    setProgress(newProgress);
+  };
+
+  const removeFile = async (fileType: 'audio' | 'image') => {
+    const fileKey = fileType === 'audio' ? audioFileKey : imageFileKey;
+    if (!fileKey) {
+      console.error(`No ${fileType} file key found`);
+      toast.error(`No ${fileType} file found to remove`);
+      return;
+    }
+
     try {
-      // Ensure that audio_url and song_art_url are already set via upload handlers
+      const response = await axios.delete('/api/delete-file', { data: { fileKey } });
+      if (response.status === 200) {
+        if (fileType === 'audio') {
+          setAudioFile(null);
+          setAudioFileKey(null);
+          setAudioUploadStatus('idle');
+          setAudioUploadProgress(0);
+          form.setValue('audio_url', undefined, { shouldValidate: true });
+        } else {
+          setImageFile(null);
+          setImageFileKey(null);
+          setImageUploadStatus('idle');
+          setImageUploadProgress(0);
+          form.setValue('song_art_url', undefined, { shouldValidate: true });
+          setCroppedImage(null);
+        }
+        toast.success(`${fileType.charAt(0).toUpperCase() + fileType.slice(1)} file removed successfully`);
+        // Reset the file input
+        const fileInput = document.querySelector(`input[type="file"][accept="${fileType}/*"]`) as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+      } else {
+        throw new Error(response.data.message || `Failed to remove ${fileType} file`);
+      }
+    } catch (error) {
+      console.error(`Error removing ${fileType} file:`, error.response?.data || error.message);
+      toast.error(`Failed to remove ${fileType} file: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
+  const router = useRouter()
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log('onSubmit function called');
+    try {
+      setProgress(0);
+
+      // Upload audio file if it exists
+      let audioUrl = values.audio_url;
+      if (audioFile) {
+        audioUrl = await uploadFile(audioFile, 'audio');
+        if (!audioUrl) {
+          throw new Error('Failed to upload audio file');
+        }
+      }
+
+      // Upload image file if it exists
+      let imageUrl = values.song_art_url;
+      if (imageFile) {
+        imageUrl = await uploadFile(imageFile, 'image');
+        if (!imageUrl) {
+          throw new Error('Failed to upload image file');
+        }
+      }
+
       const formData = {
         ...values,
-        // audio_url and song_art_url are set during file upload
+        uploaded_by: user?.id,
+        bible_verses: selectedBibleVerses,
+        audio_url: audioUrl,
+        song_art_url: imageUrl,
       };
+      console.log('Form data:', formData);
 
       // Send the form data to your backend
-      await axios.post('/api/submit-song', formData);
+      console.log('Sending POST request to /api/submit-song');
+      const response = await axios.post('/api/submit-song', formData, {
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total!)
+          setProgress(percentCompleted)
+        }
+      });
+      console.log('Response received:', response);
 
-      toast.success('Song uploaded successfully!');
-      setUploadedFiles([]); // Clear the uploaded files list after successful submission
-      console.log('Form submitted, clearing uploaded files list');
+      if (response.status === 200) {
+        toast.success('Song uploaded successfully!')
+        setUploadedFiles([]) // Clear the uploaded files list after successful submission
+        console.log('Form submitted, clearing uploaded files list')
+        
+        // Redirect to the newly created song's page
+        router.push(`/songs/${response.data.songId}`)
+      } else {
+        throw new Error(response.data.message || 'Failed to submit song')
+      }
     } catch (error) {
-      console.error('Error submitting form:', error);
-      toast.error('Error uploading song. Please try again.');
+      console.error('Error submitting form:', error)
+      toast.error(`Error uploading song: ${error.response?.data?.message || error.message}`)
+      setProgress(0)
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('handleSubmit called');
     setShowValidationMessages(true)
     form.handleSubmit(onSubmit)(e)
   }
@@ -530,29 +658,39 @@ export default function Upload() {
   const [croppedImage, setCroppedImage] = useState<File | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
+  // Update the handleFileChange function for image uploads
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file)
-      setCropImageUrl(imageUrl)
-      setIsModalOpen(true)
+      if (file.size > MAX_IMAGE_FILE_SIZE) {
+        toast.error("Image file size exceeds the limit of 5MB");
+        return;
+      }
+      setImageFile(file);
+      setCropImageUrl(URL.createObjectURL(file));
+      setIsModalOpen(true);
     }
-  }
+  };
 
+  // Update the handleCropComplete function
   const handleCropComplete = async (croppedImageBlob: Blob) => {
-    const croppedFile = new File([croppedImageBlob], 'cropped_image.jpg', { type: 'image/jpeg' })
-    setCroppedImage(croppedFile)
-    setIsModalOpen(false)
+    const croppedFile = new File([croppedImageBlob], 'cropped_image.jpg', { type: 'image/jpeg' });
+    setCroppedImage(croppedFile);
+    setIsModalOpen(false);
     
-    setImageUploadStatus('uploading')
-    setImageUploadProgress(0)
+    setImageUploadStatus('uploading');
+    setImageUploadProgress(0);
     try {
-      await uploadFile(croppedFile, 'image')
-      setImageUploadStatus('success')
+      const fileKey = await uploadFile(croppedFile, 'image');
+      if (fileKey) {
+        form.setValue('song_art_url', fileKey, { shouldValidate: true });
+        setImageUploadStatus('success');
+        updateFormProgress();
+      }
     } catch (error) {
-      setImageUploadStatus('error')
+      setImageUploadStatus('error');
     }
-  }
+  };
 
   const handleCropCancel = () => {
     setCropImageUrl(null)
@@ -764,7 +902,11 @@ export default function Upload() {
                     <FormItem className="rounded-lg border p-4">
                       <FormLabel className="form-label">Song Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter song title" {...field} />
+                        <Input 
+                          placeholder="Enter song title" 
+                          {...field} 
+                          value={field.value || ''} // Ensure value is always defined
+                        />
                       </FormControl>
                       <FormMessage className="form-message" />
                     </FormItem>
@@ -777,7 +919,11 @@ export default function Upload() {
                     <FormItem className="rounded-lg border p-4">
                       <FormLabel className="form-label">Artist (optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter artist name" {...field} />
+                        <Input 
+                          placeholder="Enter artist name" 
+                          {...field} 
+                          value={field.value || ''} // Ensure value is always defined
+                        />
                       </FormControl>
                       <FormMessage className="form-message" />
                     </FormItem>
@@ -1368,14 +1514,12 @@ export default function Upload() {
                                   toast.error("Audio file size exceeds the limit of 200MB");
                                   return;
                                 }
+                                setAudioFile(file);
                                 field.onChange(file);
-                                setAudioUploadStatus('uploading');
-                                setAudioUploadProgress(0);
-                                try {
-                                  await uploadFile(file, 'audio');
-                                  setAudioUploadStatus('success');
-                                } catch (error) {
-                                  setAudioUploadStatus('error');
+                                const fileKey = await uploadFile(file, 'audio');
+                                if (fileKey) {
+                                  form.setValue('audio_url', fileKey, { shouldValidate: true });
+                                  updateFormProgress();
                                 }
                               }
                             }}
@@ -1385,26 +1529,7 @@ export default function Upload() {
                               type="button"
                               variant="destructive"
                               size="icon"
-                              onClick={async () => {
-                                try {
-                                  const response = await axios.delete('/api/delete-file', { data: { fileKey: form.getValues('audio_url') } });
-                                  if (response.status === 200) {
-                                    form.setValue('audio_file', undefined, { shouldValidate: true });
-                                    form.setValue('audio_url', undefined, { shouldValidate: true });
-                                    setAudioUploadStatus('idle');
-                                    setAudioUploadProgress(0);
-                                    toast.success('Audio file removed successfully');
-                                    // Reset the file input
-                                    const fileInput = document.querySelector('input[type="file"][accept="audio/*"]') as HTMLInputElement;
-                                    if (fileInput) fileInput.value = '';
-                                  } else {
-                                    throw new Error(response.data.message || 'Failed to remove audio file');
-                                  }
-                                } catch (error) {
-                                  console.error('Error removing audio file:', error.response?.data || error.message);
-                                  toast.error(`Failed to remove audio file: ${error.response?.data?.message || error.message}`);
-                                }
-                              }}
+                              onClick={() => removeFile('audio')}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -1445,6 +1570,7 @@ export default function Upload() {
                                   toast.error("Image file size exceeds the limit of 5MB");
                                   return;
                                 }
+                                setImageFile(file);
                                 handleFileChange(e);
                               }
                             }}
@@ -1456,27 +1582,7 @@ export default function Upload() {
                                 type="button"
                                 variant="destructive"
                                 size="icon"
-                                onClick={async () => {
-                                  try {
-                                    const response = await axios.delete('/api/delete-file', { data: { fileKey: form.getValues('song_art_url') } });
-                                    if (response.status === 200) {
-                                      form.setValue('song_art_file', undefined, { shouldValidate: true });
-                                      form.setValue('song_art_url', undefined, { shouldValidate: true });
-                                      setImageUploadStatus('idle');
-                                      setImageUploadProgress(0);
-                                      setCroppedImage(null);
-                                      toast.success('Song art removed successfully');
-                                      // Reset the file input
-                                      const fileInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
-                                      if (fileInput) fileInput.value = '';
-                                    } else {
-                                      throw new Error(response.data.message || 'Failed to remove song art');
-                                    }
-                                  } catch (error) {
-                                    console.error('Error removing song art:', error.response?.data || error.message);
-                                    toast.error(`Failed to remove song art: ${error.response?.data?.message || error.message}`);
-                                  }
-                                }}
+                                onClick={() => removeFile('image')}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
