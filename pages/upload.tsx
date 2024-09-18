@@ -12,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, X, Trash2 } from "lucide-react"
+import { Check, ChevronsUpDown, X, Trash2, File as FileIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
 import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
@@ -536,6 +536,7 @@ export default function Upload() {
       const imageUrl = URL.createObjectURL(file)
       setCropImageUrl(imageUrl)
       setIsModalOpen(true)
+      form.setValue('song_art_file', file) // Add this line
     }
   }
 
@@ -1357,29 +1358,38 @@ export default function Upload() {
                     <FormItem className="rounded-lg border p-4">
                       <FormLabel className="form-label">Audio File</FormLabel>
                       <FormControl>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            type="file"
-                            accept="audio/*"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                if (file.size > MAX_AUDIO_FILE_SIZE) {
-                                  toast.error("Audio file size exceeds the limit of 200MB");
-                                  return;
-                                }
-                                field.onChange(file);
-                                setAudioUploadStatus('uploading');
-                                setAudioUploadProgress(0);
-                                try {
-                                  await uploadFile(file, 'audio');
-                                  setAudioUploadStatus('success');
-                                } catch (error) {
-                                  setAudioUploadStatus('error');
-                                }
-                              }
-                            }}
-                          />
+                        <div className="flex items-center justify-between">
+                          <div className="flex-grow">
+                            {audioUploadStatus === 'idle' ? (
+                              <Input
+                                type="file"
+                                accept="audio/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    if (file.size > MAX_AUDIO_FILE_SIZE) {
+                                      toast.error("Audio file size exceeds the limit of 200MB");
+                                      return;
+                                    }
+                                    field.onChange(file);
+                                    setAudioUploadStatus('uploading');
+                                    setAudioUploadProgress(0);
+                                    try {
+                                      await uploadFile(file, 'audio');
+                                      setAudioUploadStatus('success');
+                                    } catch (error) {
+                                      setAudioUploadStatus('error');
+                                    }
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center space-x-2">
+                                <FileIcon className="h-5 w-5 text-gray-500" />
+                                <p className="text-sm text-gray-500">{field.value?.name}</p>
+                              </div>
+                            )}
+                          </div>
                           {audioUploadStatus === 'success' && (
                             <Button
                               type="button"
@@ -1434,23 +1444,32 @@ export default function Upload() {
                     <FormItem className="rounded-lg border p-4">
                       <FormLabel className="form-label">Song Art</FormLabel>
                       <FormControl>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                if (file.size > MAX_IMAGE_FILE_SIZE) {
-                                  toast.error("Image file size exceeds the limit of 5MB");
-                                  return;
-                                }
-                                handleFileChange(e);
-                              }
-                            }}
-                          />
+                        <div className="flex items-center justify-between">
+                          <div className="flex-grow">
+                            {imageUploadStatus === 'idle' ? (
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    if (file.size > MAX_IMAGE_FILE_SIZE) {
+                                      toast.error("Image file size exceeds the limit of 5MB");
+                                      return;
+                                    }
+                                    handleFileChange(e);
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center space-x-2">
+                                <FileIcon className="h-5 w-5 text-gray-500" />
+                                <p className="text-sm text-gray-500">{field.value?.name}</p>
+                              </div>
+                            )}
+                          </div>
                           {imageUploadStatus === 'success' && croppedImage && (
-                            <>
+                            <div className="flex items-center space-x-2">
                               <img src={URL.createObjectURL(croppedImage)} alt="Uploaded Song Art" className="w-14 h-14 object-cover rounded" />
                               <Button
                                 type="button"
@@ -1480,10 +1499,20 @@ export default function Upload() {
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                            </>
+                            </div>
                           )}
                         </div>
                       </FormControl>
+                      {imageUploadStatus !== 'idle' && (
+                        <div className="mt-2">
+                          <Progress value={imageUploadProgress} className="w-full" />
+                          <p className="text-sm mt-1">
+                            {imageUploadStatus === 'uploading' && `Uploading: ${imageUploadProgress}%`}
+                            {imageUploadStatus === 'success' && 'Upload successful!'}
+                            {imageUploadStatus === 'error' && 'Upload failed. Please try again.'}
+                          </p>
+                        </div>
+                      )}
                       <FormMessage className="form-message" />
                     </FormItem>
                   )}
@@ -1498,17 +1527,6 @@ export default function Upload() {
                     />
                   )}
                 </Modal>
-
-                {imageUploadStatus !== 'idle' && (
-                  <div className="mt-2">
-                    <Progress value={imageUploadProgress} className="w-full" />
-                    <p className="text-sm mt-1">
-                      {imageUploadStatus === 'uploading' && `Uploading: ${imageUploadProgress}%`}
-                      {imageUploadStatus === 'success' && 'Upload successful!'}
-                      {imageUploadStatus === 'error' && 'Upload failed. Please try again.'}
-                    </p>
-                  </div>
-                )}
               </TabsContent>
             </Tabs>
 
