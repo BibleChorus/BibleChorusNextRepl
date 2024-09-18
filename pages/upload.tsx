@@ -12,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, X, Trash2 } from "lucide-react"
+import { Check, ChevronsUpDown, X, Trash2, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
 import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
@@ -113,6 +113,15 @@ export default function Upload() {
     mode: "onChange", // This enables real-time validation
   })
 
+  // Add this separate effect for logging validation results
+  useEffect(() => {
+    const subscription = form.watch((value, { name, type }) => {
+      console.log('Form value changed:', name, value);
+      console.log('Validation errors:', form.formState.errors);
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   const [openGenre, setOpenGenre] = useState(false)
   const [openTranslation, setOpenTranslation] = useState(false)
   const [genreSearch, setGenreSearch] = useState('')
@@ -201,6 +210,9 @@ export default function Upload() {
   const [audioFileKey, setAudioFileKey] = useState<string | null>(null);
   const [imageFileKey, setImageFileKey] = useState<string | null>(null);
 
+  const [audioFileName, setAudioFileName] = useState<string | null>(null)
+  const [imageFileName, setImageFileName] = useState<string | null>(null)
+
   const uploadFile = async (file: File, fileType: 'audio' | 'image') => {
     const fileExtension = file.name.split('.').pop();
     const contentType = file.type;
@@ -255,9 +267,11 @@ export default function Upload() {
 
       if (fileType === 'audio') {
         setAudioFileKey(data.fileKey);
+        setAudioFileName(file.name)
         form.setValue('audio_url', data.fileKey, { shouldValidate: true });
       } else {
         setImageFileKey(data.fileKey);
+        setImageFileName(file.name)
         form.setValue('song_art_url', data.fileKey, { shouldValidate: true });
       }
 
@@ -321,12 +335,14 @@ export default function Upload() {
         if (fileType === 'audio') {
           setAudioFile(null);
           setAudioFileKey(null);
+          setAudioFileName(null)
           setAudioUploadStatus('idle');
           setAudioUploadProgress(0);
           form.setValue('audio_url', undefined, { shouldValidate: true });
         } else {
           setImageFile(null);
           setImageFileKey(null);
+          setImageFileName(null)
           setImageUploadStatus('idle');
           setImageUploadProgress(0);
           form.setValue('song_art_url', undefined, { shouldValidate: true });
@@ -401,6 +417,9 @@ export default function Upload() {
       }
     } catch (error) {
       console.error('Error submitting form:', error)
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', error.response?.data);
+      }
       toast.error(`Error uploading song: ${error.response?.data?.message || error.message}`)
       setProgress(0)
     }
@@ -1504,26 +1523,34 @@ export default function Upload() {
                       <FormLabel className="form-label">Audio File</FormLabel>
                       <FormControl>
                         <div className="flex items-center space-x-2">
-                          <Input
-                            type="file"
-                            accept="audio/*"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                if (file.size > MAX_AUDIO_FILE_SIZE) {
-                                  toast.error("Audio file size exceeds the limit of 200MB");
-                                  return;
+                          {audioFileName ? (
+                            <div className="flex items-center space-x-2 bg-secondary p-2 rounded">
+                              <FileText className="h-4 w-4" />
+                              <span className="text-sm">{audioFileName}</span>
+                            </div>
+                          ) : (
+                            <Input
+                              type="file"
+                              accept="audio/*"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.size > MAX_AUDIO_FILE_SIZE) {
+                                    toast.error("Audio file size exceeds the limit of 200MB");
+                                    return;
+                                  }
+                                  setAudioFile(file);
+                                  field.onChange(file);
+                                  const fileKey = await uploadFile(file, 'audio');
+                                  if (fileKey) {
+                                    form.setValue('audio_url', fileKey, { shouldValidate: true });
+                                    setAudioFileName(file.name);
+                                    updateFormProgress();
+                                  }
                                 }
-                                setAudioFile(file);
-                                field.onChange(file);
-                                const fileKey = await uploadFile(file, 'audio');
-                                if (fileKey) {
-                                  form.setValue('audio_url', fileKey, { shouldValidate: true });
-                                  updateFormProgress();
-                                }
-                              }
-                            }}
-                          />
+                              }}
+                            />
+                          )}
                           {audioUploadStatus === 'success' && (
                             <Button
                               type="button"
@@ -1560,21 +1587,28 @@ export default function Upload() {
                       <FormLabel className="form-label">Song Art</FormLabel>
                       <FormControl>
                         <div className="flex items-center space-x-2">
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                if (file.size > MAX_IMAGE_FILE_SIZE) {
-                                  toast.error("Image file size exceeds the limit of 5MB");
-                                  return;
+                          {imageFileName ? (
+                            <div className="flex items-center space-x-2 bg-secondary p-2 rounded">
+                              <FileText className="h-4 w-4" />
+                              <span className="text-sm">{imageFileName}</span>
+                            </div>
+                          ) : (
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.size > MAX_IMAGE_FILE_SIZE) {
+                                    toast.error("Image file size exceeds the limit of 5MB");
+                                    return;
+                                  }
+                                  setImageFile(file);
+                                  handleFileChange(e);
                                 }
-                                setImageFile(file);
-                                handleFileChange(e);
-                              }
-                            }}
-                          />
+                              }}
+                            />
+                          )}
                           {imageUploadStatus === 'success' && croppedImage && (
                             <>
                               <img src={URL.createObjectURL(croppedImage)} alt="Uploaded Song Art" className="w-14 h-14 object-cover rounded" />
@@ -1637,7 +1671,7 @@ export default function Upload() {
                   Next
                 </Button>
               ) : (
-                <GradientButton type="submit" progress={progress}>
+                <GradientButton type="submit" progress={progress} onClick={handleSubmit}>
                   Submit
                 </GradientButton>
               )}
