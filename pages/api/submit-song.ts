@@ -41,10 +41,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const trx = await db.transaction();
+  let songId: { id: number } | undefined;
 
   try {
     // Insert into songs table
-    const [songId] = await trx('songs').insert({
+    const [insertedSong] = await trx('songs').insert({
       title,
       artist: artist || null,
       audio_url,
@@ -62,22 +63,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       song_art_url: song_art_url || null,
     }).returning('id');
 
-    if (!songId) {
-      throw new Error('Failed to insert song');
+    if (!insertedSong || typeof insertedSong.id !== 'number') {
+      throw new Error('Failed to insert song or invalid song ID');
     }
+
+    const songId = insertedSong.id;
+
+    console.log('Inserted song ID:', songId);
 
     // Query the bible_verses table and insert into song_verses table
     const verseReferences = bible_verses.split(',').map(v => v.trim());
+    console.log('Verse references:', verseReferences);
+
+    console.log('Knex query:', trx('bible_verses')
+      .whereRaw(`CONCAT(book, ' ', chapter, ':', verse) IN (${verseReferences.map(() => '?').join(',')})`, verseReferences)
+      .select('id', 'book', 'chapter', 'verse').toString());
+
     const verseData = await trx('bible_verses')
-      .whereRaw("CONCAT(book, ' ', chapter, ':', verse) IN (?)", [verseReferences])
+      .whereRaw(`CONCAT(book, ' ', chapter, ':', verse) IN (${verseReferences.map(() => '?').join(',')})`, verseReferences)
       .select('id', 'book', 'chapter', 'verse');
 
+    console.log('Verse data:', verseData);
+
     if (verseData.length === 0) {
+      console.log('No matching verses found. Attempting individual queries...');
+      for (const verseRef of verseReferences) {
+        const [book, chapterVerse] = verseRef.split(' ');
+        const [chapter, verse] = chapterVerse.split(':');
+        const result = await trx('bible_verses')
+          .where({ book, chapter, verse })
+          .first();
+        console.log(`Query for ${verseRef}:`, result);
+      }
       throw new Error('No matching Bible verses found');
     }
 
     await trx('song_verses').insert(
-      verseData.map(verse => ({ song_id: songId, verse_id: verse.id }))
+      verseData.map(verse => ({ 
+        song_id: songId,
+        verse_id: verse.id 
+      }))
     );
 
     // Update progress_map table
@@ -94,7 +119,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } else {
         acc[key].count++;
       }
-      return acc;
+      return acc as Record<string, ProgressUpdate>;
     }, {} as Record<string, ProgressUpdate>);
 
     for (const update of Object.values(progressUpdates) as ProgressUpdate[]) {
@@ -116,25 +141,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
         .onConflict(['book', 'chapter'])
         .merge({
-          verse_count: db.raw('?? + ?', ['verse_count', update.count]),
-          song_count: db.raw('?? + 1', ['song_count']),
+          verse_count: db.raw('?? + ?', ['progress_map.verse_count', update.count]),
+          song_count: db.raw('?? + 1', ['progress_map.song_count']),
           [lyrics_scripture_adherence === 'The lyrics follow the scripture word-for-word' ? 'word_for_word_count' :
             lyrics_scripture_adherence === 'The lyrics closely follow the scripture passage' ? 'close_paraphrase_count' :
-            'creative_inspiration_count']: db.raw('?? + 1', [lyrics_scripture_adherence === 'The lyrics follow the scripture word-for-word' ? 'word_for_word_count' :
+            'creative_inspiration_count']: db.raw('?? + 1', [`progress_map.${lyrics_scripture_adherence === 'The lyrics follow the scripture word-for-word' ? 'word_for_word_count' :
             lyrics_scripture_adherence === 'The lyrics closely follow the scripture passage' ? 'close_paraphrase_count' :
-            'creative_inspiration_count']),
-          [ai_used_for_lyrics ? 'ai_lyrics_count' : 'human_created_count']: db.raw('?? + 1', [ai_used_for_lyrics ? 'ai_lyrics_count' : 'human_created_count']),
-          [music_ai_generated ? 'ai_music_count' : 'human_created_count']: db.raw('?? + 1', [music_ai_generated ? 'ai_music_count' : 'human_created_count']),
-          [is_continuous_passage ? 'continuous_passage_count' : 'non_continuous_passage_count']: db.raw('?? + 1', [is_continuous_passage ? 'continuous_passage_count' : 'non_continuous_passage_count']),
+            'creative_inspiration_count'}`]),
+          [ai_used_for_lyrics ? 'ai_lyrics_count' : 'human_created_count']: db.raw('?? + 1', [`progress_map.${ai_used_for_lyrics ? 'ai_lyrics_count' : 'human_created_count'}`]),
+          [music_ai_generated ? 'ai_music_count' : 'human_created_count']: db.raw('?? + 1', [`progress_map.${music_ai_generated ? 'ai_music_count' : 'human_created_count'}`]),
+          [is_continuous_passage ? 'continuous_passage_count' : 'non_continuous_passage_count']: db.raw('?? + 1', [`progress_map.${is_continuous_passage ? 'continuous_passage_count' : 'non_continuous_passage_count'}`]),
           genre_counts: db.raw(`jsonb_set(
-            COALESCE(genre_counts, '{}')::jsonb,
+            COALESCE(progress_map.genre_counts, '{}')::jsonb,
             '{${genre}}',
-            (COALESCE((genre_counts->>'${genre}')::int, 0) + 1)::text::jsonb
+            (COALESCE((progress_map.genre_counts->>'${genre}')::int, 0) + 1)::text::jsonb
           )`),
           translation_counts: db.raw(`jsonb_set(
-            COALESCE(translation_counts, '{}')::jsonb,
+            COALESCE(progress_map.translation_counts, '{}')::jsonb,
             '{${bible_translation_used}}',
-            (COALESCE((translation_counts->>'${bible_translation_used}')::int, 0) + 1)::text::jsonb
+            (COALESCE((progress_map.translation_counts->>'${bible_translation_used}')::int, 0) + 1)::text::jsonb
           )`),
         });
     }
@@ -144,6 +169,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     await trx.rollback();
     console.error('Error submitting song:', error);
-    res.status(500).json({ message: 'Error submitting song', error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ 
+        message: 'Error submitting song', 
+        error: error.message, 
+        stack: error.stack,
+        verseReferences: bible_verses,
+        query: trx('bible_verses')
+          .whereRaw(`CONCAT(book, ' ', chapter, ':', verse) IN (${bible_verses.split(',').map(() => '?').join(',')})`, bible_verses.split(',').map(v => v.trim()))
+          .select('id', 'book', 'chapter', 'verse')
+          .toString(),
+        songId: songId // This will be undefined if insertion failed
+      });
+    } else {
+      res.status(500).json({ message: 'Error submitting song', error: 'An unknown error occurred' });
+    }
   }
 }
