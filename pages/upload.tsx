@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/popover"
 import { Check, ChevronsUpDown, X, Trash2, File as FileIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
+import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
 import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -55,10 +55,6 @@ const formSchema = z.object({
     "The lyrics are creatively inspired by the scripture passage"
   ]),
   is_continuous_passage: z.boolean(),
-  bible_book: z.string().min(1, "Bible book is required"),
-  bible_chapter: z.string().min(1, "Chapter is required"),
-  bible_verse_start: z.string().min(1, "Starting verse is required"),
-  bible_verse_end: z.string().optional(),
   bible_books: z.string().min(1, "At least one Bible book is required"),
   bible_chapters: z.record(z.string(), z.array(z.number())).optional(),
   bible_verses: z.string().min(1, "At least one Bible verse is required"),
@@ -89,20 +85,29 @@ const formSchema = z.object({
 });
 
 export default function Upload() {
+  console.log("Upload component rendered");
+
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0)
   const [progress, setProgress] = useState(0); // Add progress state
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: async (...args) => {
+      const result = await zodResolver(formSchema)(...args);
+      console.log("Zod resolver result:", result);
+      return result;
+    },
     defaultValues: {
       ai_used_for_lyrics: false,
       music_ai_generated: false,
       is_continuous_passage: false,
       music_model_used: undefined,
       music_ai_prompt: undefined,
+      title: "",
+      artist: "",
+      lyrics: "",
     },
-    mode: "onChange", // This enables real-time validation
+    mode: "onBlur", // Change this from "onChange" to reduce unnecessary validations
   })
 
   const [openGenre, setOpenGenre] = useState(false)
@@ -242,9 +247,9 @@ export default function Upload() {
 
       // Set the corresponding form field
       if (fileType === 'audio') {
-        form.setValue('audio_url', data.fileKey, { shouldValidate: true });
+        form.setValue('audio_url', data.fileKey, { shouldValidate: false });
       } else if (fileType === 'image') {
-        form.setValue('song_art_url', data.fileKey, { shouldValidate: true });
+        form.setValue('song_art_url', data.fileKey, { shouldValidate: false });
       }
 
       return data.fileKey;
@@ -259,31 +264,101 @@ export default function Upload() {
     }
   };
 
+  const [hasShownValidMessage, setHasShownValidMessage] = useState(false);
+
+  useEffect(() => {
+    console.log("Setting up form subscription");
+    const subscription = form.watch(() => {
+      console.log("Form changed");
+      console.log("Form state:", form.formState);
+      console.log("Is form valid?", form.formState.isValid);
+      console.log("Form errors:", form.formState.errors);
+      
+      // Remove the toast from here, we'll show it only on submit
+    });
+
+    return () => {
+      console.log("Cleaning up form subscription");
+      subscription.unsubscribe();
+    };
+  }, [form]);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Ensure that audio_url and song_art_url are already set via upload handlers
+      // Modify audio_url and song_art_url to use Cloudfront CDN
+      const cdnUrl = process.env.CDN_URL || '';
+      const audioUrl = values.audio_url ? `${cdnUrl}${values.audio_url}` : undefined;
+      const songArtUrl = values.song_art_url ? `${cdnUrl}${values.song_art_url}` : undefined;
+
       const formData = {
         ...values,
-        // audio_url and song_art_url are set during file upload
+        audio_url: audioUrl,
+        song_art_url: songArtUrl,
+        uploaded_by: user?.id, // Assuming you have access to the user object
       };
 
       // Send the form data to your backend
-      await axios.post('/api/submit-song', formData);
+      const response = await axios.post('/api/submit-song', formData);
 
-      toast.success('Song uploaded successfully!');
-      setUploadedFiles([]); // Clear the uploaded files list after successful submission
-      console.log('Form submitted, clearing uploaded files list');
+      if (response.status === 200) {
+        toast.success('Song uploaded successfully!');
+        setUploadedFiles([]); // Clear the uploaded files list after successful submission
+        console.log('Form submitted, clearing uploaded files list');
+        setHasShownValidMessage(false); // Reset the flag after successful submission
+        // Optionally, reset the form or redirect to another page
+        // form.reset();
+        // router.push('/songs');
+      } else {
+        throw new Error('Failed to submit song');
+      }
     } catch (error) {
       console.error('Error submitting form:', error);
       toast.error('Error uploading song. Please try again.');
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setShowValidationMessages(true)
-    form.handleSubmit(onSubmit)(e)
-  }
+  // Add this debug function
+  const debugForm = () => {
+    console.log("Current form state:", form.formState);
+    console.log("Current form values:", form.getValues());
+    console.log("Is form valid?", form.formState.isValid);
+    console.log("Form errors:", form.formState.errors);
+    toast.info(`Form is ${form.formState.isValid ? 'valid' : 'invalid'}`);
+  };
+
+  // Update the handleSubmit function
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Submit button clicked");
+    setShowValidationMessages(true);
+    
+    const isValid = await form.trigger();
+    console.log("Manual validation triggered, isValid:", isValid);
+    console.log("Form values:", form.getValues());
+    console.log("Form errors:", form.formState.errors);
+    
+    if (isValid) {
+      console.log("Form is valid, submitting...");
+      const formData = form.getValues();
+      console.log("Submitting form data:", formData);
+      try {
+        const response = await axios.post('/api/submit-song', formData);
+        console.log("Server response:", response.data);
+        toast.success('Song uploaded successfully!');
+        setUploadedFiles([]);
+        setHasShownValidMessage(false);
+      } catch (error) {
+        console.error("Error submitting form:", error.response?.data || error.message);
+        toast.error('Error uploading song. Please try again.');
+      }
+    } else {
+      console.log("Form is not valid, errors:", form.formState.errors);
+      Object.entries(form.formState.errors).forEach(([key, value]) => {
+        console.log(`Error in field ${key}:`, value);
+      });
+      toast.error("Please fill in all required fields correctly.");
+    }
+  };
 
   const steps = ["AI Info", "Song Info", "Bible Info", "Upload"]
 
@@ -765,7 +840,11 @@ export default function Upload() {
                     <FormItem className="rounded-lg border p-4">
                       <FormLabel className="form-label">Song Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter song title" {...field} />
+                        <Input 
+                          placeholder="Enter song title" 
+                          {...field} 
+                          value={field.value || ""}
+                        />
                       </FormControl>
                       <FormMessage className="form-message" />
                     </FormItem>
@@ -778,7 +857,11 @@ export default function Upload() {
                     <FormItem className="rounded-lg border p-4">
                       <FormLabel className="form-label">Artist (optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter artist name" {...field} />
+                        <Input 
+                          placeholder="Enter artist name" 
+                          {...field} 
+                          value={field.value || ""}
+                        />
                       </FormControl>
                       <FormMessage className="form-message" />
                     </FormItem>
@@ -886,6 +969,7 @@ export default function Upload() {
                           placeholder="Enter song lyrics"
                           className="min-h-[200px]"
                           {...field}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage className="form-message" />
