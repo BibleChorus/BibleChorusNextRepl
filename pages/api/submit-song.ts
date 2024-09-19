@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { db } from '../../lib/db';
+import db from '../../db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -25,27 +25,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     bible_verses,
   } = req.body;
 
+  // Validate required fields
+  const missingFields: string[] = [];
+  if (!title) missingFields.push('title');
+  if (!audio_url) missingFields.push('audio_url');
+  if (!uploaded_by) missingFields.push('uploaded_by');
+  if (!bible_translation_used) missingFields.push('bible_translation_used');
+  if (!genre) missingFields.push('genre');
+  if (!lyrics_scripture_adherence) missingFields.push('lyrics_scripture_adherence');
+  if (!lyrics) missingFields.push('lyrics');
+  if (!bible_verses) missingFields.push('bible_verses');
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({ message: 'Missing required fields', missingFields });
+  }
+
   const trx = await db.transaction();
 
   try {
     // Insert into songs table
     const [songId] = await trx('songs').insert({
       title,
-      artist,
+      artist: artist || null,
       audio_url,
       uploaded_by,
-      ai_used_for_lyrics,
-      music_ai_generated,
+      ai_used_for_lyrics: ai_used_for_lyrics || false,
+      music_ai_generated: music_ai_generated || false,
       bible_translation_used,
       genre,
       lyrics_scripture_adherence,
-      is_continuous_passage,
+      is_continuous_passage: is_continuous_passage || false,
       lyrics,
-      lyric_ai_prompt,
-      music_ai_prompt,
-      music_model_used,
-      song_art_url,
+      lyric_ai_prompt: lyric_ai_prompt || null,
+      music_ai_prompt: music_ai_prompt || null,
+      music_model_used: music_model_used || null,
+      song_art_url: song_art_url || null,
     }).returning('id');
+
+    if (!songId) {
+      throw new Error('Failed to insert song');
+    }
 
     // Query the bible_verses table and insert into song_verses table
     const verseReferences = bible_verses.split(',').map(v => v.trim());
@@ -53,11 +72,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .whereRaw("CONCAT(book, ' ', chapter, ':', verse) IN (?)", [verseReferences])
       .select('id', 'book', 'chapter', 'verse');
 
+    if (verseData.length === 0) {
+      throw new Error('No matching Bible verses found');
+    }
+
     await trx('song_verses').insert(
       verseData.map(verse => ({ song_id: songId, verse_id: verse.id }))
     );
 
     // Update progress_map table
+    type ProgressUpdate = {
+      book: string;
+      chapter: number;
+      count: number;
+    };
+
     const progressUpdates = verseData.reduce((acc, { book, chapter }) => {
       const key = `${book}-${chapter}`;
       if (!acc[key]) {
@@ -66,9 +95,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         acc[key].count++;
       }
       return acc;
-    }, {} as Record<string, { book: string; chapter: number; count: number }>);
+    }, {} as Record<string, ProgressUpdate>);
 
-    for (const update of Object.values(progressUpdates)) {
+    for (const update of Object.values(progressUpdates) as ProgressUpdate[]) {
       await trx('progress_map')
         .insert({
           book: update.book,

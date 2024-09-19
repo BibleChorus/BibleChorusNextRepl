@@ -66,6 +66,9 @@ const formSchema = z.object({
   // Include URLs after upload
   audio_url: z.string().optional(),
   song_art_url: z.string().optional(),
+
+  // Added uploaded_by field
+  uploaded_by: z.union([z.string(), z.number()]).optional(),
 }).refine((data) => {
   if (data.ai_used_for_lyrics && (!data.lyric_ai_prompt || data.lyric_ai_prompt.trim().length === 0)) {
     return false;
@@ -326,6 +329,65 @@ export default function Upload() {
     toast.info(`Form is ${form.formState.isValid ? 'valid' : 'invalid'}`);
   };
 
+  // Update the handleSubmit function
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Submit button clicked");
+    setShowValidationMessages(true);
+    
+    const isValid = await form.trigger();
+    console.log("Manual validation triggered, isValid:", isValid);
+    console.log("Form values:", form.getValues());
+    console.log("Form errors:", form.formState.errors);
+    
+    if (isValid) {
+      console.log("Form is valid, submitting...");
+      const formData = form.getValues();
+      
+      // Remove file objects and use URLs instead
+      delete formData.audio_file;
+      delete formData.song_art_file;
+
+      // Check if audio_url is present
+      if (!formData.audio_url) {
+        toast.error('Please upload an audio file before submitting.');
+        return;
+      }
+
+      // Add the uploaded_by field
+      if (user && user.id) {
+        form.setValue('uploaded_by', user.id); // This should now work without type errors
+      } else {
+        toast.error('User not authenticated. Please log in and try again.');
+        return;
+      }
+      
+      console.log("Submitting form data:", formData);
+      try {
+        const response = await axios.post('/api/submit-song', formData);
+        console.log("Server response:", response.data);
+        toast.success('Song uploaded successfully!');
+        setUploadedFiles([]);
+        setHasShownValidMessage(false);
+        // Optionally, reset the form or redirect to another page here
+      } catch (error) {
+        console.error("Error submitting form:", error.response?.data || error.message);
+        if (error.response?.data?.missingFields) {
+          const missingFieldsMessage = `Missing fields: ${error.response.data.missingFields.join(', ')}`;
+          toast.error(missingFieldsMessage);
+        } else {
+          toast.error('Error uploading song. Please try again.');
+        }
+      }
+    } else {
+      console.log("Form is not valid, errors:", form.formState.errors);
+      Object.entries(form.formState.errors).forEach(([key, value]) => {
+        console.log(`Error in field ${key}:`, value);
+      });
+      toast.error("Please fill in all required fields correctly.");
+    }
+  };
+
   const steps = ["AI Info", "Song Info", "Bible Info", "Upload"]
 
   const watchAiUsedForLyrics = form.watch("ai_used_for_lyrics");
@@ -572,12 +634,13 @@ export default function Upload() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault(); // Prevent form submission
     const file = e.target.files?.[0]
     if (file) {
       const imageUrl = URL.createObjectURL(file)
       setCropImageUrl(imageUrl)
       setIsModalOpen(true)
-      form.setValue('song_art_file', file) // Add this line
+      form.setValue('song_art_file', file)
     }
   }
 
@@ -615,14 +678,14 @@ export default function Upload() {
             <UploadInfoDialog />
           </div>
           {progress === 100 && (
-            <GradientButton type="submit" progress={progress}>
+            <GradientButton type="submit" progress={progress} onClick={handleSubmit}>
               Submit
             </GradientButton>
           )}
         </div>
         
         <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-8">
             <UploadProgressBar onProgressChange={setProgress} />
             
             <Tabs value={steps[currentStep]} className="w-full">
@@ -1501,13 +1564,13 @@ export default function Upload() {
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => {
-                                  const file = e.target.files?.[0];
+                                  e.preventDefault(); // Prevent form submission
+                                  const file = e.target.files?.[0]
                                   if (file) {
-                                    if (file.size > MAX_IMAGE_FILE_SIZE) {
-                                      toast.error("Image file size exceeds the limit of 5MB");
-                                      return;
-                                    }
-                                    handleFileChange(e);
+                                    const imageUrl = URL.createObjectURL(file)
+                                    setCropImageUrl(imageUrl)
+                                    setIsModalOpen(true)
+                                    form.setValue('song_art_file', file)
                                   }
                                 }}
                               />
