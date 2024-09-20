@@ -29,6 +29,7 @@ import { Modal } from '@/components/Modal'
 import UploadProgressBar from '@/components/UploadProgressBar';
 import GradientButton from '@/components/GradientButton'; // Import GradientButton
 import UploadInfoDialog from '@/components/UploadInfoDialog';
+import { useRouter } from 'next/router'
 
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -93,6 +94,7 @@ export default function Upload() {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0)
   const [progress, setProgress] = useState(0); // Add progress state
+  const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: async (...args) => {
@@ -297,22 +299,20 @@ export default function Upload() {
         ...values,
         audio_url: audioUrl,
         song_art_url: songArtUrl,
-        uploaded_by: user?.id, // Ensure this line is present
+        uploaded_by: user?.id,
       };
 
       // Send the form data to your backend
       const response = await axios.post('/api/submit-song', formData);
 
-      if (response.status === 200) {
+      if (response.status === 200 && response.data.songId) {
         toast.success('Song uploaded successfully!');
         setUploadedFiles([]);
         console.log('Form submitted, clearing uploaded files list');
         setHasShownValidMessage(false);
-        // Optionally, reset the form or redirect to another page
-        // form.reset();
-        // router.push('/songs');
+        router.push(`/Songs/${response.data.songId}`); // Redirect to the new song's page
       } else {
-        throw new Error('Failed to submit song');
+        throw new Error('Failed to submit song or get song ID');
       }
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -366,10 +366,14 @@ export default function Upload() {
       try {
         const response = await axios.post('/api/submit-song', formData);
         console.log("Server response:", response.data);
-        toast.success('Song uploaded successfully!');
-        setUploadedFiles([]);
-        setHasShownValidMessage(false);
-        // Optionally, reset the form or redirect to another page here
+        if (response.status === 200 && response.data.songId) {
+          toast.success('Song uploaded successfully!');
+          setUploadedFiles([]);
+          setHasShownValidMessage(false);
+          router.push(`/Songs/${response.data.songId}`); // Redirect to the new song's page
+        } else {
+          throw new Error('Failed to submit song or get song ID');
+        }
       } catch (error) {
         console.error("Error submitting form:", error.response?.data || error.message);
         if (error.response?.data?.missingFields) {

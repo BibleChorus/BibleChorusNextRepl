@@ -12,6 +12,8 @@ import { Play, Pause, Edit, Share2, Info, Trash2 } from 'lucide-react'
 import db from '@/db'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import axios from 'axios'
+import { toast } from "sonner"
 
 interface Song {
   id: number
@@ -50,18 +52,17 @@ export default function SongPage({ song }: SongPageProps) {
   const deleteSong = async () => {
     setIsDeleting(true)
     try {
-      const response = await fetch(`/api/songs/${song.id}/delete`, {
-        method: 'DELETE',
-      })
+      const response = await axios.delete(`/api/songs/${song.id}/delete`)
 
-      if (response.ok) {
-        router.push('/songs') // Redirect to songs list page after successful deletion
+      if (response.status === 200) {
+        toast.success("Song deleted successfully")
+        router.push('/profile') // Redirect to profile page after successful deletion
       } else {
         throw new Error('Failed to delete song')
       }
     } catch (error) {
       console.error('Error deleting song:', error)
-      alert('Failed to delete song. Please try again.')
+      toast.error("Failed to delete song. Please try again.")
     } finally {
       setIsDeleting(false)
     }

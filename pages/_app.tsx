@@ -6,7 +6,7 @@ import { useRouter } from 'next/router'
 import { ThemeProvider } from 'next-themes'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { QueryClient, QueryClientProvider } from 'react-query'
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from 'sonner'
 
 const queryClient = new QueryClient()
 

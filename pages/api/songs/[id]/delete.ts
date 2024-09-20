@@ -30,6 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         Key: fileKey,
       });
       await s3Client.send(deleteCommand);
+      console.log('Deleted song art from S3:', fileKey);
     }
 
     // Delete audio file from S3
@@ -40,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         Key: audioFileKey,
       });
       await s3Client.send(deleteAudioCommand);
+      console.log('Deleted audio file from S3:', audioFileKey);
     }
 
     // Fetch associated verses
@@ -74,6 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const updateData: any = {
           total_verses_covered_count: db.raw('GREATEST(0, ?? - ?)', ['total_verses_covered_count', verses.size]),
           song_ids: db.raw('array_remove(progress_map.song_ids, ?)', [id]),
+          last_updated: trx.fn.now(), // Add this line
         };
 
         // Only include fields in the update if they exist in the song object

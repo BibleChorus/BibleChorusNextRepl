@@ -25,10 +25,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     bible_verses,
   } = req.body;
 
+  // Get the CDN URL from environment variables
+  const cdnUrl = process.env.CDN_URL || '';
+
+  // Prepend CDN URL to audio_url and song_art_url
+  const fullAudioUrl = audio_url ? `${cdnUrl}${audio_url}` : null;
+  const fullSongArtUrl = song_art_url ? `${cdnUrl}${song_art_url}` : null;
+
   // Validate required fields
   const missingFields: string[] = [];
   if (!title) missingFields.push('title');
-  if (!audio_url) missingFields.push('audio_url');
+  if (!fullAudioUrl) missingFields.push('audio_url');
   if (!uploaded_by) missingFields.push('uploaded_by');
   if (!bible_translation_used) missingFields.push('bible_translation_used');
   if (!genre) missingFields.push('genre');
@@ -48,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const [insertedSong] = await trx('songs').insert({
       title,
       artist: artist || null,
-      audio_url,
+      audio_url: fullAudioUrl,
       uploaded_by,
       ai_used_for_lyrics: ai_used_for_lyrics || false,
       music_ai_generated: music_ai_generated || false,
@@ -60,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       lyric_ai_prompt: lyric_ai_prompt || null,
       music_ai_prompt: music_ai_prompt || null,
       music_model_used: music_model_used || null,
-      song_art_url: song_art_url || null,
+      song_art_url: fullSongArtUrl,
     }).returning('id');
 
     if (!insertedSong || typeof insertedSong.id !== 'number') {
@@ -139,20 +146,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           [ai_used_for_lyrics ? 'ai_lyrics_verse_count' : 'human_created_verse_count']: uniqueVerseCount,
           [music_ai_generated ? 'ai_music_verse_count' : 'human_created_verse_count']: uniqueVerseCount,
           [is_continuous_passage ? 'continuous_passage_verse_count' : 'non_continuous_passage_verse_count']: uniqueVerseCount,
-          genre_verse_counts: db.raw(`
-            jsonb_set(
-              COALESCE(progress_map.genre_verse_counts::jsonb, '{}'::jsonb),
-              '{${genre}}',
-              to_jsonb((COALESCE((progress_map.genre_verse_counts->>'${genre}')::int, 0) + ?))
-            )
-          `, [uniqueVerseCount]),
-          translation_verse_counts: db.raw(`
-            jsonb_set(
-              COALESCE(progress_map.translation_verse_counts::jsonb, '{}'::jsonb),
-              '{${bible_translation_used}}',
-              to_jsonb((COALESCE((progress_map.translation_verse_counts->>'${bible_translation_used}')::int, 0) + ?))
-            )
-          `, [uniqueVerseCount]),
+          genre_verse_counts: JSON.stringify({ [genre]: uniqueVerseCount }),
+          translation_verse_counts: JSON.stringify({ [bible_translation_used]: uniqueVerseCount }),
+          last_updated: trx.fn.now(),
         })
         .onConflict(['book', 'chapter'])
         .merge((existing) => {
@@ -209,24 +205,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             ]),
             genre_verse_counts: db.raw(`
               jsonb_set(
-                COALESCE(progress_map.genre_verse_counts::jsonb, '{}'::jsonb),
+                COALESCE(progress_map.genre_verse_counts, '{}')::jsonb,
                 '{${genre}}',
-                to_jsonb((COALESCE((progress_map.genre_verse_counts->>'${genre}')::int, 0) + ?))
+                to_jsonb(COALESCE((progress_map.genre_verse_counts->>'${genre}')::int, 0) + ?)
               )
             `, [uniqueVerseCount]),
             translation_verse_counts: db.raw(`
               jsonb_set(
-                COALESCE(progress_map.translation_verse_counts::jsonb, '{}'::jsonb),
+                COALESCE(progress_map.translation_verse_counts, '{}')::jsonb,
                 '{${bible_translation_used}}',
-                to_jsonb((COALESCE((progress_map.translation_verse_counts->>'${bible_translation_used}')::int, 0) + ?))
+                to_jsonb(COALESCE((progress_map.translation_verse_counts->>'${bible_translation_used}')::int, 0) + ?)
               )
             `, [uniqueVerseCount]),
+            last_updated: trx.fn.now(),
           };
         });
     }
 
     await trx.commit();
-    res.status(200).json({ message: 'Song submitted successfully' });
+    res.status(200).json({ message: 'Song submitted successfully', songId: songId });
   } catch (error) {
     await trx.rollback();
     console.error('Error submitting song:', error);
