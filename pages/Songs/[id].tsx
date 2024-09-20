@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Play, Pause, Edit, Share2, Info } from 'lucide-react'
-import db from '@/db'  // Import the db connection
+import { Play, Pause, Edit, Share2, Info, Trash2 } from 'lucide-react'
+import db from '@/db'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 
 interface Song {
   id: number
@@ -37,11 +39,32 @@ interface SongPageProps {
 
 export default function SongPage({ song }: SongPageProps) {
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying)
     // Implement audio playback logic here
+  }
+
+  const deleteSong = async () => {
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/songs/${song.id}/delete`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        router.push('/songs') // Redirect to songs list page after successful deletion
+      } else {
+        throw new Error('Failed to delete song')
+      }
+    } catch (error) {
+      console.error('Error deleting song:', error)
+      alert('Failed to delete song. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const fallbackImageUrl = '/biblechorus-icon.png' // Adjust this path if needed
@@ -124,6 +147,26 @@ export default function SongPage({ song }: SongPageProps) {
                     </Tooltip>
                   </TooltipProvider>
                   <Button variant="outline"><Share2 className="mr-2" />Share</Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" disabled={isDeleting}>
+                        <Trash2 className="mr-2" />
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to delete this song?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the song, its associated data, and remove the audio and artwork files from storage.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={deleteSong}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
 
                 <Popover>
