@@ -289,7 +289,7 @@ export default function Upload() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       // Modify audio_url and song_art_url to use Cloudfront CDN
-      const cdnUrl = process.env.CDN_URL || '';
+      const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL || '';
       const audioUrl = values.audio_url ? `${cdnUrl}${values.audio_url}` : undefined;
       const songArtUrl = values.song_art_url ? `${cdnUrl}${values.song_art_url}` : undefined;
 
@@ -297,7 +297,7 @@ export default function Upload() {
         ...values,
         audio_url: audioUrl,
         song_art_url: songArtUrl,
-        uploaded_by: user?.id, // Assuming you have access to the user object
+        uploaded_by: user?.id, // Ensure this line is present
       };
 
       // Send the form data to your backend
@@ -305,9 +305,9 @@ export default function Upload() {
 
       if (response.status === 200) {
         toast.success('Song uploaded successfully!');
-        setUploadedFiles([]); // Clear the uploaded files list after successful submission
+        setUploadedFiles([]);
         console.log('Form submitted, clearing uploaded files list');
-        setHasShownValidMessage(false); // Reset the flag after successful submission
+        setHasShownValidMessage(false);
         // Optionally, reset the form or redirect to another page
         // form.reset();
         // router.push('/songs');
@@ -356,7 +356,7 @@ export default function Upload() {
 
       // Add the uploaded_by field
       if (user && user.id) {
-        form.setValue('uploaded_by', user.id); // This should now work without type errors
+        formData.uploaded_by = user.id;
       } else {
         toast.error('User not authenticated. Please log in and try again.');
         return;

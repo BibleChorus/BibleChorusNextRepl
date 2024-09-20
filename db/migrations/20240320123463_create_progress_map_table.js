@@ -3,7 +3,8 @@ exports.up = function(knex) {
     table.increments('id').primary();
     table.string('book', 50).notNullable();
     table.integer('chapter').notNullable();
-    table.integer('verse_count').notNullable();
+    table.integer('total_verses_in_chapter').notNullable();
+    table.integer('total_verses_covered_count').defaultTo(0);
     table.specificType('song_ids', 'INTEGER[]').notNullable().defaultTo('{}');
     table.timestamp('last_updated', { useTz: true }).defaultTo(knex.fn.now());
     table.unique(['book', 'chapter']);
