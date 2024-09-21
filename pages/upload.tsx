@@ -638,7 +638,8 @@ export default function Upload() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault(); // Prevent form submission
+    e.preventDefault(); // Prevent default behavior
+    e.stopPropagation(); // Stop event from bubbling up
     const file = e.target.files?.[0]
     if (file) {
       const imageUrl = URL.createObjectURL(file)
@@ -689,7 +690,7 @@ export default function Upload() {
         </div>
         
         <FormProvider {...form}>
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-8">
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-4 sm:space-y-8">
             <UploadProgressBar onProgressChange={setProgress} />
             
             <Tabs value={steps[currentStep]} className="w-full">
@@ -1568,7 +1569,8 @@ export default function Upload() {
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => {
-                                  e.preventDefault(); // Prevent form submission
+                                  e.preventDefault(); // Prevent default behavior
+                                  e.stopPropagation(); // Stop event from bubbling up
                                   const file = e.target.files?.[0]
                                   if (file) {
                                     const imageUrl = URL.createObjectURL(file)
