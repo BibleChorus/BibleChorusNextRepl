@@ -173,38 +173,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData: {
-  ai_used_for_lyrics: boolean,
-  music_ai_generated: boolean,
-  is_continuous_passage: boolean,
-  lyrics_scripture_adherence: string,
-  genre: string,
-  bible_translation_used: string
-}) {
+async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData: any) {
   const verseIds = await trx('song_verses')
     .where('song_id', songId)
     .pluck('verse_id');
 
+  const genres = songData.genre.split(',').map(g => g.trim());
+
   for (const verseId of verseIds) {
+    const updateObj: any = {
+      all_song_ids: trx.raw('array_append(all_song_ids, ?)', [songId]),
+      ai_lyrics_song_ids: songData.ai_used_for_lyrics ? trx.raw('array_append(ai_lyrics_song_ids, ?)', [songId]) : trx.raw('ai_lyrics_song_ids'),
+      human_lyrics_song_ids: !songData.ai_used_for_lyrics ? trx.raw('array_append(human_lyrics_song_ids, ?)', [songId]) : trx.raw('human_lyrics_song_ids'),
+      ai_music_song_ids: songData.music_ai_generated ? trx.raw('array_append(ai_music_song_ids, ?)', [songId]) : trx.raw('ai_music_song_ids'),
+      human_music_song_ids: !songData.music_ai_generated ? trx.raw('array_append(human_music_song_ids, ?)', [songId]) : trx.raw('human_music_song_ids'),
+      continuous_passage_song_ids: songData.is_continuous_passage ? trx.raw('array_append(continuous_passage_song_ids, ?)', [songId]) : trx.raw('continuous_passage_song_ids'),
+      non_continuous_passage_song_ids: !songData.is_continuous_passage ? trx.raw('array_append(non_continuous_passage_song_ids, ?)', [songId]) : trx.raw('non_continuous_passage_song_ids'),
+      [songData.lyrics_scripture_adherence + '_song_ids']: trx.raw(`array_append(${songData.lyrics_scripture_adherence}_song_ids, ?)`, [songId]),
+      translation_song_ids: trx.raw(`
+        jsonb_set(
+          COALESCE(translation_song_ids, '{}'::jsonb),
+          ARRAY[?],
+          COALESCE(translation_song_ids->?, '[]'::jsonb) || ?::jsonb
+        )
+      `, [songData.bible_translation_used, songData.bible_translation_used, JSON.stringify([songId])])
+    };
+
+    // Handle genre_song_ids
+    for (const genre of genres) {
+      updateObj.genre_song_ids = trx.raw(`
+        jsonb_set(
+          COALESCE(genre_song_ids, '{}'::jsonb),
+          ARRAY[?],
+          COALESCE(genre_song_ids->?, '[]'::jsonb) || ?::jsonb
+        )
+      `, [genre, genre, JSON.stringify([songId])]);
+    }
+
     await trx('bible_verses')
       .where('id', verseId)
-      .update({
-        all_song_ids: trx.raw('array_append(all_song_ids, ?)', [songId]),
-        ai_lyrics_song_ids: songData.ai_used_for_lyrics ? trx.raw('array_append(ai_lyrics_song_ids, ?)', [songId]) : trx.raw('ai_lyrics_song_ids'),
-        human_lyrics_song_ids: !songData.ai_used_for_lyrics ? trx.raw('array_append(human_lyrics_song_ids, ?)', [songId]) : trx.raw('human_lyrics_song_ids'),
-        ai_music_song_ids: songData.music_ai_generated ? trx.raw('array_append(ai_music_song_ids, ?)', [songId]) : trx.raw('ai_music_song_ids'),
-        human_music_song_ids: !songData.music_ai_generated ? trx.raw('array_append(human_music_song_ids, ?)', [songId]) : trx.raw('human_music_song_ids'),
-        continuous_passage_song_ids: songData.is_continuous_passage ? trx.raw('array_append(continuous_passage_song_ids, ?)', [songId]) : trx.raw('continuous_passage_song_ids'),
-        non_continuous_passage_song_ids: !songData.is_continuous_passage ? trx.raw('array_append(non_continuous_passage_song_ids, ?)', [songId]) : trx.raw('non_continuous_passage_song_ids'),
-        [`${songData.lyrics_scripture_adherence}_song_ids`]: trx.raw(`array_append(${songData.lyrics_scripture_adherence}_song_ids, ?)`, [songId]),
-        genre_song_ids: trx.raw('jsonb_set(COALESCE(genre_song_ids, \'{}\'), ?, ?)', [
-          `{${songData.genre}}`,
-          trx.raw(`COALESCE(genre_song_ids->?, '[]')::jsonb || ?::jsonb`, [songData.genre, JSON.stringify([songId])])
-        ]),
-        translation_song_ids: trx.raw('jsonb_set(COALESCE(translation_song_ids, \'{}\'), ?, ?)', [
-          `{${songData.bible_translation_used}}`,
-          trx.raw(`COALESCE(translation_song_ids->?, '[]')::jsonb || ?::jsonb`, [songData.bible_translation_used, JSON.stringify([songId])])
-        ])
-      });
+      .update(updateObj);
   }
 }
