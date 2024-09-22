@@ -199,19 +199,24 @@ async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData
       `, [songData.bible_translation_used, songData.bible_translation_used, JSON.stringify([songId])])
     };
 
-    // Handle genre_song_ids
-    for (const genre of genres) {
-      updateObj.genre_song_ids = trx.raw(`
-        jsonb_set(
-          COALESCE(genre_song_ids, '{}'::jsonb),
-          ARRAY[?],
-          COALESCE(genre_song_ids->?, '[]'::jsonb) || ?::jsonb
-        )
-      `, [genre, genre, JSON.stringify([songId])]);
-    }
-
+    // Update the bible_verses table with all fields except genre_song_ids
     await trx('bible_verses')
       .where('id', verseId)
       .update(updateObj);
+
+    // Update genre_song_ids separately for each genre
+    for (const genre of genres) {
+      await trx('bible_verses')
+        .where('id', verseId)
+        .update({
+          genre_song_ids: trx.raw(`
+            jsonb_set(
+              COALESCE(genre_song_ids, '{}'::jsonb),
+              ARRAY[?],
+              COALESCE(genre_song_ids->?, '[]'::jsonb) || ?::jsonb
+            )
+          `, [genre, genre, JSON.stringify([songId])])
+        });
+    }
   }
 }
