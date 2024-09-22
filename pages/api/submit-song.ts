@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../db';
+import { Knex } from 'knex';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -25,6 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     bible_verses,
   } = req.body;
 
+  console.log('Received request body:', req.body);
+
   // Get the CDN URL from environment variables
   const cdnUrl = process.env.CDN_URL || '';
 
@@ -44,7 +47,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!bible_verses) missingFields.push('bible_verses');
 
   if (missingFields.length > 0) {
+    console.log('Missing required fields:', missingFields);
     return res.status(400).json({ message: 'Missing required fields', missingFields });
+  }
+
+  // Validate lyrics_scripture_adherence
+  const validAdherenceOptions = ['word_for_word', 'close_paraphrase', 'creative_inspiration'];
+  const adherenceMapping = {
+    'The lyrics follow the scripture word-for-word': 'word_for_word',
+    'The lyrics closely follow the scripture passage': 'close_paraphrase',
+    'The lyrics are creatively inspired by the scripture passage': 'creative_inspiration'
+  };
+
+  let mappedAdherence = lyrics_scripture_adherence;
+  if (adherenceMapping[lyrics_scripture_adherence]) {
+    mappedAdherence = adherenceMapping[lyrics_scripture_adherence];
+    console.log(`Mapped lyrics_scripture_adherence from "${lyrics_scripture_adherence}" to "${mappedAdherence}"`);
+  }
+
+  if (!validAdherenceOptions.includes(mappedAdherence)) {
+    console.log('Invalid lyrics_scripture_adherence:', lyrics_scripture_adherence);
+    return res.status(400).json({ 
+      message: 'Invalid lyrics_scripture_adherence value', 
+      receivedValue: lyrics_scripture_adherence,
+      mappedValue: mappedAdherence,
+      validOptions: validAdherenceOptions 
+    });
   }
 
   const trx = await db.transaction();
@@ -61,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       music_ai_generated: music_ai_generated || false,
       bible_translation_used,
       genre,
-      lyrics_scripture_adherence,
+      lyrics_scripture_adherence: mappedAdherence,
       is_continuous_passage: is_continuous_passage || false,
       lyrics,
       lyric_ai_prompt: lyric_ai_prompt || null,
@@ -112,115 +140,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }))
     );
 
-    // Update progress_map table
-    type ProgressUpdate = {
-      book: string;
-      chapter: number;
-      verses: Set<number>;
-    };
-
-    const progressUpdates = verseData.reduce((acc, { book, chapter, verse }) => {
-      const key = `${book}-${chapter}`;
-      if (!acc[key]) {
-        acc[key] = { book, chapter, verses: new Set([verse]) };
-      } else {
-        acc[key].verses.add(verse);
-      }
-      return acc;
-    }, {} as Record<string, ProgressUpdate>);
-
-    for (const update of Object.values(progressUpdates) as ProgressUpdate[]) {
-      const uniqueVerseCount = update.verses.size;
-      
-      await trx('progress_map')
-        .insert({
-          book: update.book,
-          chapter: update.chapter,
-          total_verses_in_chapter: await getTotalVersesInChapter(trx, update.book, update.chapter),
-          total_verses_covered_count: uniqueVerseCount,
-          song_ids: [songId],
-          testament: ['Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy'].includes(update.book) ? 'Old' : 'New',
-          [lyrics_scripture_adherence === 'The lyrics follow the scripture word-for-word' ? 'word_for_word_verse_count' :
-            lyrics_scripture_adherence === 'The lyrics closely follow the scripture passage' ? 'close_paraphrase_verse_count' :
-            'creative_inspiration_verse_count']: uniqueVerseCount,
-          [ai_used_for_lyrics ? 'ai_lyrics_verse_count' : 'human_created_verse_count']: uniqueVerseCount,
-          [music_ai_generated ? 'ai_music_verse_count' : 'human_created_verse_count']: uniqueVerseCount,
-          [is_continuous_passage ? 'continuous_passage_verse_count' : 'non_continuous_passage_verse_count']: uniqueVerseCount,
-          genre_verse_counts: JSON.stringify({ [genre]: uniqueVerseCount }),
-          translation_verse_counts: JSON.stringify({ [bible_translation_used]: uniqueVerseCount }),
-          last_updated: trx.fn.now(),
-        })
-        .onConflict(['book', 'chapter'])
-        .merge((existing) => {
-          const newTotalVersesCovered = db.raw(`
-            LEAST(
-              ??,
-              ?? + (
-                SELECT COUNT(DISTINCT v.verse)
-                FROM UNNEST(?::int[]) AS v(verse)
-                WHERE v.verse NOT IN (
-                  SELECT unnest(string_to_array(COALESCE(??, ''), ',')::int[])
-                )
-              )
-            )
-          `, [
-            'total_verses_in_chapter',
-            'total_verses_covered_count',
-            Array.from(update.verses),
-            'covered_verses'
-          ]);
-
-          return {
-            total_verses_covered_count: newTotalVersesCovered,
-            song_ids: db.raw('array_append(progress_map.song_ids, ?)', [songId]),
-            covered_verses: db.raw(`
-              ARRAY(
-                SELECT DISTINCT unnest(
-                  array_cat(
-                    string_to_array(COALESCE(??, ''), ',')::int[],
-                    ?::int[]
-                  )
-                )::text
-              )::text[]
-            `, ['covered_verses', Array.from(update.verses)]),
-            [lyrics_scripture_adherence === 'The lyrics follow the scripture word-for-word' ? 'word_for_word_verse_count' :
-              lyrics_scripture_adherence === 'The lyrics closely follow the scripture passage' ? 'close_paraphrase_verse_count' :
-              'creative_inspiration_verse_count']: db.raw('?? + ?', [
-                `progress_map.${lyrics_scripture_adherence === 'The lyrics follow the scripture word-for-word' ? 'word_for_word_verse_count' :
-                lyrics_scripture_adherence === 'The lyrics closely follow the scripture passage' ? 'close_paraphrase_verse_count' :
-                'creative_inspiration_verse_count'}`,
-                newTotalVersesCovered
-              ]),
-            [ai_used_for_lyrics ? 'ai_lyrics_verse_count' : 'human_created_verse_count']: db.raw('?? + ?', [
-              `progress_map.${ai_used_for_lyrics ? 'ai_lyrics_verse_count' : 'human_created_verse_count'}`,
-              newTotalVersesCovered
-            ]),
-            [music_ai_generated ? 'ai_music_verse_count' : 'human_created_verse_count']: db.raw('?? + ?', [
-              `progress_map.${music_ai_generated ? 'ai_music_verse_count' : 'human_created_verse_count'}`,
-              newTotalVersesCovered
-            ]),
-            [is_continuous_passage ? 'continuous_passage_verse_count' : 'non_continuous_passage_verse_count']: db.raw('?? + ?', [
-              `progress_map.${is_continuous_passage ? 'continuous_passage_verse_count' : 'non_continuous_passage_verse_count'}`,
-              newTotalVersesCovered
-            ]),
-            genre_verse_counts: db.raw(`
-              jsonb_set(
-                COALESCE(progress_map.genre_verse_counts, '{}')::jsonb,
-                '{${genre}}',
-                to_jsonb(COALESCE((progress_map.genre_verse_counts->>'${genre}')::int, 0) + ?)
-              )
-            `, [uniqueVerseCount]),
-            translation_verse_counts: db.raw(`
-              jsonb_set(
-                COALESCE(progress_map.translation_verse_counts, '{}')::jsonb,
-                '{${bible_translation_used}}',
-                to_jsonb(COALESCE((progress_map.translation_verse_counts->>'${bible_translation_used}')::int, 0) + ?)
-              )
-            `, [uniqueVerseCount]),
-            last_updated: trx.fn.now(),
-          };
-        });
-    }
+    // Update bible_verses table
+    await updateBibleVerses(trx, songId, {
+      ai_used_for_lyrics,
+      music_ai_generated,
+      is_continuous_passage,
+      lyrics_scripture_adherence,
+      genre,
+      bible_translation_used
+    });
 
     await trx.commit();
     res.status(200).json({ message: 'Song submitted successfully', songId: songId });
@@ -245,11 +173,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-// Helper function to get total verses in a chapter
-async function getTotalVersesInChapter(trx, book, chapter) {
-  const result = await trx('bible_verses')
-    .where({ book, chapter })
-    .count('* as total')
-    .first();
-  return result ? result.total : 0;
+async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData: {
+  ai_used_for_lyrics: boolean,
+  music_ai_generated: boolean,
+  is_continuous_passage: boolean,
+  lyrics_scripture_adherence: string,
+  genre: string,
+  bible_translation_used: string
+}) {
+  const verseIds = await trx('song_verses')
+    .where('song_id', songId)
+    .pluck('verse_id');
+
+  for (const verseId of verseIds) {
+    await trx('bible_verses')
+      .where('id', verseId)
+      .update({
+        all_song_ids: trx.raw('array_append(all_song_ids, ?)', [songId]),
+        ai_lyrics_song_ids: songData.ai_used_for_lyrics ? trx.raw('array_append(ai_lyrics_song_ids, ?)', [songId]) : trx.raw('ai_lyrics_song_ids'),
+        human_lyrics_song_ids: !songData.ai_used_for_lyrics ? trx.raw('array_append(human_lyrics_song_ids, ?)', [songId]) : trx.raw('human_lyrics_song_ids'),
+        ai_music_song_ids: songData.music_ai_generated ? trx.raw('array_append(ai_music_song_ids, ?)', [songId]) : trx.raw('ai_music_song_ids'),
+        human_music_song_ids: !songData.music_ai_generated ? trx.raw('array_append(human_music_song_ids, ?)', [songId]) : trx.raw('human_music_song_ids'),
+        continuous_passage_song_ids: songData.is_continuous_passage ? trx.raw('array_append(continuous_passage_song_ids, ?)', [songId]) : trx.raw('continuous_passage_song_ids'),
+        non_continuous_passage_song_ids: !songData.is_continuous_passage ? trx.raw('array_append(non_continuous_passage_song_ids, ?)', [songId]) : trx.raw('non_continuous_passage_song_ids'),
+        [`${songData.lyrics_scripture_adherence}_song_ids`]: trx.raw(`array_append(${songData.lyrics_scripture_adherence}_song_ids, ?)`, [songId]),
+        genre_song_ids: trx.raw('jsonb_set(COALESCE(genre_song_ids, \'{}\'), ?, ?)', [
+          `{${songData.genre}}`,
+          trx.raw(`COALESCE(genre_song_ids->?, '[]')::jsonb || ?::jsonb`, [songData.genre, JSON.stringify([songId])])
+        ]),
+        translation_song_ids: trx.raw('jsonb_set(COALESCE(translation_song_ids, \'{}\'), ?, ?)', [
+          `{${songData.bible_translation_used}}`,
+          trx.raw(`COALESCE(translation_song_ids->?, '[]')::jsonb || ?::jsonb`, [songData.bible_translation_used, JSON.stringify([songId])])
+        ])
+      });
+  }
 }

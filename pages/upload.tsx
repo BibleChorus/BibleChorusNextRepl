@@ -51,9 +51,9 @@ const formSchema = z.object({
   // Step 3: Bible Info
   bible_translation_used: z.string().min(1, "Bible translation is required"),
   lyrics_scripture_adherence: z.enum([
-    "The lyrics follow the scripture word-for-word",
-    "The lyrics closely follow the scripture passage",
-    "The lyrics are creatively inspired by the scripture passage"
+    "word_for_word",
+    "close_paraphrase",
+    "creative_inspiration"
   ]),
   is_continuous_passage: z.boolean(),
   bible_books: z.string().min(1, "At least one Bible book is required"),
@@ -398,7 +398,7 @@ export default function Upload() {
   const watchScriptureAdherence = form.watch("lyrics_scripture_adherence");
 
   const handleAILyricsChange = (checked: boolean) => {
-    if (watchScriptureAdherence === "The lyrics follow the scripture word-for-word") {
+    if (watchScriptureAdherence === "word_for_word") {
       toast.info("Cannot enable AI for lyrics when Word-for-word adherence is selected.", {
         duration: 5000,
         action: {
@@ -417,7 +417,7 @@ export default function Upload() {
   };
 
   useEffect(() => {
-    if (watchScriptureAdherence === "The lyrics follow the scripture word-for-word") {
+    if (watchScriptureAdherence === "word_for_word") {
       if (watchAiUsedForLyrics) {
         form.setValue("ai_used_for_lyrics", false);
         toast.info("AI used for lyrics has been set to No as Word-for-word adherence was selected.", {
@@ -725,13 +725,13 @@ export default function Upload() {
                                 <Switch
                                   checked={field.value}
                                   onCheckedChange={handleAILyricsChange}
-                                  disabled={watchScriptureAdherence === "The lyrics follow the scripture word-for-word"}
+                                  disabled={watchScriptureAdherence === "word_for_word"}
                                 />
                               </FormControl>
                             </div>
                           </HoverCardTrigger>
                           <HoverCardContent className="w-80">
-                            {watchScriptureAdherence === "The lyrics follow the scripture word-for-word" ? (
+                            {watchScriptureAdherence === "word_for_word" ? (
                               <p>Cannot enable AI for lyrics when Word-for-word adherence is selected.</p>
                             ) : (
                               <p>Toggle to indicate if AI was used to generate the lyrics.</p>
@@ -1386,7 +1386,7 @@ export default function Upload() {
                           <Select 
                             onValueChange={(value) => {
                               field.onChange(value);
-                              if (value === "The lyrics follow the scripture word-for-word" && watchAiUsedForLyrics) {
+                              if (value === "word_for_word" && watchAiUsedForLyrics) {
                                 form.setValue("ai_used_for_lyrics", false);
                                 toast.info("AI used for lyrics has been set to No as Word-for-word adherence was selected.", {
                                   duration: 5000,
@@ -1405,13 +1405,13 @@ export default function Upload() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="The lyrics follow the scripture word-for-word">
+                              <SelectItem value="word_for_word">
                                 Word-for-word
                               </SelectItem>
-                              <SelectItem value="The lyrics closely follow the scripture passage">
+                              <SelectItem value="close_paraphrase">
                                 Close paraphrase
                               </SelectItem>
-                              <SelectItem value="The lyrics are creatively inspired by the scripture passage">
+                              <SelectItem value="creative_inspiration">
                                 Creative inspiration
                               </SelectItem>
                             </SelectContent>
