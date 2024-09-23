@@ -103,8 +103,8 @@ export default function Upload() {
       return result;
     },
     defaultValues: {
-      ai_used_for_lyrics: false,
-      music_ai_generated: false,
+      ai_used_for_lyrics: true,
+      music_ai_generated: true,
       is_continuous_passage: false,
       music_model_used: undefined,
       music_ai_prompt: undefined,
@@ -1646,7 +1646,7 @@ export default function Upload() {
               </TabsContent>
             </Tabs>
 
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center pb-4 sm:pb-6 md:pb-8 lg:pb-10 xl:pb-12">
               {currentStep > 0 ? (
                 <Button
                   type="button"
