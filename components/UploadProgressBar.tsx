@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import * as ProgressPrimitive from "@radix-ui/react-progress";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface UploadProgressBarProps {
   onProgressChange: (progress: number) => void;
@@ -17,11 +18,12 @@ const steps = [
 const UploadProgressBar: React.FC<UploadProgressBarProps> = ({ onProgressChange }) => {
   const { watch } = useFormContext();
   const watchedFields = watch();
-  const [progress, setProgress] = useState(0);
+  const prevProgressRef = useRef<number>(0);
 
-  const calculateProgress = () => {
+  const { progress, missingFields } = useMemo(() => {
     let totalFields = 0;
     let filledFields = 0;
+    const missing: string[] = [];
 
     steps.forEach(step => {
       step.fields.forEach(field => {
@@ -31,18 +33,42 @@ const UploadProgressBar: React.FC<UploadProgressBarProps> = ({ onProgressChange 
         totalFields++;
         if (watchedFields[field] !== undefined && watchedFields[field] !== "") {
           filledFields++;
+        } else {
+          missing.push(field);
         }
       });
     });
 
-    return Math.round((filledFields / totalFields) * 100);
-  };
+    const calculatedProgress = Math.round((filledFields / totalFields) * 100);
+
+    return { progress: calculatedProgress, missingFields: missing };
+  }, [watchedFields]);
 
   useEffect(() => {
-    const newProgress = calculateProgress();
-    setProgress(newProgress);
-    onProgressChange(newProgress); // Emit progress to parent
-  }, [watchedFields, onProgressChange]);
+    if (progress !== prevProgressRef.current) {
+      onProgressChange(progress);
+      prevProgressRef.current = progress;
+    }
+  }, [progress, onProgressChange]);
+
+  const formatFieldName = (field: string): string => {
+    const specialCases: { [key: string]: string } = {
+      "ai_used_for_lyrics": "AI for Lyrics",
+      "music_ai_generated": "AI Generated Music",
+      "lyric_ai_prompt": "Lyric AI Prompt",
+      "music_model_used": "Music AI Model",
+      "music_ai_prompt": "Music AI Prompt",
+      "bible_translation_used": "Bible Translation",
+      "lyrics_scripture_adherence": "Scripture Adherence",
+      "is_continuous_passage": "Continuous Passage",
+      "bible_books": "Bible Books",
+      "bible_verses": "Bible Verses",
+      "audio_url": "Audio File",
+      "song_art_url": "Song Artwork"
+    };
+
+    return specialCases[field] || field.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
 
   return (
     <div className="w-full space-y-2">
@@ -50,26 +76,40 @@ const UploadProgressBar: React.FC<UploadProgressBarProps> = ({ onProgressChange 
         <span>Upload Progress</span>
         <span>{progress}% Complete</span>
       </div>
-      <ProgressPrimitive.Root
-        className="relative h-4 w-full overflow-hidden rounded-full bg-secondary"
-      >
-        <ProgressPrimitive.Indicator
-          className={cn(
-            "h-full w-full flex-1 transition-all duration-500 ease-in-out",
-            progress === 100
-              ? "bg-gradient-to-r from-purple-500 to-pink-500"
-              : "bg-primary"
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <div className="cursor-pointer">
+            <ProgressPrimitive.Root
+              className="relative h-4 w-full overflow-hidden rounded-full bg-secondary"
+            >
+              <ProgressPrimitive.Indicator
+                className={cn(
+                  "h-full w-full flex-1 transition-all duration-500 ease-in-out",
+                  progress === 100
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500"
+                    : "bg-primary"
+                )}
+                style={{ transform: `translateX(-${100 - progress}%)` }}
+              />
+            </ProgressPrimitive.Root>
+          </div>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80">
+          {missingFields.length > 0 ? (
+            <>
+              <h3 className="font-semibold mb-2">Almost there! Just a few more steps:</h3>
+              <ul className="list-disc pl-5">
+                {missingFields.map((field, index) => (
+                  <li key={index} className="text-sm">{formatFieldName(field)}</li>
+                ))}
+              </ul>
+              <p className="mt-2 text-sm text-gray-600">Fill these in to complete your upload!</p>
+            </>
+          ) : (
+            <p className="text-green-600 font-semibold">Great job! All required fields are filled. You're ready to submit!</p>
           )}
-          style={{ transform: `translateX(-${100 - progress}%)` }}
-        />
-      </ProgressPrimitive.Root>
-      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-500">
-        {steps.map((step, index) => (
-          <span key={index} className={progress >= ((index + 1) / steps.length) * 100 ? "text-primary" : ""}>
-            {step.name}
-          </span>
-        ))}
-      </div>
+        </HoverCardContent>
+      </HoverCard>
     </div>
   );
 };
