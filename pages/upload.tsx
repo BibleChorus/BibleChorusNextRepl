@@ -682,7 +682,7 @@ export default function Upload() {
             <UploadInfoDialog />
           </div>
           {progress === 100 && (
-            <GradientButton type="submit" progress={progress} onClick={handleSubmit}>
+            <GradientButton type="button" progress={progress} onClick={handleSubmit}>
               Submit
             </GradientButton>
           )}
@@ -1568,7 +1568,6 @@ export default function Upload() {
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => {
-                                  e.preventDefault(); // Prevent form submission
                                   const file = e.target.files?.[0]
                                   if (file) {
                                     const imageUrl = URL.createObjectURL(file)

@@ -19,6 +19,7 @@ export function Modal({ isOpen, onClose, children }: ModalProps) {
           variant="ghost"
           size="icon"
           onClick={onClose}
+          type="button" // Add this line
         >
           <X className="h-4 w-4" />
         </Button>

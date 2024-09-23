@@ -75,8 +75,8 @@ export function ImageCropper({ imageUrl, onCropComplete, onCancel }: ImageCroppe
         <img src={imageUrl} onLoad={(e) => onLoad(e.currentTarget)} alt="Crop me" />
       </ReactCrop>
       <div className="mt-4 flex justify-end space-x-2">
-        <Button onClick={onCancel} variant="outline">Cancel</Button>
-        <Button onClick={getCroppedImg}>Save Image</Button>
+        <Button onClick={onCancel} variant="outline" type="button">Cancel</Button>
+        <Button onClick={getCroppedImg} type="button">Save Image</Button>
       </div>
     </div>
   )
