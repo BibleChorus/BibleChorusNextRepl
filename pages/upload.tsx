@@ -38,9 +38,9 @@ const formSchema = z.object({
   // Step 1: AI Info
   ai_used_for_lyrics: z.boolean(),
   music_ai_generated: z.boolean(),
-  lyric_ai_prompt: z.string().min(1, "Lyric AI prompt is required"),
-  music_model_used: z.string().min(1, "Music model is required"),
-  music_ai_prompt: z.string().min(1, "Music AI prompt is required"),
+  lyric_ai_prompt: z.string().optional(),
+  music_model_used: z.string().optional(),
+  music_ai_prompt: z.string().optional(),
 
   // Step 2: Song Info
   title: z.string().min(1, "Title is required"),
@@ -347,6 +347,8 @@ export default function Upload() {
     toast.info(`Form is ${form.formState.isValid ? 'valid' : 'invalid'}`);
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Update the handleSubmit function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -381,6 +383,7 @@ export default function Upload() {
       }
       
       console.log("Submitting form data:", formData);
+      setIsSubmitting(true);
       try {
         const response = await axios.post('/api/submit-song', formData);
         console.log("Server response:", response.data);
@@ -400,6 +403,8 @@ export default function Upload() {
         } else {
           toast.error('Error uploading song. Please try again.');
         }
+      } finally {
+        setIsSubmitting(false);
       }
     } else {
       console.log("Form is not valid, errors:", form.formState.errors);
@@ -700,8 +705,8 @@ export default function Upload() {
             <UploadInfoDialog />
           </div>
           {progress === 100 && (
-            <GradientButton type="button" progress={progress} onClick={handleSubmit}>
-              Submit
+            <GradientButton type="button" progress={progress} onClick={handleSubmit} isLoading={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit'}
             </GradientButton>
           )}
         </div>
@@ -757,7 +762,7 @@ export default function Upload() {
                           </HoverCardContent>
                         </HoverCard>
                       </div>
-                      {watchAiUsedForLyrics && (
+                      {field.value && (
                         <FormField
                           control={form.control}
                           name="lyric_ai_prompt"
@@ -773,10 +778,9 @@ export default function Upload() {
                                   onChange={(e) => {
                                     field.onChange(e);
                                     if (showValidationMessages) {
-                                      form.trigger();
+                                      form.trigger("lyric_ai_prompt");
                                     }
                                   }}
-                                  required={form.watch("ai_used_for_lyrics")}
                                 />
                               </FormControl>
                               {showValidationMessages && <FormMessage />}
@@ -827,11 +831,10 @@ export default function Upload() {
                                   onValueChange={(value) => {
                                     field.onChange(value);
                                     if (showValidationMessages) {
-                                      form.trigger();
+                                      form.trigger("music_model_used");
                                     }
                                   }}
                                   value={field.value}
-                                  required={form.watch("music_ai_generated")}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
@@ -865,10 +868,9 @@ export default function Upload() {
                                     onChange={(e) => {
                                       field.onChange(e);
                                       if (showValidationMessages) {
-                                        form.trigger();
+                                        form.trigger("music_ai_prompt");
                                       }
                                     }}
-                                    required={form.watch("music_ai_generated")}
                                   />
                                 </FormControl>
                                 {showValidationMessages && <FormMessage />}
@@ -1683,8 +1685,8 @@ export default function Upload() {
                   Next
                 </Button>
               ) : (
-                <GradientButton type="submit" progress={progress}>
-                  Submit
+                <GradientButton type="submit" progress={progress} onClick={handleSubmit} isLoading={isSubmitting}>
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
                 </GradientButton>
               )}
             </div>
