@@ -92,9 +92,27 @@ export default function Upload() {
   console.log("Upload component rendered");
 
   const { user } = useAuth();
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!user) {
+      toast.error("You need to be logged in to upload a song.", {
+        duration: 5000,
+        action: {
+          label: "Login",
+          onClick: () => router.push('/login?view=login'),
+        },
+      })
+      router.push('/login?view=login')
+    }
+  }, [user, router])
+
+  if (!user) {
+    return null // or a loading spinner if you prefer
+  }
+
   const [currentStep, setCurrentStep] = useState(0)
   const [progress, setProgress] = useState(0); // Add progress state
-  const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: async (...args) => {
