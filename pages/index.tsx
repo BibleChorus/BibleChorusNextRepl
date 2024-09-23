@@ -5,9 +5,15 @@ import { ModeToggle } from '../components/mode-toggle';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthButtons } from '@/components/AuthButtons';
 import { UserDropdown } from '@/components/UserDropdown';
+import { useRouter } from 'next/router';
 
 export default function Home() {
   const { user } = useAuth();
+  const router = useRouter();
+
+  const handleGetStarted = () => {
+    router.push('/progress');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
@@ -41,16 +47,15 @@ export default function Home() {
         >
           Explore, sing, and share your favorite Bible songs
         </motion.p>
-        <Link href="/upload">
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, delay: 0.4 }}
-            className="bg-purple-600 text-white px-6 py-3 rounded-md text-lg font-semibold hover:bg-purple-700 transition-colors duration-300"
-          >
-            Get Started
-          </motion.button>
-        </Link>
+        <motion.button
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+          className="bg-purple-600 text-white px-6 py-3 rounded-md text-lg font-semibold hover:bg-purple-700 transition-colors duration-300"
+          onClick={handleGetStarted}
+        >
+          Get Started
+        </motion.button>
       </main>
     </div>
   );
