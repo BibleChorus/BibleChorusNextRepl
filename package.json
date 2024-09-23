@@ -8,7 +8,8 @@
     "start": "next start --port 3000 --hostname 0.0.0.0",
     "lint": "next lint",
     "migrate": "knex migrate:latest",
-    "migrate:rollback": "knex migrate:rollback"
+    "migrate:rollback": "knex migrate:rollback",
+    "knex": "knex"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.651.1",
