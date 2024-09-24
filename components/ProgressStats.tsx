@@ -27,36 +27,39 @@ interface ProgressStatsProps {
 }
 
 export function ProgressStats({ bibleTotal, oldTestament, newTestament }: ProgressStatsProps) {
+  const formatNumber = (num: number) => num.toLocaleString();
+  const formatPercentage = (num: number) => (num || 0).toFixed(2);
+
   return (
     <div className="grid grid-cols-1 gap-4">
       <Card className="p-4">
         <h3 className="text-lg font-medium">Entire Bible Coverage</h3>
-        <p className="text-3xl font-bold">{bibleTotal?.filtered_bible_percentage.toFixed(2)}%</p>
+        <p className="text-3xl font-bold">{formatPercentage(bibleTotal?.filtered_bible_percentage)}%</p>
         <p className="text-sm text-muted-foreground">
-          {bibleTotal?.filtered_bible_verses_covered} / {bibleTotal?.bible_total_verses} verses
+          {formatNumber(bibleTotal?.filtered_bible_verses_covered)} / {formatNumber(bibleTotal?.bible_total_verses)} verses
         </p>
         <p className="text-xs text-muted-foreground">
-          Overall: {bibleTotal?.bible_percentage.toFixed(2)}% ({bibleTotal?.bible_verses_covered} verses)
+          Overall: {formatPercentage(bibleTotal?.bible_percentage)}% ({formatNumber(bibleTotal?.bible_verses_covered)} verses)
         </p>
       </Card>
       <Card className="p-4">
         <h3 className="text-lg font-medium">Old Testament Coverage</h3>
-        <p className="text-3xl font-bold">{oldTestament?.filtered_testament_percentage.toFixed(2)}%</p>
+        <p className="text-3xl font-bold">{formatPercentage(oldTestament?.filtered_testament_percentage)}%</p>
         <p className="text-sm text-muted-foreground">
-          {oldTestament?.filtered_testament_verses_covered} / {oldTestament?.testament_total_verses} verses
+          {formatNumber(oldTestament?.filtered_testament_verses_covered)} / {formatNumber(oldTestament?.testament_total_verses)} verses
         </p>
         <p className="text-xs text-muted-foreground">
-          Overall: {oldTestament?.testament_percentage.toFixed(2)}% ({oldTestament?.testament_verses_covered} verses)
+          Overall: {formatPercentage(oldTestament?.testament_percentage)}% ({formatNumber(oldTestament?.testament_verses_covered)} verses)
         </p>
       </Card>
       <Card className="p-4">
         <h3 className="text-lg font-medium">New Testament Coverage</h3>
-        <p className="text-3xl font-bold">{newTestament?.filtered_testament_percentage.toFixed(2)}%</p>
+        <p className="text-3xl font-bold">{formatPercentage(newTestament?.filtered_testament_percentage)}%</p>
         <p className="text-sm text-muted-foreground">
-          {newTestament?.filtered_testament_verses_covered} / {newTestament?.testament_total_verses} verses
+          {formatNumber(newTestament?.filtered_testament_verses_covered)} / {formatNumber(newTestament?.testament_total_verses)} verses
         </p>
         <p className="text-xs text-muted-foreground">
-          Overall: {newTestament?.testament_percentage.toFixed(2)}% ({newTestament?.testament_verses_covered} verses)
+          Overall: {formatPercentage(newTestament?.testament_percentage)}% ({formatNumber(newTestament?.testament_verses_covered)} verses)
         </p>
       </Card>
     </div>

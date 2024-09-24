@@ -7,6 +7,7 @@ import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts"
 import { Card } from "@/components/ui/card"
 import { ProgressStats } from "@/components/ProgressStats"
 import { Filters, FilterOptions } from "@/components/Filters"
+import { Badge } from "@/components/ui/badge"
 
 interface ChartData {
   "Old Testament": {
@@ -53,7 +54,7 @@ export default function Progress() {
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     lyricsAdherence: "all",
     isContinuous: "all",
-    usesAI: "all",
+    aiMusic: "all",
   })
 
   useEffect(() => {
@@ -65,6 +66,28 @@ export default function Progress() {
     }
     fetchData()
   }, [filterOptions])
+
+  const barChartData = chartData
+    ? [...(chartData["Old Testament"]?.books || []), ...(chartData["New Testament"]?.books || [])]
+        .map(book => ({
+          book: book.book,
+          filtered_book_percentage: Number(book.filtered_book_percentage.toFixed(2))
+        }))
+    : []
+
+  const getFilterTags = (): string[] => {
+    const tags: string[] = []
+    if (filterOptions.lyricsAdherence !== "all") {
+      tags.push(`Lyrics: ${filterOptions.lyricsAdherence.replace(/_/g, ' ')}`)
+    }
+    if (filterOptions.isContinuous !== "all") {
+      tags.push(`Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`)
+    }
+    if (filterOptions.aiMusic !== "all") {
+      tags.push(`Music: ${filterOptions.aiMusic === "true" ? "AI" : "Human"}`)
+    }
+    return tags
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -91,18 +114,22 @@ export default function Progress() {
 
           <div className="lg:col-span-2">
             <Card className="p-4">
-              <h2 className="text-xl font-semibold mb-4">Bible Coverage by Book</h2>
+              <div className="flex flex-wrap items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Bible Coverage by Book</h2>
+                <div className="flex flex-wrap gap-2">
+                  {getFilterTags().map((tag, index) => (
+                    <Badge key={index} variant="secondary">{tag}</Badge>
+                  ))}
+                </div>
+              </div>
               {chartData && (
                 <ChartContainer className="min-h-[400px]" config={{}}>
-                  <BarChart data={[
-                    ...(chartData["Old Testament"]?.books || []),
-                    ...(chartData["New Testament"]?.books || [])
-                  ]}>
+                  <BarChart data={barChartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="book" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(value) => `${value}%`} />
+                    <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
                     <Tooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="book_percentage" fill="#8884d8" />
+                    <Bar dataKey="filtered_book_percentage" fill="#8884d8" name="Filtered Coverage" />
                   </BarChart>
                 </ChartContainer>
               )}

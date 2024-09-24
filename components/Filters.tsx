@@ -6,7 +6,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 export interface FilterOptions {
   lyricsAdherence: "all" | "word_for_word" | "close_paraphrase" | "creative_inspiration"
   isContinuous: "all" | "true" | "false"
-  usesAI: "all" | "true" | "false"
+  aiMusic: "all" | "true" | "false"
 }
 
 interface FiltersProps {
@@ -47,12 +47,12 @@ export function Filters({ filterOptions, setFilterOptions }: FiltersProps) {
         </ToggleGroup>
       </div>
       <div>
-        <p className="font-medium mb-2">Uses AI</p>
+        <p className="font-medium mb-2">AI Music</p>
         <ToggleGroup
           type="single"
-          value={filterOptions.usesAI}
+          value={filterOptions.aiMusic}
           onValueChange={(value) =>
-            setFilterOptions((prev) => ({ ...prev, usesAI: value as FilterOptions['usesAI'] }))
+            setFilterOptions((prev) => ({ ...prev, aiMusic: value as FilterOptions['aiMusic'] }))
           }
         >
           <ToggleGroupItem value="all">All</ToggleGroupItem>

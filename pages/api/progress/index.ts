@@ -23,40 +23,38 @@ interface GroupedData {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { lyricsAdherence, isContinuous, usesAI } = req.query
+  const { lyricsAdherence, isContinuous, aiMusic } = req.query
 
   let query = db("progress_materialized_view")
     .select(
       "book",
       "testament",
       "total_verses",
-      "verses_covered",
-      "book_percentage"
+      "verses_covered"
     )
 
-  // Determine which column to use based on the filters
-  let versesColumn = "verses_covered"
-  let percentageColumn = "book_percentage"
+  // Initialize the filtered verses column
+  let filteredVersesColumn = "verses_covered"
 
+  // Apply filters
   if (lyricsAdherence && lyricsAdherence !== "all") {
-    versesColumn = `${lyricsAdherence}_verses`
-    percentageColumn = `${lyricsAdherence}_percentage`
+    filteredVersesColumn = `${lyricsAdherence}_verses`
   }
 
   if (isContinuous && isContinuous !== "all") {
-    versesColumn = isContinuous === "true" ? "continuous_passage_verses" : "non_continuous_passage_verses"
-    percentageColumn = isContinuous === "true" ? "continuous_passage_percentage" : "non_continuous_passage_percentage"
+    const continuousColumn = isContinuous === "true" ? "continuous_passage_verses" : "non_continuous_passage_verses"
+    filteredVersesColumn = `LEAST(${filteredVersesColumn}, ${continuousColumn})`
   }
 
-  if (usesAI && usesAI !== "all") {
-    versesColumn = usesAI === "true" ? "ai_lyrics_verses" : "human_lyrics_verses"
-    percentageColumn = usesAI === "true" ? "ai_lyrics_percentage" : "human_lyrics_percentage"
+  if (aiMusic && aiMusic !== "all") {
+    const aiMusicColumn = aiMusic === "true" ? "ai_music_verses" : "human_music_verses"
+    filteredVersesColumn = `LEAST(${filteredVersesColumn}, ${aiMusicColumn})`
   }
 
-  // Update the query to use the correct verses and percentage columns
+  // Update the query to use the correct verses column
   query = query
-    .select(db.raw(`${versesColumn} as filtered_verses_covered`))
-    .select(db.raw(`${percentageColumn} as filtered_book_percentage`))
+    .select(db.raw(`${filteredVersesColumn} as filtered_verses_covered`))
+    .select(db.raw(`(${filteredVersesColumn} * 100.0 / total_verses) as filtered_book_percentage`))
 
   try {
     const data = await query
@@ -73,15 +71,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       acc[item.testament].books.push({
         book: item.book,
-        verses_covered: item.verses_covered,
-        filtered_verses_covered: item.filtered_verses_covered,
+        verses_covered: parseInt(item.verses_covered),
+        filtered_verses_covered: parseInt(item.filtered_verses_covered),
         total_verses: item.total_verses,
-        book_percentage: item.book_percentage,
-        filtered_book_percentage: item.filtered_book_percentage
+        book_percentage: (item.verses_covered / item.total_verses) * 100,
+        filtered_book_percentage: parseFloat(item.filtered_book_percentage)
       })
-      acc[item.testament].testament_verses_covered += item.verses_covered
+      acc[item.testament].testament_verses_covered += parseInt(item.verses_covered)
       acc[item.testament].testament_total_verses += item.total_verses
-      acc[item.testament].filtered_testament_verses_covered += item.filtered_verses_covered
+      acc[item.testament].filtered_testament_verses_covered += parseInt(item.filtered_verses_covered)
       return acc
     }, {})
 
