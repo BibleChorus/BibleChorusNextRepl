@@ -23,12 +23,12 @@ import axios from 'axios'
 import { toast } from "sonner";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Progress } from "@/components/ui/progress"
-import { ImageCropper } from '@/components/ImageCropper'
+import { ImageCropper } from '@/components/UploadPage/ImageCropper'
 import { useAuth } from '@/contexts/AuthContext';
 import { Modal } from '@/components/Modal'
-import UploadProgressBar from '@/components/UploadProgressBar';
+import UploadProgressBar from '@/components/UploadPage/UploadProgressBar';
 import GradientButton from '@/components/GradientButton'; // Import GradientButton
-import UploadInfoDialog from '@/components/UploadInfoDialog';
+import UploadInfoDialog from '@/components/UploadPage/UploadInfoDialog';
 import { useRouter } from 'next/router'
 
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes

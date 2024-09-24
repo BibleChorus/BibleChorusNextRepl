@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../db';
 import { Knex } from 'knex';
+import { refreshProgressMaterializedView } from '@/lib/db-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -151,6 +152,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     await trx.commit();
+    
+    // Refresh the materialized view after successful insertion
+    await refreshProgressMaterializedView();
+    
     res.status(200).json({ message: 'Song submitted successfully', songId: songId });
   } catch (error) {
     await trx.rollback();

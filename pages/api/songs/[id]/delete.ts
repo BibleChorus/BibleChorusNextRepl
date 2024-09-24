@@ -3,6 +3,7 @@ import db from '@/db';
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import s3Client from '@/lib/s3';
 import { Knex } from 'knex';
+import { refreshProgressMaterializedView } from '@/lib/db-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE') {
@@ -54,6 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Delete the song
     await trx('songs').where('id', id).delete();
 
+    await refreshProgressMaterializedView(); // Add this line
     await trx.commit();
     res.status(200).json({ message: 'Song deleted successfully' });
   } catch (error) {

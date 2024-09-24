@@ -5,9 +5,10 @@ import Head from "next/head"
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts"
 import { Card } from "@/components/ui/card"
-import { ProgressStats } from "@/components/ProgressStats"
-import { Filters, FilterOptions } from "@/components/Filters"
+import { ProgressStats } from "@/components/ProgressPage/ProgressStats"
+import { Filters, FilterOptions } from "@/components/ProgressPage/Filters"
 import { Badge } from "@/components/ui/badge"
+import { useMediaQuery } from "@/hooks/useMediaQuery" // Add this import
 
 interface ChartData {
   "Old Testament": {
@@ -67,11 +68,14 @@ export default function Progress() {
     fetchData()
   }, [filterOptions])
 
+  const isSmallScreen = useMediaQuery("(max-width: 768px)")
+
   const barChartData = chartData
     ? [...(chartData["Old Testament"]?.books || []), ...(chartData["New Testament"]?.books || [])]
-        .map(book => ({
+        .map((book, index) => ({
           book: book.book,
-          filtered_book_percentage: Number(book.filtered_book_percentage.toFixed(2))
+          filtered_book_percentage: Number(book.filtered_book_percentage.toFixed(2)),
+          index: index // Add index for label display logic
         }))
     : []
 
@@ -123,11 +127,40 @@ export default function Progress() {
                 </div>
               </div>
               {chartData && (
-                <ChartContainer className="min-h-[400px]" config={{}}>
-                  <BarChart data={barChartData}>
+                <ChartContainer className="min-h-[400px] max-w-full overflow-x-auto" config={{}}>
+                  <BarChart
+                    data={barChartData}
+                    layout={isSmallScreen ? "vertical" : "horizontal"}
+                    width={isSmallScreen ? 600 : undefined}
+                    height={isSmallScreen ? barChartData.length * 30 : 400}
+                    margin={isSmallScreen ? { top: 5, right: 30, left: 100, bottom: 5 } : { top: 5, right: 30, left: 20, bottom: 50 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="book" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
+                    {isSmallScreen ? (
+                      <>
+                        <XAxis type="number" tickFormatter={(value) => `${value.toFixed(2)}%`} />
+                        <YAxis 
+                          dataKey="book" 
+                          type="category" 
+                          width={90} 
+                          tick={{ fontSize: 10 }}
+                          interval={0}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <XAxis 
+                          dataKey="book" 
+                          tick={{ fontSize: 10 }} 
+                          angle={-45} 
+                          textAnchor="end" 
+                          interval={0} 
+                          height={70}
+                          tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
+                        />
+                        <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
+                      </>
+                    )}
                     <Tooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="filtered_book_percentage" fill="#8884d8" name="Filtered Coverage" />
                   </BarChart>
