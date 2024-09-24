@@ -127,13 +127,13 @@ export default function Progress() {
                 </div>
               </div>
               {chartData && (
-                <ChartContainer className="min-h-[400px] max-w-full overflow-x-auto" config={{}}>
+                <ChartContainer className={`${isSmallScreen ? 'min-h-[400px]' : 'min-h-[400px]'} max-w-full overflow-x-auto`} config={{}}>
                   <BarChart
                     data={barChartData}
                     layout={isSmallScreen ? "vertical" : "horizontal"}
-                    width={isSmallScreen ? 600 : undefined}
-                    height={isSmallScreen ? barChartData.length * 30 : 400}
-                    margin={isSmallScreen ? { top: 5, right: 30, left: 100, bottom: 5 } : { top: 5, right: 30, left: 20, bottom: 50 }}
+                    width={isSmallScreen ? 1500 : undefined}
+                    height={isSmallScreen ? Math.max(750, barChartData.length * 20) : 400}
+                    margin={isSmallScreen ? { top: 5, right: 30, left: 0, bottom: 5 } : { top: 5, right: 30, left: 5, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     {isSmallScreen ? (
@@ -142,20 +142,21 @@ export default function Progress() {
                         <YAxis 
                           dataKey="book" 
                           type="category" 
-                          width={90} 
-                          tick={{ fontSize: 10 }}
+                          width={50} 
+                          tick={{ fontSize: 7 }}
                           interval={0}
+                          tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
                         />
                       </>
                     ) : (
                       <>
                         <XAxis 
                           dataKey="book" 
-                          tick={{ fontSize: 10 }} 
-                          angle={-45} 
+                          tick={{ fontSize: 11 }} 
+                          angle={-40} 
                           textAnchor="end" 
                           interval={0} 
-                          height={70}
+                          height={55}
                           tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
                         />
                         <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
