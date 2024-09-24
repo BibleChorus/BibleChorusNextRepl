@@ -23,7 +23,7 @@ export function Filters({ filterOptions, setFilterOptions }: FiltersProps) {
           type="single"
           value={filterOptions.lyricsAdherence}
           onValueChange={(value) =>
-            setFilterOptions((prev) => ({ ...prev, lyricsAdherence: value as any }))
+            setFilterOptions((prev) => ({ ...prev, lyricsAdherence: value as FilterOptions['lyricsAdherence'] }))
           }
         >
           <ToggleGroupItem value="all">All</ToggleGroupItem>
@@ -38,7 +38,7 @@ export function Filters({ filterOptions, setFilterOptions }: FiltersProps) {
           type="single"
           value={filterOptions.isContinuous}
           onValueChange={(value) =>
-            setFilterOptions((prev) => ({ ...prev, isContinuous: value as any }))
+            setFilterOptions((prev) => ({ ...prev, isContinuous: value as FilterOptions['isContinuous'] }))
           }
         >
           <ToggleGroupItem value="all">All</ToggleGroupItem>
@@ -52,7 +52,7 @@ export function Filters({ filterOptions, setFilterOptions }: FiltersProps) {
           type="single"
           value={filterOptions.usesAI}
           onValueChange={(value) =>
-            setFilterOptions((prev) => ({ ...prev, usesAI: value as any }))
+            setFilterOptions((prev) => ({ ...prev, usesAI: value as FilterOptions['usesAI'] }))
           }
         >
           <ToggleGroupItem value="all">All</ToggleGroupItem>

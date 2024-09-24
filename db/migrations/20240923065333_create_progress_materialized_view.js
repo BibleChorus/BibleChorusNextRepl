@@ -4,16 +4,23 @@
  */
 exports.up = function(knex) {
   return knex.raw(`
+    DROP MATERIALIZED VIEW IF EXISTS progress_materialized_view;
+    
     CREATE MATERIALIZED VIEW progress_materialized_view AS
     SELECT
       bv.book,
       COUNT(DISTINCT bv.id) AS verses_covered,
       bbi.verses AS total_verses,
-      (COUNT(DISTINCT bv.id)::float / bbi.verses) * 100 AS percentage
+      (COUNT(DISTINCT bv.id)::float / bbi.verses) * 100 AS percentage,
+      s.lyrics_scripture_adherence,
+      s.is_continuous_passage,
+      s.ai_used_for_lyrics
     FROM
       song_verses sv
     JOIN
       bible_verses bv ON sv.verse_id = bv.id
+    JOIN
+      songs s ON sv.song_id = s.id
     JOIN
       (VALUES
         ('Genesis', 1533),
@@ -84,7 +91,7 @@ exports.up = function(knex) {
         ('Revelation', 404)
       ) AS bbi(book, verses) ON bv.book = bbi.book
     GROUP BY
-      bv.book, bbi.verses;
+      bv.book, bbi.verses, s.lyrics_scripture_adherence, s.is_continuous_passage, s.ai_used_for_lyrics;
   `);
 };
 

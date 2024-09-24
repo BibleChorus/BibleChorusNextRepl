@@ -2,16 +2,54 @@
 
 import { useEffect, useState } from "react"
 import Head from "next/head"
-import { ChartContainer, ChartLegendContent, ChartTooltipContent } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts"
-import { ToggleGroup } from "@/components/ui/toggle-group"
 import { Card } from "@/components/ui/card"
 import { ProgressStats } from "@/components/ProgressStats"
 import { Filters, FilterOptions } from "@/components/Filters"
-import { BIBLE_BOOKS, BIBLE_BOOK_INFO, VERSE_COUNTS } from "@/lib/constants"
+
+interface ChartData {
+  "Old Testament": {
+    books: Array<{
+      book: string;
+      verses_covered: number;
+      filtered_verses_covered: number;
+      total_verses: number;
+      book_percentage: number;
+      filtered_book_percentage: number;
+    }>;
+    testament_percentage: number;
+    testament_verses_covered: number;
+    testament_total_verses: number;
+    filtered_testament_percentage: number;
+    filtered_testament_verses_covered: number;
+  };
+  "New Testament": {
+    books: Array<{
+      book: string;
+      verses_covered: number;
+      filtered_verses_covered: number;
+      total_verses: number;
+      book_percentage: number;
+      filtered_book_percentage: number;
+    }>;
+    testament_percentage: number;
+    testament_verses_covered: number;
+    testament_total_verses: number;
+    filtered_testament_percentage: number;
+    filtered_testament_verses_covered: number;
+  };
+  bibleTotal: {
+    bible_percentage: number;
+    bible_verses_covered: number;
+    bible_total_verses: number;
+    filtered_bible_percentage: number;
+    filtered_bible_verses_covered: number;
+  };
+}
 
 export default function Progress() {
-  const [chartData, setChartData] = useState([])
+  const [chartData, setChartData] = useState<ChartData | null>(null)
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     lyricsAdherence: "all",
     isContinuous: "all",
@@ -43,20 +81,31 @@ export default function Progress() {
         <Filters filterOptions={filterOptions} setFilterOptions={setFilterOptions} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          <ProgressStats />
+          {chartData && (
+            <ProgressStats
+              bibleTotal={chartData.bibleTotal}
+              oldTestament={chartData["Old Testament"]}
+              newTestament={chartData["New Testament"]}
+            />
+          )}
 
           <div className="lg:col-span-2">
             <Card className="p-4">
               <h2 className="text-xl font-semibold mb-4">Bible Coverage by Book</h2>
-              <ChartContainer className="min-h-[400px]" config={{}}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="book" tick={{ fontSize: 12 }} />
-                  <YAxis tickFormatter={(value) => `${value}%`} />
-                  <Tooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="percentage" fill="#8884d8" />
-                </BarChart>
-              </ChartContainer>
+              {chartData && (
+                <ChartContainer className="min-h-[400px]" config={{}}>
+                  <BarChart data={[
+                    ...(chartData["Old Testament"]?.books || []),
+                    ...(chartData["New Testament"]?.books || [])
+                  ]}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="book" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(value) => `${value}%`} />
+                    <Tooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="book_percentage" fill="#8884d8" />
+                  </BarChart>
+                </ChartContainer>
+              )}
             </Card>
           </div>
         </div>
