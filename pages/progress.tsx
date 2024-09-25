@@ -9,7 +9,7 @@ import { ProgressStats } from "@/components/ProgressPage/ProgressStats"
 import { Filters, FilterOptions } from "@/components/ProgressPage/Filters"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import { Filter } from "lucide-react"
+import { Filter, X } from "lucide-react"
 
 interface ChartData {
   "Old Testament": {
@@ -114,35 +114,49 @@ export default function Progress() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div 
-        className={`sticky top-14 z-10 transition-all duration-300 ${
-          isHeaderVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'
-        }`}
-      >
-        <div className="bg-gray-100 dark:bg-gray-800 shadow-md">
-          <div className="container mx-auto px-4 flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+      <div className="sticky top-0 z-20 bg-gray-100 dark:bg-gray-800 shadow-md transition-all duration-300">
+        {/* Header Section */}
+        <div className={`container mx-auto px-4 transition-all duration-300 ${isHeaderVisible ? 'h-16' : 'h-12'}`}>
+          <div className="flex items-center justify-between h-full">
+            <h1 className={`text-2xl font-bold text-gray-800 dark:text-gray-100 transition-opacity duration-300 ${isHeaderVisible ? 'opacity-100' : 'opacity-0'}`}>
               Progress Map
             </h1>
           </div>
         </div>
-      </div>
 
-      <button
-        onClick={() => setIsFilterExpanded(!isFilterExpanded)}
-        className={`fixed top-16 right-4 z-20 p-2 rounded-full bg-white dark:bg-gray-800 shadow-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300`}
-        aria-label={isFilterExpanded ? "Collapse filters" : "Expand filters"}
-      >
-        <Filter className="h-5 w-5" />
-      </button>
-
-      {isFilterExpanded && (
-        <div className="sticky top-14 z-10 bg-gray-100 dark:bg-gray-800 shadow-md">
-          <div className="container mx-auto px-4 py-4 transition-all duration-300">
-            <Filters filterOptions={filterOptions} setFilterOptions={setFilterOptions} />
+        {/* Filter Group Section */}
+        {isFilterExpanded && (
+          <div className="bg-gray-100 dark:bg-gray-800">
+            <div className="container mx-auto px-4 py-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Filters</h2>
+                <button
+                  onClick={() => setIsFilterExpanded(false)}
+                  className="text-sm flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                  aria-label="Close filters"
+                >
+                  Close Filters
+                  <X className="h-4 w-4 ml-1" />
+                </button>
+              </div>
+              <Filters filterOptions={filterOptions} setFilterOptions={setFilterOptions} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Filter Toggle Button */}
+        {!isFilterExpanded && (
+          <button
+            onClick={() => setIsFilterExpanded(true)}
+            className={`fixed right-4 z-20 p-2 rounded-full bg-white dark:bg-gray-800 shadow-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 ${
+              isHeaderVisible ? 'top-16' : 'top-12'
+            }`}
+            aria-label="Expand filters"
+          >
+            <Filter className="h-5 w-5" />
+          </button>
+        )}
+      </div>
 
       <main className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
