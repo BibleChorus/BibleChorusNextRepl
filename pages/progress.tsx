@@ -74,7 +74,8 @@ export default function Progress() {
 
   const isSmallScreen = useMediaQuery("(max-width: 768px)")
 
-  const [isFilterExpanded, setIsFilterExpanded] = useState(true)
+  // Change the initial state of isFilterExpanded to false
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
 
   useEffect(() => {
@@ -243,7 +244,11 @@ export default function Progress() {
                       </>
                     )}
                     <Tooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="filtered_book_percentage" fill="#8884d8" name="Filtered Coverage" />
+                    <Bar 
+                      dataKey="filtered_book_percentage" 
+                      fill="#8884d8" 
+                      name="Percent Covered:"
+                    />
                   </BarChart>
                 </ChartContainer>
               )}
