@@ -212,9 +212,9 @@ export default function Progress() {
                   <BarChart
                     data={barChartData}
                     layout={isSmallScreen ? "vertical" : "horizontal"}
-                    width={isSmallScreen ? 1500 : undefined}
+                    width={isSmallScreen ? 750 : undefined}
                     height={isSmallScreen ? Math.max(750, barChartData.length * 20) : 400}
-                    margin={isSmallScreen ? { top: 5, right: 30, left: 0, bottom: 5 } : { top: 5, right: 30, left: 5, bottom: 5 }}
+                    margin={isSmallScreen ? { top: 5, right: 20, left: -43, bottom: 5 } : { top: 5, right: 30, left: 5, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     {isSmallScreen ? (
@@ -223,8 +223,8 @@ export default function Progress() {
                         <YAxis 
                           dataKey="book" 
                           type="category" 
-                          width={50} 
-                          tick={{ fontSize: 7 }}
+                          width={100} 
+                          tick={{ fontSize: 8 }}
                           interval={0}
                           tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
                         />
