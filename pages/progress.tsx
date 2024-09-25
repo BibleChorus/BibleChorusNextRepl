@@ -13,6 +13,7 @@ import { Filter, X, Info } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Separator } from "@/components/ui/separator"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { PieChartGroup } from "@/components/ProgressPage/PieChartGroup"
 
 interface ChartData {
   "Old Testament": {
@@ -188,72 +189,66 @@ export default function Progress() {
       </div>
 
       <main className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 gap-6 mt-6">
           {chartData && (
-            <ProgressStats
-              bibleTotal={chartData.bibleTotal}
-              oldTestament={chartData["Old Testament"]}
-              newTestament={chartData["New Testament"]}
-            />
+            <PieChartGroup chartData={chartData} filterOptions={filterOptions} />
           )}
 
-          <div className="lg:col-span-2">
-            <Card className="p-4">
-              <div className="flex flex-wrap items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Bible Coverage by Book</h2>
-                <div className="flex flex-wrap gap-2">
-                  {getFilterTags().map((tag, index) => (
-                    <Badge key={index} variant="secondary">{tag}</Badge>
-                  ))}
-                </div>
+          <Card className="p-4">
+            <div className="flex flex-wrap items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Bible Coverage by Book</h2>
+              <div className="flex flex-wrap gap-2">
+                {getFilterTags().map((tag, index) => (
+                  <Badge key={index} variant="secondary">{tag}</Badge>
+                ))}
               </div>
-              {chartData && (
-                <ChartContainer className={`${isSmallScreen ? 'min-h-[400px]' : 'min-h-[400px]'} max-w-full overflow-x-auto`} config={{}}>
-                  <BarChart
-                    data={barChartData}
-                    layout={isSmallScreen ? "vertical" : "horizontal"}
-                    width={isSmallScreen ? 750 : undefined}
-                    height={isSmallScreen ? Math.max(750, barChartData.length * 20) : 400}
-                    margin={isSmallScreen ? { top: 5, right: 20, left: -43, bottom: 5 } : { top: 5, right: 30, left: 5, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    {isSmallScreen ? (
-                      <>
-                        <XAxis type="number" tickFormatter={(value) => `${value.toFixed(2)}%`} />
-                        <YAxis 
-                          dataKey="book" 
-                          type="category" 
-                          width={100} 
-                          tick={{ fontSize: 8 }}
-                          interval={0}
-                          tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <XAxis 
-                          dataKey="book" 
-                          tick={{ fontSize: 11 }} 
-                          angle={-40} 
-                          textAnchor="end" 
-                          interval={0} 
-                          height={55}
-                          tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
-                        />
-                        <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
-                      </>
-                    )}
-                    <Tooltip content={<ChartTooltipContent />} />
-                    <Bar 
-                      dataKey="filtered_book_percentage" 
-                      fill="#8884d8" 
-                      name="Percent Covered:"
-                    />
-                  </BarChart>
-                </ChartContainer>
-              )}
-            </Card>
-          </div>
+            </div>
+            {chartData && (
+              <ChartContainer className={`${isSmallScreen ? 'min-h-[400px]' : 'min-h-[400px]'} max-w-full overflow-x-auto`} config={{}}>
+                <BarChart
+                  data={barChartData}
+                  layout={isSmallScreen ? "vertical" : "horizontal"}
+                  width={isSmallScreen ? 750 : undefined}
+                  height={isSmallScreen ? Math.max(750, barChartData.length * 20) : 400}
+                  margin={isSmallScreen ? { top: 5, right: 20, left: -43, bottom: 5 } : { top: 5, right: 30, left: 5, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  {isSmallScreen ? (
+                    <>
+                      <XAxis type="number" tickFormatter={(value) => `${value.toFixed(2)}%`} />
+                      <YAxis 
+                        dataKey="book" 
+                        type="category" 
+                        width={100} 
+                        tick={{ fontSize: 8 }}
+                        interval={0}
+                        tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <XAxis 
+                        dataKey="book" 
+                        tick={{ fontSize: 11 }} 
+                        angle={-40} 
+                        textAnchor="end" 
+                        interval={0} 
+                        height={55}
+                        tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
+                      />
+                      <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
+                    </>
+                  )}
+                  <Tooltip content={<ChartTooltipContent showPercentage />} />
+                  <Bar 
+                    dataKey="filtered_book_percentage" 
+                    fill="#8884d8" 
+                    name="Percent Covered:"
+                  />
+                </BarChart>
+              </ChartContainer>
+            )}
+          </Card>
         </div>
       </main>
     </div>
