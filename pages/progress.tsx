@@ -9,7 +9,10 @@ import { ProgressStats } from "@/components/ProgressPage/ProgressStats"
 import { Filters, FilterOptions } from "@/components/ProgressPage/Filters"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import { Filter, X } from "lucide-react"
+import { Filter, X, Info } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Separator } from "@/components/ui/separator"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 
 interface ChartData {
   "Old Testament": {
@@ -108,54 +111,79 @@ export default function Progress() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <Head>
         <title>BibleChorus - Progress Map</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="sticky top-0 z-20 bg-gray-100 dark:bg-gray-800 shadow-md transition-all duration-300">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         {/* Header Section */}
         <div className={`container mx-auto px-4 transition-all duration-300 ${isHeaderVisible ? 'h-16' : 'h-12'}`}>
           <div className="flex items-center justify-between h-full">
-            <h1 className={`text-2xl font-bold text-gray-800 dark:text-gray-100 transition-opacity duration-300 ${isHeaderVisible ? 'opacity-100' : 'opacity-0'}`}>
+            <h1 className={`text-2xl font-bold text-foreground transition-opacity duration-300 ${isHeaderVisible ? 'opacity-100' : 'opacity-0'}`}>
               Progress Map
             </h1>
           </div>
         </div>
 
         {/* Filter Group Section */}
-        {isFilterExpanded && (
-          <div className="bg-gray-100 dark:bg-gray-800">
-            <div className="container mx-auto px-4 py-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Filters</h2>
-                <button
-                  onClick={() => setIsFilterExpanded(false)}
-                  className="text-sm flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                  aria-label="Close filters"
-                >
-                  Close Filters
-                  <X className="h-4 w-4 ml-1" />
-                </button>
+        <AnimatePresence>
+          {isFilterExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+            >
+              <div className="container mx-auto px-4 py-4">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center space-x-2">
+                    <h2 className="text-lg font-semibold">Filters</h2>
+                    <Popover>
+                      <PopoverTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                      </PopoverTrigger>
+                      <PopoverContent>
+                        <p className="text-sm">
+                          Adjust filters to refine your view of Bible coverage progress.
+                        </p>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <button
+                    onClick={() => setIsFilterExpanded(false)}
+                    className="text-sm flex items-center text-muted-foreground hover:text-foreground"
+                    aria-label="Close filters"
+                  >
+                    Close Filters
+                    <X className="h-4 w-4 ml-1" />
+                  </button>
+                </div>
+                <Filters filterOptions={filterOptions} setFilterOptions={setFilterOptions} />
               </div>
-              <Filters filterOptions={filterOptions} setFilterOptions={setFilterOptions} />
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Filter Toggle Button */}
         {!isFilterExpanded && (
-          <button
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
             onClick={() => setIsFilterExpanded(true)}
-            className={`fixed right-4 z-20 p-2 rounded-full bg-white dark:bg-gray-800 shadow-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 ${
+            className={`fixed right-4 z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${
               isHeaderVisible ? 'top-16' : 'top-12'
             }`}
             aria-label="Expand filters"
           >
             <Filter className="h-5 w-5" />
-          </button>
+          </motion.button>
         )}
+        <Separator />
       </div>
 
       <main className="container mx-auto px-4 py-6">
