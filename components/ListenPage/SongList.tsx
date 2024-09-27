@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { Song } from '@/pages/listen'
 import { Badge } from '@/components/ui/badge'
 import { PlayCircle } from 'lucide-react'
 import { useRouter } from 'next/router'
