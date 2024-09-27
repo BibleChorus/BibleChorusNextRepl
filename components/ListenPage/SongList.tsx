@@ -6,6 +6,7 @@ import { Song } from '@/pages/listen'
 import { Badge } from '@/components/ui/badge'
 import { PlayCircle } from 'lucide-react'
 import { useState } from 'react'
+import { useRouter } from 'next/router'
 
 // Add this line to get the CDN URL
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
@@ -14,7 +15,8 @@ const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 export type Song = {
   id: number;
   title: string;
-  artist: string;
+  username: string; // Add this line
+  uploaded_by: number; // Add this line
   genre: string;
   created_at: string;
   audio_url: string;
@@ -30,6 +32,7 @@ interface SongListProps {
 
 export function SongList({ songs }: SongListProps) {
   const [imageError, setImageError] = useState<Record<number, boolean>>({})
+  const router = useRouter()
 
   return (
     <div className="space-y-4">
@@ -62,9 +65,12 @@ export function SongList({ songs }: SongListProps) {
                 {song.title}
               </h2>
             </Link>
-            <p className="text-gray-600 dark:text-gray-300">
-              {song.artist || 'Unknown Artist'}
-            </p>
+            <button
+              onClick={() => router.push(`/profile?id=${song.uploaded_by}`)}
+              className="text-primary hover:underline"
+            >
+              {song.username || 'Unknown User'}
+            </button>
 
             {/* Tags / Badges */}
             <div className="mt-2 flex flex-wrap gap-2">
