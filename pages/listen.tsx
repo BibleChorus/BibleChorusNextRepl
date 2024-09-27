@@ -50,10 +50,10 @@ function ListenContent() {
   //   }, {} as VisibilityState)
   // )
 
-  // Use React Query's useQuery hook to fetch songs
+  // Update the useQuery hook to use the new API endpoint
   const { data: songs, isLoading, error } = useQuery<Song[], Error>('songs', async () => {
     const res = await axios.get('/api/songs')
-    console.log('API response:', res.data) // Add this line
+    console.log('API response:', res.data) // Add this line for debugging
     return res.data
   })
 

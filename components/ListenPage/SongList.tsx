@@ -10,6 +10,20 @@ import { useState } from 'react'
 // Add this line to get the CDN URL
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
+// Update the Song type to match the fields returned by the new API
+export type Song = {
+  id: number;
+  title: string;
+  artist: string;
+  genre: string;
+  created_at: string;
+  audio_url: string;
+  song_art_url?: string;
+  bible_translation_used?: string;
+  lyrics_scripture_adherence?: string;
+  is_continuous_passage?: boolean;
+};
+
 interface SongListProps {
   songs: Song[]
 }
