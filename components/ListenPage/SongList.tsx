@@ -1,12 +1,12 @@
 "use client"
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { Song } from '@/pages/listen'
 import { Badge } from '@/components/ui/badge'
 import { PlayCircle } from 'lucide-react'
-import { useState } from 'react'
 import { useRouter } from 'next/router'
+import { motion } from 'framer-motion'
 
 // Add this line to get the CDN URL
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
@@ -36,13 +36,15 @@ export function SongList({ songs }: SongListProps) {
 
   return (
     <div className="space-y-4">
-      {songs.map((song) => (
-        <div
+      {songs.map((song, index) => (
+        <motion.div
           key={song.id}
-          className="flex flex-col sm:flex-row items-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
+          className="flex flex-col sm:flex-row items-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden"
+          whileHover={{ scale: 1.02 }}
+          transition={{ duration: 0.2 }}
         >
-          {/* Song Art */}
-          <div className="w-full sm:w-32 sm:h-32 h-64 mb-4 sm:mb-0 sm:mr-4 relative">
+          {/* Song Art with Play Button Overlay */}
+          <div className="w-full sm:w-32 sm:h-32 h-64 mb-4 sm:mb-0 sm:mr-4 relative group">
             {song.song_art_url && !imageError[song.id] ? (
               <img
                 // Modify this line to use the CDN URL
@@ -56,12 +58,26 @@ export function SongList({ songs }: SongListProps) {
                 No Image
               </div>
             )}
+            <motion.div 
+              className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center transition-opacity duration-300 ${index === 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+              initial={{ opacity: index === 0 ? 1 : 0 }}
+              whileHover={{ opacity: 1 }}
+            >
+              <motion.button
+                className="text-white p-2"
+                onClick={() => console.log('Play song:', song.audio_url)}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <PlayCircle className="h-12 w-12" />
+              </motion.button>
+            </motion.div>
           </div>
 
           {/* Song Details */}
           <div className="flex-1">
             <Link href={`/Songs/${song.id}`}>
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 hover:underline">
                 {song.title}
               </h2>
             </Link>
@@ -92,15 +108,7 @@ export function SongList({ songs }: SongListProps) {
               )}
             </div>
           </div>
-
-          {/* Play Button */}
-          <button
-            className="mt-4 sm:mt-0 sm:ml-4 p-2 text-primary hover:text-primary-foreground"
-            onClick={() => console.log('Play song:', song.audio_url)}
-          >
-            <PlayCircle className="h-8 w-8" />
-          </button>
-        </div>
+        </motion.div>
       ))}
     </div>
   )
