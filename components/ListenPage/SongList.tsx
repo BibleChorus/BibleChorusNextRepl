@@ -3,20 +3,28 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { PlayCircle } from 'lucide-react'
+import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote } from 'lucide-react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
-import { formatBibleVerses } from '@/lib/utils'; // We'll create this utility function
+import { formatBibleVerses } from '@/lib/utils'
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 
-// Add this line to get the CDN URL
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
-// Update the Song type to match the fields returned by the new API
 export type Song = {
   id: number;
   title: string;
-  username: string; // Add this line
-  uploaded_by: number; // Add this line
+  username: string;
+  uploaded_by: number;
   genre: string;
   created_at: string;
   audio_url: string;
@@ -34,6 +42,11 @@ interface SongListProps {
 export function SongList({ songs }: SongListProps) {
   const [imageError, setImageError] = useState<Record<number, boolean>>({})
   const router = useRouter()
+
+  const handleVote = (songId: number, voteType: string) => {
+    console.log(`Voted for song ${songId} as ${voteType}`);
+    // TODO: Implement actual voting logic here
+  };
 
   return (
     <div className="space-y-2 sm:space-y-4">
@@ -75,7 +88,7 @@ export function SongList({ songs }: SongListProps) {
           </div>
 
           {/* Song Details */}
-          <div className="flex-1 min-w-0 pr-2"> {/* Added pr-2 for right padding */}
+          <div className="flex-1 min-w-0 pr-2">
             <Link href={`/Songs/${song.id}`}>
               <h2 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-100 hover:underline truncate">
                 {song.title}
@@ -121,6 +134,61 @@ export function SongList({ songs }: SongListProps) {
                 </Badge>
               )}
             </div>
+          </div>
+
+          {/* Dropdown Menu */}
+          <div className="flex-shrink-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => console.log('Like song:', song.id)}>
+                  <Heart className="mr-2 h-4 w-4" />
+                  <span>Like</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Share song:', song.id)}>
+                  <Share2 className="mr-2 h-4 w-4" />
+                  <span>Share</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Add to playlist:', song.id)}>
+                  <ListPlus className="mr-2 h-4 w-4" />
+                  <span>Add to Playlist</span>
+                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Vote className="mr-2 h-4 w-4" />
+                    <span>Vote</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem onClick={() => handleVote(song.id, 'Best Musically')}>
+                      Best Musically
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleVote(song.id, 'Best Lyrically')}>
+                      Best Lyrically
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleVote(song.id, 'Best Overall')}>
+                      Best Overall
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuItem onClick={() => router.push(`/edit-song/${song.id}`)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  <span>Edit</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Delete song:', song.id)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Report song:', song.id)}>
+                  <Flag className="mr-2 h-4 w-4" />
+                  <span>Report</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </motion.div>
       ))}
