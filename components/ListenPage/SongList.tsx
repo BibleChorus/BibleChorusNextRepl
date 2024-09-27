@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { PlayCircle } from 'lucide-react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
+import { formatBibleVerses } from '@/lib/utils'; // We'll create this utility function
 
 // Add this line to get the CDN URL
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
@@ -23,6 +24,7 @@ export type Song = {
   bible_translation_used?: string;
   lyrics_scripture_adherence?: string;
   is_continuous_passage?: boolean;
+  bible_verses?: { book: string; chapter: number; verse: number }[];
 };
 
 interface SongListProps {
@@ -86,6 +88,15 @@ export function SongList({ songs }: SongListProps) {
             >
               {song.username || 'Unknown User'}
             </button>
+
+            {/* Bible Verses */}
+            {song.bible_verses && song.bible_verses.length > 0 && (
+              <div className="mt-2">
+                <p className="text-sm font-medium text-primary-600 dark:text-primary-400 italic border-l-2 border-primary-500 pl-2">
+                  {formatBibleVerses(song.bible_verses)}
+                </p>
+              </div>
+            )}
 
             {/* Tags / Badges */}
             <div className="mt-2 flex flex-wrap gap-2">

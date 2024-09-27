@@ -20,6 +20,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         )
         .join('users', 'songs.uploaded_by', 'users.id')
         .orderBy('songs.created_at', 'desc');
+
+      // Fetch Bible verses for each song
+      for (let song of songs) {
+        const verses = await db('song_verses')
+          .join('bible_verses', 'song_verses.verse_id', 'bible_verses.id')
+          .where('song_verses.song_id', song.id)
+          .select('bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse')
+          .orderBy(['bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse']);
+
+        song.bible_verses = verses;
+      }
+
       res.status(200).json(songs);
     } catch (error) {
       console.error('Error fetching songs:', error);
