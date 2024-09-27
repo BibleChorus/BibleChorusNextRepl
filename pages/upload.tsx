@@ -18,7 +18,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useQuery } from 'react-query'
+import { useQuery, QueryClientProvider, QueryClient } from 'react-query'
 import axios from 'axios'
 import { toast } from "sonner";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
@@ -88,7 +88,18 @@ const formSchema = z.object({
   path: ["lyric_ai_prompt", "music_model_used", "music_ai_prompt"],
 });
 
+// Create a client
+const queryClient = new QueryClient()
+
 export default function Upload() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <UploadContent />
+    </QueryClientProvider>
+  )
+}
+
+function UploadContent() {
   console.log("Upload component rendered");
 
   const { user } = useAuth();
