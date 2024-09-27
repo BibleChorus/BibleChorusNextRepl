@@ -1,9 +1,14 @@
 import Head from 'next/head'
+import { useState } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from 'react-query'
 import axios from 'axios'
 
-import { columns } from './listen/columns' // Import columns definition
-import { DataTable } from './listen/data-table' // Import DataTable component
+// Remove imports related to DataTable and columns
+// import { columns, getColumns, ColumnSelector } from './listen/columns'
+// import { VisibilityState } from '@tanstack/react-table'
+
+// Add import for the SongList component
+import { SongList } from '@/components/ListenPage/SongList'
 
 // Define the Song type based on your data structure
 export type Song = {
@@ -13,6 +18,10 @@ export type Song = {
   genre: string;
   created_at: string;
   audio_url: string;
+  song_art_url?: string;
+  bible_translation_used?: string;
+  lyrics_scripture_adherence?: string;
+  is_continuous_passage?: boolean;
   // Add more fields as necessary
 }
 
@@ -29,11 +38,31 @@ export default function Listen() {
 }
 
 function ListenContent() {
+  // We no longer need the visibleColumns state since we're using SongList instead of DataTable
+  // Remove or comment out the following code:
+
+  // const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(
+  //   columns.reduce((acc, column) => {
+  //     if (column.id) {
+  //       acc[column.id] = true
+  //     }
+  //     return acc
+  //   }, {} as VisibilityState)
+  // )
+
   // Use React Query's useQuery hook to fetch songs
   const { data: songs, isLoading, error } = useQuery<Song[], Error>('songs', async () => {
     const res = await axios.get('/api/songs')
+    console.log('API response:', res.data) // Add this line
     return res.data
   })
+
+  // Since we are no longer adjusting column visibility, remove the handleColumnVisibilityChange function
+  // Remove or comment out the following code:
+
+  // const handleColumnVisibilityChange = (updatedColumns: VisibilityState) => {
+  //   setVisibleColumns(updatedColumns)
+  // }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -42,19 +71,19 @@ function ListenContent() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="container mx-auto px-4">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 pt-4">
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">
           Listen to Songs
         </h1>
 
-        {/* Display loading, error, or the DataTable */}
+        {/* Display loading, error, or the SongList */}
         {isLoading ? (
           <p>Loading songs...</p>
         ) : error ? (
           <p>Error loading songs: {error.message}</p>
         ) : (
-          // Render the DataTable with the fetched songs
-          <DataTable columns={columns} data={songs || []} />
+          // Use the SongList component to display the songs
+          <SongList songs={songs || []} />
         )}
       </main>
     </div>
