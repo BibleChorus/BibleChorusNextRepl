@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Head from "next/head"
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ProgressStats } from "@/components/ProgressPage/ProgressStats"
 import { Filters, FilterOptions } from "@/components/ProgressPage/Filters"
 import { Badge } from "@/components/ui/badge"
@@ -194,60 +194,62 @@ export default function Progress() {
             <PieChartGroup chartData={chartData} filterOptions={filterOptions} />
           )}
 
-          <Card className="p-4">
-            <div className="flex flex-wrap items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Bible Coverage by Book</h2>
-              <div className="flex flex-wrap gap-2">
+          <Card className="w-full">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 pb-2">
+              <CardTitle className="text-xl font-semibold">Bible Coverage by Book</CardTitle>
+              <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
                 {getFilterTags().map((tag, index) => (
                   <Badge key={index} variant="secondary">{tag}</Badge>
                 ))}
               </div>
-            </div>
-            {chartData && (
-              <ChartContainer className={`${isSmallScreen ? 'min-h-[400px]' : 'min-h-[400px]'} max-w-full overflow-x-auto`} config={{}}>
-                <BarChart
-                  data={barChartData}
-                  layout={isSmallScreen ? "vertical" : "horizontal"}
-                  width={isSmallScreen ? 750 : undefined}
-                  height={isSmallScreen ? Math.max(750, barChartData.length * 20) : 400}
-                  margin={isSmallScreen ? { top: 5, right: 20, left: -43, bottom: 5 } : { top: 5, right: 30, left: 5, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  {isSmallScreen ? (
-                    <>
-                      <XAxis type="number" tickFormatter={(value) => `${value.toFixed(2)}%`} />
-                      <YAxis 
-                        dataKey="book" 
-                        type="category" 
-                        width={100} 
-                        tick={{ fontSize: 8 }}
-                        interval={0}
-                        tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <XAxis 
-                        dataKey="book" 
-                        tick={{ fontSize: 11 }} 
-                        angle={-40} 
-                        textAnchor="end" 
-                        interval={0} 
-                        height={55}
-                        tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
-                      />
-                      <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
-                    </>
-                  )}
-                  <Tooltip content={<ChartTooltipContent showPercentage />} />
-                  <Bar 
-                    dataKey="filtered_book_percentage" 
-                    fill="#8884d8" 
-                    name="Percent Covered:"
-                  />
-                </BarChart>
-              </ChartContainer>
-            )}
+            </CardHeader>
+            <CardContent>
+              {chartData && (
+                <ChartContainer className={`${isSmallScreen ? 'min-h-[400px]' : 'min-h-[400px]'} max-w-full overflow-x-auto`} config={{}}>
+                  <BarChart
+                    data={barChartData}
+                    layout={isSmallScreen ? "vertical" : "horizontal"}
+                    width={isSmallScreen ? 750 : undefined}
+                    height={isSmallScreen ? Math.max(750, barChartData.length * 20) : 400}
+                    margin={isSmallScreen ? { top: 5, right: 20, left: -43, bottom: 5 } : { top: 5, right: 30, left: 5, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    {isSmallScreen ? (
+                      <>
+                        <XAxis type="number" tickFormatter={(value) => `${value.toFixed(2)}%`} />
+                        <YAxis 
+                          dataKey="book" 
+                          type="category" 
+                          width={100} 
+                          tick={{ fontSize: 8 }}
+                          interval={0}
+                          tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <XAxis 
+                          dataKey="book" 
+                          tick={{ fontSize: 11 }} 
+                          angle={-40} 
+                          textAnchor="end" 
+                          interval={0} 
+                          height={55}
+                          tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
+                        />
+                        <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
+                      </>
+                    )}
+                    <Tooltip content={<ChartTooltipContent showPercentage />} />
+                    <Bar 
+                      dataKey="filtered_book_percentage" 
+                      fill="#8884d8" 
+                      name="Percent Covered:"
+                    />
+                  </BarChart>
+                </ChartContainer>
+              )}
+            </CardContent>
           </Card>
         </div>
       </main>

@@ -84,9 +84,9 @@ export function PieChartGroup({ chartData, filterOptions }: PieChartGroupProps) 
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Bible Coverage Overview</CardTitle>
-        <div className="flex flex-wrap gap-2 mt-2">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 pb-2">
+        <CardTitle className="text-xl font-semibold">Bible Coverage Overview</CardTitle>
+        <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
           {getFilterTags().map((tag, index) => (
             <Badge key={index} variant="secondary">{tag}</Badge>
           ))}
