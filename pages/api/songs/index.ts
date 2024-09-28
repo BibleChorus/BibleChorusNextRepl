@@ -1,10 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import db from '@/db';  // Adjust the path to your db module if necessary
+import db from '@/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
-      const songs = await db('songs')
+      const { lyricsAdherence, isContinuous, aiMusic } = req.query;
+
+      let query = db('songs')
         .select(
           'songs.id',
           'songs.title',
@@ -18,8 +20,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'songs.lyrics_scripture_adherence',
           'songs.is_continuous_passage'
         )
-        .join('users', 'songs.uploaded_by', 'users.id')
-        .orderBy('songs.created_at', 'desc');
+        .join('users', 'songs.uploaded_by', 'users.id');
+
+      if (lyricsAdherence !== 'all') {
+        query = query.where('lyrics_scripture_adherence', lyricsAdherence);
+      }
+
+      if (isContinuous !== 'all') {
+        query = query.where('is_continuous_passage', isContinuous === 'true');
+      }
+
+      if (aiMusic !== 'all') {
+        query = query.where('music_ai_generated', aiMusic === 'true');
+      }
+
+      const songs = await query.orderBy('songs.created_at', 'desc');
 
       // Fetch Bible verses for each song
       for (let song of songs) {
