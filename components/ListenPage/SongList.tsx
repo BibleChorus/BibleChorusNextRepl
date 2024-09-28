@@ -311,7 +311,7 @@ export function SongList({ songs }: SongListProps) {
           <div className="py-4">
             <ToggleGroup
               type="single"
-              value={getVoteValue(voteStates[selectedSong?.id]?.[selectedVoteType])}
+              value={selectedSong ? getVoteValue(voteStates[selectedSong.id]?.[selectedVoteType]) : undefined}
               onValueChange={handleVote}
               className="flex justify-between items-center"
             >
@@ -326,11 +326,11 @@ export function SongList({ songs }: SongListProps) {
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
-          {voteStates[selectedSong?.id]?.[selectedVoteType] !== undefined && (
+          {selectedSong?.id !== undefined && voteStates[selectedSong.id]?.[selectedVoteType] !== undefined && (
             <p className="text-center text-sm text-gray-500">
               Your current vote: {
-                voteStates[selectedSong?.id]?.[selectedVoteType] === 1 ? 'Upvote' :
-                voteStates[selectedSong?.id]?.[selectedVoteType] === -1 ? 'Downvote' :
+                voteStates[selectedSong.id]?.[selectedVoteType] === 1 ? 'Upvote' :
+                voteStates[selectedSong.id]?.[selectedVoteType] === -1 ? 'Downvote' :
                 'Neutral'
               }
             </p>
