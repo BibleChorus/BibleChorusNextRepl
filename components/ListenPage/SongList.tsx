@@ -63,11 +63,13 @@ export function SongList({ songs }: SongListProps) {
   const [selectedVoteType, setSelectedVoteType] = useState<string>('')
   const [voteStates, setVoteStates] = useState<VoteState>({})
   const [likeStates, setLikeStates] = useState<LikeState>({})
+  const [likeCounts, setLikeCounts] = useState<Record<number, number>>({})
 
   useEffect(() => {
     if (user) {
       fetchUserVotes()
       fetchUserLikes()
+      fetchLikeCounts()
     }
   }, [user])
 
@@ -104,6 +106,15 @@ export function SongList({ songs }: SongListProps) {
       console.error('Error fetching user likes:', error)
     }
   }, [user])
+
+  const fetchLikeCounts = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/likes/count')
+      setLikeCounts(response.data)
+    } catch (error) {
+      console.error('Error fetching like counts:', error)
+    }
+  }, [])
 
   const handleVoteClick = async (song: Song, voteType: string) => {
     setSelectedSong(song)
@@ -192,6 +203,12 @@ export function SongList({ songs }: SongListProps) {
         [song.id]: !isLiked
       }))
 
+      // Update like count
+      setLikeCounts(prev => ({
+        ...prev,
+        [song.id]: (prev[song.id] || 0) + (isLiked ? -1 : 1)
+      }))
+
       toast.success(isLiked ? 'Song unliked' : 'Song liked')
     } catch (error) {
       console.error('Error toggling like:', error)
@@ -246,11 +263,26 @@ export function SongList({ songs }: SongListProps) {
 
           {/* Song Details */}
           <div className="flex-1 min-w-0 pr-2">
-            <Link href={`/Songs/${song.id}`}>
-              <h2 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-100 hover:underline truncate">
-                {song.title}
-              </h2>
-            </Link>
+            <div className="flex items-center justify-between">
+              <Link href={`/Songs/${song.id}`}>
+                <h2 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-100 hover:underline truncate">
+                  {song.title}
+                </h2>
+              </Link>
+              <div className="flex items-center ml-2">
+                <button
+                  onClick={() => handleLike(song)}
+                  className="flex items-center text-gray-500 hover:text-red-500 transition-colors duration-200"
+                >
+                  <Heart
+                    className={`h-4 w-4 mr-1 ${
+                      likeStates[song.id] ? 'fill-current text-red-500' : ''
+                    }`}
+                  />
+                  <span className="text-xs">{likeCounts[song.id] || 0}</span>
+                </button>
+              </div>
+            </div>
             <div className="flex items-center text-xs sm:text-sm mt-1">
               <button
                 onClick={() => router.push(`/profile?id=${song.uploaded_by}`)}

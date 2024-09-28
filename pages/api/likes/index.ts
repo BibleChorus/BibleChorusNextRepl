@@ -6,13 +6,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const { user_id, likeable_type, likeable_id } = req.body
 
-      const [like] = await db('likes').insert({
+      await db('likes').insert({
         user_id,
         likeable_type,
         likeable_id,
-      }).returning('*')
+      })
 
-      res.status(201).json(like)
+      const [{ count }] = await db('likes')
+        .where({ likeable_type, likeable_id })
+        .count('* as count')
+
+      res.status(201).json({ count: Number(count) })
     } catch (error) {
       console.error('Error creating like:', error)
       res.status(500).json({ message: 'Error creating like', error })
@@ -25,7 +29,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .where({ user_id, likeable_type, likeable_id })
         .del()
 
-      res.status(200).json({ message: 'Like removed successfully' })
+      const [{ count }] = await db('likes')
+        .where({ likeable_type, likeable_id })
+        .count('* as count')
+
+      res.status(200).json({ count: Number(count) })
     } catch (error) {
       console.error('Error removing like:', error)
       res.status(500).json({ message: 'Error removing like', error })
