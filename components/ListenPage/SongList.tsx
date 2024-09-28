@@ -54,6 +54,12 @@ interface LikeState {
   [songId: number]: boolean;
 }
 
+interface VoteCounts {
+  [songId: number]: {
+    [voteType: string]: number;
+  };
+}
+
 export function SongList({ songs }: SongListProps) {
   const [imageError, setImageError] = useState<Record<number, boolean>>({})
   const router = useRouter()
@@ -64,12 +70,14 @@ export function SongList({ songs }: SongListProps) {
   const [voteStates, setVoteStates] = useState<VoteState>({})
   const [likeStates, setLikeStates] = useState<LikeState>({})
   const [likeCounts, setLikeCounts] = useState<Record<number, number>>({})
+  const [voteCounts, setVoteCounts] = useState<VoteCounts>({})
 
   useEffect(() => {
     if (user) {
       fetchUserVotes()
       fetchUserLikes()
       fetchLikeCounts()
+      fetchVoteCounts()
     }
   }, [user])
 
@@ -116,6 +124,15 @@ export function SongList({ songs }: SongListProps) {
     }
   }, [])
 
+  const fetchVoteCounts = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/votes/count')
+      setVoteCounts(response.data)
+    } catch (error) {
+      console.error('Error fetching vote counts:', error)
+    }
+  }, [])
+
   const handleVoteClick = async (song: Song, voteType: string) => {
     setSelectedSong(song)
     setSelectedVoteType(voteType)
@@ -154,7 +171,7 @@ export function SongList({ songs }: SongListProps) {
     const voteValue = value === 'up' ? 1 : value === 'down' ? -1 : 0
     
     try {
-      await axios.post('/api/votes', {
+      const response = await axios.post('/api/votes', {
         user_id: user.id,
         song_id: selectedSong.id,
         vote_type: selectedVoteType,
@@ -166,6 +183,15 @@ export function SongList({ songs }: SongListProps) {
         [selectedSong.id]: {
           ...prevStates[selectedSong.id],
           [selectedVoteType]: voteValue
+        }
+      }))
+
+      // Update the vote count
+      setVoteCounts(prevCounts => ({
+        ...prevCounts,
+        [selectedSong.id]: {
+          ...prevCounts[selectedSong.id],
+          [selectedVoteType]: response.data.count
         }
       }))
 
@@ -269,7 +295,7 @@ export function SongList({ songs }: SongListProps) {
                   {song.title}
                 </h2>
               </Link>
-              <div className="flex items-center ml-2">
+              <div className="flex items-center ml-2 space-x-2">
                 <button
                   onClick={() => handleLike(song)}
                   className="flex items-center text-gray-500 hover:text-red-500 transition-colors duration-200"
@@ -280,6 +306,27 @@ export function SongList({ songs }: SongListProps) {
                     }`}
                   />
                   <span className="text-xs">{likeCounts[song.id] || 0}</span>
+                </button>
+                <button
+                  onClick={() => handleVoteClick(song, 'Best Musically')}
+                  className="flex items-center text-gray-500 hover:text-blue-500 transition-colors duration-200"
+                >
+                  <Music className="h-4 w-4 mr-1" />
+                  <span className="text-xs">{voteCounts[song.id]?.['Best Musically'] || 0}</span>
+                </button>
+                <button
+                  onClick={() => handleVoteClick(song, 'Best Lyrically')}
+                  className="flex items-center text-gray-500 hover:text-green-500 transition-colors duration-200"
+                >
+                  <BookOpen className="h-4 w-4 mr-1" />
+                  <span className="text-xs">{voteCounts[song.id]?.['Best Lyrically'] || 0}</span>
+                </button>
+                <button
+                  onClick={() => handleVoteClick(song, 'Best Overall')}
+                  className="flex items-center text-gray-500 hover:text-yellow-500 transition-colors duration-200"
+                >
+                  <Star className="h-4 w-4 mr-1" />
+                  <span className="text-xs">{voteCounts[song.id]?.['Best Overall'] || 0}</span>
                 </button>
               </div>
             </div>

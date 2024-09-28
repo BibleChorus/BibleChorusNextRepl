@@ -39,7 +39,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
 
-      res.status(200).json({ message: 'Vote submitted successfully' })
+      // Fetch the updated vote count for this song and vote type
+      const [{ count }] = await db('votes')
+        .where({ song_id, vote_type })
+        .sum('vote_value as count')
+
+      res.status(200).json({ message: 'Vote submitted successfully', count: Number(count) })
     } catch (error) {
       console.error('Error submitting vote:', error)
       res.status(500).json({ message: 'Error submitting vote', error })
