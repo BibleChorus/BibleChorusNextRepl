@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star } from 'lucide-react'
@@ -50,6 +50,10 @@ interface VoteState {
   };
 }
 
+interface LikeState {
+  [songId: number]: boolean;
+}
+
 export function SongList({ songs }: SongListProps) {
   const [imageError, setImageError] = useState<Record<number, boolean>>({})
   const router = useRouter()
@@ -58,10 +62,12 @@ export function SongList({ songs }: SongListProps) {
   const [selectedSong, setSelectedSong] = useState<Song | null>(null)
   const [selectedVoteType, setSelectedVoteType] = useState<string>('')
   const [voteStates, setVoteStates] = useState<VoteState>({})
+  const [likeStates, setLikeStates] = useState<LikeState>({})
 
   useEffect(() => {
     if (user) {
       fetchUserVotes()
+      fetchUserLikes()
     }
   }, [user])
 
@@ -81,6 +87,23 @@ export function SongList({ songs }: SongListProps) {
       console.error('Error fetching user votes:', error)
     }
   }
+
+  const fetchUserLikes = useCallback(async () => {
+    if (!user) return;
+    try {
+      const response = await axios.get(`/api/users/${user.id}/likes`)
+      const userLikes = response.data
+      const newLikeStates: LikeState = {}
+      userLikes.forEach((like: any) => {
+        if (like.likeable_type === 'song') {
+          newLikeStates[like.likeable_id] = true
+        }
+      })
+      setLikeStates(newLikeStates)
+    } catch (error) {
+      console.error('Error fetching user likes:', error)
+    }
+  }, [user])
 
   const handleVoteClick = async (song: Song, voteType: string) => {
     setSelectedSong(song)
@@ -143,6 +166,38 @@ export function SongList({ songs }: SongListProps) {
 
     setIsVoteDialogOpen(false)
   }
+
+  const handleLike = useCallback(async (song: Song) => {
+    if (!user) {
+      toast.error('You need to be logged in to like a song')
+      return
+    }
+
+    try {
+      const isLiked = likeStates[song.id]
+      if (isLiked) {
+        await axios.delete(`/api/likes`, {
+          data: { user_id: user.id, likeable_type: 'song', likeable_id: song.id }
+        })
+      } else {
+        await axios.post('/api/likes', {
+          user_id: user.id,
+          likeable_type: 'song',
+          likeable_id: song.id
+        })
+      }
+
+      setLikeStates(prev => ({
+        ...prev,
+        [song.id]: !isLiked
+      }))
+
+      toast.success(isLiked ? 'Song unliked' : 'Song liked')
+    } catch (error) {
+      console.error('Error toggling like:', error)
+      toast.error('Failed to update like status')
+    }
+  }, [user, likeStates])
 
   const getVoteValue = (value: number | undefined): string => {
     if (value === 1) return 'up';
@@ -248,9 +303,9 @@ export function SongList({ songs }: SongListProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => console.log('Like song:', song.id)}>
-                  <Heart className="mr-2 h-4 w-4" />
-                  <span>Like</span>
+                <DropdownMenuItem onClick={() => handleLike(song)}>
+                  <Heart className={`mr-2 h-4 w-4 ${likeStates[song.id] ? 'fill-current text-red-500' : ''}`} />
+                  <span>{likeStates[song.id] ? 'Unlike' : 'Like'}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => console.log('Share song:', song.id)}>
                   <Share2 className="mr-2 h-4 w-4" />
