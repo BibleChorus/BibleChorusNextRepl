@@ -226,7 +226,7 @@ export function SongList({ songs }: SongListProps) {
                 </Badge>
               )}
               {song.lyrics_scripture_adherence && (
-                <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
+                <Badge variant="default" className="text-[10px] sm:text-xs px-1 py-0 bg-primary text-primary-foreground">
                   {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
                 </Badge>
               )}
