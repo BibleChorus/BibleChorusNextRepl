@@ -253,7 +253,7 @@ export function SongList({ songs }: SongListProps) {
       {songs.map((song, index) => (
         <motion.div
           key={song.id}
-          className="flex items-center p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden"
+          className="flex items-stretch p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden"
           whileHover={{ scale: 1.01 }}
           transition={{ duration: 0.2 }}
         >
@@ -288,14 +288,14 @@ export function SongList({ songs }: SongListProps) {
           </div>
 
           {/* Song Details */}
-          <div className="flex-1 min-w-0 pr-2">
-            <div className="flex items-center justify-between">
-              <Link href={`/Songs/${song.id}`}>
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <Link href={`/Songs/${song.id}`} className="mb-1 sm:mb-0">
                 <h2 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-100 hover:underline truncate">
                   {song.title}
                 </h2>
               </Link>
-              <div className="flex items-center ml-2 space-x-2">
+              <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                 <button
                   onClick={() => handleLike(song)}
                   className="flex items-center text-gray-500 hover:text-red-500 transition-colors duration-200"
@@ -305,28 +305,28 @@ export function SongList({ songs }: SongListProps) {
                       likeStates[song.id] ? 'fill-current text-red-500' : ''
                     }`}
                   />
-                  <span className="text-xs">{likeCounts[song.id] || 0}</span>
+                  <span>{likeCounts[song.id] || 0}</span>
                 </button>
                 <button
                   onClick={() => handleVoteClick(song, 'Best Musically')}
                   className="flex items-center text-gray-500 hover:text-blue-500 transition-colors duration-200"
                 >
                   <Music className="h-4 w-4 mr-1" />
-                  <span className="text-xs">{voteCounts[song.id]?.['Best Musically'] || 0}</span>
+                  <span>{voteCounts[song.id]?.['Best Musically'] || 0}</span>
                 </button>
                 <button
                   onClick={() => handleVoteClick(song, 'Best Lyrically')}
                   className="flex items-center text-gray-500 hover:text-green-500 transition-colors duration-200"
                 >
                   <BookOpen className="h-4 w-4 mr-1" />
-                  <span className="text-xs">{voteCounts[song.id]?.['Best Lyrically'] || 0}</span>
+                  <span>{voteCounts[song.id]?.['Best Lyrically'] || 0}</span>
                 </button>
                 <button
                   onClick={() => handleVoteClick(song, 'Best Overall')}
                   className="flex items-center text-gray-500 hover:text-yellow-500 transition-colors duration-200"
                 >
                   <Star className="h-4 w-4 mr-1" />
-                  <span className="text-xs">{voteCounts[song.id]?.['Best Overall'] || 0}</span>
+                  <span>{voteCounts[song.id]?.['Best Overall'] || 0}</span>
                 </button>
               </div>
             </div>
@@ -373,7 +373,7 @@ export function SongList({ songs }: SongListProps) {
           </div>
 
           {/* Dropdown Menu */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 ml-2 flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
