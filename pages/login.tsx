@@ -6,8 +6,8 @@ import { useRouter } from 'next/router'
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { UserAuthForm } from "@/components/user-auth-form"
-import { ScriptureScroll } from "@/components/scripture-scroll"
+import { UserAuthForm } from "@/components/LoginPage/user-auth-form"
+import { ScriptureScroll } from "@/components/LoginPage/scripture-scroll"
 
 // Define metadata as a constant (not exported)
 const metadata: Metadata = {

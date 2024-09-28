@@ -55,6 +55,15 @@ a {
 
     --lavender-50: 240 67% 98%;
     --lavender-100: 240 67% 94%;
+
+    /* Add these new variables for the chart colors */
+    --chart-1: 215 50% 23%;
+    --chart-2: 215 20% 65%;
+ 
+    /* Update these variables for the chart colors */
+    --chart-purple: 270 50% 60%;
+    --chart-gray: 215 20% 65%;
+    --chart-uncovered: 0 0% 0%; /* Black for light mode */
   }
  
   .dark {
@@ -85,6 +94,15 @@ a {
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
+    /* Add these new variables for the chart colors in dark mode */
+    --chart-1: 210 20% 80%;
+    --chart-2: 215 16% 47%;
+ 
+    /* Update these variables for the chart colors in dark mode */
+    --chart-purple: 270 50% 70%;
+    --chart-gray: 215 16% 47%;
+    --chart-uncovered: 0 0% 100%; /* White for dark mode */
   }
 }
 

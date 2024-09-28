@@ -12,23 +12,23 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, X, Trash2, FileText } from "lucide-react"
+import { Check, ChevronsUpDown, X, Trash2, File as FileIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
+import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
 import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useQuery } from 'react-query'
+import { useQuery, QueryClientProvider, QueryClient } from 'react-query'
 import axios from 'axios'
 import { toast } from "sonner";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Progress } from "@/components/ui/progress"
-import { ImageCropper } from '@/components/ImageCropper'
+import { ImageCropper } from '@/components/UploadPage/ImageCropper'
 import { useAuth } from '@/contexts/AuthContext';
 import { Modal } from '@/components/Modal'
-import UploadProgressBar from '@/components/UploadProgressBar';
+import UploadProgressBar from '@/components/UploadPage/UploadProgressBar';
 import GradientButton from '@/components/GradientButton'; // Import GradientButton
-import UploadInfoDialog from '@/components/UploadInfoDialog';
+import UploadInfoDialog from '@/components/UploadPage/UploadInfoDialog';
 import { useRouter } from 'next/router'
 
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
@@ -38,9 +38,9 @@ const formSchema = z.object({
   // Step 1: AI Info
   ai_used_for_lyrics: z.boolean(),
   music_ai_generated: z.boolean(),
-  lyric_ai_prompt: z.string().min(1, "Lyric AI prompt is required"),
-  music_model_used: z.string().min(1, "Music model is required"),
-  music_ai_prompt: z.string().min(1, "Music AI prompt is required"),
+  lyric_ai_prompt: z.string().optional(),
+  music_model_used: z.string().optional(),
+  music_ai_prompt: z.string().optional(),
 
   // Step 2: Song Info
   title: z.string().min(1, "Title is required"),
@@ -51,15 +51,11 @@ const formSchema = z.object({
   // Step 3: Bible Info
   bible_translation_used: z.string().min(1, "Bible translation is required"),
   lyrics_scripture_adherence: z.enum([
-    "The lyrics follow the scripture word-for-word",
-    "The lyrics closely follow the scripture passage",
-    "The lyrics are creatively inspired by the scripture passage"
+    "word_for_word",
+    "close_paraphrase",
+    "creative_inspiration"
   ]),
   is_continuous_passage: z.boolean(),
-  bible_book: z.string().min(1, "Bible book is required"),
-  bible_chapter: z.string().min(1, "Chapter is required"),
-  bible_verse_start: z.string().min(1, "Starting verse is required"),
-  bible_verse_end: z.string().optional(),
   bible_books: z.string().min(1, "At least one Bible book is required"),
   bible_chapters: z.record(z.string(), z.array(z.number())).optional(),
   bible_verses: z.string().min(1, "At least one Bible verse is required"),
@@ -71,6 +67,9 @@ const formSchema = z.object({
   // Include URLs after upload
   audio_url: z.string().optional(),
   song_art_url: z.string().optional(),
+
+  // Added uploaded_by field
+  uploaded_by: z.union([z.string(), z.number()]).optional(),
 }).refine((data) => {
   if (data.ai_used_for_lyrics && (!data.lyric_ai_prompt || data.lyric_ai_prompt.trim().length === 0)) {
     return false;
@@ -89,38 +88,61 @@ const formSchema = z.object({
   path: ["lyric_ai_prompt", "music_model_used", "music_ai_prompt"],
 });
 
+// Create a client
+const queryClient = new QueryClient()
+
 export default function Upload() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <UploadContent />
+    </QueryClientProvider>
+  )
+}
+
+function UploadContent() {
+  console.log("Upload component rendered");
+
   const { user } = useAuth();
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!user) {
+      toast.error("You need to be logged in to upload a song.", {
+        duration: 5000,
+        action: {
+          label: "Login",
+          onClick: () => router.push('/login?view=login'),
+        },
+      })
+      router.push('/login?view=login')
+    }
+  }, [user, router])
+
+  if (!user) {
+    return null // or a loading spinner if you prefer
+  }
+
   const [currentStep, setCurrentStep] = useState(0)
   const [progress, setProgress] = useState(0); // Add progress state
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      ai_used_for_lyrics: false,
-      music_ai_generated: false,
-      is_continuous_passage: false,
-      music_model_used: '',
-      music_ai_prompt: '',
-      title: '',
-      artist: '',
-      genre: '',
-      lyrics: '',
-      bible_translation_used: '',
-      lyrics_scripture_adherence: "The lyrics closely follow the scripture passage",
-      lyric_ai_prompt: '',
+    resolver: async (...args) => {
+      const result = await zodResolver(formSchema)(...args);
+      console.log("Zod resolver result:", result);
+      return result;
     },
-    mode: "onChange", // This enables real-time validation
+    defaultValues: {
+      ai_used_for_lyrics: true,
+      music_ai_generated: true,
+      is_continuous_passage: false,
+      music_model_used: undefined,
+      music_ai_prompt: undefined,
+      title: "",
+      artist: "",
+      lyrics: "",
+    },
+    mode: "onBlur", // Change this from "onChange" to reduce unnecessary validations
   })
-
-  // Add this separate effect for logging validation results
-  useEffect(() => {
-    const subscription = form.watch((value, { name, type }) => {
-      console.log('Form value changed:', name, value);
-      console.log('Validation errors:', form.formState.errors);
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
 
   const [openGenre, setOpenGenre] = useState(false)
   const [openTranslation, setOpenTranslation] = useState(false)
@@ -205,14 +227,6 @@ export default function Upload() {
     };
   }, [uploadedFiles]);
 
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [audioFileKey, setAudioFileKey] = useState<string | null>(null);
-  const [imageFileKey, setImageFileKey] = useState<string | null>(null);
-
-  const [audioFileName, setAudioFileName] = useState<string | null>(null)
-  const [imageFileName, setImageFileName] = useState<string | null>(null)
-
   const uploadFile = async (file: File, fileType: 'audio' | 'image') => {
     const fileExtension = file.name.split('.').pop();
     const contentType = file.type;
@@ -225,7 +239,7 @@ export default function Upload() {
       const sizeInMB = maxSize / (1024 * 1024);
       toast.error(`File size exceeds the limit of ${sizeInMB}MB`);
       setStatus('error');
-      return null;
+      return;
     }
 
     // Retrieve the title from the form
@@ -242,7 +256,7 @@ export default function Upload() {
         fileSize: file.size,
       });
 
-      console.log('Received signed URL:', data.signedUrl);
+      console.log('Received signed URL:', data.signedUrl); // Add this line for debugging
 
       // Upload the file to S3
       const uploadResponse = await axios.put(data.signedUrl, file, {
@@ -255,7 +269,7 @@ export default function Upload() {
         },
       });
 
-      console.log('S3 upload response:', uploadResponse);
+      console.log('S3 upload response:', uploadResponse); // Add this line for debugging
 
       if (uploadResponse.status !== 200) {
         throw new Error(`S3 upload failed with status ${uploadResponse.status}`);
@@ -265,18 +279,12 @@ export default function Upload() {
       setUploadedFiles(prev => [...prev, data.fileKey]);
       console.log('File uploaded:', data.fileKey);
 
+      // Set the corresponding form field
       if (fileType === 'audio') {
-        setAudioFileKey(data.fileKey);
-        setAudioFileName(file.name)
-        form.setValue('audio_url', data.fileKey, { shouldValidate: true });
-      } else {
-        setImageFileKey(data.fileKey);
-        setImageFileName(file.name)
-        form.setValue('song_art_url', data.fileKey, { shouldValidate: true });
+        form.setValue('audio_url', data.fileKey, { shouldValidate: false });
+      } else if (fileType === 'image') {
+        form.setValue('song_art_url', data.fileKey, { shouldValidate: false });
       }
-
-      // Update overall form progress
-      updateFormProgress();
 
       return data.fileKey;
     } catch (error) {
@@ -286,151 +294,137 @@ export default function Upload() {
       }
       setStatus('error');
       toast.error(`Upload failed: ${error.message}`);
-      return null;
+      throw error;
     }
   };
 
-  // Add this function to update the overall form progress
-  const updateFormProgress = () => {
-    const totalSteps = 4; // AI Info, Song Info, Bible Info, Upload
-    let completedSteps = 0;
+  const [hasShownValidMessage, setHasShownValidMessage] = useState(false);
 
-    // Check if AI Info is complete
-    if (form.getValues('ai_used_for_lyrics') !== undefined &&
-        form.getValues('music_ai_generated') !== undefined) {
-      completedSteps++;
-    }
+  useEffect(() => {
+    console.log("Setting up form subscription");
+    const subscription = form.watch(() => {
+      console.log("Form changed");
+      console.log("Form state:", form.formState);
+      console.log("Is form valid?", form.formState.isValid);
+      console.log("Form errors:", form.formState.errors);
+      
+      // Remove the toast from here, we'll show it only on submit
+    });
 
-    // Check if Song Info is complete
-    if (form.getValues('title') && form.getValues('genre') && form.getValues('lyrics')) {
-      completedSteps++;
-    }
-
-    // Check if Bible Info is complete
-    if (form.getValues('bible_translation_used') && form.getValues('lyrics_scripture_adherence') &&
-        selectedBibleVerses.length > 0) {
-      completedSteps++;
-    }
-
-    // Check if Upload is complete
-    if (form.getValues('audio_url') && form.getValues('song_art_url')) {
-      completedSteps++;
-    }
-
-    const newProgress = (completedSteps / totalSteps) * 100;
-    setProgress(newProgress);
-  };
-
-  const removeFile = async (fileType: 'audio' | 'image') => {
-    const fileKey = fileType === 'audio' ? audioFileKey : imageFileKey;
-    if (!fileKey) {
-      console.error(`No ${fileType} file key found`);
-      toast.error(`No ${fileType} file found to remove`);
-      return;
-    }
-
-    try {
-      const response = await axios.delete('/api/delete-file', { data: { fileKey } });
-      if (response.status === 200) {
-        if (fileType === 'audio') {
-          setAudioFile(null);
-          setAudioFileKey(null);
-          setAudioFileName(null)
-          setAudioUploadStatus('idle');
-          setAudioUploadProgress(0);
-          form.setValue('audio_url', undefined, { shouldValidate: true });
-        } else {
-          setImageFile(null);
-          setImageFileKey(null);
-          setImageFileName(null)
-          setImageUploadStatus('idle');
-          setImageUploadProgress(0);
-          form.setValue('song_art_url', undefined, { shouldValidate: true });
-          setCroppedImage(null);
-        }
-        toast.success(`${fileType.charAt(0).toUpperCase() + fileType.slice(1)} file removed successfully`);
-        // Reset the file input
-        const fileInput = document.querySelector(`input[type="file"][accept="${fileType}/*"]`) as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
-      } else {
-        throw new Error(response.data.message || `Failed to remove ${fileType} file`);
-      }
-    } catch (error) {
-      console.error(`Error removing ${fileType} file:`, error.response?.data || error.message);
-      toast.error(`Failed to remove ${fileType} file: ${error.response?.data?.message || error.message}`);
-    }
-  };
-
-  const router = useRouter()
+    return () => {
+      console.log("Cleaning up form subscription");
+      subscription.unsubscribe();
+    };
+  }, [form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log('onSubmit function called');
     try {
-      setProgress(0);
-
-      // Upload audio file if it exists
-      let audioUrl = values.audio_url;
-      if (audioFile) {
-        audioUrl = await uploadFile(audioFile, 'audio');
-        if (!audioUrl) {
-          throw new Error('Failed to upload audio file');
-        }
-      }
-
-      // Upload image file if it exists
-      let imageUrl = values.song_art_url;
-      if (imageFile) {
-        imageUrl = await uploadFile(imageFile, 'image');
-        if (!imageUrl) {
-          throw new Error('Failed to upload image file');
-        }
-      }
+      // Modify audio_url and song_art_url to use Cloudfront CDN
+      const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL || '';
+      const audioUrl = values.audio_url ? `${cdnUrl}${values.audio_url}` : undefined;
+      const songArtUrl = values.song_art_url ? `${cdnUrl}${values.song_art_url}` : undefined;
 
       const formData = {
         ...values,
-        uploaded_by: user?.id,
-        bible_verses: selectedBibleVerses,
         audio_url: audioUrl,
-        song_art_url: imageUrl,
+        song_art_url: songArtUrl,
+        uploaded_by: user?.id,
       };
-      console.log('Form data:', formData);
 
       // Send the form data to your backend
-      console.log('Sending POST request to /api/submit-song');
-      const response = await axios.post('/api/submit-song', formData, {
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total!)
-          setProgress(percentCompleted)
-        }
-      });
-      console.log('Response received:', response);
+      const response = await axios.post('/api/submit-song', formData);
 
-      if (response.status === 200) {
-        toast.success('Song uploaded successfully!')
-        setUploadedFiles([]) // Clear the uploaded files list after successful submission
-        console.log('Form submitted, clearing uploaded files list')
-        
-        // Redirect to the newly created song's page
-        router.push(`/songs/${response.data.songId}`)
+      if (response.status === 200 && response.data.songId) {
+        toast.success('Song uploaded successfully!');
+        setUploadedFiles([]);
+        console.log('Form submitted, clearing uploaded files list');
+        setHasShownValidMessage(false);
+        router.push(`/Songs/${response.data.songId}`); // Redirect to the new song's page
       } else {
-        throw new Error(response.data.message || 'Failed to submit song')
+        throw new Error('Failed to submit song or get song ID');
       }
     } catch (error) {
-      console.error('Error submitting form:', error)
-      if (axios.isAxiosError(error)) {
-        console.error('Axios error details:', error.response?.data);
-      }
-      toast.error(`Error uploading song: ${error.response?.data?.message || error.message}`)
-      setProgress(0)
+      console.error('Error submitting form:', error);
+      toast.error('Error uploading song. Please try again.');
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log('handleSubmit called');
-    setShowValidationMessages(true)
-    form.handleSubmit(onSubmit)(e)
-  }
+  // Add this debug function
+  const debugForm = () => {
+    console.log("Current form state:", form.formState);
+    console.log("Current form values:", form.getValues());
+    console.log("Is form valid?", form.formState.isValid);
+    console.log("Form errors:", form.formState.errors);
+    toast.info(`Form is ${form.formState.isValid ? 'valid' : 'invalid'}`);
+  };
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update the handleSubmit function
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Submit button clicked");
+    setShowValidationMessages(true);
+    
+    const isValid = await form.trigger();
+    console.log("Manual validation triggered, isValid:", isValid);
+    console.log("Form values:", form.getValues());
+    console.log("Form errors:", form.formState.errors);
+    
+    if (isValid) {
+      console.log("Form is valid, submitting...");
+      const formData = form.getValues();
+      
+      // Remove file objects and use URLs instead
+      delete formData.audio_file;
+      delete formData.song_art_file;
+
+      // Check if audio_url is present
+      if (!formData.audio_url) {
+        toast.error('Please upload an audio file before submitting.');
+        return;
+      }
+
+      // Add the uploaded_by field
+      if (user && user.id) {
+        formData.uploaded_by = user.id;
+      } else {
+        toast.error('User not authenticated. Please log in and try again.');
+        return;
+      }
+      
+      console.log("Submitting form data:", formData);
+      setIsSubmitting(true);
+      try {
+        const response = await axios.post('/api/submit-song', formData);
+        console.log("Server response:", response.data);
+        if (response.status === 200 && response.data.songId) {
+          toast.success('Song uploaded successfully!');
+          setUploadedFiles([]);
+          setHasShownValidMessage(false);
+          router.push(`/Songs/${response.data.songId}`); // Redirect to the new song's page
+        } else {
+          throw new Error('Failed to submit song or get song ID');
+        }
+      } catch (error) {
+        console.error("Error submitting form:", error.response?.data || error.message);
+        if (error.response?.data?.missingFields) {
+          const missingFieldsMessage = `Missing fields: ${error.response.data.missingFields.join(', ')}`;
+          toast.error(missingFieldsMessage);
+        } else {
+          toast.error('Error uploading song. Please try again.');
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      console.log("Form is not valid, errors:", form.formState.errors);
+      Object.entries(form.formState.errors).forEach(([key, value]) => {
+        console.log(`Error in field ${key}:`, value);
+      });
+      toast.error("Please fill in all required fields correctly.");
+    }
+  };
 
   const steps = ["AI Info", "Song Info", "Bible Info", "Upload"]
 
@@ -438,7 +432,7 @@ export default function Upload() {
   const watchScriptureAdherence = form.watch("lyrics_scripture_adherence");
 
   const handleAILyricsChange = (checked: boolean) => {
-    if (watchScriptureAdherence === "The lyrics follow the scripture word-for-word") {
+    if (watchScriptureAdherence === "word_for_word") {
       toast.info("Cannot enable AI for lyrics when Word-for-word adherence is selected.", {
         duration: 5000,
         action: {
@@ -457,7 +451,7 @@ export default function Upload() {
   };
 
   useEffect(() => {
-    if (watchScriptureAdherence === "The lyrics follow the scripture word-for-word") {
+    if (watchScriptureAdherence === "word_for_word") {
       if (watchAiUsedForLyrics) {
         form.setValue("ai_used_for_lyrics", false);
         toast.info("AI used for lyrics has been set to No as Word-for-word adherence was selected.", {
@@ -677,39 +671,31 @@ export default function Upload() {
   const [croppedImage, setCroppedImage] = useState<File | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Update the handleFileChange function for image uploads
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    e.preventDefault(); // Prevent form submission
+    const file = e.target.files?.[0]
     if (file) {
-      if (file.size > MAX_IMAGE_FILE_SIZE) {
-        toast.error("Image file size exceeds the limit of 5MB");
-        return;
-      }
-      setImageFile(file);
-      setCropImageUrl(URL.createObjectURL(file));
-      setIsModalOpen(true);
+      const imageUrl = URL.createObjectURL(file)
+      setCropImageUrl(imageUrl)
+      setIsModalOpen(true)
+      form.setValue('song_art_file', file)
     }
-  };
+  }
 
-  // Update the handleCropComplete function
   const handleCropComplete = async (croppedImageBlob: Blob) => {
-    const croppedFile = new File([croppedImageBlob], 'cropped_image.jpg', { type: 'image/jpeg' });
-    setCroppedImage(croppedFile);
-    setIsModalOpen(false);
+    const croppedFile = new File([croppedImageBlob], 'cropped_image.jpg', { type: 'image/jpeg' })
+    setCroppedImage(croppedFile)
+    setIsModalOpen(false)
     
-    setImageUploadStatus('uploading');
-    setImageUploadProgress(0);
+    setImageUploadStatus('uploading')
+    setImageUploadProgress(0)
     try {
-      const fileKey = await uploadFile(croppedFile, 'image');
-      if (fileKey) {
-        form.setValue('song_art_url', fileKey, { shouldValidate: true });
-        setImageUploadStatus('success');
-        updateFormProgress();
-      }
+      await uploadFile(croppedFile, 'image')
+      setImageUploadStatus('success')
     } catch (error) {
-      setImageUploadStatus('error');
+      setImageUploadStatus('error')
     }
-  };
+  }
 
   const handleCropCancel = () => {
     setCropImageUrl(null)
@@ -730,8 +716,8 @@ export default function Upload() {
             <UploadInfoDialog />
           </div>
           {progress === 100 && (
-            <GradientButton type="submit" progress={progress} onClick={handleSubmit}>
-              Submit
+            <GradientButton type="button" progress={progress} onClick={handleSubmit} isLoading={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit'}
             </GradientButton>
           )}
         </div>
@@ -773,13 +759,13 @@ export default function Upload() {
                                 <Switch
                                   checked={field.value}
                                   onCheckedChange={handleAILyricsChange}
-                                  disabled={watchScriptureAdherence === "The lyrics follow the scripture word-for-word"}
+                                  disabled={watchScriptureAdherence === "word_for_word"}
                                 />
                               </FormControl>
                             </div>
                           </HoverCardTrigger>
                           <HoverCardContent className="w-80">
-                            {watchScriptureAdherence === "The lyrics follow the scripture word-for-word" ? (
+                            {watchScriptureAdherence === "word_for_word" ? (
                               <p>Cannot enable AI for lyrics when Word-for-word adherence is selected.</p>
                             ) : (
                               <p>Toggle to indicate if AI was used to generate the lyrics.</p>
@@ -787,7 +773,7 @@ export default function Upload() {
                           </HoverCardContent>
                         </HoverCard>
                       </div>
-                      {watchAiUsedForLyrics && (
+                      {field.value && (
                         <FormField
                           control={form.control}
                           name="lyric_ai_prompt"
@@ -803,10 +789,9 @@ export default function Upload() {
                                   onChange={(e) => {
                                     field.onChange(e);
                                     if (showValidationMessages) {
-                                      form.trigger();
+                                      form.trigger("lyric_ai_prompt");
                                     }
                                   }}
-                                  required={form.watch("ai_used_for_lyrics")}
                                 />
                               </FormControl>
                               {showValidationMessages && <FormMessage />}
@@ -857,11 +842,10 @@ export default function Upload() {
                                   onValueChange={(value) => {
                                     field.onChange(value);
                                     if (showValidationMessages) {
-                                      form.trigger();
+                                      form.trigger("music_model_used");
                                     }
                                   }}
                                   value={field.value}
-                                  required={form.watch("music_ai_generated")}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
@@ -895,10 +879,9 @@ export default function Upload() {
                                     onChange={(e) => {
                                       field.onChange(e);
                                       if (showValidationMessages) {
-                                        form.trigger();
+                                        form.trigger("music_ai_prompt");
                                       }
                                     }}
-                                    required={form.watch("music_ai_generated")}
                                   />
                                 </FormControl>
                                 {showValidationMessages && <FormMessage />}
@@ -924,7 +907,7 @@ export default function Upload() {
                         <Input 
                           placeholder="Enter song title" 
                           {...field} 
-                          value={field.value || ''} // Ensure value is always defined
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage className="form-message" />
@@ -941,7 +924,7 @@ export default function Upload() {
                         <Input 
                           placeholder="Enter artist name" 
                           {...field} 
-                          value={field.value || ''} // Ensure value is always defined
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage className="form-message" />
@@ -1050,6 +1033,7 @@ export default function Upload() {
                           placeholder="Enter song lyrics"
                           className="min-h-[200px]"
                           {...field}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage className="form-message" />
@@ -1433,7 +1417,7 @@ export default function Upload() {
                           <Select 
                             onValueChange={(value) => {
                               field.onChange(value);
-                              if (value === "The lyrics follow the scripture word-for-word" && watchAiUsedForLyrics) {
+                              if (value === "word_for_word" && watchAiUsedForLyrics) {
                                 form.setValue("ai_used_for_lyrics", false);
                                 toast.info("AI used for lyrics has been set to No as Word-for-word adherence was selected.", {
                                   duration: 5000,
@@ -1452,13 +1436,13 @@ export default function Upload() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="The lyrics follow the scripture word-for-word">
+                              <SelectItem value="word_for_word">
                                 Word-for-word
                               </SelectItem>
-                              <SelectItem value="The lyrics closely follow the scripture passage">
+                              <SelectItem value="close_paraphrase">
                                 Close paraphrase
                               </SelectItem>
-                              <SelectItem value="The lyrics are creatively inspired by the scripture passage">
+                              <SelectItem value="creative_inspiration">
                                 Creative inspiration
                               </SelectItem>
                             </SelectContent>
@@ -1522,41 +1506,63 @@ export default function Upload() {
                     <FormItem className="rounded-lg border p-4">
                       <FormLabel className="form-label">Audio File</FormLabel>
                       <FormControl>
-                        <div className="flex items-center space-x-2">
-                          {audioFileName ? (
-                            <div className="flex items-center space-x-2 bg-secondary p-2 rounded">
-                              <FileText className="h-4 w-4" />
-                              <span className="text-sm">{audioFileName}</span>
-                            </div>
-                          ) : (
-                            <Input
-                              type="file"
-                              accept="audio/*"
-                              onChange={async (e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  if (file.size > MAX_AUDIO_FILE_SIZE) {
-                                    toast.error("Audio file size exceeds the limit of 200MB");
-                                    return;
+                        <div className="flex items-center justify-between">
+                          <div className="flex-grow">
+                            {audioUploadStatus === 'idle' ? (
+                              <Input
+                                type="file"
+                                accept="audio/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    if (file.size > MAX_AUDIO_FILE_SIZE) {
+                                      toast.error("Audio file size exceeds the limit of 200MB");
+                                      return;
+                                    }
+                                    field.onChange(file);
+                                    setAudioUploadStatus('uploading');
+                                    setAudioUploadProgress(0);
+                                    try {
+                                      await uploadFile(file, 'audio');
+                                      setAudioUploadStatus('success');
+                                    } catch (error) {
+                                      setAudioUploadStatus('error');
+                                    }
                                   }
-                                  setAudioFile(file);
-                                  field.onChange(file);
-                                  const fileKey = await uploadFile(file, 'audio');
-                                  if (fileKey) {
-                                    form.setValue('audio_url', fileKey, { shouldValidate: true });
-                                    setAudioFileName(file.name);
-                                    updateFormProgress();
-                                  }
-                                }
-                              }}
-                            />
-                          )}
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center space-x-2">
+                                <FileIcon className="h-5 w-5 text-gray-500" />
+                                <p className="text-sm text-gray-500">{field.value?.name}</p>
+                              </div>
+                            )}
+                          </div>
                           {audioUploadStatus === 'success' && (
                             <Button
                               type="button"
                               variant="destructive"
                               size="icon"
-                              onClick={() => removeFile('audio')}
+                              onClick={async () => {
+                                try {
+                                  const response = await axios.delete('/api/delete-file', { data: { fileKey: form.getValues('audio_url') } });
+                                  if (response.status === 200) {
+                                    form.setValue('audio_file', undefined, { shouldValidate: true });
+                                    form.setValue('audio_url', undefined, { shouldValidate: true });
+                                    setAudioUploadStatus('idle');
+                                    setAudioUploadProgress(0);
+                                    toast.success('Audio file removed successfully');
+                                    // Reset the file input
+                                    const fileInput = document.querySelector('input[type="file"][accept="audio/*"]') as HTMLInputElement;
+                                    if (fileInput) fileInput.value = '';
+                                  } else {
+                                    throw new Error(response.data.message || 'Failed to remove audio file');
+                                  }
+                                } catch (error) {
+                                  console.error('Error removing audio file:', error.response?.data || error.message);
+                                  toast.error(`Failed to remove audio file: ${error.response?.data?.message || error.message}`);
+                                }
+                              }}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -1586,44 +1592,74 @@ export default function Upload() {
                     <FormItem className="rounded-lg border p-4">
                       <FormLabel className="form-label">Song Art</FormLabel>
                       <FormControl>
-                        <div className="flex items-center space-x-2">
-                          {imageFileName ? (
-                            <div className="flex items-center space-x-2 bg-secondary p-2 rounded">
-                              <FileText className="h-4 w-4" />
-                              <span className="text-sm">{imageFileName}</span>
-                            </div>
-                          ) : (
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  if (file.size > MAX_IMAGE_FILE_SIZE) {
-                                    toast.error("Image file size exceeds the limit of 5MB");
-                                    return;
+                        <div className="flex items-center justify-between">
+                          <div className="flex-grow">
+                            {imageUploadStatus === 'idle' ? (
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) {
+                                    const imageUrl = URL.createObjectURL(file)
+                                    setCropImageUrl(imageUrl)
+                                    setIsModalOpen(true)
+                                    form.setValue('song_art_file', file)
                                   }
-                                  setImageFile(file);
-                                  handleFileChange(e);
-                                }
-                              }}
-                            />
-                          )}
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center space-x-2">
+                                <FileIcon className="h-5 w-5 text-gray-500" />
+                                <p className="text-sm text-gray-500">{field.value?.name}</p>
+                              </div>
+                            )}
+                          </div>
                           {imageUploadStatus === 'success' && croppedImage && (
-                            <>
+                            <div className="flex items-center space-x-2">
                               <img src={URL.createObjectURL(croppedImage)} alt="Uploaded Song Art" className="w-14 h-14 object-cover rounded" />
                               <Button
                                 type="button"
                                 variant="destructive"
                                 size="icon"
-                                onClick={() => removeFile('image')}
+                                onClick={async () => {
+                                  try {
+                                    const response = await axios.delete('/api/delete-file', { data: { fileKey: form.getValues('song_art_url') } });
+                                    if (response.status === 200) {
+                                      form.setValue('song_art_file', undefined, { shouldValidate: true });
+                                      form.setValue('song_art_url', undefined, { shouldValidate: true });
+                                      setImageUploadStatus('idle');
+                                      setImageUploadProgress(0);
+                                      setCroppedImage(null);
+                                      toast.success('Song art removed successfully');
+                                      // Reset the file input
+                                      const fileInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
+                                      if (fileInput) fileInput.value = '';
+                                    } else {
+                                      throw new Error(response.data.message || 'Failed to remove song art');
+                                    }
+                                  } catch (error) {
+                                    console.error('Error removing song art:', error.response?.data || error.message);
+                                    toast.error(`Failed to remove song art: ${error.response?.data?.message || error.message}`);
+                                  }
+                                }}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                            </>
+                            </div>
                           )}
                         </div>
                       </FormControl>
+                      {imageUploadStatus !== 'idle' && (
+                        <div className="mt-2">
+                          <Progress value={imageUploadProgress} className="w-full" />
+                          <p className="text-sm mt-1">
+                            {imageUploadStatus === 'uploading' && `Uploading: ${imageUploadProgress}%`}
+                            {imageUploadStatus === 'success' && 'Upload successful!'}
+                            {imageUploadStatus === 'error' && 'Upload failed. Please try again.'}
+                          </p>
+                        </div>
+                      )}
                       <FormMessage className="form-message" />
                     </FormItem>
                   )}
@@ -1638,21 +1674,10 @@ export default function Upload() {
                     />
                   )}
                 </Modal>
-
-                {imageUploadStatus !== 'idle' && (
-                  <div className="mt-2">
-                    <Progress value={imageUploadProgress} className="w-full" />
-                    <p className="text-sm mt-1">
-                      {imageUploadStatus === 'uploading' && `Uploading: ${imageUploadProgress}%`}
-                      {imageUploadStatus === 'success' && 'Upload successful!'}
-                      {imageUploadStatus === 'error' && 'Upload failed. Please try again.'}
-                    </p>
-                  </div>
-                )}
               </TabsContent>
             </Tabs>
 
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center pb-4 sm:pb-6 md:pb-8 lg:pb-10 xl:pb-12">
               {currentStep > 0 ? (
                 <Button
                   type="button"
@@ -1671,8 +1696,8 @@ export default function Upload() {
                   Next
                 </Button>
               ) : (
-                <GradientButton type="submit" progress={progress} onClick={handleSubmit}>
-                  Submit
+                <GradientButton type="submit" progress={progress} onClick={handleSubmit} isLoading={isSubmitting}>
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
                 </GradientButton>
               )}
             </div>

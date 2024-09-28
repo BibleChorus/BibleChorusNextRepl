@@ -1,19 +1,19 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { FaUpload, FaSearch, FaMap, FaList, FaVoteYea, FaHeadphones, FaUser, FaQuestionCircle, FaTimes } from 'react-icons/fa';
+import { Upload, Search, Map, List, Vote, Headphones, User, HelpCircle, X } from 'lucide-react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import Image from 'next/image'; // Add this import
 import Link from 'next/link'; // Add this import
 
 const menuItems = [
-  { name: 'Upload Songs', icon: FaUpload, href: '/upload' },
-  { name: 'Advanced Search', icon: FaSearch, href: '/search' },
-  { name: 'Progress Map', icon: FaMap, href: '/progress' },
-  { name: 'Playlists', icon: FaList, href: '/playlists' },
-  { name: 'Vote on Songs', icon: FaVoteYea, href: '/vote' },
-  { name: 'Listen', icon: FaHeadphones, href: '/listen' },
-  { name: 'Profile', icon: FaUser, href: '/profile' },
-  { name: 'How To', icon: FaQuestionCircle, href: '/how-to' },
+  { name: 'Upload Songs', icon: Upload, href: '/upload' },
+  { name: 'Advanced Search', icon: Search, href: '/search' },
+  { name: 'Progress Map', icon: Map, href: '/progress' },
+  { name: 'Playlists', icon: List, href: '/playlists' },
+  { name: 'Vote on Songs', icon: Vote, href: '/vote' },
+  { name: 'Listen', icon: Headphones, href: '/listen' },
+  { name: 'Profile', icon: User, href: '/profile' },
+  { name: 'How To', icon: HelpCircle, href: '/how-to' },
 ];
 
 interface SidebarProps {
@@ -34,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobileOpen, setI
   return (
     <>
       <div
-        className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ease-in-out z-[55] 
+        className={`fixed top-0 left-0 h-full bg-background text-foreground shadow-lg transition-all duration-300 ease-in-out z-[55] 
           ${isMobileOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'} 
           ${isOpen ? 'lg:w-64' : 'lg:w-16'}
           ${!isMobileOpen && !isOpen ? 'lg:w-0 lg:-translate-x-full' : ''}`}
@@ -43,15 +43,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobileOpen, setI
           {/* Close button for mobile view */}
           <button
             onClick={() => setIsMobileOpen(false)}
-            className="absolute top-4 right-4 p-2 text-gray-600 dark:text-gray-400 lg:hidden"
+            className="absolute top-4 right-4 p-2 text-muted-foreground lg:hidden"
           >
-            <FaTimes className="h-6 w-6" />
+            <X className="h-6 w-6" />
           </button>
 
           {/* Toggle button for desktop view */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="absolute top-4 right-4 p-2 text-gray-600 dark:text-gray-400 hidden lg:block"
+            className="absolute top-4 right-4 p-2 text-muted-foreground hidden lg:block"
           >
             {isOpen ? <PanelLeftClose className="h-6 w-6" /> : <PanelLeftOpen className="h-6 w-6" />}
           </button>
@@ -60,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobileOpen, setI
           <div className="h-12"></div>
           
           {/* BibleChorus icon and text */}
-          <Link href="/" className={`flex items-center py-2 px-2 mb-4 text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900 rounded-md cursor-pointer
+          <Link href="/" className={`flex items-center py-2 px-2 mb-4 text-foreground hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer
             ${isOpen ? 'lg:px-4' : 'lg:px-2 lg:justify-center'}
             h-10 overflow-hidden whitespace-nowrap`}>
             <div className="w-6 h-6 flex items-center justify-center">
@@ -80,18 +80,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobileOpen, setI
           </Link>
           
           {/* Separator line */}
-          <div className="border-b border-gray-200 dark:border-gray-700 mb-4"></div>
+          <div className="border-b border-border mb-4"></div>
           
           {menuItems.map((item) => (
             <div
               key={item.name}
               onClick={() => handleItemClick(item.href)}
-              className={`flex items-center py-2 px-2 text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900 rounded-md cursor-pointer
+              className={`flex items-center py-2 px-2 text-foreground hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer
                 ${isOpen ? 'lg:px-4' : 'lg:px-2 lg:justify-center'}
                 h-10 overflow-hidden whitespace-nowrap`}
             >
               <div className="w-6 h-6 flex items-center justify-center">
-                <item.icon className="text-xl text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                <item.icon className="h-5 w-5 text-primary flex-shrink-0" />
               </div>
               <span className={`ml-4 transition-opacity duration-300
                 ${isOpen ? 'opacity-100 lg:inline' : 'opacity-0 lg:hidden'}

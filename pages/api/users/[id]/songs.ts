@@ -1,14 +1,19 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import db from '../../db';
+import db from '@/db';  // This should be the correct path
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { id } = req.query;
+
   switch (req.method) {
     case 'GET':
       try {
-        const songs = await db('songs').select('*');
+        const songs = await db('songs')
+          .select('id', 'title', 'artist', 'genre', 'created_at')
+          .where('uploaded_by', id)
+          .orderBy('created_at', 'desc');
         res.status(200).json(songs);
       } catch (error) {
-        res.status(500).json({ message: 'Error fetching songs', error });
+        res.status(500).json({ message: 'Error fetching user songs', error });
       }
       break;
 

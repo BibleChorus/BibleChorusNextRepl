@@ -12,7 +12,7 @@ export type ChartConfig = {
     icon?: React.ComponentType
   } & (
     | { color?: string; theme?: never }
-    | { color?: never; theme: Record<keyof typeof THEMES, string> }
+    | { color: never; theme: Record<keyof typeof THEMES, string> }
   )
 }
 
@@ -109,6 +109,7 @@ const ChartTooltipContent = React.forwardRef<
       indicator?: "line" | "dot" | "dashed"
       nameKey?: string
       labelKey?: string
+      showPercentage?: boolean
     }
 >(
   (
@@ -126,6 +127,7 @@ const ChartTooltipContent = React.forwardRef<
       color,
       nameKey,
       labelKey,
+      showPercentage = false,
     },
     ref
   ) => {
@@ -233,12 +235,14 @@ const ChartTooltipContent = React.forwardRef<
                       <div className="grid gap-1.5">
                         {nestLabel ? tooltipLabel : null}
                         <span className="text-muted-foreground">
-                          {itemConfig?.label || item.name}
+                          {(itemConfig?.label || item.name) + " "}
                         </span>
                       </div>
-                      {item.value && (
+                      {item.value !== undefined && (
                         <span className="font-mono font-medium tabular-nums text-foreground">
-                          {item.value.toLocaleString()}
+                          {showPercentage
+                            ? item.value.toLocaleString() + "%"
+                            : item.value.toLocaleString()}
                         </span>
                       )}
                     </div>
