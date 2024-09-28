@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote } from 'lucide-react'
+import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star } from 'lucide-react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 import { formatBibleVerses } from '@/lib/utils'
@@ -165,13 +165,16 @@ export function SongList({ songs }: SongListProps) {
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     <DropdownMenuItem onClick={() => handleVote(song.id, 'Best Musically')}>
-                      Best Musically
+                      <Music className="mr-2 h-4 w-4" />
+                      <span>Best Musically</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleVote(song.id, 'Best Lyrically')}>
-                      Best Lyrically
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      <span>Best Lyrically</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleVote(song.id, 'Best Overall')}>
-                      Best Overall
+                      <Star className="mr-2 h-4 w-4" />
+                      <span>Best Overall</span>
                     </DropdownMenuItem>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
