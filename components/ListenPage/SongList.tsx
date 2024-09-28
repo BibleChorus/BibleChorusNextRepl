@@ -17,7 +17,7 @@ import {
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useAuth } from '@/contexts/AuthContext'
 import axios from 'axios'
@@ -82,9 +82,35 @@ export function SongList({ songs }: SongListProps) {
     }
   }
 
-  const handleVoteClick = (song: Song, voteType: string) => {
+  const handleVoteClick = async (song: Song, voteType: string) => {
     setSelectedSong(song)
     setSelectedVoteType(voteType)
+    
+    // Fetch the user's existing vote for this song and vote type
+    if (user) {
+      try {
+        const response = await axios.get(`/api/votes`, {
+          params: {
+            user_id: user.id,
+            song_id: song.id,
+            vote_type: voteType
+          }
+        })
+        const existingVote = response.data
+        
+        // Update the voteStates with the fetched vote
+        setVoteStates(prevStates => ({
+          ...prevStates,
+          [song.id]: {
+            ...prevStates[song.id],
+            [voteType]: existingVote ? existingVote.vote_value : 0
+          }
+        }))
+      } catch (error) {
+        console.error('Error fetching existing vote:', error)
+      }
+    }
+    
     setIsVoteDialogOpen(true)
   }
 
@@ -117,6 +143,12 @@ export function SongList({ songs }: SongListProps) {
 
     setIsVoteDialogOpen(false)
   }
+
+  const getVoteValue = (value: number | undefined): string => {
+    if (value === 1) return 'up';
+    if (value === -1) return 'down';
+    return '0';
+  };
 
   return (
     <div className="space-y-2 sm:space-y-4">
@@ -267,24 +299,42 @@ export function SongList({ songs }: SongListProps) {
       ))}
 
       <Dialog open={isVoteDialogOpen} onOpenChange={setIsVoteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Vote for {selectedSong?.title}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-center mb-2">
+              {selectedSong?.title}
+            </DialogTitle>
+            <DialogDescription className="text-center text-lg font-medium">
+              Vote for: {selectedVoteType}
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <h3 className="mb-4 text-lg font-medium">{selectedVoteType}</h3>
-            <ToggleGroup type="single" value={voteStates[selectedSong?.id]?.[selectedVoteType]?.toString()} onValueChange={handleVote}>
-              <ToggleGroupItem value="up" aria-label="Upvote">
-                👍 Upvote
+            <ToggleGroup
+              type="single"
+              value={getVoteValue(voteStates[selectedSong?.id]?.[selectedVoteType])}
+              onValueChange={handleVote}
+              className="flex justify-between items-center"
+            >
+              <ToggleGroupItem value="down" aria-label="Downvote" className="flex-1 py-6">
+                👎 Downvote
               </ToggleGroupItem>
-              <ToggleGroupItem value="0" aria-label="Neutral">
+              <ToggleGroupItem value="0" aria-label="Neutral" className="flex-1 py-6">
                 😐 Neutral
               </ToggleGroupItem>
-              <ToggleGroupItem value="down" aria-label="Downvote">
-                👎 Downvote
+              <ToggleGroupItem value="up" aria-label="Upvote" className="flex-1 py-6">
+                👍 Upvote
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
+          {voteStates[selectedSong?.id]?.[selectedVoteType] !== undefined && (
+            <p className="text-center text-sm text-gray-500">
+              Your current vote: {
+                voteStates[selectedSong?.id]?.[selectedVoteType] === 1 ? 'Upvote' :
+                voteStates[selectedSong?.id]?.[selectedVoteType] === -1 ? 'Downvote' :
+                'Neutral'
+              }
+            </p>
+          )}
         </DialogContent>
       </Dialog>
     </div>
