@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star } from 'lucide-react'
@@ -17,6 +17,11 @@ import {
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { useAuth } from '@/contexts/AuthContext'
+import axios from 'axios'
+import { toast } from "sonner"
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -39,14 +44,79 @@ interface SongListProps {
   songs: Song[]
 }
 
+interface VoteState {
+  [songId: number]: {
+    [voteType: string]: number;
+  };
+}
+
 export function SongList({ songs }: SongListProps) {
   const [imageError, setImageError] = useState<Record<number, boolean>>({})
   const router = useRouter()
+  const { user } = useAuth()
+  const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false)
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null)
+  const [selectedVoteType, setSelectedVoteType] = useState<string>('')
+  const [voteStates, setVoteStates] = useState<VoteState>({})
 
-  const handleVote = (songId: number, voteType: string) => {
-    console.log(`Voted for song ${songId} as ${voteType}`);
-    // TODO: Implement actual voting logic here
-  };
+  useEffect(() => {
+    if (user) {
+      fetchUserVotes()
+    }
+  }, [user])
+
+  const fetchUserVotes = async () => {
+    try {
+      const response = await axios.get(`/api/users/${user?.id}/votes`)
+      const userVotes = response.data
+      const newVoteStates: VoteState = {}
+      userVotes.forEach((vote: any) => {
+        if (!newVoteStates[vote.song_id]) {
+          newVoteStates[vote.song_id] = {}
+        }
+        newVoteStates[vote.song_id][vote.vote_type] = vote.vote_value
+      })
+      setVoteStates(newVoteStates)
+    } catch (error) {
+      console.error('Error fetching user votes:', error)
+    }
+  }
+
+  const handleVoteClick = (song: Song, voteType: string) => {
+    setSelectedSong(song)
+    setSelectedVoteType(voteType)
+    setIsVoteDialogOpen(true)
+  }
+
+  const handleVote = async (value: string) => {
+    if (!user || !selectedSong) return
+
+    const voteValue = value === 'up' ? 1 : value === 'down' ? -1 : 0
+    
+    try {
+      await axios.post('/api/votes', {
+        user_id: user.id,
+        song_id: selectedSong.id,
+        vote_type: selectedVoteType,
+        vote_value: voteValue
+      })
+
+      setVoteStates(prevStates => ({
+        ...prevStates,
+        [selectedSong.id]: {
+          ...prevStates[selectedSong.id],
+          [selectedVoteType]: voteValue
+        }
+      }))
+
+      toast.success('Vote submitted successfully')
+    } catch (error) {
+      console.error('Error submitting vote:', error)
+      toast.error('Failed to submit vote')
+    }
+
+    setIsVoteDialogOpen(false)
+  }
 
   return (
     <div className="space-y-2 sm:space-y-4">
@@ -164,15 +234,15 @@ export function SongList({ songs }: SongListProps) {
                     <span>Vote</span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
-                    <DropdownMenuItem onClick={() => handleVote(song.id, 'Best Musically')}>
+                    <DropdownMenuItem onClick={() => handleVoteClick(song, 'Best Musically')}>
                       <Music className="mr-2 h-4 w-4" />
                       <span>Best Musically</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleVote(song.id, 'Best Lyrically')}>
+                    <DropdownMenuItem onClick={() => handleVoteClick(song, 'Best Lyrically')}>
                       <BookOpen className="mr-2 h-4 w-4" />
                       <span>Best Lyrically</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleVote(song.id, 'Best Overall')}>
+                    <DropdownMenuItem onClick={() => handleVoteClick(song, 'Best Overall')}>
                       <Star className="mr-2 h-4 w-4" />
                       <span>Best Overall</span>
                     </DropdownMenuItem>
@@ -195,6 +265,28 @@ export function SongList({ songs }: SongListProps) {
           </div>
         </motion.div>
       ))}
+
+      <Dialog open={isVoteDialogOpen} onOpenChange={setIsVoteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Vote for {selectedSong?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <h3 className="mb-4 text-lg font-medium">{selectedVoteType}</h3>
+            <ToggleGroup type="single" value={voteStates[selectedSong?.id]?.[selectedVoteType]?.toString()} onValueChange={handleVote}>
+              <ToggleGroupItem value="up" aria-label="Upvote">
+                👍 Upvote
+              </ToggleGroupItem>
+              <ToggleGroupItem value="0" aria-label="Neutral">
+                😐 Neutral
+              </ToggleGroupItem>
+              <ToggleGroupItem value="down" aria-label="Downvote">
+                👎 Downvote
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
