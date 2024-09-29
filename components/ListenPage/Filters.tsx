@@ -8,13 +8,21 @@ import { Check, ChevronsUpDown, X, RefreshCw, Info } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
-import { GENRES } from "@/lib/constants"
+import { GENRES, BIBLE_BOOKS, BIBLE_TRANSLATIONS, AI_MUSIC_MODELS } from "@/lib/constants"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
 
 export interface FilterOptions {
   lyricsAdherence: string[]
   isContinuous: "all" | "true" | "false"
   aiMusic: "all" | "true" | "false"
-  genres: string[] // Add this line
+  genres: string[]
+  aiUsedForLyrics: boolean
+  musicModelUsed: string
+  title: string
+  artist: string
+  bibleTranslation: string
+  bibleBooks: string[]
 }
 
 interface FiltersProps {
@@ -27,9 +35,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
   const [openLyricsAdherence, setOpenLyricsAdherence] = useState(false)
   const [openGenres, setOpenGenres] = useState(false)
   const [genreSearch, setGenreSearch] = useState('')
+  const [openBibleBooks, setOpenBibleBooks] = useState(false)
+  const [bibleBookSearch, setBibleBookSearch] = useState('')
+  const [currentTab, setCurrentTab] = useState("AI Info")
 
   const handleChange = (key: keyof FilterOptions, value: any) => {
-    setFilterOptions((prev) => ({ ...prev, [key]: value }))
+    // If the value is our placeholder for empty string, convert it back to an empty string
+    const actualValue = value === '_empty_' ? '' : value;
+    setFilterOptions((prev) => ({ ...prev, [key]: actualValue }))
   }
 
   const lyricsAdherenceOptions = [
@@ -60,12 +73,32 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
     handleChange('genres', newGenres)
   }
 
+  const filteredBibleBooks = useCallback(() => {
+    return BIBLE_BOOKS.filter(book =>
+      book.toLowerCase().includes(bibleBookSearch.toLowerCase())
+    )
+  }, [bibleBookSearch])
+
+  const toggleBibleBook = (book: string) => {
+    const currentBooks = filterOptions.bibleBooks
+    const newBooks = currentBooks.includes(book)
+      ? currentBooks.filter((b) => b !== book)
+      : [...currentBooks, book]
+    handleChange('bibleBooks', newBooks)
+  }
+
   const clearFilters = () => {
     setFilterOptions({
       lyricsAdherence: [],
       isContinuous: "all",
       aiMusic: "all",
-      genres: [], // Add this line
+      genres: [],
+      aiUsedForLyrics: false,
+      musicModelUsed: "",
+      title: "",
+      artist: "",
+      bibleTranslation: "",
+      bibleBooks: [],
     })
   }
 
@@ -111,113 +144,219 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           </button>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Popover open={openLyricsAdherence} onOpenChange={setOpenLyricsAdherence}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={openLyricsAdherence}
-              className="w-full justify-between"
-            >
-              {filterOptions.lyricsAdherence.length > 0
-                ? `${filterOptions.lyricsAdherence.length} selected`
-                : "Select lyrics adherence..."}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-full p-0">
-            <div className="p-2">
-              {lyricsAdherenceOptions.map((option) => (
-                <div
-                  key={option.value}
-                  className={cn(
-                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                    filterOptions.lyricsAdherence.includes(option.value) && "bg-accent"
-                  )}
-                  onClick={() => toggleLyricsAdherence(option.value)}
-                >
-                  <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                    {filterOptions.lyricsAdherence.includes(option.value) && <Check className="h-3 w-3" />}
-                  </div>
-                  {option.label}
-                </div>
-              ))}
+      
+      <Tabs value={currentTab} onValueChange={setCurrentTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="AI Info">AI Info</TabsTrigger>
+          <TabsTrigger value="Song Info">Song Info</TabsTrigger>
+          <TabsTrigger value="Bible Info">Bible Info</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="AI Info" className="space-y-4">
+          <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <label className="text-base font-medium">AI Used for Lyrics</label>
+              <p className="text-sm text-muted-foreground">
+                Filter songs based on AI-generated lyrics
+              </p>
             </div>
-          </PopoverContent>
-        </Popover>
-        <FilterSelect
-          title="Passage Type"
-          value={filterOptions.isContinuous}
-          onChange={(value) => handleChange('isContinuous', value)}
-          options={[
-            { value: "all", label: "All Passage Types" },
-            { value: "true", label: "Continuous" },
-            { value: "false", label: "Non-continuous" },
-          ]}
-        />
-        <FilterSelect
-          title="Music Source"
-          value={filterOptions.aiMusic}
-          onChange={(value) => handleChange('aiMusic', value)}
-          options={[
-            { value: "all", label: "All Music Sources" },
-            { value: "true", label: "AI Generated" },
-            { value: "false", label: "Human Composed" },
-          ]}
-        />
-        <Popover open={openGenres} onOpenChange={setOpenGenres}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={openGenres}
-              className="w-full justify-between"
-            >
-              {filterOptions.genres.length > 0
-                ? `${filterOptions.genres.length} genre(s) selected`
-                : "Select genres..."}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-full p-0">
-            <div className="p-2">
-              <div className="flex items-center justify-between pb-2">
-                <Input
-                  placeholder="Search genres..."
-                  value={genreSearch}
-                  onChange={(e) => setGenreSearch(e.target.value)}
-                  className="mr-2"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleChange('genres', [])}
-                >
-                  Clear
-                </Button>
+            <Switch
+              checked={filterOptions.aiUsedForLyrics}
+              onCheckedChange={(value) => handleChange('aiUsedForLyrics', value)}
+            />
+          </div>
+          <FilterSelect
+            title="AI Music Model"
+            value={filterOptions.musicModelUsed}
+            onChange={(value) => handleChange('musicModelUsed', value)}
+            options={[
+              { value: "", label: "All Models" },
+              ...AI_MUSIC_MODELS.map(model => ({ value: model, label: model }))
+            ]}
+          />
+          <FilterSelect
+            title="Music Source"
+            value={filterOptions.aiMusic}
+            onChange={(value) => handleChange('aiMusic', value)}
+            options={[
+              { value: "all", label: "All Music Sources" },
+              { value: "true", label: "AI Generated" },
+              { value: "false", label: "Human Composed" },
+            ]}
+          />
+        </TabsContent>
+
+        <TabsContent value="Song Info" className="space-y-4">
+          <Input
+            placeholder="Filter by song title"
+            value={filterOptions.title}
+            onChange={(e) => handleChange('title', e.target.value)}
+          />
+          <Input
+            placeholder="Filter by artist"
+            value={filterOptions.artist}
+            onChange={(e) => handleChange('artist', e.target.value)}
+          />
+          <Popover open={openGenres} onOpenChange={setOpenGenres}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openGenres}
+                className="w-full justify-between"
+              >
+                {filterOptions.genres.length > 0
+                  ? `${filterOptions.genres.length} genre(s) selected`
+                  : "Select genres..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0">
+              <div className="p-2">
+                <div className="flex items-center justify-between pb-2">
+                  <Input
+                    placeholder="Search genres..."
+                    value={genreSearch}
+                    onChange={(e) => setGenreSearch(e.target.value)}
+                    className="mr-2"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleChange('genres', [])}
+                  >
+                    Clear
+                  </Button>
+                </div>
+                <div className="max-h-[200px] overflow-y-auto">
+                  {filteredGenres().map((genre) => (
+                    <div
+                      key={genre}
+                      className={cn(
+                        "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                        filterOptions.genres.includes(genre) && "bg-accent"
+                      )}
+                      onClick={() => toggleGenre(genre)}
+                    >
+                      <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                        {filterOptions.genres.includes(genre) && <Check className="h-3 w-3" />}
+                      </div>
+                      {genre}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="max-h-[200px] overflow-y-auto">
-                {filteredGenres().map((genre) => (
+            </PopoverContent>
+          </Popover>
+        </TabsContent>
+
+        <TabsContent value="Bible Info" className="space-y-4">
+          <FilterSelect
+            title="Bible Translation"
+            value={filterOptions.bibleTranslation}
+            onChange={(value) => handleChange('bibleTranslation', value)}
+            options={[
+              { value: "", label: "All Translations" },
+              ...BIBLE_TRANSLATIONS.map(translation => ({ value: translation, label: translation }))
+            ]}
+          />
+          <Popover open={openLyricsAdherence} onOpenChange={setOpenLyricsAdherence}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openLyricsAdherence}
+                className="w-full justify-between"
+              >
+                {filterOptions.lyricsAdherence.length > 0
+                  ? `${filterOptions.lyricsAdherence.length} selected`
+                  : "Select lyrics adherence..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0">
+              <div className="p-2">
+                {lyricsAdherenceOptions.map((option) => (
                   <div
-                    key={genre}
+                    key={option.value}
                     className={cn(
                       "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                      filterOptions.genres.includes(genre) && "bg-accent"
+                      filterOptions.lyricsAdherence.includes(option.value) && "bg-accent"
                     )}
-                    onClick={() => toggleGenre(genre)}
+                    onClick={() => toggleLyricsAdherence(option.value)}
                   >
                     <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                      {filterOptions.genres.includes(genre) && <Check className="h-3 w-3" />}
+                      {filterOptions.lyricsAdherence.includes(option.value) && <Check className="h-3 w-3" />}
                     </div>
-                    {genre}
+                    {option.label}
                   </div>
                 ))}
               </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
+            </PopoverContent>
+          </Popover>
+          <FilterSelect
+            title="Passage Type"
+            value={filterOptions.isContinuous}
+            onChange={(value) => handleChange('isContinuous', value)}
+            options={[
+              { value: "all", label: "All Passage Types" },
+              { value: "true", label: "Continuous" },
+              { value: "false", label: "Non-continuous" },
+            ]}
+          />
+          <Popover open={openBibleBooks} onOpenChange={setOpenBibleBooks}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openBibleBooks}
+                className="w-full justify-between"
+              >
+                {filterOptions.bibleBooks.length > 0
+                  ? `${filterOptions.bibleBooks.length} book(s) selected`
+                  : "Select Bible books..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0">
+              <div className="p-2">
+                <div className="flex items-center justify-between pb-2">
+                  <Input
+                    placeholder="Search Bible books..."
+                    value={bibleBookSearch}
+                    onChange={(e) => setBibleBookSearch(e.target.value)}
+                    className="mr-2"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleChange('bibleBooks', [])}
+                  >
+                    Clear
+                  </Button>
+                </div>
+                <div className="max-h-[200px] overflow-y-auto">
+                  {filteredBibleBooks().map((book) => (
+                    <div
+                      key={book}
+                      className={cn(
+                        "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                        filterOptions.bibleBooks.includes(book) && "bg-accent"
+                      )}
+                      onClick={() => toggleBibleBook(book)}
+                    >
+                      <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                        {filterOptions.bibleBooks.includes(book) && <Check className="h-3 w-3" />}
+                      </div>
+                      {book}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </TabsContent>
+      </Tabs>
     </motion.div>
   )
 }
@@ -239,7 +378,10 @@ function FilterSelect({ title, value, onChange, options }: FilterSelectProps) {
         <SelectGroup>
           <SelectLabel>{title}</SelectLabel>
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem 
+              key={option.value} 
+              value={option.value || '_empty_'}  // Use a placeholder value for empty strings
+            >
               {option.label}
             </SelectItem>
           ))}

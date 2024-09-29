@@ -47,7 +47,13 @@ function ListenContent() {
     lyricsAdherence: [],
     isContinuous: "all",
     aiMusic: "all",
-    genres: [], // Add this line
+    genres: [],
+    aiUsedForLyrics: false,
+    musicModelUsed: "",
+    title: "",
+    artist: "",
+    bibleTranslation: "",
+    bibleBooks: [],
   })
   const [isFilterExpanded, setIsFilterExpanded] = useState(false)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
