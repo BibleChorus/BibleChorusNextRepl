@@ -4,7 +4,26 @@ import db from '@/db';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
+      // Log incoming query parameters
+      console.log('Received query parameters:', req.query);
+
       const { lyricsAdherence, isContinuous, aiMusic } = req.query;
+
+      // Log individual parameters
+      console.log('lyricsAdherence:', lyricsAdherence);
+      console.log('isContinuous:', isContinuous);
+      console.log('aiMusic:', aiMusic);
+
+      // Ensure lyricsAdherence is always an array
+      let adherenceValues: string[] = [];
+      if (lyricsAdherence) {
+        adherenceValues = Array.isArray(lyricsAdherence)
+          ? lyricsAdherence
+          : [lyricsAdherence];
+      }
+
+      // Log the normalized adherenceValues
+      console.log('Normalized adherenceValues:', adherenceValues);
 
       let query = db('songs')
         .select(
@@ -22,8 +41,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         )
         .join('users', 'songs.uploaded_by', 'users.id');
 
-      if (lyricsAdherence !== 'all') {
-        query = query.where('lyrics_scripture_adherence', lyricsAdherence);
+      // Apply the lyricsAdherence filter with case-insensitive matching
+      if (adherenceValues.length > 0) {
+        query = query.where((builder) => {
+          adherenceValues.forEach((value, index) => {
+            if (index === 0) {
+              builder.whereRaw('LOWER(songs.lyrics_scripture_adherence) = LOWER(?)', value);
+            } else {
+              builder.orWhereRaw('LOWER(songs.lyrics_scripture_adherence) = LOWER(?)', value);
+            }
+          });
+        });
       }
 
       if (isContinuous !== 'all') {
@@ -50,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(200).json(songs);
     } catch (error) {
       console.error('Error fetching songs:', error);
-      res.status(500).json({ message: 'Error fetching songs', error });
+      res.status(500).json({ message: 'Error fetching songs', error: error.message });
     }
   } else {
     res.setHeader('Allow', ['GET']);

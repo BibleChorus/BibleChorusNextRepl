@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
+import qs from 'qs'
 
 // Define the Song type based on your data structure
 export type Song = {
@@ -40,7 +41,7 @@ export default function Listen() {
 
 function ListenContent() {
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    lyricsAdherence: "all",
+    lyricsAdherence: [],
     isContinuous: "all",
     aiMusic: "all",
   })
@@ -51,7 +52,10 @@ function ListenContent() {
   const { data: songs, isLoading, error } = useQuery<Song[], Error>(
     ['songs', filterOptions],
     async () => {
-      const res = await axios.get('/api/songs', { params: filterOptions })
+      const res = await axios.get('/api/songs', {
+        params: filterOptions,
+        paramsSerializer: (params) => qs.stringify(params, { arrayFormat: 'repeat' }),
+      })
       return res.data
     }
   )
@@ -66,16 +70,44 @@ function ListenContent() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const getFilterTags = (): string[] => {
-    const tags: string[] = []
-    if (filterOptions.lyricsAdherence !== "all") {
-      tags.push(`Lyrics: ${filterOptions.lyricsAdherence.replace(/_/g, ' ')}`)
+  const removeFilter = (filterType: keyof FilterOptions, value?: string) => {
+    setFilterOptions((prev) => {
+      if (filterType === 'lyricsAdherence' && value) {
+        return {
+          ...prev,
+          lyricsAdherence: prev.lyricsAdherence.filter(v => v !== value)
+        }
+      } else {
+        return {
+          ...prev,
+          [filterType]: filterType === 'lyricsAdherence' ? [] : 'all'
+        }
+      }
+    })
+  }
+
+  const getFilterTags = (): { type: keyof FilterOptions; label: string; value?: string }[] => {
+    const tags: { type: keyof FilterOptions; label: string; value?: string }[] = []
+    if (filterOptions.lyricsAdherence.length > 0) {
+      filterOptions.lyricsAdherence.forEach(value => {
+        tags.push({
+          type: 'lyricsAdherence',
+          label: `Lyrics: ${value.replace(/_/g, ' ')}`,
+          value
+        })
+      })
     }
     if (filterOptions.isContinuous !== "all") {
-      tags.push(`Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`)
+      tags.push({
+        type: 'isContinuous',
+        label: `Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`
+      })
     }
     if (filterOptions.aiMusic !== "all") {
-      tags.push(`Music: ${filterOptions.aiMusic === "true" ? "AI" : "Human"}`)
+      tags.push({
+        type: 'aiMusic',
+        label: `Music: ${filterOptions.aiMusic === "true" ? "AI" : "Human"}`
+      })
     }
     return tags
   }
@@ -108,30 +140,11 @@ function ListenContent() {
               className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
             >
               <div className="container mx-auto px-4 py-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center space-x-2">
-                    <h2 className="text-lg font-semibold">Filters</h2>
-                    <Popover>
-                      <PopoverTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer" />
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        <p className="text-sm">
-                          Adjust filters to refine your song list.
-                        </p>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <button
-                    onClick={() => setIsFilterExpanded(false)}
-                    className="text-sm flex items-center text-muted-foreground hover:text-foreground"
-                    aria-label="Close filters"
-                  >
-                    Close Filters
-                    <X className="h-4 w-4 ml-1" />
-                  </button>
-                </div>
-                <Filters filterOptions={filterOptions} setFilterOptions={setFilterOptions} />
+                <Filters 
+                  filterOptions={filterOptions} 
+                  setFilterOptions={setFilterOptions}
+                  setIsFilterExpanded={setIsFilterExpanded}
+                />
               </div>
             </motion.div>
           )}
@@ -159,7 +172,13 @@ function ListenContent() {
       <main className="container mx-auto px-4 py-6">
         <div className="flex flex-wrap gap-2 mb-4">
           {getFilterTags().map((tag, index) => (
-            <Badge key={index} variant="secondary">{tag}</Badge>
+            <Badge key={index} variant="secondary" className="flex items-center gap-1">
+              {tag.label}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => removeFilter(tag.type, tag.value)}
+              />
+            </Badge>
           ))}
         </div>
 
