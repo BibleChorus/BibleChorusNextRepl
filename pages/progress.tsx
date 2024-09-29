@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react"
 import Head from "next/head"
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
-import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis, Cell } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ProgressStats } from "@/components/ProgressPage/ProgressStats"
 import { Filters, FilterOptions } from "@/components/ProgressPage/Filters"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import { Filter, X, Info } from "lucide-react"
+import { Filter, X, Info, RefreshCw } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Separator } from "@/components/ui/separator"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
@@ -101,16 +101,44 @@ export default function Progress() {
       })
     : []
 
-  const getFilterTags = (): string[] => {
-    const tags: string[] = []
+  const removeFilter = (filterType: keyof FilterOptions, value?: string) => {
+    setFilterOptions((prev) => {
+      if (filterType === 'lyricsAdherence' && value) {
+        return {
+          ...prev,
+          lyricsAdherence: prev.lyricsAdherence.filter(v => v !== value)
+        }
+      } else {
+        return {
+          ...prev,
+          [filterType]: filterType === 'lyricsAdherence' ? [] : 'all'
+        }
+      }
+    })
+  }
+
+  const getFilterTags = (): { type: keyof FilterOptions; label: string; value?: string }[] => {
+    const tags: { type: keyof FilterOptions; label: string; value?: string }[] = []
     if (filterOptions.lyricsAdherence.length > 0) {
-      tags.push(`Lyrics: ${filterOptions.lyricsAdherence.map(v => v.replace(/_/g, ' ')).join(', ')}`)
+      filterOptions.lyricsAdherence.forEach(value => {
+        tags.push({
+          type: 'lyricsAdherence',
+          label: `Lyrics: ${value.replace(/_/g, ' ')}`,
+          value
+        })
+      })
     }
     if (filterOptions.isContinuous !== "all") {
-      tags.push(`Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`)
+      tags.push({
+        type: 'isContinuous',
+        label: `Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`
+      })
     }
     if (filterOptions.aiMusic !== "all") {
-      tags.push(`Music: ${filterOptions.aiMusic === "true" ? "AI" : "Human"}`)
+      tags.push({
+        type: 'aiMusic',
+        label: `Music: ${filterOptions.aiMusic === "true" ? "AI" : "Human"}`
+      })
     }
     return tags
   }
@@ -143,30 +171,11 @@ export default function Progress() {
               className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
             >
               <div className="container mx-auto px-4 py-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center space-x-2">
-                    <h2 className="text-lg font-semibold">Filters</h2>
-                    <Popover>
-                      <PopoverTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer" />
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        <p className="text-sm">
-                          Adjust filters to refine your view of Bible coverage progress.
-                        </p>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <button
-                    onClick={() => setIsFilterExpanded(false)}
-                    className="text-sm flex items-center text-muted-foreground hover:text-foreground"
-                    aria-label="Close filters"
-                  >
-                    Close Filters
-                    <X className="h-4 w-4 ml-1" />
-                  </button>
-                </div>
-                <Filters filterOptions={filterOptions} setFilterOptions={setFilterOptions} />
+                <Filters 
+                  filterOptions={filterOptions} 
+                  setFilterOptions={setFilterOptions}
+                  setIsFilterExpanded={setIsFilterExpanded} // Add this line
+                />
               </div>
             </motion.div>
           )}
@@ -194,7 +203,11 @@ export default function Progress() {
       <main className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 gap-6 mt-6">
           {chartData && (
-            <PieChartGroup chartData={chartData} filterOptions={filterOptions} />
+            <PieChartGroup 
+              chartData={chartData} 
+              filterOptions={filterOptions} 
+              removeFilter={removeFilter}
+            />
           )}
 
           <Card className="w-full">
@@ -202,14 +215,24 @@ export default function Progress() {
               <CardTitle className="text-xl font-semibold">Bible Coverage by Book</CardTitle>
               <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
                 {getFilterTags().map((tag, index) => (
-                  <Badge key={index} variant="secondary">{tag}</Badge>
+                  <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                    {tag.label}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => removeFilter(tag.type, tag.value)}
+                    />
+                  </Badge>
                 ))}
               </div>
             </CardHeader>
             <CardContent>
               {chartData && (
-                <ChartContainer className={`${isSmallScreen ? 'min-h-[400px]' : 'min-h-[400px]'} max-w-full overflow-x-auto`} config={{}}>
+                <ChartContainer
+                  className={`${isSmallScreen ? 'min-h-[400px]' : 'min-h-[400px]'} max-w-full overflow-x-auto`}
+                  config={{}}
+                >
                   <BarChart
+                    key={`bar-chart-${isSmallScreen ? 'vertical' : 'horizontal'}`} // Add key prop here
                     data={barChartData}
                     layout={isSmallScreen ? "vertical" : "horizontal"}
                     width={isSmallScreen ? 750 : undefined}
@@ -248,7 +271,11 @@ export default function Progress() {
                       dataKey="filtered_book_percentage" 
                       fill="#8884d8" 
                       name="Percent Covered:"
-                    />
+                    >
+                      {barChartData.map((entry, index) => (
+                        <Cell key={`cell-${entry.book}-${index}`} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ChartContainer>
               )}

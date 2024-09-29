@@ -4,7 +4,7 @@ import { Dispatch, SetStateAction, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, X, RefreshCw, Info } from "lucide-react" // Updated import
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 
@@ -17,9 +17,10 @@ export interface FilterOptions {
 interface FiltersProps {
   filterOptions: FilterOptions
   setFilterOptions: Dispatch<SetStateAction<FilterOptions>>
+  setIsFilterExpanded: Dispatch<SetStateAction<boolean>> // Add this line
 }
 
-export function Filters({ filterOptions, setFilterOptions }: FiltersProps) {
+export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }: FiltersProps) {
   const [openLyricsAdherence, setOpenLyricsAdherence] = useState(false)
 
   const handleChange = (key: keyof FilterOptions, value: any) => {
@@ -40,6 +41,14 @@ export function Filters({ filterOptions, setFilterOptions }: FiltersProps) {
     handleChange('lyricsAdherence', newValues)
   }
 
+  const clearFilters = () => {
+    setFilterOptions({
+      lyricsAdherence: [],
+      isContinuous: "all",
+      aiMusic: "all",
+    })
+  }
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: -20 }}
@@ -48,6 +57,40 @@ export function Filters({ filterOptions, setFilterOptions }: FiltersProps) {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-2">
+          <h2 className="text-lg font-semibold">Filters</h2>
+          <Popover>
+            <PopoverTrigger>
+              <Info className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+            </PopoverTrigger>
+            <PopoverContent>
+              <p className="text-sm">
+                Adjust filters to refine your view of Bible coverage progress.
+              </p>
+            </PopoverContent>
+          </Popover>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearFilters}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Clear Filters
+          </Button>
+          <button
+            onClick={() => setIsFilterExpanded(false)}
+            className="text-sm flex items-center text-muted-foreground hover:text-foreground"
+            aria-label="Close filters"
+          >
+            Close Filters
+            <X className="h-4 w-4 ml-1" />
+          </button>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Popover open={openLyricsAdherence} onOpenChange={setOpenLyricsAdherence}>
           <PopoverTrigger asChild>

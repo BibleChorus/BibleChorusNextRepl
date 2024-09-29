@@ -5,28 +5,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FilterOptions } from './Filters'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
+import { X } from "lucide-react"
 
 interface PieChartGroupProps {
   chartData: any // Replace 'any' with the actual type of your chartData
   filterOptions: FilterOptions
+  removeFilter: (filterType: keyof FilterOptions, value?: string) => void
 }
 
-export function PieChartGroup({ chartData, filterOptions }: PieChartGroupProps) {
+export function PieChartGroup({ chartData, filterOptions, removeFilter }: PieChartGroupProps) {
   const isSmallScreen = useMediaQuery("(max-width: 768px)")
 
-  const getFilterTags = (): string[] => {
-    const tags: string[] = []
+  const getFilterTags = (): { type: keyof FilterOptions; label: string; value?: string }[] => {
+    const tags: { type: keyof FilterOptions; label: string; value?: string }[] = []
     if (filterOptions.lyricsAdherence.length > 0) {
-      const formattedAdherence = filterOptions.lyricsAdherence
-        .map(adherence => adherence.replace(/_/g, ' '))
-        .join(', ');
-      tags.push(`Lyrics: ${formattedAdherence}`);
+      filterOptions.lyricsAdherence.forEach(value => {
+        tags.push({
+          type: 'lyricsAdherence',
+          label: `Lyrics: ${value.replace(/_/g, ' ')}`,
+          value
+        })
+      })
     }
     if (filterOptions.isContinuous !== "all") {
-      tags.push(`Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`)
+      tags.push({
+        type: 'isContinuous',
+        label: `Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`
+      })
     }
     if (filterOptions.aiMusic !== "all") {
-      tags.push(`Music: ${filterOptions.aiMusic === "true" ? "AI" : "Human"}`)
+      tags.push({
+        type: 'aiMusic',
+        label: `Music: ${filterOptions.aiMusic === "true" ? "AI" : "Human"}`
+      })
     }
     return tags
   }
@@ -91,7 +102,13 @@ export function PieChartGroup({ chartData, filterOptions }: PieChartGroupProps) 
         <CardTitle className="text-xl font-semibold">Bible Coverage Overview</CardTitle>
         <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
           {getFilterTags().map((tag, index) => (
-            <Badge key={index} variant="secondary">{tag}</Badge>
+            <Badge key={index} variant="secondary" className="flex items-center gap-1">
+              {tag.label}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => removeFilter(tag.type, tag.value)}
+              />
+            </Badge>
           ))}
         </div>
       </CardHeader>
