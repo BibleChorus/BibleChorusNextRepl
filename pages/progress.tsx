@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Separator } from "@/components/ui/separator"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { PieChartGroup } from "@/components/ProgressPage/PieChartGroup"
+import { BIBLE_BOOKS } from "@/lib/constants"
 
 interface ChartData {
   "Old Testament": {
@@ -58,7 +59,7 @@ interface ChartData {
 export default function Progress() {
   const [chartData, setChartData] = useState<ChartData | null>(null)
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    lyricsAdherence: "all",
+    lyricsAdherence: [],
     isContinuous: "all",
     aiMusic: "all",
   })
@@ -90,18 +91,20 @@ export default function Progress() {
   }, [])
 
   const barChartData = chartData
-    ? [...(chartData["Old Testament"]?.books || []), ...(chartData["New Testament"]?.books || [])]
-        .map((book, index) => ({
-          book: book.book,
-          filtered_book_percentage: Number(book.filtered_book_percentage.toFixed(2)),
-          index: index // Add index for label display logic
-        }))
+    ? BIBLE_BOOKS.map((book) => {
+        const bookData = [...(chartData["Old Testament"]?.books || []), ...(chartData["New Testament"]?.books || [])]
+          .find((b) => b.book === book);
+        return {
+          book: book,
+          filtered_book_percentage: bookData ? Number(bookData.filtered_book_percentage.toFixed(2)) : 0,
+        };
+      })
     : []
 
   const getFilterTags = (): string[] => {
     const tags: string[] = []
-    if (filterOptions.lyricsAdherence !== "all") {
-      tags.push(`Lyrics: ${filterOptions.lyricsAdherence.replace(/_/g, ' ')}`)
+    if (filterOptions.lyricsAdherence.length > 0) {
+      tags.push(`Lyrics: ${filterOptions.lyricsAdherence.map(v => v.replace(/_/g, ' ')).join(', ')}`)
     }
     if (filterOptions.isContinuous !== "all") {
       tags.push(`Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`)

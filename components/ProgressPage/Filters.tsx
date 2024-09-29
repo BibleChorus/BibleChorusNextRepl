@@ -1,11 +1,15 @@
 "use client"
 
-import { Dispatch, SetStateAction } from "react"
+import { Dispatch, SetStateAction, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Button } from "@/components/ui/button"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 
 export interface FilterOptions {
-  lyricsAdherence: "all" | "word_for_word" | "close_paraphrase" | "creative_inspiration"
+  lyricsAdherence: string[]
   isContinuous: "all" | "true" | "false"
   aiMusic: "all" | "true" | "false"
 }
@@ -16,8 +20,24 @@ interface FiltersProps {
 }
 
 export function Filters({ filterOptions, setFilterOptions }: FiltersProps) {
-  const handleChange = (key: keyof FilterOptions, value: string) => {
-    setFilterOptions((prev) => ({ ...prev, [key]: value as any }))
+  const [openLyricsAdherence, setOpenLyricsAdherence] = useState(false)
+
+  const handleChange = (key: keyof FilterOptions, value: any) => {
+    setFilterOptions((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const lyricsAdherenceOptions = [
+    { value: "word_for_word", label: "Word for Word" },
+    { value: "close_paraphrase", label: "Close Paraphrase" },
+    { value: "creative_inspiration", label: "Creative Inspiration" },
+  ]
+
+  const toggleLyricsAdherence = (value: string) => {
+    const currentValues = filterOptions.lyricsAdherence
+    const newValues = currentValues.includes(value)
+      ? currentValues.filter((v) => v !== value)
+      : [...currentValues, value]
+    handleChange('lyricsAdherence', newValues)
   }
 
   return (
@@ -29,17 +49,40 @@ export function Filters({ filterOptions, setFilterOptions }: FiltersProps) {
       className="space-y-6"
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <FilterSelect
-          title="Lyrics Adherence"
-          value={filterOptions.lyricsAdherence}
-          onChange={(value) => handleChange('lyricsAdherence', value)}
-          options={[
-            { value: "all", label: "All Lyric Types" },
-            { value: "word_for_word", label: "Word for Word" },
-            { value: "close_paraphrase", label: "Close Paraphrase" },
-            { value: "creative_inspiration", label: "Creative Inspiration" },
-          ]}
-        />
+        <Popover open={openLyricsAdherence} onOpenChange={setOpenLyricsAdherence}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={openLyricsAdherence}
+              className="w-full justify-between"
+            >
+              {filterOptions.lyricsAdherence.length > 0
+                ? `${filterOptions.lyricsAdherence.length} selected`
+                : "Select lyrics adherence..."}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0">
+            <div className="p-2">
+              {lyricsAdherenceOptions.map((option) => (
+                <div
+                  key={option.value}
+                  className={cn(
+                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                    filterOptions.lyricsAdherence.includes(option.value) && "bg-accent"
+                  )}
+                  onClick={() => toggleLyricsAdherence(option.value)}
+                >
+                  <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                    {filterOptions.lyricsAdherence.includes(option.value) && <Check className="h-3 w-3" />}
+                  </div>
+                  {option.label}
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
         <FilterSelect
           title="Passage Type"
           value={filterOptions.isContinuous}

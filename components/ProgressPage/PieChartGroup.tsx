@@ -16,8 +16,11 @@ export function PieChartGroup({ chartData, filterOptions }: PieChartGroupProps) 
 
   const getFilterTags = (): string[] => {
     const tags: string[] = []
-    if (filterOptions.lyricsAdherence !== "all") {
-      tags.push(`Lyrics: ${filterOptions.lyricsAdherence.replace(/_/g, ' ')}`)
+    if (filterOptions.lyricsAdherence.length > 0) {
+      const formattedAdherence = filterOptions.lyricsAdherence
+        .map(adherence => adherence.replace(/_/g, ' '))
+        .join(', ');
+      tags.push(`Lyrics: ${formattedAdherence}`);
     }
     if (filterOptions.isContinuous !== "all") {
       tags.push(`Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`)
