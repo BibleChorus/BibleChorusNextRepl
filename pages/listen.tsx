@@ -12,20 +12,23 @@ import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import qs from 'qs'
 
-// Define the Song type based on your data structure
+// Updated Song type definition
 export type Song = {
   id: number;
   title: string;
+  username: string;
+  uploaded_by: number;
   artist: string;
-  genre: string;
+  // Remove 'genre: string;'
+  genres: string[]; // Add this line
   created_at: string;
   audio_url: string;
   song_art_url?: string;
   bible_translation_used?: string;
   lyrics_scripture_adherence?: string;
   is_continuous_passage?: boolean;
-  // Add more fields as necessary
-}
+  bible_verses?: { book: string; chapter: number; verse: number }[];
+};
 
 // Create a React Query client
 const queryClient = new QueryClient()
@@ -44,6 +47,7 @@ function ListenContent() {
     lyricsAdherence: [],
     isContinuous: "all",
     aiMusic: "all",
+    genres: [], // Add this line
   })
   const [isFilterExpanded, setIsFilterExpanded] = useState(false)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
@@ -77,10 +81,15 @@ function ListenContent() {
           ...prev,
           lyricsAdherence: prev.lyricsAdherence.filter(v => v !== value)
         }
+      } else if (filterType === 'genres' && value) {
+        return {
+          ...prev,
+          genres: prev.genres.filter(v => v !== value)
+        }
       } else {
         return {
           ...prev,
-          [filterType]: filterType === 'lyricsAdherence' ? [] : 'all'
+          [filterType]: filterType === 'lyricsAdherence' || filterType === 'genres' ? [] : 'all'
         }
       }
     })
@@ -107,6 +116,15 @@ function ListenContent() {
       tags.push({
         type: 'aiMusic',
         label: `Music: ${filterOptions.aiMusic === "true" ? "AI" : "Human"}`
+      })
+    }
+    if (filterOptions.genres.length > 0) {
+      filterOptions.genres.forEach(genre => {
+        tags.push({
+          type: 'genres',
+          label: `Genre: ${genre}`,
+          value: genre
+        })
       })
     }
     return tags
@@ -187,7 +205,6 @@ function ListenContent() {
         ) : error ? (
           <p>Error loading songs: {error.message}</p>
         ) : (
-          // Use the SongList component to display the songs
           <SongList songs={songs || []} />
         )}
       </main>

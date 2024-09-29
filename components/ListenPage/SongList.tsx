@@ -30,7 +30,7 @@ export type Song = {
   title: string;
   username: string;
   uploaded_by: number;
-  genre: string;
+  genres?: string[];
   created_at: string;
   audio_url: string;
   song_art_url?: string;
@@ -349,11 +349,11 @@ export function SongList({ songs }: SongListProps) {
 
             {/* Tags / Badges */}
             <div className="mt-1 sm:mt-2 flex flex-wrap gap-1">
-              {song.genre && (
-                <Badge variant="secondary" className="text-[10px] sm:text-xs px-1 py-0">
-                  {song.genre}
+              {song.genres && song.genres.map((genre) => (
+                <Badge key={genre} variant="secondary" className="text-[10px] sm:text-xs px-1 py-0">
+                  {genre}
                 </Badge>
-              )}
+              ))}
               {song.bible_translation_used && (
                 <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
                   {song.bible_translation_used}

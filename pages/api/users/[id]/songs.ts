@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     case 'GET':
       try {
         const songs = await db('songs')
-          .select('id', 'title', 'artist', 'genre', 'created_at')
+          .select('id', 'title', 'artist', /* Remove 'genre', */ 'genres', 'created_at')
           .where('uploaded_by', id)
           .orderBy('created_at', 'desc');
         res.status(200).json(songs);

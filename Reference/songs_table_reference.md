@@ -16,7 +16,7 @@ This table stores information about individual songs, including metadata, lyrics
 | ai_used_for_lyrics | boolean | | false | Indicates if AI was used to generate lyrics |
 | music_ai_generated | boolean | | false | Indicates if AI was used to generate music |
 | bible_translation_used | string(10) | | | Bible translation used for the lyrics |
-| genre | string(50) | | | Genre of the song |
+| genres | text[] | | | Array of genres associated with the song |
 | lyrics_scripture_adherence | text | CHECK | 'close_paraphrase' | How closely the lyrics adhere to scripture |
 | is_continuous_passage | boolean | | false | Indicates if the song uses a continuous scripture passage |
 | lyrics | text | | | Full lyrics of the song |
@@ -36,11 +36,18 @@ This table stores information about individual songs, including metadata, lyrics
 
 ## Indexes
 
-No specific indexes are defined in the provided migrations, but consider adding indexes on frequently queried columns like `title`, `artist`, and `genre`.
+Consider adding indexes on frequently queried columns like `title`, `artist`, and `genres`.
 
 ## Notes
 
-- The `lyrics_scripture_adherence` column was updated from an ENUM to a TEXT type with a CHECK constraint.
+- The `lyrics_scripture_adherence` column uses a TEXT type with a CHECK constraint.
 - The default value for `lyrics_scripture_adherence` is 'close_paraphrase'.
 - The table includes columns to track AI involvement in both lyrics and music creation.
+- The `genres` column is now an array of text, allowing for multiple genres per song.
 - Consider adding a `views` or `play_count` column for tracking song popularity.
+- The old `genre` column has been removed in favor of the new `genres` array column.
+
+## Recent Changes
+
+- Removed the `genre` column (string type)
+- Added the `genres` column (text[] type) to store multiple genres as an array

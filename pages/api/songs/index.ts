@@ -7,14 +7,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Log incoming query parameters
       console.log('Received query parameters:', req.query);
 
-      const { lyricsAdherence, isContinuous, aiMusic } = req.query;
+      const { lyricsAdherence, isContinuous, aiMusic, genres } = req.query;
 
       // Log individual parameters
       console.log('lyricsAdherence:', lyricsAdherence);
       console.log('isContinuous:', isContinuous);
       console.log('aiMusic:', aiMusic);
+      console.log('genres:', genres);
 
-      // Ensure lyricsAdherence is always an array
+      // Ensure lyricsAdherence and genres are always arrays
       let adherenceValues: string[] = [];
       if (lyricsAdherence) {
         adherenceValues = Array.isArray(lyricsAdherence)
@@ -22,8 +23,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           : [lyricsAdherence];
       }
 
-      // Log the normalized adherenceValues
+      let genreValues: string[] = [];
+      if (genres) {
+        genreValues = Array.isArray(genres)
+          ? genres
+          : [genres];
+      }
+
+      // Log the normalized values
       console.log('Normalized adherenceValues:', adherenceValues);
+      console.log('Normalized genreValues:', genreValues);
 
       let query = db('songs')
         .select(
@@ -31,7 +40,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'songs.title',
           'users.username',
           'songs.uploaded_by',
-          'songs.genre',
+          // Remove 'songs.genre',
+          'songs.genres', // Add this line to select the new 'genres' column
           'songs.created_at',
           'songs.audio_url',
           'songs.song_art_url',
@@ -62,7 +72,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         query = query.where('music_ai_generated', aiMusic === 'true');
       }
 
-      const songs = await query.orderBy('songs.created_at', 'desc');
+      // Apply the genre filter
+      if (genreValues.length > 0) {
+        genreValues = genreValues.map(value => value.toLowerCase());
+        query = query.whereRaw('genres @> ARRAY[?]::text[]', [genreValues]);
+      }
+
+      const songs = await query
+        .select(
+          'songs.id',
+          'songs.title',
+          'users.username',
+          'songs.uploaded_by',
+          'songs.genres', // Include the genres array
+          'songs.created_at',
+          'songs.audio_url',
+          'songs.song_art_url',
+          'songs.bible_translation_used',
+          'songs.lyrics_scripture_adherence',
+          'songs.is_continuous_passage'
+        )
+        .orderBy('songs.created_at', 'desc');
 
       // Fetch Bible verses for each song
       for (let song of songs) {

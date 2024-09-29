@@ -45,7 +45,7 @@ const formSchema = z.object({
   // Step 2: Song Info
   title: z.string().min(1, "Title is required"),
   artist: z.string().optional(),
-  genre: z.string().min(1, "At least one genre is required"),
+  genres: z.array(z.string()).min(1, "At least one genre is required"),
   lyrics: z.string().min(1, "Lyrics are required"),
 
   // Step 3: Bible Info
@@ -140,6 +140,7 @@ function UploadContent() {
       title: "",
       artist: "",
       lyrics: "",
+      genres: [], // Initialize genres as an empty array
     },
     mode: "onBlur", // Change this from "onChange" to reduce unnecessary validations
   })
@@ -192,12 +193,12 @@ function UploadContent() {
       updatedGenres = [...selectedGenres, genre];
     }
     setSelectedGenres(updatedGenres);
-    form.setValue('genre', updatedGenres.join(', '), { shouldValidate: true });
+    form.setValue('genres', updatedGenres, { shouldValidate: true });
   }
 
   const clearGenres = () => {
     setSelectedGenres([]);
-    form.setValue('genre', '', { shouldValidate: true });
+    form.setValue('genres', [], { shouldValidate: true });
   }
 
   const [showValidationMessages, setShowValidationMessages] = useState(false)
@@ -933,7 +934,7 @@ function UploadContent() {
                 />
                 <FormField
                   control={form.control}
-                  name="genre"
+                  name="genres" // Update to 'genres'
                   render={({ field }) => (
                     <FormItem className="flex flex-col rounded-lg border p-4">
                       <FormLabel className="form-label">Genre(s)</FormLabel>
@@ -990,6 +991,7 @@ function UploadContent() {
                           </div>
                         </PopoverContent>
                       </Popover>
+                      {/* Update the display of selected genres */}
                       <div className="flex flex-wrap gap-1 mt-2">
                         {selectedGenres.map((genre) => (
                           <div
