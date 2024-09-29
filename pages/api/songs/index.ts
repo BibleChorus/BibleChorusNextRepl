@@ -72,10 +72,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         query = query.where('music_ai_generated', aiMusic === 'true');
       }
 
-      // Apply the genre filter
+      // Update the genre filter
       if (genreValues.length > 0) {
-        genreValues = genreValues.map(value => value.toLowerCase());
-        query = query.whereRaw('genres @> ARRAY[?]::text[]', [genreValues]);
+        query = query.where((builder) => {
+          genreValues.forEach((genre) => {
+            builder.whereRaw("? = ANY(genres)", genre);
+          });
+        });
       }
 
       const songs = await query

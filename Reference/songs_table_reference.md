@@ -16,7 +16,7 @@ This table stores information about individual songs, including metadata, lyrics
 | ai_used_for_lyrics | boolean | | false | Indicates if AI was used to generate lyrics |
 | music_ai_generated | boolean | | false | Indicates if AI was used to generate music |
 | bible_translation_used | string(10) | | | Bible translation used for the lyrics |
-| genres | text[] | | | Array of genres associated with the song |
+| genres | text[] | | | Array of genres associated with the song. Some genres may have a "/" character in them. |
 | lyrics_scripture_adherence | text | CHECK | 'close_paraphrase' | How closely the lyrics adhere to scripture |
 | is_continuous_passage | boolean | | false | Indicates if the song uses a continuous scripture passage |
 | lyrics | text | | | Full lyrics of the song |

@@ -56,13 +56,17 @@ function ListenContent() {
   const { data: songs, isLoading, error } = useQuery<Song[], Error>(
     ['songs', filterOptions],
     async () => {
-      const res = await axios.get('/api/songs', {
-        params: filterOptions,
-        paramsSerializer: (params) => qs.stringify(params, { arrayFormat: 'repeat' }),
-      })
-      return res.data
+      const params = new URLSearchParams();
+      
+      filterOptions.lyricsAdherence.forEach(value => params.append('lyricsAdherence', value));
+      params.append('isContinuous', filterOptions.isContinuous);
+      params.append('aiMusic', filterOptions.aiMusic);
+      filterOptions.genres.forEach(genre => params.append('genres', genre));
+
+      const res = await axios.get('/api/songs', { params });
+      return res.data;
     }
-  )
+  );
 
   useEffect(() => {
     const handleScroll = () => {
