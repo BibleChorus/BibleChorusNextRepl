@@ -4,7 +4,7 @@ import { Dispatch, SetStateAction, useState, useCallback, useEffect } from "reac
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-import { Check, ChevronsUpDown, X, RefreshCw, Info } from "lucide-react"
+import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
@@ -271,9 +271,18 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       
       <Tabs value={currentTab} onValueChange={setCurrentTab}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="AI Info">AI Info</TabsTrigger>
-          <TabsTrigger value="Song Info">Song Info</TabsTrigger>
-          <TabsTrigger value="Bible Info">Bible Info</TabsTrigger>
+          <TabsTrigger value="AI Info" className="flex items-center gap-2">
+            <Bot className="h-4 w-4" />
+            AI Info
+          </TabsTrigger>
+          <TabsTrigger value="Song Info" className="flex items-center gap-2">
+            <Music className="h-4 w-4" />
+            Song Info
+          </TabsTrigger>
+          <TabsTrigger value="Bible Info" className="flex items-center gap-2">
+            <Book className="h-4 w-4" />
+            Bible Info
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="AI Info" className="space-y-4">
@@ -286,6 +295,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               { value: "true", label: "AI Generated" },
               { value: "false", label: "Human Written" },
             ]}
+            icon={<Mic className="h-4 w-4 mr-2" />}
           />
           <FilterSelect
             title="Music Source"
@@ -296,6 +306,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               { value: "true", label: "AI Generated" },
               { value: "false", label: "Human Composed" },
             ]}
+            icon={<Music className="h-4 w-4 mr-2" />}
           />
           <FilterSelect
             title="AI Music Model"
@@ -305,15 +316,20 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               { value: "", label: "All Models" },
               ...AI_MUSIC_MODELS.map(model => ({ value: model, label: model }))
             ]}
+            icon={<Bot className="h-4 w-4 mr-2" />}
           />
         </TabsContent>
 
         <TabsContent value="Song Info" className="space-y-4">
-          <Input
-            placeholder="Search songs..."
-            value={filterOptions.search}
-            onChange={(e) => handleChange('search', e.target.value)}
-          />
+          <div className="relative">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search songs..."
+              value={filterOptions.search}
+              onChange={(e) => handleChange('search', e.target.value)}
+              className="pl-9"
+            />
+          </div>
           <Popover open={openGenres} onOpenChange={setOpenGenres}>
             <PopoverTrigger asChild>
               <Button
@@ -322,10 +338,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 aria-expanded={openGenres}
                 className="w-full justify-between"
               >
-                {filterOptions.genres.length > 0
-                  ? `${filterOptions.genres.length} genre(s) selected`
-                  : "Select genres..."}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <div className="flex items-center">
+                  <Tag className="h-4 w-4 mr-2" />
+                  {filterOptions.genres.length > 0
+                    ? `${filterOptions.genres.length} genre(s) selected`
+                    : "Select genres..."}
+                </div>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0">
@@ -376,6 +395,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               { value: "", label: "All Translations" },
               ...BIBLE_TRANSLATIONS.map(translation => ({ value: translation, label: translation }))
             ]}
+            icon={<Book className="h-4 w-4 mr-2" />}
           />
           <Popover open={openLyricsAdherence} onOpenChange={setOpenLyricsAdherence}>
             <PopoverTrigger asChild>
@@ -385,10 +405,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 aria-expanded={openLyricsAdherence}
                 className="w-full justify-between"
               >
-                {filterOptions.lyricsAdherence.length > 0
-                  ? `${filterOptions.lyricsAdherence.length} selected`
-                  : "Select lyrics adherence..."}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <div className="flex items-center">
+                  <AlignJustify className="h-4 w-4 mr-2" />
+                  {filterOptions.lyricsAdherence.length > 0
+                    ? `${filterOptions.lyricsAdherence.length} selected`
+                    : "Select lyrics adherence..."}
+                </div>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0">
@@ -420,6 +443,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               { value: "true", label: "Continuous" },
               { value: "false", label: "Non-continuous" },
             ]}
+            icon={<FileText className="h-4 w-4 mr-2" />}
           />
           <Popover open={openBibleBooks} onOpenChange={setOpenBibleBooks}>
             <PopoverTrigger asChild>
@@ -429,10 +453,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 aria-expanded={openBibleBooks}
                 className="w-full justify-between"
               >
-                {filterOptions.bibleBooks.length > 0
-                  ? `${filterOptions.bibleBooks.length} book(s) selected`
-                  : "Select Bible books..."}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <div className="flex items-center">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  {filterOptions.bibleBooks.length > 0
+                    ? `${filterOptions.bibleBooks.length} book(s) selected`
+                    : "Select Bible books..."}
+                </div>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0">
@@ -483,10 +510,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   aria-expanded={openChapters}
                   className="w-full justify-between"
                 >
-                  {Object.values(selectedChapters).flat().length > 0
-                    ? `${Object.values(selectedChapters).flat().length} chapter(s) selected`
-                    : "Select chapters..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  <div className="flex items-center">
+                    <Bookmark className="h-4 w-4 mr-2" />
+                    {Object.values(selectedChapters).flat().length > 0
+                      ? `${Object.values(selectedChapters).flat().length} chapter(s) selected`
+                      : "Select chapters..."}
+                  </div>
+                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -555,10 +585,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   aria-expanded={openBibleVerses}
                   className="w-full justify-between"
                 >
-                  {selectedBibleVerses.length > 0
-                    ? `${selectedBibleVerses.length} verse(s) selected`
-                    : "Select Bible verses..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  <div className="flex items-center">
+                    <FileText className="h-4 w-4 mr-2" />
+                    {selectedBibleVerses.length > 0
+                      ? `${selectedBibleVerses.length} verse(s) selected`
+                      : "Select Bible verses..."}
+                  </div>
+                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0" style={{ maxWidth: '80vw' }}>
@@ -631,13 +664,17 @@ interface FilterSelectProps {
   value: string
   onChange: (value: string) => void
   options: { value: string; label: string }[]
+  icon: React.ReactNode
 }
 
-function FilterSelect({ title, value, onChange, options }: FilterSelectProps) {
+function FilterSelect({ title, value, onChange, options, icon }: FilterSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder={title} />
+        <div className="flex items-center">
+          {icon}
+          <SelectValue placeholder={title} />
+        </div>
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
@@ -645,7 +682,7 @@ function FilterSelect({ title, value, onChange, options }: FilterSelectProps) {
           {options.map((option) => (
             <SelectItem 
               key={option.value} 
-              value={option.value || '_empty_'}  // Use a placeholder value for empty strings
+              value={option.value || '_empty_'}
             >
               {option.label}
             </SelectItem>
