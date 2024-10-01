@@ -23,6 +23,7 @@ export interface FilterOptions {
   artist: string
   bibleTranslation: string
   bibleBooks: string[]
+  search: string
 }
 
 interface FiltersProps {
@@ -40,7 +41,6 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
   const [currentTab, setCurrentTab] = useState("AI Info")
 
   const handleChange = (key: keyof FilterOptions, value: any) => {
-    // If the value is our placeholder for empty string, convert it back to an empty string
     const actualValue = value === '_empty_' ? '' : value;
     setFilterOptions((prev) => ({ ...prev, [key]: actualValue }))
   }
@@ -99,6 +99,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       artist: "",
       bibleTranslation: "",
       bibleBooks: [],
+      search: "",
     })
   }
 
@@ -188,14 +189,9 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
 
         <TabsContent value="Song Info" className="space-y-4">
           <Input
-            placeholder="Filter by song title"
-            value={filterOptions.title}
-            onChange={(e) => handleChange('title', e.target.value)}
-          />
-          <Input
-            placeholder="Filter by artist"
-            value={filterOptions.artist}
-            onChange={(e) => handleChange('artist', e.target.value)}
+            placeholder="Search songs..."
+            value={filterOptions.search}
+            onChange={(e) => handleChange('search', e.target.value)}
           />
           <Popover open={openGenres} onOpenChange={setOpenGenres}>
             <PopoverTrigger asChild>

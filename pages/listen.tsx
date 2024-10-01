@@ -1,16 +1,16 @@
 import Head from 'next/head'
 import { useState, useEffect } from 'react'
-import { QueryClient, QueryClientProvider, useQuery } from 'react-query'
-import axios from 'axios'
+import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
 import { Filters, FilterOptions } from '@/components/ListenPage/Filters'
 import { motion, AnimatePresence } from "framer-motion"
 import { Filter, X, Info } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import qs from 'qs'
+
+const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 // Updated Song type definition
 export type Song = {
@@ -30,15 +30,9 @@ export type Song = {
   bible_verses?: { book: string; chapter: number; verse: number }[];
 };
 
-// Create a React Query client
-const queryClient = new QueryClient()
-
 export default function Listen() {
   return (
-    // Provide the QueryClient to your app
-    <QueryClientProvider client={queryClient}>
-      <ListenContent />
-    </QueryClientProvider>
+    <ListenContent />
   )
 }
 
@@ -54,25 +48,65 @@ function ListenContent() {
     artist: "",
     bibleTranslation: "",
     bibleBooks: [],
+    search: '',
   })
   const [isFilterExpanded, setIsFilterExpanded] = useState(false)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const isSmallScreen = useMediaQuery("(max-width: 768px)")
+  const [page, setPage] = useState(1)
 
-  const { data: songs, isLoading, error } = useQuery<Song[], Error>(
-    ['songs', filterOptions],
-    async () => {
-      const params = new URLSearchParams();
-      
-      filterOptions.lyricsAdherence.forEach(value => params.append('lyricsAdherence', value));
-      params.append('isContinuous', filterOptions.isContinuous);
-      params.append('aiMusic', filterOptions.aiMusic);
-      filterOptions.genres.forEach(genre => params.append('genres', genre));
+  // Debounce filter changes
+  const [debouncedFilters, setDebouncedFilters] = useState(filterOptions)
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedFilters(filterOptions), 500)
+    return () => clearTimeout(handler)
+  }, [filterOptions])
 
-      const res = await axios.get('/api/songs', { params });
-      return res.data;
+  // Build query string for filters
+  const buildQueryString = (filters: FilterOptions, page: number) => {
+    const params = new URLSearchParams()
+
+    // Add filters to params
+    filters.lyricsAdherence.forEach(value => params.append('lyricsAdherence', value))
+    if (filters.isContinuous !== 'all') {
+      params.append('isContinuous', filters.isContinuous)
     }
-  );
+    if (filters.aiMusic !== 'all') {
+      params.append('aiMusic', filters.aiMusic)
+    }
+    filters.genres.forEach(genre => params.append('genres', genre))
+    if (filters.aiUsedForLyrics) {
+      params.append('aiUsedForLyrics', 'true')
+    }
+    if (filters.musicModelUsed) {
+      params.append('musicModelUsed', filters.musicModelUsed)
+    }
+    if (filters.title) {
+      params.append('title', filters.title)
+    }
+    if (filters.artist) {
+      params.append('artist', filters.artist)
+    }
+    if (filters.bibleTranslation) {
+      params.append('bibleTranslation', filters.bibleTranslation)
+    }
+    filters.bibleBooks.forEach(book => params.append('bibleBooks', book))
+
+    if (filters.search) {
+      params.append('search', filters.search)
+    }
+
+    params.append('page', page.toString())
+    params.append('limit', '20')
+
+    return params.toString()
+  }
+
+  const { data, error, isValidating } = useSWR(
+    `/api/songs?${buildQueryString(debouncedFilters, page)}`,
+    fetcher,
+    { revalidateOnFocus: false }
+  )
 
   useEffect(() => {
     const handleScroll = () => {
@@ -210,12 +244,34 @@ function ListenContent() {
           ))}
         </div>
 
-        {isLoading ? (
+        {isValidating && !data ? (
           <p>Loading songs...</p>
         ) : error ? (
           <p>Error loading songs: {error.message}</p>
+        ) : data && data.songs.length > 0 ? (
+          <>
+            <SongList songs={data.songs} />
+            {/* Pagination controls */}
+            <div className="flex justify-between items-center mt-4">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                className="px-4 py-2 bg-primary text-white rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span>Page {page}</span>
+              <button
+                disabled={(page * 20) >= data.total}
+                onClick={() => setPage(page + 1)}
+                className="px-4 py-2 bg-primary text-white rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </>
         ) : (
-          <SongList songs={songs || []} />
+          <p>No songs found.</p>
         )}
       </main>
     </div>
