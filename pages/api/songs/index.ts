@@ -22,8 +22,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         search,
       } = req.query;
 
-      const limitNum = parseInt(limit as string, 10);
-      const offset = (parseInt(page as string, 10) - 1) * limitNum;
+      // Adjust limit and offset for infinite scroll
+      const limitNum = parseInt(limit as string, 10) || 20;
+      const pageNum = parseInt(page as string, 10) || 1;
+      const offset = (pageNum - 1) * limitNum;
 
       let query = db('songs')
         .select(
@@ -115,38 +117,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         query = query.distinct('songs.id');
       }
 
-      // After applying all filters, select distinct songs
-      query = query.select(
-        'songs.id',
-        'songs.title',
-        'users.username',
-        'songs.uploaded_by',
-        'songs.genres',
-        'songs.created_at',
-        'songs.audio_url',
-        'songs.song_art_url',
-        'songs.bible_translation_used',
-        'songs.lyrics_scripture_adherence',
-        'songs.is_continuous_passage',
-        'songs.ai_used_for_lyrics',
-        'songs.music_ai_generated',
-        'songs.music_model_used'
-      );
+      // After applying all filters, select songs
+      const songsQuery = query.clone().offset(offset).limit(limitNum);
+      const songs = await songsQuery;
 
-      // Full-text search on lyrics, prompts, genres, and title
-      if (search) {
-        const searchTerm = search as string;
-        query = query.whereRaw("search_vector @@ plainto_tsquery('english', ?)", [searchTerm]);
-      }
-
-      query = query.orderBy('songs.created_at', 'desc');
-
-      // Get total count for pagination
-      const totalQuery = query.clone().clearSelect().clearOrder().countDistinct('songs.id as total');
+      // Get the total count without pagination
+      const totalQuery = query.clone().clearSelect().countDistinct('songs.id as total');
       const totalResult = await totalQuery.first();
       const total = totalResult ? Number(totalResult.total) : 0;
-
-      const songs = await query;
 
       // Fetch Bible verses for each song
       const songIds = songs.map(song => song.id);

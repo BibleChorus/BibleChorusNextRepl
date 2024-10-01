@@ -9,6 +9,9 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import qs from 'qs'
+import { SongListSkeleton } from '@/components/ListenPage/SongListSkeleton'
+import { useInView } from 'react-intersection-observer';
+import useSWRInfinite from 'swr/infinite';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json()).then(data => ({
   songs: data.songs || [],
@@ -117,11 +120,49 @@ function ListenContent() {
     return params.toString()
   }
 
-  const { data, error, isValidating } = useSWR(
-    `/api/songs?${buildQueryString(debouncedFilters, page)}`,
+  // State to track if more songs are available
+  const [hasMore, setHasMore] = useState(true);
+
+  // Use SWRInfinite for infinite loading
+  const {
+    data,
+    error,
+    isValidating,
+    size,
+    setSize,
+  } = useSWRInfinite(
+    (index) => `/api/songs?${buildQueryString(debouncedFilters, index + 1)}`,
     fetcher,
-    { revalidateOnFocus: false }
-  )
+    {
+      revalidateOnFocus: false,
+      // Add onSuccess callback to update hasMore state
+      onSuccess: (data) => {
+        const total = data?.[0]?.total || 0;
+        const loadedSongs = data ? data.flatMap((page) => page.songs).length : 0;
+        // Determine if there are more songs to load
+        if (loadedSongs >= total) {
+          setHasMore(false);
+        } else {
+          setHasMore(true);
+        }
+      },
+    }
+  );
+
+  // Merge the paginated data
+  const songs = data ? data.flatMap((page) => page.songs) : [];
+
+  const { ref: loadMoreRef, inView } = useInView({
+    threshold: 0,
+    triggerOnce: false,
+  });
+
+  // Infinite scroll logic
+  useEffect(() => {
+    if (inView && hasMore && !isValidating) {
+      setSize(size + 1);
+    }
+  }, [inView, hasMore, isValidating, setSize, size]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -389,33 +430,22 @@ function ListenContent() {
           ))}
         </div>
 
-        {isValidating && !data ? (
-          <p>Loading songs...</p>
-        ) : error ? (
-          <p>Error loading songs: {error.message}</p>
-        ) : data && Array.isArray(data.songs) && data.songs.length > 0 ? (
+        {songs.length > 0 ? (
           <>
-            <SongList songs={data.songs} />
-            {/* Pagination controls */}
-            <div className="flex justify-between items-center mt-4">
-              <button
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-                className="px-4 py-2 bg-primary text-white rounded disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span>Page {page}</span>
-              <button
-                disabled={(page * 20) >= data.total}
-                onClick={() => setPage(page + 1)}
-                className="px-4 py-2 bg-primary text-white rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
+            <SongList songs={songs} />
+            {hasMore && (
+              <>
+                {isValidating && <SongListSkeleton />}
+                {/* Sentinel for infinite scroll */}
+                <div ref={loadMoreRef} className="h-1" />
+              </>
+            )}
           </>
+        ) : isValidating ? (
+          // Show skeletons while loading
+          <SongListSkeleton />
         ) : (
+          // Show 'No songs found' when no songs are available after loading
           <p>No songs found.</p>
         )}
       </main>
