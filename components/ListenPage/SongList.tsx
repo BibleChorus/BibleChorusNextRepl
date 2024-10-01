@@ -22,6 +22,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useAuth } from '@/contexts/AuthContext'
 import axios from 'axios'
 import { toast } from "sonner"
+import { MusicFilled, BookOpenFilled, StarFilled } from '@/components/ui/custom-icons'
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -430,6 +431,40 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
     return 'No vote';
   };
 
+  const getVoteIcon = (voteType: string) => {
+    const voteValue = voteStates[song.id]?.[voteType] || 0;
+    const isUpvoted = voteValue === 1;
+
+    const iconProps = {
+      className: 'h-4 w-4 mr-1',
+    };
+
+    if (isUpvoted) {
+      switch (voteType) {
+        case 'Best Musically':
+          return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />; // Blue color
+        case 'Best Lyrically':
+          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />; // Green color, outlined
+        case 'Best Overall':
+          return <StarFilled {...iconProps} style={{ color: '#eab308' }} />; // Yellow color
+        default:
+          return null;
+      }
+    } else {
+      // For downvotes or no votes, use the regular outlined icons
+      switch (voteType) {
+        case 'Best Musically':
+          return <Music {...iconProps} />;
+        case 'Best Lyrically':
+          return <BookOpen {...iconProps} />;
+        case 'Best Overall':
+          return <Star {...iconProps} />;
+        default:
+          return null;
+      }
+    }
+  };
+
   return (
     <motion.div
       className="flex items-stretch p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden"
@@ -490,21 +525,21 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
               onClick={() => handleVoteClick('Best Musically')}
               className="flex items-center text-gray-500 hover:text-blue-500 transition-colors duration-200"
             >
-              <Music className="h-4 w-4 mr-1" />
+              {getVoteIcon('Best Musically')}
               <span>{voteCounts[song.id]?.['Best Musically'] || 0}</span>
             </button>
             <button
               onClick={() => handleVoteClick('Best Lyrically')}
               className="flex items-center text-gray-500 hover:text-green-500 transition-colors duration-200"
             >
-              <BookOpen className="h-4 w-4 mr-1" />
+              {getVoteIcon('Best Lyrically')}
               <span>{voteCounts[song.id]?.['Best Lyrically'] || 0}</span>
             </button>
             <button
               onClick={() => handleVoteClick('Best Overall')}
               className="flex items-center text-gray-500 hover:text-yellow-500 transition-colors duration-200"
             >
-              <Star className="h-4 w-4 mr-1" />
+              {getVoteIcon('Best Overall')}
               <span>{voteCounts[song.id]?.['Best Overall'] || 0}</span>
             </button>
           </div>

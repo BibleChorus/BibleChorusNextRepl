@@ -1,19 +1,26 @@
 import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Play, Pause, Edit, Share2, Info, Trash2 } from 'lucide-react'
+import { Play, Pause, Edit, Share2, Info, Trash2, Heart, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X } from 'lucide-react'
 import db from '@/db'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import axios from 'axios'
 import { toast } from "sonner"
+import { useAuth } from '@/contexts/AuthContext'
+import { motion } from 'framer-motion'
+import { formatBibleVerses } from '@/lib/utils'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
+import { MusicFilled, BookOpenFilled, StarFilled } from '@/components/ui/custom-icons'
+
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
 interface Song {
   id: number
@@ -24,8 +31,8 @@ interface Song {
   ai_used_for_lyrics: boolean
   music_ai_generated: boolean
   bible_translation_used: string
-  genre: string
-  lyrics_scripture_adherence: 'The lyrics follow the scripture word-for-word' | 'The lyrics closely follow the scripture passage' | 'The lyrics are creatively inspired by the scripture passage'
+  genres: string[]
+  lyrics_scripture_adherence: 'word_for_word' | 'close_paraphrase' | 'creative_inspiration'
   is_continuous_passage: boolean
   lyrics: string
   lyric_ai_prompt?: string
@@ -33,6 +40,8 @@ interface Song {
   music_model_used?: string
   song_art_url: string
   created_at: string
+  username: string
+  bible_verses?: { book: string; chapter: number; verse: number }[]
 }
 
 interface SongPageProps {
@@ -43,6 +52,70 @@ export default function SongPage({ song }: SongPageProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
+  const { user } = useAuth()
+  const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false)
+  const [selectedVoteType, setSelectedVoteType] = useState<string>('')
+  const [voteStates, setVoteStates] = useState<Record<string, number>>({})
+  const [likeState, setLikeState] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
+  const [voteCounts, setVoteCounts] = useState<Record<string, number>>({})
+  const [isLyricPromptOpen, setIsLyricPromptOpen] = useState(false)
+  const [isMusicPromptOpen, setIsMusicPromptOpen] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      fetchUserVote()
+      fetchUserLike()
+      fetchLikeCount()
+      fetchVoteCounts()
+    }
+  }, [user, song.id])
+
+  const fetchUserVote = async () => {
+    try {
+      const response = await axios.get(`/api/votes`, {
+        params: { user_id: user?.id, song_id: song.id }
+      })
+      const userVotes = response.data
+      const newVoteStates: Record<string, number> = {}
+
+      userVotes.forEach((vote: any) => {
+        newVoteStates[vote.vote_type] = vote.vote_value
+      })
+      setVoteStates(newVoteStates)
+    } catch (error) {
+      console.error('Error fetching user votes:', error)
+    }
+  }
+
+  const fetchUserLike = useCallback(async () => {
+    if (!user) return
+    try {
+      const response = await axios.get(`/api/users/${user.id}/likes`)
+      const userLikes = response.data
+      setLikeState(userLikes.some((like: any) => like.likeable_type === 'song' && like.likeable_id === song.id))
+    } catch (error) {
+      console.error('Error fetching user likes:', error)
+    }
+  }, [user, song.id])
+
+  const fetchLikeCount = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/likes/count')
+      setLikeCount(response.data[song.id] || 0)
+    } catch (error) {
+      console.error('Error fetching like count:', error)
+    }
+  }, [song.id])
+
+  const fetchVoteCounts = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/votes/count')
+      setVoteCounts(response.data[song.id] || {})
+    } catch (error) {
+      console.error('Error fetching vote counts:', error)
+    }
+  }, [song.id])
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying)
@@ -68,10 +141,123 @@ export default function SongPage({ song }: SongPageProps) {
     }
   }
 
-  const fallbackImageUrl = '/biblechorus-icon.png' // Adjust this path if needed
+  const handleVoteClick = (voteType: string) => {
+    setSelectedVoteType(voteType)
+    setIsVoteDialogOpen(true)
+  }
+
+  const handleVote = async (value: string) => {
+    if (!user) return
+
+    const voteValue = value === 'up' ? 1 : value === 'down' ? -1 : 0
+    
+    try {
+      const response = await axios.post('/api/votes', {
+        user_id: user.id,
+        song_id: song.id,
+        vote_type: selectedVoteType,
+        vote_value: voteValue
+      })
+
+      setVoteStates(prevStates => ({
+        ...prevStates,
+        [selectedVoteType]: voteValue
+      }))
+
+      // Update the vote count
+      setVoteCounts(prevCounts => ({
+        ...prevCounts,
+        [selectedVoteType]: response.data.count
+      }))
+
+      toast.success('Vote submitted successfully')
+    } catch (error) {
+      console.error('Error submitting vote:', error)
+      toast.error('Failed to submit vote')
+    }
+
+    setIsVoteDialogOpen(false)
+  }
+
+  const handleLike = useCallback(async () => {
+    if (!user) {
+      toast.error('You need to be logged in to like a song')
+      return
+    }
+
+    try {
+      if (likeState) {
+        await axios.delete(`/api/likes`, {
+          data: { user_id: user.id, likeable_type: 'song', likeable_id: song.id }
+        })
+      } else {
+        await axios.post('/api/likes', {
+          user_id: user.id,
+          likeable_type: 'song',
+          likeable_id: song.id
+        })
+      }
+
+      setLikeState(!likeState)
+
+      // Update like count
+      setLikeCount(prev => prev + (likeState ? -1 : 1))
+
+      toast.success(likeState ? 'Song unliked' : 'Song liked')
+    } catch (error) {
+      console.error('Error toggling like:', error)
+      toast.error('Failed to update like status')
+    }
+  }, [user, likeState, song.id])
+
+  const getVoteValue = (value: number | undefined): string => {
+    if (value === 1) return 'up';
+    if (value === -1) return 'down';
+    return '0';
+  };
+
+  const getVoteLabel = (value: number): string => {
+    if (value === 1) return 'Upvoted';
+    if (value === -1) return 'Downvoted';
+    return 'No vote';
+  };
+
+  const getVoteIcon = (voteType: string) => {
+    const voteValue = voteStates[voteType] || 0;
+    const isUpvoted = voteValue === 1;
+
+    const iconProps = {
+      className: 'h-4 w-4 mr-1',
+    };
+
+    if (isUpvoted) {
+      switch (voteType) {
+        case 'Best Musically':
+          return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />; // Blue color
+        case 'Best Lyrically':
+          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />; // Green color, outlined
+        case 'Best Overall':
+          return <StarFilled {...iconProps} style={{ color: '#eab308' }} />; // Yellow color
+        default:
+          return null;
+      }
+    } else {
+      // For downvotes or no votes, use the regular outlined icons
+      switch (voteType) {
+        case 'Best Musically':
+          return <Music {...iconProps} />;
+        case 'Best Lyrically':
+          return <BookOpen {...iconProps} />;
+        case 'Best Overall':
+          return <Star {...iconProps} />;
+        default:
+          return null;
+      }
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <Head>
         <title>{song.title} - BibleChorus</title>
         <link rel="icon" href="/favicon.ico" />
@@ -86,7 +272,7 @@ export default function SongPage({ song }: SongPageProps) {
           <div className="md:flex">
             <div className="md:w-1/3 p-4">
               <Image
-                src={song.song_art_url && song.song_art_url.startsWith('/') ? song.song_art_url : fallbackImageUrl}
+                src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
                 alt={`${song.title} cover art`}
                 width={300}
                 height={300}
@@ -101,7 +287,11 @@ export default function SongPage({ song }: SongPageProps) {
 
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
-                  <Badge>{song.genre}</Badge>
+                  {song.genres && song.genres.map((genre, index) => (
+                    <Badge key={`${song.id}-${genre}-${index}`} variant="secondary">
+                      {genre}
+                    </Badge>
+                  ))}
                   <Badge variant="outline">{song.bible_translation_used}</Badge>
                   {song.ai_used_for_lyrics && <Badge variant="secondary">AI Lyrics</Badge>}
                   {song.music_ai_generated && <Badge variant="secondary">AI Music</Badge>}
@@ -109,7 +299,7 @@ export default function SongPage({ song }: SongPageProps) {
 
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Scripture Adherence</h3>
-                  <p>{song.lyrics_scripture_adherence}</p>
+                  <p>{song.lyrics_scripture_adherence.replace(/_/g, ' ')}</p>
                 </div>
 
                 <div>
@@ -120,7 +310,7 @@ export default function SongPage({ song }: SongPageProps) {
                 {song.ai_used_for_lyrics && (
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Lyric AI Prompt</h3>
-                    <p>{song.lyric_ai_prompt}</p>
+                    <Button variant="outline" onClick={() => setIsLyricPromptOpen(true)}>View Lyric AI Prompt</Button>
                   </div>
                 )}
 
@@ -128,19 +318,54 @@ export default function SongPage({ song }: SongPageProps) {
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Music AI Details</h3>
                     <p><strong>Model:</strong> {song.music_model_used}</p>
-                    <p><strong>Prompt:</strong> {song.music_ai_prompt}</p>
+                    <Button variant="outline" onClick={() => setIsMusicPromptOpen(true)}>View Music AI Prompt</Button>
                   </div>
                 )}
 
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                   <Button onClick={togglePlay}>
                     {isPlaying ? <Pause className="mr-2" /> : <Play className="mr-2" />}
                     {isPlaying ? 'Pause' : 'Play'}
                   </Button>
+                  <button
+                    onClick={handleLike}
+                    className="flex items-center text-gray-500 hover:text-red-500 transition-colors duration-200"
+                  >
+                    <Heart
+                      className={`h-4 w-4 mr-1 ${
+                        likeState ? 'fill-current text-red-500' : ''
+                      }`}
+                    />
+                    <span>{likeCount}</span>
+                  </button>
+                  <button
+                    onClick={() => handleVoteClick('Best Musically')}
+                    className="flex items-center text-gray-500 hover:text-blue-500 transition-colors duration-200"
+                  >
+                    {getVoteIcon('Best Musically')}
+                    <span>{voteCounts['Best Musically'] || 0}</span>
+                  </button>
+                  <button
+                    onClick={() => handleVoteClick('Best Lyrically')}
+                    className="flex items-center text-gray-500 hover:text-green-500 transition-colors duration-200"
+                  >
+                    {getVoteIcon('Best Lyrically')}
+                    <span>{voteCounts['Best Lyrically'] || 0}</span>
+                  </button>
+                  <button
+                    onClick={() => handleVoteClick('Best Overall')}
+                    className="flex items-center text-gray-500 hover:text-yellow-500 transition-colors duration-200"
+                  >
+                    {getVoteIcon('Best Overall')}
+                    <span>{voteCounts['Best Overall'] || 0}</span>
+                  </button>
+                </div>
+
+                <div className="flex space-x-2">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="outline"><Edit className="mr-2" />Edit</Button>
+                        <Button variant="outline" onClick={() => router.push(`/edit-song/${song.id}`)}><Edit className="mr-2" />Edit</Button>
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>Edit song details (requires permissions)</p>
@@ -176,9 +401,12 @@ export default function SongPage({ song }: SongPageProps) {
                   </PopoverTrigger>
                   <PopoverContent className="w-80">
                     <div className="space-y-2">
-                      <p><strong>Uploaded by:</strong> User ID {song.uploaded_by}</p>
+                      <p><strong>Uploaded by:</strong> {song.username}</p>
                       <p><strong>Created at:</strong> {new Date(song.created_at).toLocaleString()}</p>
                       <p><strong>Continuous Passage:</strong> {song.is_continuous_passage ? 'Yes' : 'No'}</p>
+                      {song.bible_verses && (
+                        <p><strong>Bible Verses:</strong> {formatBibleVerses(song.bible_verses)}</p>
+                      )}
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -187,6 +415,59 @@ export default function SongPage({ song }: SongPageProps) {
           </div>
         </Card>
       </main>
+
+      {/* Vote Dialog */}
+      <Dialog open={isVoteDialogOpen} onOpenChange={setIsVoteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-center">Vote for {selectedVoteType}</DialogTitle>
+            <DialogDescription className="text-center">{song.title}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4">
+            {voteStates[selectedVoteType] !== 1 && (
+              <Button onClick={() => handleVote('up')} variant="outline" className="w-full sm:w-auto">
+                <ThumbsUp className="mr-2 h-4 w-4" />
+                Upvote
+              </Button>
+            )}
+            {voteStates[selectedVoteType] !== -1 && (
+              <Button onClick={() => handleVote('down')} variant="outline" className="w-full sm:w-auto">
+                <ThumbsDown className="mr-2 h-4 w-4" />
+                Downvote
+              </Button>
+            )}
+            {voteStates[selectedVoteType] !== 0 && (
+              <Button onClick={() => handleVote('0')} variant="outline" className="w-full sm:w-auto">
+                <X className="mr-2 h-4 w-4" />
+                Remove Vote
+              </Button>
+            )}
+          </div>
+          <div className="text-sm text-center text-muted-foreground mt-4">
+            Your current vote: {getVoteLabel(voteStates[selectedVoteType] || 0)}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lyric AI Prompt Dialog */}
+      <Dialog open={isLyricPromptOpen} onOpenChange={setIsLyricPromptOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Lyric AI Prompt</DialogTitle>
+          </DialogHeader>
+          <p>{song.lyric_ai_prompt}</p>
+        </DialogContent>
+      </Dialog>
+
+      {/* Music AI Prompt Dialog */}
+      <Dialog open={isMusicPromptOpen} onOpenChange={setIsMusicPromptOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Music AI Prompt</DialogTitle>
+          </DialogHeader>
+          <p>{song.music_ai_prompt}</p>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -195,13 +476,26 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string }
 
   try {
-    const song = await db('songs').where('id', id).first()
+    const song = await db('songs')
+      .join('users', 'songs.uploaded_by', 'users.id')
+      .where('songs.id', id)
+      .select('songs.*', 'users.username')
+      .first()
 
     if (!song) {
       return {
         notFound: true
       }
     }
+
+    // Fetch Bible verses for the song
+    const verses = await db('song_verses')
+      .join('bible_verses', 'song_verses.verse_id', 'bible_verses.id')
+      .where('song_verses.song_id', id)
+      .select('bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse')
+      .orderBy(['bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse'])
+
+    song.bible_verses = verses
 
     return {
       props: { song: JSON.parse(JSON.stringify(song)) }

@@ -6,11 +6,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const { user_id, song_id, vote_type } = req.query
 
-      const vote = await db('votes')
-        .where({ user_id, song_id, vote_type })
-        .first()
+      // Start building the query
+      let query = db('votes').where({ user_id, song_id })
 
-      res.status(200).json(vote || null)
+      // Add vote_type to the query only if it is provided
+      if (vote_type !== undefined) {
+        query = query.andWhere({ vote_type })
+      }
+
+      const votes = await query.select()
+
+      res.status(200).json(votes)
     } catch (error) {
       console.error('Error fetching vote:', error)
       res.status(500).json({ message: 'Error fetching vote', error })
