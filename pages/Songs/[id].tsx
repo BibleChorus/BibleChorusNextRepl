@@ -19,6 +19,7 @@ import { motion } from 'framer-motion'
 import { formatBibleVerses } from '@/lib/utils'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
 import { MusicFilled, BookOpenFilled, StarFilled } from '@/components/ui/custom-icons'
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -41,7 +42,7 @@ interface Song {
   song_art_url: string
   created_at: string
   username: string
-  bible_verses?: { book: string; chapter: number; verse: number }[]
+  bible_verses?: { book: string; chapter: number; verse: number; KJV_text: string }[]
 }
 
 interface SongPageProps {
@@ -61,6 +62,10 @@ export default function SongPage({ song }: SongPageProps) {
   const [voteCounts, setVoteCounts] = useState<Record<string, number>>({})
   const [isLyricPromptOpen, setIsLyricPromptOpen] = useState(false)
   const [isMusicPromptOpen, setIsMusicPromptOpen] = useState(false)
+  const [isKJVTextOpen, setIsKJVTextOpen] = useState(false)
+
+  // State for controlling Accordion default values based on screen size
+  const [accordionDefaultValues, setAccordionDefaultValues] = useState<string[]>([])
 
   useEffect(() => {
     if (user) {
@@ -68,6 +73,28 @@ export default function SongPage({ song }: SongPageProps) {
       fetchUserLike()
       fetchLikeCount()
       fetchVoteCounts()
+    }
+
+    // Function to set default Accordion values based on screen width
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        // For screens md and larger, expand all accordions by default
+        setAccordionDefaultValues(['lyrics', 'ai-info'])
+      } else {
+        // For smaller screens, collapse all accordions by default
+        setAccordionDefaultValues([])
+      }
+    }
+
+    // Initial check
+    handleResize()
+
+    // Add event listener
+    window.addEventListener('resize', handleResize)
+
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('resize', handleResize)
     }
   }, [user, song.id])
 
@@ -263,27 +290,57 @@ export default function SongPage({ song }: SongPageProps) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
+      {/* Song Art Banner with Bible Verses */}
+      <div className="relative h-64 sm:h-80 w-full mb-8">
+        <Image
+          src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
+          alt={`${song.title} cover art`}
+          layout="fill"
+          objectFit="cover"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">{song.title}</h1>
+          <p className="text-xl sm:text-2xl mb-4">{song.artist}</p>
+          {song.bible_verses && song.bible_verses.length > 0 && (
+            <div className="flex items-center">
+              <p className="text-sm sm:text-base font-semibold">
+                {formatBibleVerses(song.bible_verses)}
+              </p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setIsKJVTextOpen(true)}
+                      className="ml-2 text-white hover:text-primary-300 transition-colors"
+                    >
+                      <Info className="h-4 w-4 sm:h-5 sm:w-5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Click to view KJV text</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
+        </div>
+      </div>
+
       <main className="container mx-auto px-4 py-8">
         <Button variant="outline" onClick={() => router.back()} className="mb-4">
           Back
         </Button>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Song Info Card */}
-          <Card className="md:col-span-2">
+          <Card className="lg:col-span-2">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-3xl font-bold mb-2">{song.title}</CardTitle>
-                  <p className="text-xl text-gray-600 dark:text-gray-400">{song.artist}</p>
+                  <CardTitle className="text-2xl font-bold mb-2">Song Details</CardTitle>
                 </div>
-                <Image
-                  src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
-                  alt={`${song.title} cover art`}
-                  width={100}
-                  height={100}
-                  className="rounded-lg shadow-lg"
-                />
               </div>
             </CardHeader>
             <CardContent>
@@ -306,12 +363,15 @@ export default function SongPage({ song }: SongPageProps) {
               <p><strong>Uploaded by:</strong> {song.username}</p>
               <p><strong>Created at:</strong> {new Date(song.created_at).toLocaleString()}</p>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button onClick={togglePlay}>
+            <CardFooter className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+              <Button
+                onClick={togglePlay}
+                className="w-full sm:w-auto"
+              >
                 {isPlaying ? <Pause className="mr-2" /> : <Play className="mr-2" />}
                 {isPlaying ? 'Pause' : 'Play'}
               </Button>
-              <div className="flex space-x-2">
+              <div className="flex flex-wrap justify-center sm:justify-end space-x-2 space-y-2 sm:space-y-0">
                 <Button variant="outline" onClick={() => router.push(`/edit-song/${song.id}`)}><Edit className="mr-2" />Edit</Button>
                 <Button variant="outline"><Share2 className="mr-2" />Share</Button>
                 <AlertDialog>
@@ -393,58 +453,73 @@ export default function SongPage({ song }: SongPageProps) {
             </CardContent>
           </Card>
 
-          {/* Bible Info Card */}
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Bible Verses</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {song.bible_verses && song.bible_verses.length > 0 ? (
-                <p className="text-lg font-semibold text-primary-600 dark:text-primary-400">
-                  {formatBibleVerses(song.bible_verses)}
-                </p>
-              ) : (
-                <p>No specific Bible verses associated with this song.</p>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Lyrics Card */}
-          <Card className="md:col-span-2">
+          <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Lyrics</CardTitle>
+              <CardTitle className="text-2xl font-bold">Lyrics</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap">{song.lyrics}</p>
+              <Accordion type="single" collapsible defaultValue="lyrics">
+                <AccordionItem value="lyrics">
+                  <AccordionTrigger>View Lyrics</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="whitespace-pre-wrap">{song.lyrics}</p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </CardContent>
           </Card>
 
           {/* AI Info Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {song.ai_used_for_lyrics && (
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold mb-2">Lyric AI</h3>
-                  <Button variant="outline" onClick={() => setIsLyricPromptOpen(true)}>View Lyric AI Prompt</Button>
-                </div>
-              )}
-              {song.music_ai_generated && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Music AI</h3>
-                  <p><strong>Model:</strong> {song.music_model_used}</p>
-                  <Button variant="outline" onClick={() => setIsMusicPromptOpen(true)}>View Music AI Prompt</Button>
-                </div>
-              )}
-              {!song.ai_used_for_lyrics && !song.music_ai_generated && (
-                <p>No AI was used in the creation of this song.</p>
-              )}
-            </CardContent>
-          </Card>
+          {(song.ai_used_for_lyrics || song.music_ai_generated) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold">AI Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="multiple" defaultValue={['lyric-ai', 'music-ai']}>
+                  {song.ai_used_for_lyrics && (
+                    <AccordionItem value="lyric-ai">
+                      <AccordionTrigger>Lyric AI</AccordionTrigger>
+                      <AccordionContent>
+                        <p className="mb-2"><strong>Prompt:</strong></p>
+                        <p>{song.lyric_ai_prompt}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                  {song.music_ai_generated && (
+                    <AccordionItem value="music-ai">
+                      <AccordionTrigger>Music AI</AccordionTrigger>
+                      <AccordionContent>
+                        <p><strong>Model:</strong> {song.music_model_used}</p>
+                        <p className="mt-2"><strong>Prompt:</strong></p>
+                        <p>{song.music_ai_prompt}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                </Accordion>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
+
+      {/* KJV Text Dialog */}
+      <Dialog open={isKJVTextOpen} onOpenChange={setIsKJVTextOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>KJV Text for {formatBibleVerses(song.bible_verses || [])}</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto">
+            {song.bible_verses && song.bible_verses.map((verse, index) => (
+              <div key={index} className="mb-4">
+                <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
+                <p>{verse.KJV_text}</p>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Vote Dialog */}
       <Dialog open={isVoteDialogOpen} onOpenChange={setIsVoteDialogOpen}>
