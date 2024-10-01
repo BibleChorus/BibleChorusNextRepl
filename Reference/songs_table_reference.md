@@ -1,7 +1,7 @@
 # Songs Table
 
 ## Purpose
-This table stores information about individual songs, including metadata, lyrics, and details about AI involvement in creation.
+This table stores information about individual songs, including metadata, lyrics, and details about AI involvement in creation. It also includes a search vector for efficient full-text search capabilities.
 
 ## Columns and Types
 
@@ -24,6 +24,8 @@ This table stores information about individual songs, including metadata, lyrics
 | music_ai_prompt | text | | | AI prompt used for generating music (if applicable) |
 | music_model_used | string(50) | | | AI model used for music generation (if applicable) |
 | song_art_url | string(255) | | | URL to the song's artwork |
+| search_vector | tsvector | | | Full-text search vector |
+| verses_text | text | | | Concatenated text of associated Bible verses |
 
 ## Constraints
 
@@ -36,7 +38,36 @@ This table stores information about individual songs, including metadata, lyrics
 
 ## Indexes
 
-Consider adding indexes on frequently queried columns like `title`, `artist`, and `genres`.
+| Index Name | Columns | Type | Description |
+|------------|---------|------|-------------|
+| idx_songs_search_vector | search_vector | GIN | For efficient full-text search |
+| idx_songs_lyrics_scripture_adherence | lyrics_scripture_adherence | B-tree | For filtering by lyrics adherence |
+| idx_songs_is_continuous_passage | is_continuous_passage | B-tree | For filtering by passage continuity |
+| idx_songs_music_ai_generated | music_ai_generated | B-tree | For filtering by AI music generation |
+| idx_songs_ai_used_for_lyrics | ai_used_for_lyrics | B-tree | For filtering by AI lyrics usage |
+| idx_songs_music_model_used | music_model_used | B-tree | For filtering by music model |
+| idx_songs_bible_translation_used | bible_translation_used | B-tree | For filtering by Bible translation |
+| idx_songs_title | title | B-tree | For efficient title searches |
+| idx_songs_artist | artist | B-tree | For efficient artist searches |
+| idx_songs_uploaded_by | uploaded_by | B-tree | For efficient user uploads queries |
+| idx_songs_genres | genres | GIN | For efficient genre filtering |
+
+## Full-Text Search
+
+The `search_vector` column is a tsvector that combines the following fields for full-text search:
+- title (weight A)
+- lyrics (weight B)
+- lyric_ai_prompt (weight C)
+- music_ai_prompt (weight C)
+- genres (weight D)
+- verses_text (weight D)
+
+This allows for efficient searching across multiple fields with different priorities.
+
+## Triggers
+
+1. `tsvectorupdate`: Updates the `search_vector` column before INSERT or UPDATE operations.
+2. `song_verses_after_insert`, `song_verses_after_update`, `song_verses_after_delete`: Update the `verses_text` and `search_vector` when associated Bible verses change.
 
 ## Notes
 
@@ -46,8 +77,15 @@ Consider adding indexes on frequently queried columns like `title`, `artist`, an
 - The `genres` column is now an array of text, allowing for multiple genres per song.
 - Consider adding a `views` or `play_count` column for tracking song popularity.
 - The old `genre` column has been removed in favor of the new `genres` array column.
+- The `search_vector` and associated triggers enable efficient full-text search across multiple fields.
+- The `verses_text` column stores concatenated Bible verse references for improved searchability.
+- Regular maintenance of the search vector and associated indexes may be required for optimal performance.
 
 ## Recent Changes
 
+- Added `search_vector` column for full-text search capabilities.
+- Added `verses_text` column to store concatenated Bible verse references.
+- Created new indexes to support efficient filtering and searching.
+- Implemented triggers to keep `search_vector` and `verses_text` updated.
 - Removed the `genre` column (string type)
 - Added the `genres` column (text[] type) to store multiple genres as an array

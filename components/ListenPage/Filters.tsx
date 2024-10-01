@@ -17,7 +17,7 @@ export interface FilterOptions {
   isContinuous: "all" | "true" | "false"
   aiMusic: "all" | "true" | "false"
   genres: string[]
-  aiUsedForLyrics: boolean
+  aiUsedForLyrics: "all" | "true" | "false"  // Updated from boolean
   musicModelUsed: string
   title: string
   artist: string
@@ -93,7 +93,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       isContinuous: "all",
       aiMusic: "all",
       genres: [],
-      aiUsedForLyrics: false,
+      aiUsedForLyrics: "all",
       musicModelUsed: "",
       title: "",
       artist: "",
@@ -154,25 +154,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
         </TabsList>
 
         <TabsContent value="AI Info" className="space-y-4">
-          <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <label className="text-base font-medium">AI Used for Lyrics</label>
-              <p className="text-sm text-muted-foreground">
-                Filter songs based on AI-generated lyrics
-              </p>
-            </div>
-            <Switch
-              checked={filterOptions.aiUsedForLyrics}
-              onCheckedChange={(value) => handleChange('aiUsedForLyrics', value)}
-            />
-          </div>
           <FilterSelect
-            title="AI Music Model"
-            value={filterOptions.musicModelUsed}
-            onChange={(value) => handleChange('musicModelUsed', value)}
+            title="Lyrics Source"
+            value={filterOptions.aiUsedForLyrics}
+            onChange={(value) => handleChange('aiUsedForLyrics', value)}
             options={[
-              { value: "", label: "All Models" },
-              ...AI_MUSIC_MODELS.map(model => ({ value: model, label: model }))
+              { value: "all", label: "All Lyrics Sources" },
+              { value: "true", label: "AI Generated" },
+              { value: "false", label: "Human Written" },
             ]}
           />
           <FilterSelect
@@ -183,6 +172,15 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               { value: "all", label: "All Music Sources" },
               { value: "true", label: "AI Generated" },
               { value: "false", label: "Human Composed" },
+            ]}
+          />
+          <FilterSelect
+            title="AI Music Model"
+            value={filterOptions.musicModelUsed}
+            onChange={(value) => handleChange('musicModelUsed', value)}
+            options={[
+              { value: "", label: "All Models" },
+              ...AI_MUSIC_MODELS.map(model => ({ value: model, label: model }))
             ]}
           />
         </TabsContent>

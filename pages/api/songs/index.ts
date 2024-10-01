@@ -63,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         query = query.whereRaw('genres && ?', [genresValues]);
       }
 
-      if (aiUsedForLyrics !== undefined) {
+      if (aiUsedForLyrics && aiUsedForLyrics !== 'all') {
         query = query.where('songs.ai_used_for_lyrics', aiUsedForLyrics === 'true');
       }
 

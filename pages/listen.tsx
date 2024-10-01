@@ -42,7 +42,7 @@ function ListenContent() {
     isContinuous: "all",
     aiMusic: "all",
     genres: [],
-    aiUsedForLyrics: false,
+    aiUsedForLyrics: 'all',  // Updated from false
     musicModelUsed: "",
     title: "",
     artist: "",
@@ -75,8 +75,8 @@ function ListenContent() {
       params.append('aiMusic', filters.aiMusic)
     }
     filters.genres.forEach(genre => params.append('genres', genre))
-    if (filters.aiUsedForLyrics) {
-      params.append('aiUsedForLyrics', 'true')
+    if (filters.aiUsedForLyrics !== 'all') {
+      params.append('aiUsedForLyrics', filters.aiUsedForLyrics)
     }
     if (filters.musicModelUsed) {
       params.append('musicModelUsed', filters.musicModelUsed)
@@ -120,7 +120,17 @@ function ListenContent() {
 
   const removeFilter = (filterType: keyof FilterOptions, value?: string) => {
     setFilterOptions((prev) => {
-      if (filterType === 'lyricsAdherence' && value) {
+      if (filterType === 'aiUsedForLyrics') {
+        return {
+          ...prev,
+          aiUsedForLyrics: 'all'  // Reset to 'all' when the tag is removed
+        }
+      } else if (filterType === 'aiMusic') {
+        return {
+          ...prev,
+          aiMusic: 'all'  // Reset to 'all' when the tag is removed
+        }
+      } else if (filterType === 'lyricsAdherence' && value) {
         return {
           ...prev,
           lyricsAdherence: prev.lyricsAdherence.filter(v => v !== value)
@@ -194,10 +204,10 @@ function ListenContent() {
       })
     }
 
-    if (filterOptions.aiUsedForLyrics) {
+    if (filterOptions.aiUsedForLyrics !== 'all') {
       tags.push({
         type: 'aiUsedForLyrics',
-        label: 'AI Lyrics: Yes'
+        label: `Lyrics: ${filterOptions.aiUsedForLyrics === 'true' ? 'AI Generated' : 'Human Written'}`
       })
     }
 
