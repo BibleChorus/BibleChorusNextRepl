@@ -78,6 +78,11 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
         setSelectedBibleVerses([]);
       }
 
+      // Synchronize the search term
+      if (key === 'search') {
+        setFilterOptions((prev) => ({ ...prev, search: value }))
+      }
+
       return updatedFilters;
     });
   }

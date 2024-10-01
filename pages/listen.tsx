@@ -12,6 +12,7 @@ import qs from 'qs'
 import { SongListSkeleton } from '@/components/ListenPage/SongListSkeleton'
 import { useInView } from 'react-intersection-observer';
 import useSWRInfinite from 'swr/infinite';
+import { useRouter } from 'next/router'
 
 const fetcher = (url: string) => fetch(url).then(res => res.json()).then(data => ({
   songs: data.songs || [],
@@ -43,6 +44,10 @@ export default function Listen() {
 }
 
 function ListenContent() {
+  const router = useRouter()
+  const querySearch = router.query.search as string || ''
+
+  // Initialize filterOptions with URL query
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     lyricsAdherence: [],
     isContinuous: "all",
@@ -54,10 +59,18 @@ function ListenContent() {
     artist: "",
     bibleTranslation: "",
     bibleBooks: [],
-    search: '',
+    search: querySearch,
     bibleChapters: {},
     bibleVerses: [],
   })
+
+  useEffect(() => {
+    // Update filters if search query changes
+    if (querySearch) {
+      setFilterOptions((prev) => ({ ...prev, search: querySearch }))
+    }
+  }, [querySearch])
+
   const [isFilterExpanded, setIsFilterExpanded] = useState(false)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const isSmallScreen = useMediaQuery("(max-width: 768px)")
@@ -135,6 +148,7 @@ function ListenContent() {
     fetcher,
     {
       revalidateOnFocus: false,
+      revalidateFirstPage: false, // Add this line
       // Add onSuccess callback to update hasMore state
       onSuccess: (data) => {
         const total = data?.[0]?.total || 0;

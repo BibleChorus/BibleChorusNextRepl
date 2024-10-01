@@ -117,6 +117,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         query = query.distinct('songs.id');
       }
 
+      // Apply search filter
+      if (search) {
+        query = query.whereRaw(
+          `songs.search_vector @@ websearch_to_tsquery('english', ?)`,
+          [search]
+        );
+      }
+
       // After applying all filters, select songs
       const songsQuery = query.clone().offset(offset).limit(limitNum);
       const songs = await songsQuery;

@@ -8,6 +8,7 @@ import { UserDropdown } from '@/components/UserDropdown';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
+import { SearchInput } from '@/components/SearchInput';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -56,8 +57,9 @@ export default function RootLayout({ children, className = '' }: LayoutProps) {
           <div className={`transition-all duration-300 ${isOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
             {/* Fixed top bar */}
             <div className={`fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300 ${isScrolled ? 'h-12' : 'h-16'}`}>
-              <div className={`flex justify-between items-center h-full transition-all duration-300 ${isScrolled ? 'px-2' : 'px-4'}`}>
-                <div className="flex-grow flex items-center">
+              <div className={`flex items-center justify-between h-full transition-all duration-300 ${isScrolled ? 'px-2' : 'px-4'}`}>
+                {/* Left Section */}
+                <div className="flex items-center">
                   <Button
                     variant="ghost"
                     size={isScrolled ? "sm" : "icon"}
@@ -67,6 +69,11 @@ export default function RootLayout({ children, className = '' }: LayoutProps) {
                     <Menu className={`transition-all duration-300 ${isScrolled ? 'h-4 w-4' : 'h-6 w-6'}`} />
                   </Button>
                 </div>
+                {/* Center Section */}
+                <div className="flex-1 flex items-center justify-center px-2">
+                  <SearchInput />
+                </div>
+                {/* Right Section */}
                 <div className={`flex items-center space-x-4 transition-all duration-300 ${isScrolled ? 'scale-90' : 'scale-100'}`}>
                   {user ? (
                     <UserDropdown user={user} />
