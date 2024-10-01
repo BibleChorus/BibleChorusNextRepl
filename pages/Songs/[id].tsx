@@ -593,11 +593,16 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     }
 
-    // Fetch Bible verses for the song
+    // Fetch Bible verses for the song, including KJV_text
     const verses = await db('song_verses')
       .join('bible_verses', 'song_verses.verse_id', 'bible_verses.id')
       .where('song_verses.song_id', id)
-      .select('bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse')
+      .select(
+        'bible_verses.book',
+        'bible_verses.chapter',
+        'bible_verses.verse',
+        'bible_verses.KJV_text' // Include the KJV_text field
+      )
       .orderBy(['bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse'])
 
     song.bible_verses = verses
