@@ -3,7 +3,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -235,7 +235,7 @@ export default function SongPage({ song }: SongPageProps) {
         case 'Best Musically':
           return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />; // Blue color
         case 'Best Lyrically':
-          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />; // Green color, outlined
+          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />; // Green color, but using outlined icon
         case 'Best Overall':
           return <StarFilled {...iconProps} style={{ color: '#eab308' }} />; // Yellow color
         default:
@@ -268,152 +268,182 @@ export default function SongPage({ song }: SongPageProps) {
           Back
         </Button>
 
-        <Card className="overflow-hidden">
-          <div className="md:flex">
-            <div className="md:w-1/3 p-4">
-              <Image
-                src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
-                alt={`${song.title} cover art`}
-                width={300}
-                height={300}
-                className="w-full h-auto rounded-lg shadow-lg"
-              />
-            </div>
-            <CardContent className="md:w-2/3 p-6">
-              <CardHeader>
-                <CardTitle className="text-3xl font-bold mb-2">{song.title}</CardTitle>
-                <p className="text-xl text-gray-600 dark:text-gray-400">{song.artist}</p>
-              </CardHeader>
-
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  {song.genres && song.genres.map((genre, index) => (
-                    <Badge key={`${song.id}-${genre}-${index}`} variant="secondary">
-                      {genre}
-                    </Badge>
-                  ))}
-                  <Badge variant="outline">{song.bible_translation_used}</Badge>
-                  {song.ai_used_for_lyrics && <Badge variant="secondary">AI Lyrics</Badge>}
-                  {song.music_ai_generated && <Badge variant="secondary">AI Music</Badge>}
-                </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Song Info Card */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Scripture Adherence</h3>
-                  <p>{song.lyrics_scripture_adherence.replace(/_/g, ' ')}</p>
+                  <CardTitle className="text-3xl font-bold mb-2">{song.title}</CardTitle>
+                  <p className="text-xl text-gray-600 dark:text-gray-400">{song.artist}</p>
                 </div>
+                <Image
+                  src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
+                  alt={`${song.title} cover art`}
+                  width={100}
+                  height={100}
+                  className="rounded-lg shadow-lg"
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {song.genres && song.genres.map((genre, index) => (
+                  <Badge key={`${song.id}-${genre}-${index}`} variant="secondary">
+                    {genre}
+                  </Badge>
+                ))}
+                <Badge variant="outline">{song.bible_translation_used}</Badge>
+                <Badge variant="default" className="bg-primary text-primary-foreground">
+                  {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
+                </Badge>
+                <Badge variant="outline">
+                  {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
+                </Badge>
+                {song.ai_used_for_lyrics && <Badge variant="secondary">AI Lyrics</Badge>}
+                {song.music_ai_generated && <Badge variant="secondary">AI Music</Badge>}
+              </div>
+              <p><strong>Uploaded by:</strong> {song.username}</p>
+              <p><strong>Created at:</strong> {new Date(song.created_at).toLocaleString()}</p>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button onClick={togglePlay}>
+                {isPlaying ? <Pause className="mr-2" /> : <Play className="mr-2" />}
+                {isPlaying ? 'Pause' : 'Play'}
+              </Button>
+              <div className="flex space-x-2">
+                <Button variant="outline" onClick={() => router.push(`/edit-song/${song.id}`)}><Edit className="mr-2" />Edit</Button>
+                <Button variant="outline"><Share2 className="mr-2" />Share</Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={isDeleting}>
+                      <Trash2 className="mr-2" />
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure you want to delete this song?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the song, its associated data, and remove the audio and artwork files from storage.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={deleteSong}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardFooter>
+          </Card>
 
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Lyrics</h3>
-                  <p className="whitespace-pre-wrap">{song.lyrics}</p>
-                </div>
-
-                {song.ai_used_for_lyrics && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Lyric AI Prompt</h3>
-                    <Button variant="outline" onClick={() => setIsLyricPromptOpen(true)}>View Lyric AI Prompt</Button>
-                  </div>
-                )}
-
-                {song.music_ai_generated && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Music AI Details</h3>
-                    <p><strong>Model:</strong> {song.music_model_used}</p>
-                    <Button variant="outline" onClick={() => setIsMusicPromptOpen(true)}>View Music AI Prompt</Button>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-                  <Button onClick={togglePlay}>
-                    {isPlaying ? <Pause className="mr-2" /> : <Play className="mr-2" />}
-                    {isPlaying ? 'Pause' : 'Play'}
-                  </Button>
-                  <button
-                    onClick={handleLike}
-                    className="flex items-center text-gray-500 hover:text-red-500 transition-colors duration-200"
-                  >
+          {/* Votes and Likes Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Votes & Likes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col space-y-4">
+                <button
+                  onClick={handleLike}
+                  className="flex items-center justify-between text-gray-500 hover:text-red-500 transition-colors duration-200"
+                >
+                  <span>Likes</span>
+                  <div className="flex items-center">
                     <Heart
-                      className={`h-4 w-4 mr-1 ${
+                      className={`h-6 w-6 mr-2 ${
                         likeState ? 'fill-current text-red-500' : ''
                       }`}
                     />
-                    <span>{likeCount}</span>
-                  </button>
-                  <button
-                    onClick={() => handleVoteClick('Best Musically')}
-                    className="flex items-center text-gray-500 hover:text-blue-500 transition-colors duration-200"
-                  >
+                    <span className="text-lg">{likeCount}</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleVoteClick('Best Musically')}
+                  className="flex items-center justify-between text-gray-500 hover:text-blue-500 transition-colors duration-200"
+                >
+                  <span>Best Musically</span>
+                  <div className="flex items-center">
                     {getVoteIcon('Best Musically')}
-                    <span>{voteCounts['Best Musically'] || 0}</span>
-                  </button>
-                  <button
-                    onClick={() => handleVoteClick('Best Lyrically')}
-                    className="flex items-center text-gray-500 hover:text-green-500 transition-colors duration-200"
-                  >
+                    <span className="text-lg">{voteCounts['Best Musically'] || 0}</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleVoteClick('Best Lyrically')}
+                  className="flex items-center justify-between text-gray-500 hover:text-green-500 transition-colors duration-200"
+                >
+                  <span>Best Lyrically</span>
+                  <div className="flex items-center">
                     {getVoteIcon('Best Lyrically')}
-                    <span>{voteCounts['Best Lyrically'] || 0}</span>
-                  </button>
-                  <button
-                    onClick={() => handleVoteClick('Best Overall')}
-                    className="flex items-center text-gray-500 hover:text-yellow-500 transition-colors duration-200"
-                  >
+                    <span className="text-lg">{voteCounts['Best Lyrically'] || 0}</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleVoteClick('Best Overall')}
+                  className="flex items-center justify-between text-gray-500 hover:text-yellow-500 transition-colors duration-200"
+                >
+                  <span>Best Overall</span>
+                  <div className="flex items-center">
                     {getVoteIcon('Best Overall')}
-                    <span>{voteCounts['Best Overall'] || 0}</span>
-                  </button>
-                </div>
-
-                <div className="flex space-x-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="outline" onClick={() => router.push(`/edit-song/${song.id}`)}><Edit className="mr-2" />Edit</Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Edit song details (requires permissions)</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <Button variant="outline"><Share2 className="mr-2" />Share</Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" disabled={isDeleting}>
-                        <Trash2 className="mr-2" />
-                        {isDeleting ? 'Deleting...' : 'Delete'}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure you want to delete this song?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the song, its associated data, and remove the audio and artwork files from storage.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={deleteSong}>Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline"><Info className="mr-2" />More Info</Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80">
-                    <div className="space-y-2">
-                      <p><strong>Uploaded by:</strong> {song.username}</p>
-                      <p><strong>Created at:</strong> {new Date(song.created_at).toLocaleString()}</p>
-                      <p><strong>Continuous Passage:</strong> {song.is_continuous_passage ? 'Yes' : 'No'}</p>
-                      {song.bible_verses && (
-                        <p><strong>Bible Verses:</strong> {formatBibleVerses(song.bible_verses)}</p>
-                      )}
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                    <span className="text-lg">{voteCounts['Best Overall'] || 0}</span>
+                  </div>
+                </button>
               </div>
             </CardContent>
-          </div>
-        </Card>
+          </Card>
+
+          {/* Bible Info Card */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Bible Verses</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {song.bible_verses && song.bible_verses.length > 0 ? (
+                <p className="text-lg font-semibold text-primary-600 dark:text-primary-400">
+                  {formatBibleVerses(song.bible_verses)}
+                </p>
+              ) : (
+                <p>No specific Bible verses associated with this song.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Lyrics Card */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Lyrics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap">{song.lyrics}</p>
+            </CardContent>
+          </Card>
+
+          {/* AI Info Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {song.ai_used_for_lyrics && (
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold mb-2">Lyric AI</h3>
+                  <Button variant="outline" onClick={() => setIsLyricPromptOpen(true)}>View Lyric AI Prompt</Button>
+                </div>
+              )}
+              {song.music_ai_generated && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Music AI</h3>
+                  <p><strong>Model:</strong> {song.music_model_used}</p>
+                  <Button variant="outline" onClick={() => setIsMusicPromptOpen(true)}>View Music AI Prompt</Button>
+                </div>
+              )}
+              {!song.ai_used_for_lyrics && !song.music_ai_generated && (
+                <p>No AI was used in the creation of this song.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </main>
 
       {/* Vote Dialog */}

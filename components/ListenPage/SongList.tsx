@@ -444,7 +444,7 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
         case 'Best Musically':
           return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />; // Blue color
         case 'Best Lyrically':
-          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />; // Green color, outlined
+          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />; // Green color, but using outlined icon
         case 'Best Overall':
           return <StarFilled {...iconProps} style={{ color: '#eab308' }} />; // Yellow color
         default:
