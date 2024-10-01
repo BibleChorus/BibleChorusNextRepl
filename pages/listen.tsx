@@ -124,23 +124,42 @@ function ListenContent() {
         return {
           ...prev,
           lyricsAdherence: prev.lyricsAdherence.filter(v => v !== value)
-        }
+        };
       } else if (filterType === 'genres' && value) {
         return {
           ...prev,
           genres: prev.genres.filter(v => v !== value)
-        }
+        };
+      } else if (filterType === 'bibleBooks' && value) {
+        return {
+          ...prev,
+          bibleBooks: prev.bibleBooks.filter(v => v !== value)
+        };
+      } else if (filterType === 'search') {
+        return {
+          ...prev,
+          search: ''
+        };
       } else {
         return {
           ...prev,
-          [filterType]: filterType === 'lyricsAdherence' || filterType === 'genres' ? [] : 'all'
-        }
+          [filterType]: typeof prev[filterType] === 'boolean' ? false : ''
+        };
       }
-    })
-  }
+    });
+  };
 
   const getFilterTags = (): { type: keyof FilterOptions; label: string; value?: string }[] => {
     const tags: { type: keyof FilterOptions; label: string; value?: string }[] = []
+
+    if (filterOptions.search) {
+      tags.push({
+        type: 'search',
+        label: `Search: "${filterOptions.search}"`,
+        value: filterOptions.search,
+      })
+    }
+
     if (filterOptions.lyricsAdherence.length > 0) {
       filterOptions.lyricsAdherence.forEach(value => {
         tags.push({
@@ -150,18 +169,21 @@ function ListenContent() {
         })
       })
     }
+
     if (filterOptions.isContinuous !== "all") {
       tags.push({
         type: 'isContinuous',
         label: `Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`
       })
     }
+
     if (filterOptions.aiMusic !== "all") {
       tags.push({
         type: 'aiMusic',
-        label: `Music: ${filterOptions.aiMusic === "true" ? "AI" : "Human"}`
+        label: `Music: ${filterOptions.aiMusic === "true" ? "AI Generated" : "Human Composed"}`
       })
     }
+
     if (filterOptions.genres.length > 0) {
       filterOptions.genres.forEach(genre => {
         tags.push({
@@ -171,6 +193,38 @@ function ListenContent() {
         })
       })
     }
+
+    if (filterOptions.aiUsedForLyrics) {
+      tags.push({
+        type: 'aiUsedForLyrics',
+        label: 'AI Lyrics: Yes'
+      })
+    }
+
+    if (filterOptions.musicModelUsed) {
+      tags.push({
+        type: 'musicModelUsed',
+        label: `Music Model: ${filterOptions.musicModelUsed}`
+      })
+    }
+
+    if (filterOptions.bibleTranslation) {
+      tags.push({
+        type: 'bibleTranslation',
+        label: `Translation: ${filterOptions.bibleTranslation}`
+      })
+    }
+
+    if (filterOptions.bibleBooks.length > 0) {
+      filterOptions.bibleBooks.forEach(book => {
+        tags.push({
+          type: 'bibleBooks',
+          label: `Book: ${book}`,
+          value: book
+        })
+      })
+    }
+
     return tags
   }
 
