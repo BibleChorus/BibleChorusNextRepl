@@ -1,6 +1,6 @@
 "use client"
 
-import { Dispatch, SetStateAction, useState, useCallback } from "react"
+import { Dispatch, SetStateAction, useState, useCallback, useEffect } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input"
 import { GENRES, BIBLE_BOOKS, BIBLE_TRANSLATIONS, AI_MUSIC_MODELS } from "@/lib/constants"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
+import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
 
 export interface FilterOptions {
   lyricsAdherence: string[]
@@ -23,6 +25,8 @@ export interface FilterOptions {
   artist: string
   bibleTranslation: string
   bibleBooks: string[]
+  bibleChapters: { [book: string]: number[] }
+  bibleVerses: string[]
   search: string
 }
 
@@ -40,9 +44,42 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
   const [bibleBookSearch, setBibleBookSearch] = useState('')
   const [currentTab, setCurrentTab] = useState("AI Info")
 
+  // State for Bible books
+  const [openChapters, setOpenChapters] = useState(false)
+  const [chapterSearch, setChapterSearch] = useState('')
+  const [selectedChapters, setSelectedChapters] = useState<{ [book: string]: number[] }>(filterOptions.bibleChapters || {})
+
+  // State for verses
+  const [openBibleVerses, setOpenBibleVerses] = useState(false)
+  const [bibleVerseSearch, setBibleVerseSearch] = useState('')
+  const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>(filterOptions.bibleVerses || [])
+
+  // Synchronize selectedChapters with filterOptions.bibleChapters
+  useEffect(() => {
+    setSelectedChapters(filterOptions.bibleChapters || {});
+  }, [filterOptions.bibleChapters]);
+
+  // Synchronize selectedBibleVerses with filterOptions.bibleVerses
+  useEffect(() => {
+    setSelectedBibleVerses(filterOptions.bibleVerses || []);
+  }, [filterOptions.bibleVerses]);
+
   const handleChange = (key: keyof FilterOptions, value: any) => {
     const actualValue = value === '_empty_' ? '' : value;
-    setFilterOptions((prev) => ({ ...prev, [key]: actualValue }))
+
+    setFilterOptions((prev) => {
+      const updatedFilters = { ...prev, [key]: actualValue };
+
+      // If bibleBooks is cleared, reset bibleChapters and bibleVerses
+      if (key === 'bibleBooks' && (value === '' || (Array.isArray(value) && value.length === 0))) {
+        updatedFilters.bibleChapters = {};
+        updatedFilters.bibleVerses = [];
+        setSelectedChapters({});
+        setSelectedBibleVerses([]);
+      }
+
+      return updatedFilters;
+    });
   }
 
   const lyricsAdherenceOptions = [
@@ -80,11 +117,19 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
   }, [bibleBookSearch])
 
   const toggleBibleBook = (book: string) => {
-    const currentBooks = filterOptions.bibleBooks
+    const currentBooks = filterOptions.bibleBooks;
     const newBooks = currentBooks.includes(book)
       ? currentBooks.filter((b) => b !== book)
-      : [...currentBooks, book]
-    handleChange('bibleBooks', newBooks)
+      : [...currentBooks, book];
+
+    handleChange('bibleBooks', newBooks);
+
+    // If no books are selected, clear chapters and verses
+    if (newBooks.length === 0) {
+      setSelectedChapters({});
+      setSelectedBibleVerses([]);
+      setFilterOptions((prev) => ({ ...prev, bibleChapters: {}, bibleVerses: [] }));
+    }
   }
 
   const clearFilters = () => {
@@ -99,8 +144,86 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       artist: "",
       bibleTranslation: "",
       bibleBooks: [],
+      bibleChapters: {},
+      bibleVerses: [],
       search: "",
     })
+  }
+
+  const { data: availableChapters, isLoading: isLoadingChapters } = useQuery({
+    queryKey: ['chapters', filterOptions.bibleBooks],
+    queryFn: async () => {
+      if (filterOptions.bibleBooks.length === 0) return {}
+      const response = await axios.get('/api/chapters', {
+        params: { books: filterOptions.bibleBooks.join(',') }
+      })
+      return response.data
+    },
+    enabled: filterOptions.bibleBooks.length > 0,
+  })
+
+  const handleChapterToggle = (book: string, chapter: number) => {
+    setSelectedChapters((prev) => {
+      const bookChapters = prev[book] || [];
+      const newChapters = bookChapters.includes(chapter)
+        ? bookChapters.filter((ch) => ch !== chapter)
+        : [...bookChapters, chapter];
+
+      const updatedChapters = { ...prev, [book]: newChapters };
+
+      // Remove book key if no chapters are left
+      if (newChapters.length === 0) {
+        delete updatedChapters[book];
+      }
+
+      // Update filterOptions
+      setFilterOptions((prevFilters) => {
+        const updatedFilters = { ...prevFilters, bibleChapters: updatedChapters };
+
+        // If no chapters are selected, clear verses
+        if (Object.keys(updatedChapters).length === 0) {
+          setSelectedBibleVerses([]);
+          updatedFilters.bibleVerses = [];
+        }
+
+        return updatedFilters;
+      });
+
+      return updatedChapters;
+    });
+  }
+
+  const { data: bibleVerses, isLoading: isLoadingVerses } = useQuery({
+    queryKey: ['bibleVerses', filterOptions.bibleBooks, selectedChapters],
+    queryFn: async () => {
+      if (filterOptions.bibleBooks.length === 0) return {}
+      const verses = await Promise.all(
+        filterOptions.bibleBooks.flatMap(book => 
+          (selectedChapters[book] || []).map(chapter => 
+            axios.get('/api/bible-verses', { params: { book, chapter } })
+          )
+        )
+      );
+      return verses.reduce((acc, response) => {
+        const verses = response.data;
+        if (verses.length > 0) {
+          const book = verses[0].book;
+          const chapter = verses[0].chapter;
+          if (!acc[book]) acc[book] = {};
+          acc[book][chapter] = verses;
+        }
+        return acc;
+      }, {} as Record<string, Record<number, any[]>>);
+    },
+    enabled: filterOptions.bibleBooks.length > 0 && Object.keys(selectedChapters).length > 0,
+  })
+
+  const handleBibleVerseToggle = (verse: string) => {
+    const updatedVerses = selectedBibleVerses.includes(verse)
+      ? selectedBibleVerses.filter(v => v !== verse)
+      : [...selectedBibleVerses, verse]
+    setSelectedBibleVerses(updatedVerses)
+    setFilterOptions(prev => ({ ...prev, bibleVerses: updatedVerses }))
   }
 
   return (
@@ -349,6 +472,154 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               </div>
             </PopoverContent>
           </Popover>
+
+          {/* Chapters Selection */}
+          {filterOptions.bibleBooks.length > 0 && (
+            <Popover open={openChapters} onOpenChange={setOpenChapters}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openChapters}
+                  className="w-full justify-between"
+                >
+                  {Object.values(selectedChapters).flat().length > 0
+                    ? `${Object.values(selectedChapters).flat().length} chapter(s) selected`
+                    : "Select chapters..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-full max-w-[80vw] p-0"  // Updated here
+                style={{ maxWidth: '80vw' }}        // Added inline style
+              >
+                <div className="p-2">
+                  <div className="flex items-center justify-between pb-2">
+                    <Input
+                      placeholder="Search chapters..."
+                      value={chapterSearch}
+                      onChange={(e) => setChapterSearch(e.target.value)}
+                      className="mr-2"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedChapters({})
+                        setFilterOptions(prev => ({ ...prev, bibleChapters: {} }))
+                      }}
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {isLoadingChapters ? (
+                      <div>Loading chapters...</div>
+                    ) : (
+                      Object.entries(availableChapters || {}).map(([book, chapters]) => (
+                        <div key={book} className="mb-2">
+                          <h4 className="font-semibold mb-1">{book}</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {(chapters as number[]).filter(chapter => chapter.toString().includes(chapterSearch)).map((chapter) => (
+                              <div
+                                key={`${book}-${chapter}`}
+                                className={cn(
+                                  "flex items-center rounded-md px-2 py-1 hover:bg-accent cursor-pointer",
+                                  (selectedChapters[book] || []).includes(chapter) && "bg-accent"
+                                )}
+                                onClick={() => handleChapterToggle(book, chapter)}
+                              >
+                                <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                  {(selectedChapters[book] || []).includes(chapter) && <Check className="h-3 w-3" />}
+                                </div>
+                                {chapter}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+
+          {/* Verses Selection */}
+          {Object.keys(selectedChapters).length > 0 && (
+            <Popover open={openBibleVerses} onOpenChange={setOpenBibleVerses}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openBibleVerses}
+                  className="w-full justify-between"
+                >
+                  {selectedBibleVerses.length > 0
+                    ? `${selectedBibleVerses.length} verse(s) selected`
+                    : "Select Bible verses..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" style={{ maxWidth: '80vw' }}>
+                <div className="p-2">
+                  <div className="flex items-center justify-between pb-2">
+                    <Input
+                      placeholder="Search Bible verses..."
+                      value={bibleVerseSearch}
+                      onChange={(e) => setBibleVerseSearch(e.target.value)}
+                      className="mr-2"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedBibleVerses([])
+                        setFilterOptions(prev => ({ ...prev, bibleVerses: [] }))
+                      }}
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {isLoadingVerses ? (
+                      <div>Loading verses...</div>
+                    ) : (
+                      Object.entries(bibleVerses || {}).map(([book, chapters]) => (
+                        <div key={book} className="mb-4">
+                          {Object.entries(chapters).map(([chapter, verses]) => (
+                            <div key={`${book}-${chapter}`} className="mb-2">
+                              <h4 className="font-semibold mb-1">{`${book} ${chapter}`}</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {verses.filter((verse: any) =>
+                                  verse.KJV_text.toLowerCase().includes(bibleVerseSearch.toLowerCase()) ||
+                                  `${verse.book} ${verse.chapter}:${verse.verse}`.toLowerCase().includes(bibleVerseSearch.toLowerCase())
+                                ).map((verse: any) => (
+                                  <div
+                                    key={`${book}-${chapter}-${verse.verse}`}
+                                    className={cn(
+                                      "flex items-center rounded-md px-2 py-1 hover:bg-accent cursor-pointer",
+                                      selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && "bg-accent"
+                                    )}
+                                    onClick={() => handleBibleVerseToggle(`${book} ${chapter}:${verse.verse}`)}
+                                  >
+                                    <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                      {selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && <Check className="h-3 w-3" />}
+                                    </div>
+                                    {verse.verse}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
         </TabsContent>
       </Tabs>
     </motion.div>

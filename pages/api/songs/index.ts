@@ -15,6 +15,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         artist,
         bibleTranslation,
         bibleBooks,
+        bibleChapters,
+        bibleVerses,
         page = '1',
         limit = '20',
         search,
@@ -75,14 +77,61 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         query = query.where('songs.bible_translation_used', bibleTranslation);
       }
 
-      if (bibleBooks) {
-        const bibleBooksValues = Array.isArray(bibleBooks) ? bibleBooks : [bibleBooks];
+      // Flag to determine if Bible filters are applied
+      const bibleFiltersApplied = bibleVerses || bibleChapters || bibleBooks;
 
+      if (bibleFiltersApplied) {
+        // Join with song_verses and bible_verses if any Bible filters are applied
         query = query
           .join('song_verses', 'songs.id', 'song_verses.song_id')
-          .join('bible_verses', 'song_verses.verse_id', 'bible_verses.id')
-          .whereIn('bible_verses.book', bibleBooksValues);
+          .join('bible_verses', 'song_verses.verse_id', 'bible_verses.id');
+
+        // Apply filters in order of specificity
+        if (bibleVerses) {
+          // If Bible verses are specified, filter by verses (overrides books and chapters)
+          const bibleVersesValues = Array.isArray(bibleVerses) ? bibleVerses : [bibleVerses];
+          query = query.whereRaw(`CONCAT(bible_verses.book, ' ', bible_verses.chapter, ':', bible_verses.verse) IN (${bibleVersesValues.map(() => '?').join(',')})`, bibleVersesValues);
+        } else if (bibleChapters) {
+          // If Bible chapters are specified, filter by chapters (overrides books)
+          const bibleChaptersValues = Array.isArray(bibleChapters) ? bibleChapters : [bibleChapters];
+          const bookChapterPairs = bibleChaptersValues.map((bookChapter) => {
+            const [book, chapter] = bookChapter.split(':');
+            return { book, chapter };
+          });
+          query = query.where((builder) => {
+            bookChapterPairs.forEach(({ book, chapter }) => {
+              builder.orWhere((qb) => {
+                qb.where('bible_verses.book', book).andWhere('bible_verses.chapter', chapter);
+              });
+            });
+          });
+        } else if (bibleBooks) {
+          // Filter by Bible books
+          const bibleBooksValues = Array.isArray(bibleBooks) ? bibleBooks : [bibleBooks];
+          query = query.whereIn('bible_verses.book', bibleBooksValues);
+        }
+
+        // Prevent duplicate songs due to joins
+        query = query.distinct('songs.id');
       }
+
+      // After applying all filters, select distinct songs
+      query = query.select(
+        'songs.id',
+        'songs.title',
+        'users.username',
+        'songs.uploaded_by',
+        'songs.genres',
+        'songs.created_at',
+        'songs.audio_url',
+        'songs.song_art_url',
+        'songs.bible_translation_used',
+        'songs.lyrics_scripture_adherence',
+        'songs.is_continuous_passage',
+        'songs.ai_used_for_lyrics',
+        'songs.music_ai_generated',
+        'songs.music_model_used'
+      );
 
       // Full-text search on lyrics, prompts, genres, and title
       if (search) {
@@ -121,7 +170,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         song.bible_verses = versesBySongId[song.id] || [];
       });
 
-      res.status(200).json({ songs, total });
+      res.status(200).json({ songs: songs || [], total });
     } catch (error) {
       console.error('Error fetching songs:', error);
       res.status(500).json({ message: 'Error fetching songs', error: error.message });

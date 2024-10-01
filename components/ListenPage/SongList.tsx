@@ -447,7 +447,6 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
 
   return (
     <motion.div
-      key={song.id}
       className="flex items-stretch p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden"
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
@@ -544,8 +543,8 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
 
         {/* Tags / Badges */}
         <div className="mt-1 sm:mt-2 flex flex-wrap gap-1">
-          {song.genres && song.genres.map((genre) => (
-            <Badge key={genre} variant="secondary" className="text-[10px] sm:text-xs px-1 py-0">
+          {song.genres && song.genres.map((genre, index) => (
+            <Badge key={`${song.id}-${genre}-${index}`} variant="secondary" className="text-[10px] sm:text-xs px-1 py-0">
               {genre}
             </Badge>
           ))}

@@ -10,7 +10,10 @@ import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import qs from 'qs'
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+const fetcher = (url: string) => fetch(url).then(res => res.json()).then(data => ({
+  songs: data.songs || [],
+  total: data.total || 0,
+}));
 
 // Updated Song type definition
 export type Song = {
@@ -49,6 +52,8 @@ function ListenContent() {
     bibleTranslation: "",
     bibleBooks: [],
     search: '',
+    bibleChapters: {},
+    bibleVerses: [],
   })
   const [isFilterExpanded, setIsFilterExpanded] = useState(false)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
@@ -96,6 +101,16 @@ function ListenContent() {
       params.append('search', filters.search)
     }
 
+    // Add bibleChapters to params
+    Object.entries(filters.bibleChapters || {}).forEach(([book, chapters]) => {
+      chapters.forEach(chapter => {
+        params.append('bibleChapters', `${book}:${chapter}`)
+      })
+    })
+
+    // Add bibleVerses to params
+    filters.bibleVerses.forEach(verse => params.append('bibleVerses', verse))
+
     params.append('page', page.toString())
     params.append('limit', '20')
 
@@ -141,9 +156,53 @@ function ListenContent() {
           genres: prev.genres.filter(v => v !== value)
         };
       } else if (filterType === 'bibleBooks' && value) {
+        // Remove the book from bibleBooks
+        const newBibleBooks = prev.bibleBooks.filter(v => v !== value);
+
+        // Remove chapters associated with the removed book
+        const newBibleChapters = { ...prev.bibleChapters };
+        delete newBibleChapters[value]; // Remove the key for the removed book
+
+        // Remove verses associated with the removed book's chapters
+        const versesToKeep = prev.bibleVerses.filter(verse => {
+          // Keep verses that are not in the removed book
+          return !verse.startsWith(`${value} `);
+        });
+
         return {
           ...prev,
-          bibleBooks: prev.bibleBooks.filter(v => v !== value)
+          bibleBooks: newBibleBooks,
+          bibleChapters: newBibleChapters,
+          bibleVerses: versesToKeep,
+        };
+      } else if (filterType === 'bibleChapters' && value) {
+        // Remove selected chapter
+        const [book, chapter] = value.split(':');
+        const chapters = prev.bibleChapters[book] || [];
+        const newChapters = chapters.filter((ch) => ch !== Number(chapter));
+        const newBibleChapters = { ...prev.bibleChapters, [book]: newChapters };
+
+        // Remove book key if no chapters are left
+        if (newChapters.length === 0) {
+          delete newBibleChapters[book];
+        }
+
+        // Remove verses associated with the removed chapter
+        const versesToKeep = prev.bibleVerses.filter(verse => {
+          // Keep verses that are not in the removed chapter
+          return !verse.startsWith(`${book} ${chapter}:`);
+        });
+
+        return {
+          ...prev,
+          bibleChapters: newBibleChapters,
+          bibleVerses: versesToKeep,
+        };
+      } else if (filterType === 'bibleVerses' && value) {
+        // Remove selected verse
+        return {
+          ...prev,
+          bibleVerses: prev.bibleVerses.filter((v) => v !== value),
         };
       } else if (filterType === 'search') {
         return {
@@ -226,13 +285,35 @@ function ListenContent() {
     }
 
     if (filterOptions.bibleBooks.length > 0) {
-      filterOptions.bibleBooks.forEach(book => {
+      filterOptions.bibleBooks.forEach((book) => {
         tags.push({
           type: 'bibleBooks',
           label: `Book: ${book}`,
-          value: book
-        })
-      })
+          value: book,
+        });
+      });
+    }
+
+    if (filterOptions.bibleChapters && Object.keys(filterOptions.bibleChapters).length > 0) {
+      Object.entries(filterOptions.bibleChapters).forEach(([book, chapters]) => {
+        chapters.forEach((chapter) => {
+          tags.push({
+            type: 'bibleChapters',
+            label: `Chapter: ${book} ${chapter}`,
+            value: `${book}:${chapter}`,
+          });
+        });
+      });
+    }
+
+    if (filterOptions.bibleVerses.length > 0) {
+      filterOptions.bibleVerses.forEach((verse) => {
+        tags.push({
+          type: 'bibleVerses',
+          label: `Verse: ${verse}`,
+          value: verse,
+        });
+      });
     }
 
     return tags
@@ -312,7 +393,7 @@ function ListenContent() {
           <p>Loading songs...</p>
         ) : error ? (
           <p>Error loading songs: {error.message}</p>
-        ) : data && data.songs.length > 0 ? (
+        ) : data && Array.isArray(data.songs) && data.songs.length > 0 ? (
           <>
             <SongList songs={data.songs} />
             {/* Pagination controls */}
