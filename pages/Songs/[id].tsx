@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Play, Pause, Edit, Share2, Info, Trash2, Heart, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X } from 'lucide-react'
+import { Play, Pause, Edit, Share2, Info, Trash2, Heart, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Pencil } from 'lucide-react'
 import db from '@/db'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -20,6 +20,11 @@ import { formatBibleVerses } from '@/lib/utils'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
 import { MusicFilled, BookOpenFilled, StarFilled } from '@/components/ui/custom-icons'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { FormControl } from "@/components/ui/form"
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -49,7 +54,8 @@ interface SongPageProps {
   song: Song
 }
 
-export default function SongPage({ song }: SongPageProps) {
+export default function SongPage({ song: initialSong }: SongPageProps) {
+  const [song, setSong] = useState(initialSong)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
@@ -60,9 +66,15 @@ export default function SongPage({ song }: SongPageProps) {
   const [likeState, setLikeState] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
   const [voteCounts, setVoteCounts] = useState<Record<string, number>>({})
-  const [isLyricPromptOpen, setIsLyricPromptOpen] = useState(false)
-  const [isMusicPromptOpen, setIsMusicPromptOpen] = useState(false)
   const [isKJVTextOpen, setIsKJVTextOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editedTitle, setEditedTitle] = useState(song.title)
+  const [editedArtist, setEditedArtist] = useState(song.artist)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isLyricsEditDialogOpen, setIsLyricsEditDialogOpen] = useState(false)
+  const [editedLyrics, setEditedLyrics] = useState(song.lyrics)
+  const [editedLyricsAdherence, setEditedLyricsAdherence] = useState(song.lyrics_scripture_adherence)
+  const [isLyricsEditing, setIsLyricsEditing] = useState(false)
 
   // State for controlling Accordion default values based on screen size
   const [accordionDefaultValues, setAccordionDefaultValues] = useState<string[]>([])
@@ -295,6 +307,55 @@ export default function SongPage({ song }: SongPageProps) {
     }
   };
 
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editedTitle.trim()) {
+      toast.error("Song title cannot be empty")
+      return
+    }
+    setIsEditing(true)
+    try {
+      const response = await axios.put(`/api/songs/${song.id}/edit`, {
+        title: editedTitle,
+        artist: editedArtist,
+      })
+      if (response.status === 200) {
+        setSong({ ...song, title: editedTitle, artist: editedArtist })
+        setIsEditDialogOpen(false)
+        toast.success("Song details updated successfully")
+      }
+    } catch (error) {
+      console.error('Error updating song:', error)
+      toast.error("Failed to update song details")
+    } finally {
+      setIsEditing(false)
+    }
+  }
+
+  const handleLyricsEditSubmit = async () => {
+    if (!editedLyrics.trim()) {
+      toast.error("Lyrics cannot be empty")
+      return
+    }
+    setIsLyricsEditing(true)
+    try {
+      const response = await axios.put(`/api/songs/${song.id}/edit`, {
+        lyrics: editedLyrics,
+        lyrics_scripture_adherence: editedLyricsAdherence,
+      })
+      if (response.status === 200) {
+        setSong({ ...song, lyrics: editedLyrics, lyrics_scripture_adherence: editedLyricsAdherence })
+        setIsLyricsEditDialogOpen(false)
+        toast.success("Lyrics updated successfully")
+      }
+    } catch (error) {
+      console.error('Error updating lyrics:', error)
+      toast.error("Failed to update lyrics")
+    } finally {
+      setIsLyricsEditing(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Head>
@@ -350,9 +411,16 @@ export default function SongPage({ song }: SongPageProps) {
           <Card className="lg:col-span-2">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl font-bold mb-2">Song Details</CardTitle>
-                </div>
+                <CardTitle className="text-2xl font-bold mb-2">Song Details</CardTitle>
+                {isCreator && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsEditDialogOpen(true)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -375,40 +443,39 @@ export default function SongPage({ song }: SongPageProps) {
               <p><strong>Uploaded by:</strong> {song.username}</p>
               <p><strong>Created at:</strong> {new Date(song.created_at).toLocaleString()}</p>
             </CardContent>
-            <CardFooter className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+            <CardFooter className="flex flex-col space-y-2">
               <Button
                 onClick={togglePlay}
-                className="w-full sm:w-auto"
+                className="w-full"
               >
                 {isPlaying ? <Pause className="mr-2" /> : <Play className="mr-2" />}
                 {isPlaying ? 'Pause' : 'Play'}
               </Button>
-              <div className="flex flex-wrap justify-center sm:justify-end space-x-2 space-y-2 sm:space-y-0">
-                <Button variant="outline"><Share2 className="mr-2" />Share</Button>
+              <div className="flex w-full space-x-2">
+                <Button variant="outline" className="flex-1">
+                  <Share2 className="mr-2" />Share
+                </Button>
                 {isCreator && (
-                  <>
-                    <Button variant="outline" onClick={() => router.push(`/edit-song/${song.id}`)}><Edit className="mr-2" />Edit</Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" disabled={isDeleting}>
-                          <Trash2 className="mr-2" />
-                          {isDeleting ? 'Deleting...' : 'Delete'}
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure you want to delete this song?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the song, its associated data, and remove the audio and artwork files from storage.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={deleteSong}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" disabled={isDeleting} className="flex-1">
+                        <Trash2 className="mr-2" />
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to delete this song?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the song, its associated data, and remove the audio and artwork files from storage.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={deleteSong}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
               </div>
             </CardFooter>
@@ -472,7 +539,18 @@ export default function SongPage({ song }: SongPageProps) {
           {/* Lyrics Card */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Lyrics</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-bold">Lyrics</CardTitle>
+                {isCreator && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsLyricsEditDialogOpen(true)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible defaultValue="lyrics">
@@ -570,23 +648,95 @@ export default function SongPage({ song }: SongPageProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Lyric AI Prompt Dialog */}
-      <Dialog open={isLyricPromptOpen} onOpenChange={setIsLyricPromptOpen}>
-        <DialogContent>
+      {/* Edit Song Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Lyric AI Prompt</DialogTitle>
+            <DialogTitle>Edit Song Details</DialogTitle>
+            <DialogDescription>
+              Make changes to the song title and artist name here.
+            </DialogDescription>
           </DialogHeader>
-          <p>{song.lyric_ai_prompt}</p>
+          <form onSubmit={handleEditSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">
+                  Title
+                </Label>
+                <Input
+                  id="title"
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="artist" className="text-right">
+                  Artist
+                </Label>
+                <Input
+                  id="artist"
+                  value={editedArtist}
+                  onChange={(e) => setEditedArtist(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={isEditing}>
+                {isEditing ? 'Saving...' : 'Save changes'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
-      {/* Music AI Prompt Dialog */}
-      <Dialog open={isMusicPromptOpen} onOpenChange={setIsMusicPromptOpen}>
-        <DialogContent>
+      {/* Edit Lyrics Dialog */}
+      <Dialog open={isLyricsEditDialogOpen} onOpenChange={setIsLyricsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Music AI Prompt</DialogTitle>
+            <DialogTitle>Edit Lyrics</DialogTitle>
+            <DialogDescription>
+              Make changes to the lyrics and lyrics adherence here.
+            </DialogDescription>
           </DialogHeader>
-          <p>{song.music_ai_prompt}</p>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="lyrics" className="text-right">
+                Lyrics
+              </Label>
+              <Textarea
+                id="lyrics"
+                value={editedLyrics}
+                onChange={(e) => setEditedLyrics(e.target.value)}
+                className="col-span-3"
+                rows={10}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="lyrics-adherence" className="text-right">
+                Scripture Adherence
+              </Label>
+              <Select
+                onValueChange={(value) => setEditedLyricsAdherence(value as 'word_for_word' | 'close_paraphrase' | 'creative_inspiration')}
+                defaultValue={editedLyricsAdherence}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select adherence level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="word_for_word">Word-for-word</SelectItem>
+                  <SelectItem value="close_paraphrase">Close paraphrase</SelectItem>
+                  <SelectItem value="creative_inspiration">Creative inspiration</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleLyricsEditSubmit} disabled={isLyricsEditing}>
+              {isLyricsEditing ? 'Saving...' : 'Save changes'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
