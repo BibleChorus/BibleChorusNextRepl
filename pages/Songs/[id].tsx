@@ -67,12 +67,17 @@ export default function SongPage({ song }: SongPageProps) {
   // State for controlling Accordion default values based on screen size
   const [accordionDefaultValues, setAccordionDefaultValues] = useState<string[]>([])
 
+  // Check if the current user is the creator of the song
+  const isCreator = user && user.id.toString() === song.uploaded_by.toString()
+
   useEffect(() => {
+    // Always fetch like and vote counts
+    fetchLikeCount()
+    fetchVoteCounts()
+    
     if (user) {
       fetchUserVote()
       fetchUserLike()
-      fetchLikeCount()
-      fetchVoteCounts()
     }
 
     // Function to set default Accordion values based on screen width
@@ -169,12 +174,19 @@ export default function SongPage({ song }: SongPageProps) {
   }
 
   const handleVoteClick = (voteType: string) => {
+    if (!user) {
+      toast.error('You need to be logged in to vote')
+      return
+    }
     setSelectedVoteType(voteType)
     setIsVoteDialogOpen(true)
   }
 
   const handleVote = async (value: string) => {
-    if (!user) return
+    if (!user) {
+      toast.error('You need to be logged in to vote')
+      return
+    }
 
     const voteValue = value === 'up' ? 1 : value === 'down' ? -1 : 0
     
@@ -372,28 +384,32 @@ export default function SongPage({ song }: SongPageProps) {
                 {isPlaying ? 'Pause' : 'Play'}
               </Button>
               <div className="flex flex-wrap justify-center sm:justify-end space-x-2 space-y-2 sm:space-y-0">
-                <Button variant="outline" onClick={() => router.push(`/edit-song/${song.id}`)}><Edit className="mr-2" />Edit</Button>
                 <Button variant="outline"><Share2 className="mr-2" />Share</Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" disabled={isDeleting}>
-                      <Trash2 className="mr-2" />
-                      {isDeleting ? 'Deleting...' : 'Delete'}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure you want to delete this song?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the song, its associated data, and remove the audio and artwork files from storage.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={deleteSong}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                {isCreator && (
+                  <>
+                    <Button variant="outline" onClick={() => router.push(`/edit-song/${song.id}`)}><Edit className="mr-2" />Edit</Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" disabled={isDeleting}>
+                          <Trash2 className="mr-2" />
+                          {isDeleting ? 'Deleting...' : 'Delete'}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure you want to delete this song?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the song, its associated data, and remove the audio and artwork files from storage.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={deleteSong}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
               </div>
             </CardFooter>
           </Card>

@@ -62,29 +62,16 @@ interface VoteCounts {
 }
 
 export const SongList = React.memo(function SongList({ songs }: SongListProps) {
-  const [imageError, setImageError] = useState<Record<number, boolean>>({})
-  const router = useRouter()
-  const { user } = useAuth()
-  const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false)
-  const [selectedSong, setSelectedSong] = useState<Song | null>(null)
-  const [selectedVoteType, setSelectedVoteType] = useState<string>('')
   const [voteStates, setVoteStates] = useState<VoteState>({})
   const [likeStates, setLikeStates] = useState<LikeState>({})
   const [likeCounts, setLikeCounts] = useState<Record<number, number>>({})
   const [voteCounts, setVoteCounts] = useState<VoteCounts>({})
+  const { user } = useAuth()
 
-  useEffect(() => {
-    if (user) {
-      fetchUserVotes()
-      fetchUserLikes()
-      fetchLikeCounts()
-      fetchVoteCounts()
-    }
-  }, [user])
-
-  const fetchUserVotes = async () => {
+  const fetchUserVotes = useCallback(async () => {
+    if (!user) return
     try {
-      const response = await axios.get(`/api/users/${user?.id}/votes`)
+      const response = await axios.get(`/api/users/${user.id}/votes`)
       const userVotes = response.data
       const newVoteStates: VoteState = {}
       userVotes.forEach((vote: any) => {
@@ -97,10 +84,10 @@ export const SongList = React.memo(function SongList({ songs }: SongListProps) {
     } catch (error) {
       console.error('Error fetching user votes:', error)
     }
-  }
+  }, [user])
 
   const fetchUserLikes = useCallback(async () => {
-    if (!user) return;
+    if (!user) return
     try {
       const response = await axios.get(`/api/users/${user.id}/likes`)
       const userLikes = response.data
@@ -134,76 +121,15 @@ export const SongList = React.memo(function SongList({ songs }: SongListProps) {
     }
   }, [])
 
-  const handleVoteClick = async (song: Song, voteType: string) => {
-    setSelectedSong(song)
-    setSelectedVoteType(voteType)
+  useEffect(() => {
+    fetchLikeCounts()
+    fetchVoteCounts()
     
-    // Fetch the user's existing vote for this song and vote type
     if (user) {
-      try {
-        const response = await axios.get(`/api/votes`, {
-          params: {
-            user_id: user.id,
-            song_id: song.id,
-            vote_type: voteType
-          }
-        })
-        const existingVote = response.data
-        
-        // Update the voteStates with the fetched vote
-        setVoteStates(prevStates => ({
-          ...prevStates,
-          [song.id]: {
-            ...prevStates[song.id],
-            [voteType]: existingVote ? existingVote.vote_value : 0
-          }
-        }))
-      } catch (error) {
-        console.error('Error fetching existing vote:', error)
-      }
+      fetchUserVotes()
+      fetchUserLikes()
     }
-    
-    setIsVoteDialogOpen(true)
-  }
-
-  const handleVote = async (value: string) => {
-    if (!user || !selectedSong) return
-
-    const voteValue = value === 'up' ? 1 : value === 'down' ? -1 : 0
-    
-    try {
-      const response = await axios.post('/api/votes', {
-        user_id: user.id,
-        song_id: selectedSong.id,
-        vote_type: selectedVoteType,
-        vote_value: voteValue
-      })
-
-      setVoteStates(prevStates => ({
-        ...prevStates,
-        [selectedSong.id]: {
-          ...prevStates[selectedSong.id],
-          [selectedVoteType]: voteValue
-        }
-      }))
-
-      // Update the vote count
-      setVoteCounts(prevCounts => ({
-        ...prevCounts,
-        [selectedSong.id]: {
-          ...prevCounts[selectedSong.id],
-          [selectedVoteType]: response.data.count
-        }
-      }))
-
-      toast.success('Vote submitted successfully')
-    } catch (error) {
-      console.error('Error submitting vote:', error)
-      toast.error('Failed to submit vote')
-    }
-
-    setIsVoteDialogOpen(false)
-  }
+  }, [user, fetchLikeCounts, fetchVoteCounts, fetchUserVotes, fetchUserLikes])
 
   const handleLike = useCallback(async (song: Song) => {
     if (!user) {
@@ -243,94 +169,77 @@ export const SongList = React.memo(function SongList({ songs }: SongListProps) {
     }
   }, [user, likeStates])
 
-  const getVoteValue = (value: number | undefined): string => {
-    if (value === 1) return 'up';
-    if (value === -1) return 'down';
-    return '0';
-  };
+  const handleVoteClick = useCallback(async (song: Song, voteType: string, voteValue: number) => {
+    setVoteStates(prevStates => ({
+      ...prevStates,
+      [song.id]: {
+        ...prevStates[song.id],
+        [voteType]: voteValue
+      }
+    }))
+
+    setVoteCounts(prevCounts => ({
+      ...prevCounts,
+      [song.id]: {
+        ...prevCounts[song.id],
+        [voteType]: (prevCounts[song.id]?.[voteType] || 0) + voteValue - (voteStates[song.id]?.[voteType] || 0)
+      }
+    }))
+  }, [voteStates])
 
   return (
     <div className="space-y-2 sm:space-y-4">
       {songs.map((song) => (
-        <SongListItem key={song.id} song={song} />
+        <SongListItem
+          key={song.id}
+          song={song}
+          likeCounts={likeCounts}
+          voteCounts={voteCounts}
+          likeStates={likeStates}
+          voteStates={voteStates}
+          handleLike={handleLike}
+          handleVoteClick={handleVoteClick}
+        />
       ))}
     </div>
   )
 })
 
-const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) {
+const SongListItem = React.memo(function SongListItem({ 
+  song, 
+  likeCounts, 
+  voteCounts, 
+  likeStates, 
+  voteStates, 
+  handleLike, 
+  handleVoteClick 
+}: { 
+  song: Song, 
+  likeCounts: Record<number, number>, 
+  voteCounts: VoteCounts, 
+  likeStates: LikeState, 
+  voteStates: VoteState, 
+  handleLike: (song: Song) => Promise<void>, 
+  handleVoteClick: (song: Song, voteType: string, voteValue: number) => Promise<void> 
+}) {
   const [imageError, setImageError] = useState<Record<number, boolean>>({})
   const router = useRouter()
   const { user } = useAuth()
   const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false)
   const [selectedVoteType, setSelectedVoteType] = useState<string>('')
-  const [voteStates, setVoteStates] = useState<VoteState>({})
-  const [likeStates, setLikeStates] = useState<LikeState>({})
-  const [likeCounts, setLikeCounts] = useState<Record<number, number>>({})
-  const [voteCounts, setVoteCounts] = useState<VoteCounts>({})
+  const [localVoteCounts, setLocalVoteCounts] = useState(voteCounts[song.id] || {})
+  const [localVoteStates, setLocalVoteStates] = useState(voteStates[song.id] || {})
 
   useEffect(() => {
-    if (user) {
-      fetchUserVotes()
-      fetchUserLikes()
-      fetchLikeCounts()
-      fetchVoteCounts()
-    }
-  }, [user])
+    setLocalVoteCounts(voteCounts[song.id] || {})
+    setLocalVoteStates(voteStates[song.id] || {})
+  }, [voteCounts, voteStates, song.id])
 
-  const fetchUserVotes = async () => {
-    try {
-      const response = await axios.get(`/api/users/${user?.id}/votes`)
-      const userVotes = response.data
-      const newVoteStates: VoteState = {}
-      userVotes.forEach((vote: any) => {
-        if (!newVoteStates[vote.song_id]) {
-          newVoteStates[vote.song_id] = {}
-        }
-        newVoteStates[vote.song_id][vote.vote_type] = vote.vote_value
-      })
-      setVoteStates(newVoteStates)
-    } catch (error) {
-      console.error('Error fetching user votes:', error)
+  const handleLocalVoteClick = (voteType: string) => {
+    if (!user) {
+      toast.error('You need to be logged in to vote')
+      return
     }
-  }
-
-  const fetchUserLikes = useCallback(async () => {
-    if (!user) return;
-    try {
-      const response = await axios.get(`/api/users/${user.id}/likes`)
-      const userLikes = response.data
-      const newLikeStates: LikeState = {}
-      userLikes.forEach((like: any) => {
-        if (like.likeable_type === 'song') {
-          newLikeStates[like.likeable_id] = true
-        }
-      })
-      setLikeStates(newLikeStates)
-    } catch (error) {
-      console.error('Error fetching user likes:', error)
-    }
-  }, [user])
-
-  const fetchLikeCounts = useCallback(async () => {
-    try {
-      const response = await axios.get('/api/likes/count')
-      setLikeCounts(response.data)
-    } catch (error) {
-      console.error('Error fetching like counts:', error)
-    }
-  }, [])
-
-  const fetchVoteCounts = useCallback(async () => {
-    try {
-      const response = await axios.get('/api/votes/count')
-      setVoteCounts(response.data)
-    } catch (error) {
-      console.error('Error fetching vote counts:', error)
-    }
-  }, [])
-
-  const handleVoteClick = (voteType: string) => {
     setSelectedVoteType(voteType)
     setIsVoteDialogOpen(true)
   }
@@ -351,22 +260,19 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
         vote_value: voteValue
       })
 
-      setVoteStates(prevStates => ({
-        ...prevStates,
-        [song.id]: {
-          ...prevStates[song.id],
-          [selectedVoteType]: voteValue
-        }
+      // Update local state
+      setLocalVoteStates(prev => ({
+        ...prev,
+        [selectedVoteType]: voteValue
       }))
 
-      // Update the vote count
-      setVoteCounts(prevCounts => ({
-        ...prevCounts,
-        [song.id]: {
-          ...prevCounts[song.id],
-          [selectedVoteType]: response.data.count
-        }
+      setLocalVoteCounts(prev => ({
+        ...prev,
+        [selectedVoteType]: response.data.count
       }))
+
+      // Update parent state
+      handleVoteClick(song, selectedVoteType, voteValue)
 
       toast.success('Vote submitted successfully')
     } catch (error) {
@@ -377,52 +283,8 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
     setIsVoteDialogOpen(false)
   }
 
-  const handleLike = useCallback(async (song: Song) => {
-    if (!user) {
-      toast.error('You need to be logged in to like a song')
-      return
-    }
-
-    try {
-      const isLiked = likeStates[song.id]
-      if (isLiked) {
-        await axios.delete(`/api/likes`, {
-          data: { user_id: user.id, likeable_type: 'song', likeable_id: song.id }
-        })
-      } else {
-        await axios.post('/api/likes', {
-          user_id: user.id,
-          likeable_type: 'song',
-          likeable_id: song.id
-        })
-      }
-
-      setLikeStates(prev => ({
-        ...prev,
-        [song.id]: !isLiked
-      }))
-
-      // Update like count
-      setLikeCounts(prev => ({
-        ...prev,
-        [song.id]: (prev[song.id] || 0) + (isLiked ? -1 : 1)
-      }))
-
-      toast.success(isLiked ? 'Song unliked' : 'Song liked')
-    } catch (error) {
-      console.error('Error toggling like:', error)
-      toast.error('Failed to update like status')
-    }
-  }, [user, likeStates])
-
-  const getVoteValue = (value: number | undefined): string => {
-    if (value === 1) return 'up';
-    if (value === -1) return 'down';
-    return '0';
-  };
-
-  const getCurrentVote = (songId: number, voteType: string): number => {
-    return voteStates[songId]?.[voteType] || 0;
+  const getCurrentVote = (voteType: string): number => {
+    return localVoteStates[voteType] || 0;
   };
 
   const getVoteLabel = (value: number): string => {
@@ -432,7 +294,7 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
   };
 
   const getVoteIcon = (voteType: string) => {
-    const voteValue = voteStates[song.id]?.[voteType] || 0;
+    const voteValue = localVoteStates[voteType] || 0;
     const isUpvoted = voteValue === 1;
 
     const iconProps = {
@@ -442,16 +304,15 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
     if (isUpvoted) {
       switch (voteType) {
         case 'Best Musically':
-          return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />; // Blue color
+          return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />;
         case 'Best Lyrically':
-          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />; // Green color, but using outlined icon
+          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />;
         case 'Best Overall':
-          return <StarFilled {...iconProps} style={{ color: '#eab308' }} />; // Yellow color
+          return <StarFilled {...iconProps} style={{ color: '#eab308' }} />;
         default:
           return null;
       }
     } else {
-      // For downvotes or no votes, use the regular outlined icons
       switch (voteType) {
         case 'Best Musically':
           return <Music {...iconProps} />;
@@ -522,25 +383,25 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
               <span>{likeCounts[song.id] || 0}</span>
             </button>
             <button
-              onClick={() => handleVoteClick('Best Musically')}
+              onClick={() => handleLocalVoteClick('Best Musically')}
               className="flex items-center text-gray-500 hover:text-blue-500 transition-colors duration-200"
             >
               {getVoteIcon('Best Musically')}
-              <span>{voteCounts[song.id]?.['Best Musically'] || 0}</span>
+              <span>{localVoteCounts['Best Musically'] || 0}</span>
             </button>
             <button
-              onClick={() => handleVoteClick('Best Lyrically')}
+              onClick={() => handleLocalVoteClick('Best Lyrically')}
               className="flex items-center text-gray-500 hover:text-green-500 transition-colors duration-200"
             >
               {getVoteIcon('Best Lyrically')}
-              <span>{voteCounts[song.id]?.['Best Lyrically'] || 0}</span>
+              <span>{localVoteCounts['Best Lyrically'] || 0}</span>
             </button>
             <button
-              onClick={() => handleVoteClick('Best Overall')}
+              onClick={() => handleLocalVoteClick('Best Overall')}
               className="flex items-center text-gray-500 hover:text-yellow-500 transition-colors duration-200"
             >
               {getVoteIcon('Best Overall')}
-              <span>{voteCounts[song.id]?.['Best Overall'] || 0}</span>
+              <span>{localVoteCounts['Best Overall'] || 0}</span>
             </button>
           </div>
         </div>
@@ -614,15 +475,15 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
                 <span>Vote</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
-                <DropdownMenuItem onClick={() => handleVoteClick('Best Musically')}>
+                <DropdownMenuItem onClick={() => handleLocalVoteClick('Best Musically')}>
                   <Music className="mr-2 h-4 w-4" />
                   <span>Best Musically</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleVoteClick('Best Lyrically')}>
+                <DropdownMenuItem onClick={() => handleLocalVoteClick('Best Lyrically')}>
                   <BookOpen className="mr-2 h-4 w-4" />
                   <span>Best Lyrically</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleVoteClick('Best Overall')}>
+                <DropdownMenuItem onClick={() => handleLocalVoteClick('Best Overall')}>
                   <Star className="mr-2 h-4 w-4" />
                   <span>Best Overall</span>
                 </DropdownMenuItem>
@@ -652,19 +513,19 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
             <DialogDescription className="text-center">{song.title}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4">
-            {getCurrentVote(song.id, selectedVoteType) !== 1 && (
+            {getCurrentVote(selectedVoteType) !== 1 && (
               <Button onClick={() => handleVote('up')} variant="outline" className="w-full sm:w-auto">
                 <ThumbsUp className="mr-2 h-4 w-4" />
                 Upvote
               </Button>
             )}
-            {getCurrentVote(song.id, selectedVoteType) !== -1 && (
+            {getCurrentVote(selectedVoteType) !== -1 && (
               <Button onClick={() => handleVote('down')} variant="outline" className="w-full sm:w-auto">
                 <ThumbsDown className="mr-2 h-4 w-4" />
                 Downvote
               </Button>
             )}
-            {getCurrentVote(song.id, selectedVoteType) !== 0 && (
+            {getCurrentVote(selectedVoteType) !== 0 && (
               <Button onClick={() => handleVote('0')} variant="outline" className="w-full sm:w-auto">
                 <X className="mr-2 h-4 w-4" />
                 Remove Vote
@@ -672,7 +533,7 @@ const SongListItem = React.memo(function SongListItem({ song }: { song: Song }) 
             )}
           </div>
           <div className="text-sm text-center text-muted-foreground mt-4">
-            Your current vote: {getVoteLabel(getCurrentVote(song.id, selectedVoteType))}
+            Your current vote: {getVoteLabel(getCurrentVote(selectedVoteType))}
           </div>
         </DialogContent>
       </Dialog>
