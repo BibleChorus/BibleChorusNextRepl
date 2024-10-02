@@ -25,6 +25,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { FormControl } from "@/components/ui/form"
+import { Switch } from "@/components/ui/switch"
+import { AI_MUSIC_MODELS } from '@/lib/constants';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -75,6 +77,13 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   const [editedLyrics, setEditedLyrics] = useState(song.lyrics)
   const [editedLyricsAdherence, setEditedLyricsAdherence] = useState(song.lyrics_scripture_adherence)
   const [isLyricsEditing, setIsLyricsEditing] = useState(false)
+  const [isAIEditDialogOpen, setIsAIEditDialogOpen] = useState(false)
+  const [editedAIUsedForLyrics, setEditedAIUsedForLyrics] = useState(song.ai_used_for_lyrics)
+  const [editedLyricAIPrompt, setEditedLyricAIPrompt] = useState(song.lyric_ai_prompt || '')
+  const [editedMusicAIGenerated, setEditedMusicAIGenerated] = useState(song.music_ai_generated)
+  const [editedMusicModelUsed, setEditedMusicModelUsed] = useState(song.music_model_used || '')
+  const [editedMusicAIPrompt, setEditedMusicAIPrompt] = useState(song.music_ai_prompt || '')
+  const [isAIEditing, setIsAIEditing] = useState(false)
 
   // State for controlling Accordion default values based on screen size
   const [accordionDefaultValues, setAccordionDefaultValues] = useState<string[]>([])
@@ -356,6 +365,36 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     }
   }
 
+  const handleAIEditSubmit = async () => {
+    setIsAIEditing(true)
+    try {
+      const response = await axios.put(`/api/songs/${song.id}/edit`, {
+        ai_used_for_lyrics: editedAIUsedForLyrics,
+        lyric_ai_prompt: editedLyricAIPrompt,
+        music_ai_generated: editedMusicAIGenerated,
+        music_model_used: editedMusicModelUsed,
+        music_ai_prompt: editedMusicAIPrompt,
+      })
+      if (response.status === 200) {
+        setSong({
+          ...song,
+          ai_used_for_lyrics: editedAIUsedForLyrics,
+          lyric_ai_prompt: editedLyricAIPrompt,
+          music_ai_generated: editedMusicAIGenerated,
+          music_model_used: editedMusicModelUsed,
+          music_ai_prompt: editedMusicAIPrompt,
+        })
+        setIsAIEditDialogOpen(false)
+        toast.success("AI information updated successfully")
+      }
+    } catch (error) {
+      console.error('Error updating AI information:', error)
+      toast.error("Failed to update AI information")
+    } finally {
+      setIsAIEditing(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Head>
@@ -568,7 +607,18 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           {(song.ai_used_for_lyrics || song.music_ai_generated) && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl font-bold">AI Information</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl font-bold">AI Information</CardTitle>
+                  {isCreator && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsAIEditDialogOpen(true)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <Accordion type="multiple" defaultValue={['lyric-ai', 'music-ai']}>
@@ -735,6 +785,91 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           <DialogFooter>
             <Button onClick={handleLyricsEditSubmit} disabled={isLyricsEditing}>
               {isLyricsEditing ? 'Saving...' : 'Save changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit AI Info Dialog */}
+      <Dialog open={isAIEditDialogOpen} onOpenChange={setIsAIEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit AI Information</DialogTitle>
+            <DialogDescription>
+              Make changes to the AI-related information here.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="ai-used-for-lyrics">AI Used for Lyrics</Label>
+              <Switch
+                id="ai-used-for-lyrics"
+                checked={editedAIUsedForLyrics}
+                onCheckedChange={setEditedAIUsedForLyrics}
+              />
+            </div>
+            {editedAIUsedForLyrics && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="lyric-ai-prompt" className="text-right">
+                  Lyric AI Prompt
+                </Label>
+                <Textarea
+                  id="lyric-ai-prompt"
+                  value={editedLyricAIPrompt}
+                  onChange={(e) => setEditedLyricAIPrompt(e.target.value)}
+                  className="col-span-3"
+                  rows={3}
+                />
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="music-ai-generated">AI Generated Music</Label>
+              <Switch
+                id="music-ai-generated"
+                checked={editedMusicAIGenerated}
+                onCheckedChange={setEditedMusicAIGenerated}
+              />
+            </div>
+            {editedMusicAIGenerated && (
+              <>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="music-model-used" className="text-right">
+                    AI Music Model
+                  </Label>
+                  <Select
+                    onValueChange={setEditedMusicModelUsed}
+                    defaultValue={editedMusicModelUsed}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select AI music model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AI_MUSIC_MODELS.map((model) => (
+                        <SelectItem key={model} value={model}>
+                          {model}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="music-ai-prompt" className="text-right">
+                    Music AI Prompt
+                  </Label>
+                  <Textarea
+                    id="music-ai-prompt"
+                    value={editedMusicAIPrompt}
+                    onChange={(e) => setEditedMusicAIPrompt(e.target.value)}
+                    className="col-span-3"
+                    rows={3}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleAIEditSubmit} disabled={isAIEditing}>
+              {isAIEditing ? 'Saving...' : 'Save changes'}
             </Button>
           </DialogFooter>
         </DialogContent>
