@@ -5,10 +5,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { id } = req.query
 
   if (req.method === 'PUT') {
-    const updatedData = req.body
+    const { title, artist, genres } = req.body
 
     try {
-      await db('songs').where('id', id).update(updatedData)
+      await db('songs').where('id', id).update({
+        title,
+        artist,
+        genres // This assumes your database column for genres is an array type
+      })
       res.status(200).json({ message: 'Song updated successfully' })
     } catch (error) {
       console.error('Error updating song:', error)

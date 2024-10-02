@@ -3,7 +3,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardFooter, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -27,6 +27,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { FormControl } from "@/components/ui/form"
 import { Switch } from "@/components/ui/switch"
 import { AI_MUSIC_MODELS } from '@/lib/constants';
+import { GENRES } from "@/lib/constants"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -84,6 +88,9 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   const [editedMusicModelUsed, setEditedMusicModelUsed] = useState(song.music_model_used || '')
   const [editedMusicAIPrompt, setEditedMusicAIPrompt] = useState(song.music_ai_prompt || '')
   const [isAIEditing, setIsAIEditing] = useState(false)
+  const [editedGenres, setEditedGenres] = useState<string[]>(initialSong.genres || [])
+  const [openGenre, setOpenGenre] = useState(false)
+  const [genreSearch, setGenreSearch] = useState('')
 
   // State for controlling Accordion default values based on screen size
   const [accordionDefaultValues, setAccordionDefaultValues] = useState<string[]>([])
@@ -316,6 +323,26 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     }
   };
 
+  const filteredGenres = useCallback(() => {
+    return GENRES.filter(genre =>
+      genre.toLowerCase().includes(genreSearch.toLowerCase())
+    )
+  }, [genreSearch])
+
+  const handleGenreToggle = (genre: string) => {
+    let updatedGenres: string[];
+    if (editedGenres.includes(genre)) {
+      updatedGenres = editedGenres.filter(g => g !== genre);
+    } else {
+      updatedGenres = [...editedGenres, genre];
+    }
+    setEditedGenres(updatedGenres);
+  }
+
+  const clearGenres = () => {
+    setEditedGenres([]);
+  }
+
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editedTitle.trim()) {
@@ -327,9 +354,10 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       const response = await axios.put(`/api/songs/${song.id}/edit`, {
         title: editedTitle,
         artist: editedArtist,
+        genres: editedGenres, // Add this line
       })
       if (response.status === 200) {
-        setSong({ ...song, title: editedTitle, artist: editedArtist })
+        setSong({ ...song, title: editedTitle, artist: editedArtist, genres: editedGenres }) // Update this line
         setIsEditDialogOpen(false)
         toast.success("Song details updated successfully")
       }
@@ -575,8 +603,32 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             </CardContent>
           </Card>
 
+          {/* Bible Info Card */}
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold">Bible Info</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible defaultValue="verses">
+                <AccordionItem value="verses">
+                  <AccordionTrigger>Bible Verses Covered</AccordionTrigger>
+                  <AccordionContent>
+                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                      {song.bible_verses && song.bible_verses.map((verse, index) => (
+                        <div key={index} className="mb-2">
+                          <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
+                          <p className="text-sm text-muted-foreground">{verse.KJV_text}</p>
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+
           {/* Lyrics Card */}
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-1">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-2xl font-bold">Lyrics</CardTitle>
@@ -596,7 +648,9 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                 <AccordionItem value="lyrics">
                   <AccordionTrigger>View Lyrics</AccordionTrigger>
                   <AccordionContent>
-                    <p className="whitespace-pre-wrap">{song.lyrics}</p>
+                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                      <p className="whitespace-pre-wrap">{song.lyrics}</p>
+                    </ScrollArea>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -605,7 +659,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
           {/* AI Info Card */}
           {(song.ai_used_for_lyrics || song.music_ai_generated) && (
-            <Card>
+            <Card className="lg:col-span-1">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold">AI Information</CardTitle>
@@ -626,8 +680,10 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                     <AccordionItem value="lyric-ai">
                       <AccordionTrigger>Lyric AI</AccordionTrigger>
                       <AccordionContent>
-                        <p className="mb-2"><strong>Prompt:</strong></p>
-                        <p>{song.lyric_ai_prompt}</p>
+                        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                          <p className="mb-2"><strong>Prompt:</strong></p>
+                          <p>{song.lyric_ai_prompt}</p>
+                        </ScrollArea>
                       </AccordionContent>
                     </AccordionItem>
                   )}
@@ -635,9 +691,11 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                     <AccordionItem value="music-ai">
                       <AccordionTrigger>Music AI</AccordionTrigger>
                       <AccordionContent>
-                        <p><strong>Model:</strong> {song.music_model_used}</p>
-                        <p className="mt-2"><strong>Prompt:</strong></p>
-                        <p>{song.music_ai_prompt}</p>
+                        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                          <p><strong>Model:</strong> {song.music_model_used}</p>
+                          <p className="mt-2"><strong>Prompt:</strong></p>
+                          <p>{song.music_ai_prompt}</p>
+                        </ScrollArea>
                       </AccordionContent>
                     </AccordionItem>
                   )}
@@ -704,7 +762,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           <DialogHeader>
             <DialogTitle>Edit Song Details</DialogTitle>
             <DialogDescription>
-              Make changes to the song title and artist name here.
+              Make changes to the song title, artist name, and genres here.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit}>
@@ -730,6 +788,82 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                   onChange={(e) => setEditedArtist(e.target.value)}
                   className="col-span-3"
                 />
+              </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="genres" className="text-right pt-2">
+                  Genres
+                </Label>
+                <div className="col-span-3">
+                  <Popover open={openGenre} onOpenChange={setOpenGenre}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openGenre}
+                        className="w-full justify-between"
+                      >
+                        {editedGenres.length > 0
+                          ? `${editedGenres.length} selected`
+                          : "Select genres..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <div className="p-2">
+                        <div className="flex items-center justify-between pb-2">
+                          <Input
+                            placeholder="Search genres..."
+                            value={genreSearch}
+                            onChange={(e) => setGenreSearch(e.target.value)}
+                            className="mr-2"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={clearGenres}
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                        <div className="max-h-[200px] overflow-y-auto">
+                          {filteredGenres().map((genre) => (
+                            <div
+                              key={genre}
+                              className={cn(
+                                "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                                editedGenres.includes(genre) && "bg-accent"
+                              )}
+                              onClick={() => handleGenreToggle(genre)}
+                            >
+                              <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                                {editedGenres.includes(genre) && <Check className="h-3 w-3" />}
+                              </div>
+                              {genre}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {editedGenres.map((genre) => (
+                      <div
+                        key={genre}
+                        className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                      >
+                        {genre}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="ml-1 h-4 w-4 p-0"
+                          onClick={() => handleGenreToggle(genre)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
             <DialogFooter>
