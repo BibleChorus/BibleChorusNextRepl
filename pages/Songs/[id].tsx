@@ -1,14 +1,14 @@
 import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { Card, CardContent, CardHeader, CardFooter, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Play, Pause, Edit, Share2, Info, Trash2, Heart, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Pencil } from 'lucide-react'
+import { Play, Pause, Edit, Share2, Info, Trash2, Heart, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Pencil, BookOpenText } from 'lucide-react'
 import db from '@/db'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -33,6 +33,8 @@ import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { BIBLE_BOOKS, BIBLE_TRANSLATIONS } from "@/lib/constants"
 import AsyncSelect from 'react-select/async'
+import { BOLLS_LIFE_API_BIBLE_TRANSLATIONS } from '@/lib/constants'
+import DOMPurify from 'isomorphic-dompurify';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -55,11 +57,18 @@ interface Song {
   song_art_url: string
   created_at: string
   username: string
-  bible_verses?: { book: string; chapter: number; verse: number; KJV_text: string }[]
+  bible_verses?: { book: string; chapter: number; verse: number; text: string }[]
 }
 
 interface SongPageProps {
   song: Song
+}
+
+interface BibleVerse {
+  book: string;
+  chapter: number;
+  verse: number;
+  text: string;
 }
 
 export default function SongPage({ song: initialSong }: SongPageProps) {
@@ -120,6 +129,113 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   const [openBibleVerses, setOpenBibleVerses] = useState(false)
   const [bibleVerseSearch, setBibleVerseSearch] = useState('')
 
+  const [selectedTranslation, setSelectedTranslation] = useState('NASB'); // Default translation
+  const [verses, setVerses] = useState<BibleVerse[]>([]);
+  const [isLoadingVerses, setIsLoadingVerses] = useState(false);
+  const [verseError, setVerseError] = useState<string | null>(null);
+
+  // New state variables for the Bible Info Card
+  const [bibleInfoTranslation, setBibleInfoTranslation] = useState(() => {
+    const matchingTranslation = BOLLS_LIFE_API_BIBLE_TRANSLATIONS.find(
+      t => t.shortName === initialSong.bible_translation_used
+    );
+    return matchingTranslation ? matchingTranslation.shortName : 'NASB';
+  });
+  const [bibleInfoVerses, setBibleInfoVerses] = useState<BibleVerse[]>([]);
+  const [isLoadingBibleInfoVerses, setIsLoadingBibleInfoVerses] = useState(false);
+  const [bibleInfoVerseError, setBibleInfoVerseError] = useState<string | null>(null);
+
+  const translationRef = useRef<HTMLDivElement>(null)
+
+  const [dialogTranslation, setDialogTranslation] = useState(() => {
+    const matchingTranslation = BOLLS_LIFE_API_BIBLE_TRANSLATIONS.find(
+      t => t.shortName === initialSong.bible_translation_used
+    );
+    return matchingTranslation ? matchingTranslation.shortName : 'NASB';
+  });
+  const [dialogOpenTranslation, setDialogOpenTranslation] = useState(false);
+  const [dialogTranslationSearch, setDialogTranslationSearch] = useState('');
+  const dialogTranslationRef = useRef<HTMLDivElement>(null);
+
+  // Function to sanitize and render HTML
+  const renderHTML = (html: string) => {
+    return { __html: DOMPurify.sanitize(html) };
+  };
+
+  // Fetch verses when the selected translation changes
+  useEffect(() => {
+    const fetchVerses = async () => {
+      if (!isKJVTextOpen || !song.bible_verses || song.bible_verses.length === 0) return;
+
+      setIsLoadingVerses(true);
+      setVerseError(null);
+
+      try {
+        const versesToFetch = song.bible_verses.map((verse) => ({
+          translation: dialogTranslation,
+          book: BIBLE_BOOKS.indexOf(verse.book) + 1,
+          chapter: verse.chapter,
+          verses: [verse.verse]
+        }));
+
+        const response = await axios.post('/api/fetch-verses', versesToFetch);
+        
+        const fetchedVerses = response.data.flat().map((verse: any) => ({
+          book: BIBLE_BOOKS[verse.book - 1],
+          chapter: verse.chapter,
+          verse: verse.verse,
+          text: verse.text
+        }));
+
+        setVerses(fetchedVerses);
+      } catch (error) {
+        console.error('Error fetching verses:', error);
+        setVerseError('Failed to load verses. Please try again later.');
+      } finally {
+        setIsLoadingVerses(false);
+      }
+    };
+
+    fetchVerses();
+  }, [dialogTranslation, isKJVTextOpen, song.bible_verses]);
+
+  // New useEffect for fetching verses in the Bible Info Card
+  useEffect(() => {
+    const fetchBibleInfoVerses = async () => {
+      if (!song.bible_verses || song.bible_verses.length === 0) return;
+
+      setIsLoadingBibleInfoVerses(true);
+      setBibleInfoVerseError(null);
+
+      try {
+        const versesToFetch = song.bible_verses.map((verse) => ({
+          translation: bibleInfoTranslation,
+          book: BIBLE_BOOKS.indexOf(verse.book) + 1,
+          chapter: verse.chapter,
+          verses: [verse.verse]
+        }));
+
+        const response = await axios.post('/api/fetch-verses', versesToFetch);
+        
+        const fetchedVerses = response.data.flat().map((verse: any) => ({
+          book: BIBLE_BOOKS[verse.book - 1],
+          chapter: verse.chapter,
+          verse: verse.verse,
+          text: verse.text
+        }));
+
+        setBibleInfoVerses(fetchedVerses);
+      } catch (error) {
+        console.error('Error fetching Bible info verses:', error);
+        setBibleInfoVerseError('Failed to load verses. Please try again later.');
+      } finally {
+        setIsLoadingBibleInfoVerses(false);
+      }
+    };
+
+    fetchBibleInfoVerses();
+  }, [bibleInfoTranslation, song.bible_verses]);
+
   // Add these functions near the top of your component, after the state declarations
   const loadBibleVerses = async (inputValue: string) => {
     try {
@@ -143,6 +259,22 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     setSelectedBibleVerses(selectedBibleVerses.filter(verse => verse !== verseToRemove));
   };
 
+  // Update the filteredTranslations function
+  const filteredTranslations = useCallback(() => {
+    return BOLLS_LIFE_API_BIBLE_TRANSLATIONS.filter(translation =>
+      translation.shortName.toLowerCase().includes(translationSearch.toLowerCase()) ||
+      translation.fullName.toLowerCase().includes(translationSearch.toLowerCase())
+    )
+  }, [translationSearch])
+
+  const filteredDialogTranslations = useCallback(() => {
+    return BOLLS_LIFE_API_BIBLE_TRANSLATIONS.filter(translation =>
+      translation.shortName.toLowerCase().includes(dialogTranslationSearch.toLowerCase()) ||
+      translation.fullName.toLowerCase().includes(dialogTranslationSearch.toLowerCase())
+    )
+  }, [dialogTranslationSearch])
+
+  // Update the handleBibleInfoEditSubmit function
   const handleBibleInfoEditSubmit = async () => {
     if (selectedBibleVerses.length === 0) {
       toast.error("Please select at least one Bible verse.");
@@ -151,7 +283,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     setIsBibleInfoEditing(true);
     try {
       const response = await axios.put(`/api/songs/${song.id}/edit-bible-info`, {
-        bible_translation_used: editedBibleTranslation,
+        bible_translation_used: bibleInfoTranslation,
         is_continuous_passage: editedIsContinuousPassage,
         bible_verses: selectedBibleVerses,
       });
@@ -159,7 +291,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
         // Update the song's bible verses
         setSong({
           ...song,
-          bible_translation_used: editedBibleTranslation,
+          bible_translation_used: bibleInfoTranslation,
           is_continuous_passage: editedIsContinuousPassage,
           bible_verses: response.data.bible_verses,
         });
@@ -432,12 +564,6 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     )
   }, [bibleBookSearch])
 
-  const filteredTranslations = useCallback(() => {
-    return BIBLE_TRANSLATIONS.filter(translation =>
-      translation.toLowerCase().includes(translationSearch.toLowerCase())
-    )
-  }, [translationSearch])
-
   const handleGenreToggle = (genre: string) => {
     let updatedGenres: string[];
     if (editedGenres.includes(genre)) {
@@ -549,6 +675,32 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     }
   }
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (translationRef.current && !translationRef.current.contains(event.target as Node)) {
+        setOpenTranslation(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dialogTranslationRef.current && !dialogTranslationRef.current.contains(event.target as Node)) {
+        setDialogOpenTranslation(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-background">
       <Head>
@@ -581,11 +733,11 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                       onClick={() => setIsKJVTextOpen(true)}
                       className="ml-2 text-white hover:text-primary-300 transition-colors"
                     >
-                      <Info className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <BookOpenText className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Click to view KJV text</p>
+                    <p>Click to view Bible verses</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -750,13 +902,83 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                 <AccordionItem value="verses">
                   <AccordionTrigger>Bible Verses Covered</AccordionTrigger>
                   <AccordionContent>
+                    <div className="mb-4">
+                      <Popover open={openTranslation} onOpenChange={setOpenTranslation}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openTranslation}
+                            className="w-full justify-between"
+                          >
+                            {bibleInfoTranslation ? `${bibleInfoTranslation} - ${BOLLS_LIFE_API_BIBLE_TRANSLATIONS.find(t => t.shortName === bibleInfoTranslation)?.fullName}` : "Select Bible translation..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0 max-w-[90vw] sm:max-w-[300px]" ref={translationRef}>
+                          <div className="p-2">
+                            <div className="flex items-center justify-between pb-2">
+                              <Input
+                                placeholder="Search translations..."
+                                value={translationSearch}
+                                onChange={(e) => setTranslationSearch(e.target.value)}
+                                className="mr-2"
+                              />
+                              {bibleInfoTranslation && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setBibleInfoTranslation('NASB')
+                                    setTranslationSearch('')
+                                  }}
+                                >
+                                  Clear
+                                </Button>
+                              )}
+                            </div>
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {filteredTranslations().map((translation) => (
+                                <div
+                                  key={translation.shortName}
+                                  className={cn(
+                                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                                    bibleInfoTranslation === translation.shortName && "bg-accent"
+                                  )}
+                                  onClick={() => {
+                                    setBibleInfoTranslation(translation.shortName)
+                                    setOpenTranslation(false)
+                                  }}
+                                >
+                                  <div className="mr-2 h-4 w-4 flex-shrink-0 border border-primary rounded flex items-center justify-center">
+                                    {bibleInfoTranslation === translation.shortName && <Check className="h-3 w-3" />}
+                                  </div>
+                                  <div className="flex-grow overflow-hidden">
+                                    <span className="font-semibold">{translation.shortName}</span> - <span className="text-sm break-words">{translation.fullName}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                     <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                      {song.bible_verses && song.bible_verses.map((verse, index) => (
-                        <div key={index} className="mb-2">
-                          <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
-                          <p className="text-sm text-muted-foreground">{verse.KJV_text}</p>
+                      {isLoadingBibleInfoVerses ? (
+                        <div className="flex flex-col items-center justify-center h-40">
+                          <BookOpen className="h-12 w-12 animate-pulse text-primary" />
+                          <p className="mt-4 text-muted-foreground">Loading verses...</p>
                         </div>
-                      ))}
+                      ) : bibleInfoVerseError ? (
+                        <p className="text-red-500">{bibleInfoVerseError}</p>
+                      ) : (
+                        bibleInfoVerses.map((verse, index) => (
+                          <div key={index} className="mb-4">
+                            <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
+                            <div dangerouslySetInnerHTML={renderHTML(verse.text)} />
+                          </div>
+                        ))
+                      )}
                     </ScrollArea>
                   </AccordionContent>
                 </AccordionItem>
@@ -847,15 +1069,89 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       <Dialog open={isKJVTextOpen} onOpenChange={setIsKJVTextOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>KJV Text for {formatBibleVerses(song.bible_verses || [])}</DialogTitle>
+            <DialogTitle>
+              {dialogTranslation} Text for {formatBibleVerses(song.bible_verses || [])}
+            </DialogTitle>
+            {/* Updated translation selection dropdown */}
+            <div className="mt-4">
+              <Popover open={dialogOpenTranslation} onOpenChange={setDialogOpenTranslation}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={dialogOpenTranslation}
+                    className="w-full justify-between"
+                  >
+                    {dialogTranslation ? `${dialogTranslation} - ${BOLLS_LIFE_API_BIBLE_TRANSLATIONS.find(t => t.shortName === dialogTranslation)?.fullName}` : "Select Bible translation..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0 max-w-[90vw] sm:max-w-[300px]" ref={dialogTranslationRef}>
+                  <div className="p-2">
+                    <div className="flex items-center justify-between pb-2">
+                      <Input
+                        placeholder="Search translations..."
+                        value={dialogTranslationSearch}
+                        onChange={(e) => setDialogTranslationSearch(e.target.value)}
+                        className="mr-2"
+                      />
+                      {dialogTranslation && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setDialogTranslation('KJV')
+                            setDialogTranslationSearch('')
+                          }}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    <div className="max-h-[200px] overflow-y-auto">
+                      {filteredDialogTranslations().map((translation) => (
+                        <div
+                          key={translation.shortName}
+                          className={cn(
+                            "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                            dialogTranslation === translation.shortName && "bg-accent"
+                          )}
+                          onClick={() => {
+                            setDialogTranslation(translation.shortName)
+                            setDialogOpenTranslation(false)
+                            setSelectedTranslation(translation.shortName)
+                          }}
+                        >
+                          <div className="mr-2 h-4 w-4 flex-shrink-0 border border-primary rounded flex items-center justify-center">
+                            {dialogTranslation === translation.shortName && <Check className="h-3 w-3" />}
+                          </div>
+                          <div className="flex-grow overflow-hidden">
+                            <span className="font-semibold">{translation.shortName}</span> - <span className="text-sm break-words">{translation.fullName}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-y-auto">
-            {song.bible_verses && song.bible_verses.map((verse, index) => (
-              <div key={index} className="mb-4">
-                <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
-                <p>{verse.KJV_text}</p>
+          <div className="max-h-[60vh] overflow-y-auto mt-4">
+            {isLoadingVerses ? (
+              <div className="flex flex-col items-center justify-center h-40">
+                <BookOpen className="h-12 w-12 animate-pulse text-primary" />
+                <p className="mt-4 text-muted-foreground">Loading verses...</p>
               </div>
-            ))}
+            ) : verseError ? (
+              <p className="text-red-500">{verseError}</p>
+            ) : (
+              verses.map((verse, index) => (
+                <div key={index} className="mb-4">
+                  <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
+                  <div dangerouslySetInnerHTML={renderHTML(verse.text)} />
+                </div>
+              ))
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -1160,60 +1456,23 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               <Label htmlFor="bible-translation" className="text-right">
                 Bible Translation
               </Label>
-              <Popover open={openTranslation} onOpenChange={setOpenTranslation}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={openTranslation}
-                    className="w-full justify-between col-span-3"
-                  >
-                    {editedBibleTranslation || "Select Bible translation..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
-                  <div className="p-2">
-                    <div className="flex items-center justify-between pb-2">
-                      <Input
-                        placeholder="Search translations..."
-                        value={translationSearch}
-                        onChange={(e) => setTranslationSearch(e.target.value)}
-                        className="mr-2"
-                      />
-                      {editedBibleTranslation && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditedBibleTranslation('')}
-                        >
-                          Clear
-                        </Button>
-                      )}
-                    </div>
-                    <div className="max-h-[200px] overflow-y-auto">
-                      {filteredTranslations().map((translation) => (
-                        <div
-                          key={translation}
-                          className={cn(
-                            "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                            editedBibleTranslation === translation && "bg-accent"
-                          )}
-                          onClick={() => {
-                            setEditedBibleTranslation(translation)
-                            setOpenTranslation(false)
-                          }}
-                        >
-                          <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                            {editedBibleTranslation === translation && <Check className="h-3 w-3" />}
-                          </div>
-                          {translation}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <div className="col-span-3">
+                <Select
+                  value={bibleInfoTranslation}
+                  onValueChange={(value) => setBibleInfoTranslation(value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Bible translation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BIBLE_TRANSLATIONS.map((translation) => (
+                      <SelectItem key={translation} value={translation}>
+                        {translation}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="continuous-passage" className="text-right">
@@ -1295,15 +1554,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     }
 
-    // Fetch Bible verses for the song, including KJV_text
+    // Fetch Bible verses for the song, excluding KJV_text
     const verses = await db('song_verses')
       .join('bible_verses', 'song_verses.verse_id', 'bible_verses.id')
       .where('song_verses.song_id', id)
       .select(
         'bible_verses.book',
         'bible_verses.chapter',
-        'bible_verses.verse',
-        'bible_verses.KJV_text' // Include the KJV_text field
+        'bible_verses.verse'
       )
       .orderBy(['bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse'])
 

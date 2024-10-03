@@ -89,6 +89,37 @@ export const BIBLE_TRANSLATIONS = [
   'Other', // Other Bible Translation
 ];
 
+export const BOLLS_LIFE_API_BIBLE_TRANSLATIONS = [
+  { shortName: 'YLT', fullName: 'Young\'s Literal Translation (1898)' },
+  { shortName: 'NKJV', fullName: 'New King James Version, 1982' },
+  { shortName: 'WEB', fullName: 'World English Bible' },
+  { shortName: 'RSV', fullName: 'Revised Standard Version (1952)' },
+  { shortName: 'CJB', fullName: 'The Complete Jewish Bible (1998)' },
+  { shortName: 'TS2009', fullName: 'The Scriptures 2009' },
+  { shortName: 'LXXE', fullName: 'English version of the Septuagint Bible, 1851' },
+  { shortName: 'TLV', fullName: 'Tree of Life Version' },
+  { shortName: 'LSB', fullName: 'The Legacy Standard Bible' },
+  { shortName: 'NASB', fullName: 'New American Standard Bible (1995)' },
+  { shortName: 'ESV', fullName: 'English Standard Version 2001, 2016' },
+  { shortName: 'GNV', fullName: 'Geneva Bible (1599)' },
+  { shortName: 'DRB', fullName: 'Douay Rheims Bible' },
+  { shortName: 'NIV2011', fullName: 'New International Version, 2011' },
+  { shortName: 'NIV', fullName: 'New International Version, 1984' },
+  { shortName: 'NLT', fullName: 'New Living Translation, 2015' },
+  { shortName: 'NRSVCE', fullName: 'New Revised Standard Version Catholic Edition, 1993' },
+  { shortName: 'NET', fullName: 'New English Translation, 2007' },
+  { shortName: 'NJB1985', fullName: 'New Jerusalem Bible, 1985' },
+  { shortName: 'SPE', fullName: 'Samaritan Pentateuch in English, 2013' },
+  { shortName: 'LBP', fullName: 'Aramaic Of The Peshitta: Lamsa, 1933' },
+  { shortName: 'AMP', fullName: 'Amplified Bible, 2015' },
+  { shortName: 'MSG', fullName: 'The Message, 2002' },
+  { shortName: 'LSV', fullName: 'Literal Standard Version' },
+  { shortName: 'BSB', fullName: 'The Holy Bible, Berean Standard Bible' },
+  { shortName: 'MEV', fullName: 'Modern English Version' },
+  { shortName: 'RSV2CE', fullName: 'Revised Standard Version Catholic Edition' },
+  { shortName: 'NABRE', fullName: 'New American Bible (Revised Edition)' }
+];
+
 export const BIBLE_BOOK_INFO = [
   { book: 'Genesis', testament: 'Old Testament', verses: 1533 },
   { book: 'Exodus', testament: 'Old Testament', verses: 1213 },
