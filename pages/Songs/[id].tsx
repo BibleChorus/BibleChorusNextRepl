@@ -31,6 +31,8 @@ import { GENRES } from "@/lib/constants"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { BIBLE_BOOKS, BIBLE_TRANSLATIONS } from "@/lib/constants"
+import AsyncSelect from 'react-select/async'
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -91,12 +93,86 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   const [editedGenres, setEditedGenres] = useState<string[]>(initialSong.genres || [])
   const [openGenre, setOpenGenre] = useState(false)
   const [genreSearch, setGenreSearch] = useState('')
+  const [isBibleInfoEditDialogOpen, setIsBibleInfoEditDialogOpen] = useState(false)
+  const [editedBibleTranslation, setEditedBibleTranslation] = useState(initialSong.bible_translation_used)
+  const [editedLyricsScriptureAdherence, setEditedLyricsScriptureAdherence] = useState(initialSong.lyrics_scripture_adherence)
+  const [editedIsContinuousPassage, setEditedIsContinuousPassage] = useState(initialSong.is_continuous_passage)
+  const [selectedBibleBooks, setSelectedBibleBooks] = useState<string[]>([])
+  const [selectedChapters, setSelectedChapters] = useState<{[book: string]: number[]}>({})
+  const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>(initialSong.bible_verses ? initialSong.bible_verses.map(verse => `${verse.book} ${verse.chapter}:${verse.verse}`) : []);
+  const [openBibleBooks, setOpenBibleBooks] = useState(false)
+  const [bibleBookSearch, setBibleBookSearch] = useState('')
+  const [openTranslation, setOpenTranslation] = useState(false)
+  const [translationSearch, setTranslationSearch] = useState('')
 
   // State for controlling Accordion default values based on screen size
   const [accordionDefaultValues, setAccordionDefaultValues] = useState<string[]>([])
 
   // Check if the current user is the creator of the song
   const isCreator = user && user.id.toString() === song.uploaded_by.toString()
+
+  // State variables for Bible verses editing
+  const [isBibleInfoEditing, setIsBibleInfoEditing] = useState(false)
+
+  // Popover controls
+  const [openChapters, setOpenChapters] = useState(false)
+  const [chapterSearch, setChapterSearch] = useState('')
+  const [openBibleVerses, setOpenBibleVerses] = useState(false)
+  const [bibleVerseSearch, setBibleVerseSearch] = useState('')
+
+  // Add these functions near the top of your component, after the state declarations
+  const loadBibleVerses = async (inputValue: string) => {
+    try {
+      const response = await axios.get('/api/bible-verses', { params: { search: inputValue } });
+      return response.data.map((verse: any) => ({
+        label: `${verse.book} ${verse.chapter}:${verse.verse}`,
+        value: `${verse.book} ${verse.chapter}:${verse.verse}`,
+      }));
+    } catch (error) {
+      console.error('Error fetching Bible verses:', error);
+      return [];
+    }
+  };
+
+  const handleBibleVersesChange = (selectedOptions: any) => {
+    const verses = selectedOptions ? selectedOptions.map((option: any) => option.value) : [];
+    setSelectedBibleVerses(verses);
+  };
+
+  const handleBibleVerseRemove = (verseToRemove: string) => {
+    setSelectedBibleVerses(selectedBibleVerses.filter(verse => verse !== verseToRemove));
+  };
+
+  const handleBibleInfoEditSubmit = async () => {
+    if (selectedBibleVerses.length === 0) {
+      toast.error("Please select at least one Bible verse.");
+      return;
+    }
+    setIsBibleInfoEditing(true);
+    try {
+      const response = await axios.put(`/api/songs/${song.id}/edit-bible-info`, {
+        bible_translation_used: editedBibleTranslation,
+        is_continuous_passage: editedIsContinuousPassage,
+        bible_verses: selectedBibleVerses,
+      });
+      if (response.status === 200) {
+        // Update the song's bible verses
+        setSong({
+          ...song,
+          bible_translation_used: editedBibleTranslation,
+          is_continuous_passage: editedIsContinuousPassage,
+          bible_verses: response.data.bible_verses,
+        });
+        setIsBibleInfoEditDialogOpen(false);
+        toast.success("Bible information updated successfully");
+      }
+    } catch (error) {
+      console.error('Error updating Bible information:', error);
+      toast.error("Failed to update Bible information");
+    } finally {
+      setIsBibleInfoEditing(false);
+    }
+  };
 
   useEffect(() => {
     // Always fetch like and vote counts
@@ -130,6 +206,27 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       window.removeEventListener('resize', handleResize)
     }
   }, [user, song.id])
+
+  useEffect(() => {
+    if (initialSong.bible_verses) {
+      const books = Array.from(new Set(initialSong.bible_verses.map(verse => verse.book)))
+      setSelectedBibleBooks(books)
+      
+      const chapters: {[book: string]: number[]} = {}
+      const verses: string[] = []
+      initialSong.bible_verses.forEach(verse => {
+        if (!chapters[verse.book]) {
+          chapters[verse.book] = []
+        }
+        if (!chapters[verse.book].includes(verse.chapter)) {
+          chapters[verse.book].push(verse.chapter)
+        }
+        verses.push(`${verse.book} ${verse.chapter}:${verse.verse}`)
+      })
+      setSelectedChapters(chapters)
+      setSelectedBibleVerses(verses)
+    }
+  }, [initialSong.bible_verses])
 
   const fetchUserVote = async () => {
     try {
@@ -329,6 +426,18 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     )
   }, [genreSearch])
 
+  const filteredBibleBooks = useCallback(() => {
+    return BIBLE_BOOKS.filter(book =>
+      book.toLowerCase().includes(bibleBookSearch.toLowerCase())
+    )
+  }, [bibleBookSearch])
+
+  const filteredTranslations = useCallback(() => {
+    return BIBLE_TRANSLATIONS.filter(translation =>
+      translation.toLowerCase().includes(translationSearch.toLowerCase())
+    )
+  }, [translationSearch])
+
   const handleGenreToggle = (genre: string) => {
     let updatedGenres: string[];
     if (editedGenres.includes(genre)) {
@@ -341,6 +450,23 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
   const clearGenres = () => {
     setEditedGenres([]);
+  }
+
+  const handleBibleBookToggle = (book: string) => {
+    let updatedBooks: string[];
+    if (selectedBibleBooks.includes(book)) {
+      updatedBooks = selectedBibleBooks.filter(b => b !== book);
+      const { [book]: _, ...restChapters } = selectedChapters;
+      setSelectedChapters(restChapters);
+    } else {
+      updatedBooks = [...selectedBibleBooks, book];
+    }
+    setSelectedBibleBooks(updatedBooks);
+  }
+
+  const clearBibleBooks = () => {
+    setSelectedBibleBooks([]);
+    setSelectedChapters({});
   }
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -606,7 +732,18 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           {/* Bible Info Card */}
           <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Bible Info</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-bold">Bible Info</CardTitle>
+                {isCreator && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsBibleInfoEditDialogOpen(true)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible defaultValue="verses">
@@ -1004,6 +1141,136 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           <DialogFooter>
             <Button onClick={handleAIEditSubmit} disabled={isAIEditing}>
               {isAIEditing ? 'Saving...' : 'Save changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bible Info Edit Dialog */}
+      <Dialog open={isBibleInfoEditDialogOpen} onOpenChange={setIsBibleInfoEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Bible Information</DialogTitle>
+            <DialogDescription>
+              Make changes to the Bible-related information here.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="bible-translation" className="text-right">
+                Bible Translation
+              </Label>
+              <Popover open={openTranslation} onOpenChange={setOpenTranslation}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openTranslation}
+                    className="w-full justify-between col-span-3"
+                  >
+                    {editedBibleTranslation || "Select Bible translation..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <div className="p-2">
+                    <div className="flex items-center justify-between pb-2">
+                      <Input
+                        placeholder="Search translations..."
+                        value={translationSearch}
+                        onChange={(e) => setTranslationSearch(e.target.value)}
+                        className="mr-2"
+                      />
+                      {editedBibleTranslation && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditedBibleTranslation('')}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    <div className="max-h-[200px] overflow-y-auto">
+                      {filteredTranslations().map((translation) => (
+                        <div
+                          key={translation}
+                          className={cn(
+                            "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                            editedBibleTranslation === translation && "bg-accent"
+                          )}
+                          onClick={() => {
+                            setEditedBibleTranslation(translation)
+                            setOpenTranslation(false)
+                          }}
+                        >
+                          <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
+                            {editedBibleTranslation === translation && <Check className="h-3 w-3" />}
+                          </div>
+                          {translation}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="continuous-passage" className="text-right">
+                Continuous Passage
+              </Label>
+              <div className="col-span-3">
+                <Switch
+                  checked={editedIsContinuousPassage}
+                  onCheckedChange={setEditedIsContinuousPassage}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="bible-verses" className="text-right pt-2">
+                Bible Verses
+              </Label>
+              <div className="col-span-3">
+                <AsyncSelect
+                  id="bible-verses"
+                  isMulti
+                  cacheOptions
+                  defaultOptions
+                  loadOptions={loadBibleVerses}
+                  onChange={handleBibleVersesChange}
+                  value={selectedBibleVerses.map(verse => ({ label: verse, value: verse }))}
+                  placeholder="Search and select Bible verses..."
+                  styles={{
+                    menu: (provided) => ({ ...provided, zIndex: 9999 }),
+                  }}
+                />
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {selectedBibleVerses.map((verse) => (
+                    <div
+                      key={verse}
+                      className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                    >
+                      {verse}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-1 h-4 w-4 p-0"
+                        onClick={() => handleBibleVerseRemove(verse)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              disabled={selectedBibleVerses.length === 0 || isBibleInfoEditing}
+              onClick={handleBibleInfoEditSubmit}
+            >
+              {isBibleInfoEditing ? 'Saving...' : 'Save changes'}
             </Button>
           </DialogFooter>
         </DialogContent>

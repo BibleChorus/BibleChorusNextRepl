@@ -1,40 +1,30 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { Pool } from 'pg'
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-})
+import { NextApiRequest, NextApiResponse } from 'next';
+import db from '@/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'GET') {
-    const { book, chapter } = req.query
+  if (req.method !== 'GET') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
 
-    if (!book) {
-      return res.status(400).json({ error: 'Book parameter is required' })
-    }
+  const { search } = req.query;
 
-    try {
-      const client = await pool.connect()
-      let query = 'SELECT * FROM bible_verses WHERE book = $1'
-      let values: (string | number)[] = [book as string]
+  try {
+    const query = db('bible_verses')
+      .select('book', 'chapter', 'verse')
+      .limit(50); // Limit results for performance
 
-      if (chapter) {
-        query += ' AND chapter = $2'
-        values.push(parseInt(chapter as string, 10))
+    if (search && typeof search === 'string') {
+      const trimmedSearch = search.trim(); // Remove leading and trailing spaces
+      if (trimmedSearch) {
+        query.whereRaw(`CONCAT(book, ' ', chapter, ':', verse) ILIKE ?`, [`%${trimmedSearch}%`]);
       }
-
-      query += ' ORDER BY chapter, verse'
-
-      const result = await client.query(query, values)
-      client.release()
-
-      res.status(200).json(result.rows)
-    } catch (error) {
-      console.error('Error fetching Bible verses:', error)
-      res.status(500).json({ error: 'Internal server error' })
     }
-  } else {
-    res.setHeader('Allow', ['GET'])
-    res.status(405).end(`Method ${req.method} Not Allowed`)
+
+    const verses = await query;
+
+    res.status(200).json(verses);
+  } catch (error) {
+    console.error('Error fetching Bible verses:', error);
+    res.status(500).json({ message: 'Error fetching Bible verses' });
   }
 }
