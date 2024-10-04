@@ -26,6 +26,8 @@ This table stores information about individual songs, including metadata, lyrics
 | song_art_url | string(255) | | | URL to the song's artwork |
 | search_vector | tsvector | | | Full-text search vector |
 | verses_text | text | | | Concatenated text of associated Bible verses |
+| duration | integer | UNSIGNED | 0 | Duration of the song in seconds |
+| play_count | integer | UNSIGNED | 0 | Number of times the song has been played |
 
 ## Constraints
 
@@ -51,6 +53,8 @@ This table stores information about individual songs, including metadata, lyrics
 | idx_songs_artist | artist | B-tree | For efficient artist searches |
 | idx_songs_uploaded_by | uploaded_by | B-tree | For efficient user uploads queries |
 | idx_songs_genres | genres | GIN | For efficient genre filtering |
+| idx_songs_duration | duration | B-tree | For efficient sorting and filtering by song duration |
+| idx_songs_play_count | play_count | B-tree | For efficient sorting and filtering by play count |
 
 ## Full-Text Search
 
@@ -80,6 +84,7 @@ This allows for efficient searching across multiple fields with different priori
 - The `search_vector` and associated triggers enable efficient full-text search across multiple fields.
 - The `verses_text` column stores concatenated Bible verse references for improved searchability.
 - Regular maintenance of the search vector and associated indexes may be required for optimal performance.
+- The `play_count` column tracks the number of times a song has been played, which can be used for popularity metrics and recommendations.
 
 ## Recent Changes
 
@@ -89,3 +94,6 @@ This allows for efficient searching across multiple fields with different priori
 - Implemented triggers to keep `search_vector` and `verses_text` updated.
 - Removed the `genre` column (string type)
 - Added the `genres` column (text[] type) to store multiple genres as an array
+- Added `duration` column to store the length of each song in seconds.
+- Added `play_count` column to track the number of times each song has been played.
+- Created new indexes for `duration` and `play_count` to support efficient sorting and filtering.
