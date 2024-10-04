@@ -35,8 +35,10 @@ import { BIBLE_BOOKS, BIBLE_TRANSLATIONS } from "@/lib/constants"
 import AsyncSelect from 'react-select/async'
 import { BOLLS_LIFE_API_BIBLE_TRANSLATIONS } from '@/lib/constants'
 import DOMPurify from 'isomorphic-dompurify';
+import { ImageCropper } from '@/components/UploadPage/ImageCropper'
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
 interface Song {
   id: number
@@ -156,6 +158,12 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   const [dialogOpenTranslation, setDialogOpenTranslation] = useState(false);
   const [dialogTranslationSearch, setDialogTranslationSearch] = useState('');
   const dialogTranslationRef = useRef<HTMLDivElement>(null);
+
+  // State variables for song art editing
+  const [isEditArtDialogOpen, setIsEditArtDialogOpen] = useState(false)
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
+  const [isImageCropperOpen, setIsImageCropperOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Function to sanitize and render HTML
   const renderHTML = (html: string) => {
@@ -701,6 +709,91 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     }
   }, [])
 
+  const handleEditArtClick = () => {
+    setIsEditArtDialogOpen(true)
+  }
+
+  const handleReplaceClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > MAX_IMAGE_FILE_SIZE) {
+        toast.error(`File size exceeds the limit of 5MB`)
+        return
+      }
+      const imageUrl = URL.createObjectURL(file)
+      setCropImageUrl(imageUrl)
+      setIsImageCropperOpen(true)
+    }
+  }
+
+  const handleCropComplete = async (croppedImageBlob: Blob) => {
+    setIsImageCropperOpen(false);
+    setIsEditArtDialogOpen(false);
+
+    try {
+      // First, delete the old song art
+      if (song.song_art_url) {
+        const fileKey = song.song_art_url.replace(CDN_URL, '').replace(/^\/+/, '');
+        // Changed DELETE to POST method
+        await axios.post('/api/delete-file', { fileKey });
+      }
+
+      const fileExtension = 'jpg'; // Adjust if necessary
+      const fileType = 'image/jpeg'; // Adjust if necessary
+      const title = song.title;
+      const userId = user?.id;
+      const fileSize = croppedImageBlob.size.toString();
+
+      // Get signed URL for uploading new song art
+      const uploadUrlResponse = await axios.post('/api/upload-url', {
+        fileType,
+        fileExtension,
+        title,
+        userId,
+        fileSize,
+      });
+
+      if (uploadUrlResponse.status !== 200) {
+        throw new Error('Failed to get upload URL');
+      }
+
+      const { signedUrl, fileKey } = uploadUrlResponse.data;
+
+      // Upload the image to S3 using the signed URL
+      await axios.put(signedUrl, croppedImageBlob, {
+        headers: {
+          'Content-Type': fileType,
+          'Content-Length': croppedImageBlob.size,
+        },
+      });
+
+      // Update the song with the new song art URL
+      const updateResponse = await axios.put(`/api/songs/${song.id}/update-song-art`, {
+        songArtUrl: fileKey,
+      });
+
+      if (updateResponse.status === 200) {
+        setSong({ ...song, song_art_url: updateResponse.data.updatedUrl });
+        toast.success('Song art updated successfully');
+      } else {
+        throw new Error('Failed to update song art URL');
+      }
+
+    } catch (error) {
+      console.error('Error updating song art:', error);
+      toast.error('Failed to update song art');
+    }
+  };
+
+  const handleCropCancel = () => {
+    setIsImageCropperOpen(false)
+    setCropImageUrl(null)
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Head>
@@ -744,6 +837,16 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             </div>
           )}
         </div>
+        {isCreator && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 text-white hover:text-primary-300 transition-colors"
+            onClick={handleEditArtClick}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <main className="container mx-auto px-4 py-8">
@@ -1507,7 +1610,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                   {selectedBibleVerses.map((verse) => (
                     <div
                       key={verse}
-                      className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                      className="bg-secondary text-secondary-foreground rounded-full px-2 py-2 text-sm flex items-center"
                     >
                       {verse}
                       <Button
@@ -1532,6 +1635,47 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               {isBibleInfoEditing ? 'Saving...' : 'Save changes'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Song Art Dialog */}
+      <Dialog open={isEditArtDialogOpen} onOpenChange={setIsEditArtDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Song Art</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center">
+            <Image
+              src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
+              alt="Current Song Art"
+              width={200}
+              height={200}
+              className="rounded-lg mb-4"
+            />
+            <Button onClick={handleReplaceClick}>Replace Image</Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isImageCropperOpen} onOpenChange={setIsImageCropperOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Crop Image</DialogTitle>
+          </DialogHeader>
+          {cropImageUrl && (
+            <ImageCropper
+              imageUrl={cropImageUrl}
+              onCropComplete={handleCropComplete}
+              onCancel={handleCropCancel}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
