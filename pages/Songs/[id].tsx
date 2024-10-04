@@ -751,7 +751,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           Back
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
           {/* Song Info Card */}
           <Card className="lg:col-span-2">
             <CardHeader>
@@ -827,7 +827,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           </Card>
 
           {/* Votes and Likes Card */}
-          <Card>
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Votes & Likes</CardTitle>
             </CardHeader>
@@ -881,8 +881,55 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             </CardContent>
           </Card>
 
+          {/* AI Info Card */}
+          {(song.ai_used_for_lyrics || song.music_ai_generated) && (
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl font-bold">AI Information</CardTitle>
+                  {isCreator && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsAIEditDialogOpen(true)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="multiple" defaultValue={['lyric-ai', 'music-ai']}>
+                  {song.ai_used_for_lyrics && (
+                    <AccordionItem value="lyric-ai">
+                      <AccordionTrigger>Lyric AI</AccordionTrigger>
+                      <AccordionContent>
+                        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                          <p className="mb-2"><strong>Prompt:</strong></p>
+                          <p>{song.lyric_ai_prompt}</p>
+                        </ScrollArea>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                  {song.music_ai_generated && (
+                    <AccordionItem value="music-ai">
+                      <AccordionTrigger>Music AI</AccordionTrigger>
+                      <AccordionContent>
+                        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                          <p><strong>Model:</strong> {song.music_model_used}</p>
+                          <p className="mt-2"><strong>Prompt:</strong></p>
+                          <p>{song.music_ai_prompt}</p>
+                        </ScrollArea>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                </Accordion>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Bible Info Card */}
-          <Card className="lg:col-span-1">
+          <Card className="lg:col-span-3">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-2xl font-bold">Bible Info</CardTitle>
@@ -987,7 +1034,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           </Card>
 
           {/* Lyrics Card */}
-          <Card className="lg:col-span-1">
+          <Card className="lg:col-span-3">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-2xl font-bold">Lyrics</CardTitle>
@@ -1015,53 +1062,6 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               </Accordion>
             </CardContent>
           </Card>
-
-          {/* AI Info Card */}
-          {(song.ai_used_for_lyrics || song.music_ai_generated) && (
-            <Card className="lg:col-span-1">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold">AI Information</CardTitle>
-                  {isCreator && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsAIEditDialogOpen(true)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="multiple" defaultValue={['lyric-ai', 'music-ai']}>
-                  {song.ai_used_for_lyrics && (
-                    <AccordionItem value="lyric-ai">
-                      <AccordionTrigger>Lyric AI</AccordionTrigger>
-                      <AccordionContent>
-                        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                          <p className="mb-2"><strong>Prompt:</strong></p>
-                          <p>{song.lyric_ai_prompt}</p>
-                        </ScrollArea>
-                      </AccordionContent>
-                    </AccordionItem>
-                  )}
-                  {song.music_ai_generated && (
-                    <AccordionItem value="music-ai">
-                      <AccordionTrigger>Music AI</AccordionTrigger>
-                      <AccordionContent>
-                        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                          <p><strong>Model:</strong> {song.music_model_used}</p>
-                          <p className="mt-2"><strong>Prompt:</strong></p>
-                          <p>{song.music_ai_prompt}</p>
-                        </ScrollArea>
-                      </AccordionContent>
-                    </AccordionItem>
-                  )}
-                </Accordion>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </main>
 
