@@ -290,18 +290,21 @@ function UploadContent() {
       }
 
       // Update this part
-      const reader = new FileReader();
-      reader.onload = function (event) {
-        const arrayBuffer = event.target!.result as ArrayBuffer;
-        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-        const audioContext = new AudioContext();
-        audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
-          const duration = audioBuffer.duration;
-          setAudioDuration(duration);
-          console.log("Audio duration:", duration);
-        });
-      };
-      reader.readAsArrayBuffer(file);
+      // Get audio duration only if the file is an audio file
+      if (fileType === 'audio') {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const arrayBuffer = event.target!.result as ArrayBuffer;
+          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+          const audioContext = new AudioContext();
+          audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+            const duration = audioBuffer.duration;
+            setAudioDuration(duration);
+            console.log("Audio duration:", duration);
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      }
 
       return data.fileKey;
     } catch (error) {
@@ -696,7 +699,8 @@ function UploadContent() {
       const imageUrl = URL.createObjectURL(file)
       setCropImageUrl(imageUrl)
       setIsModalOpen(true)
-      form.setValue('song_art_file', file)
+      // Remove this line to avoid using the original image file
+      // form.setValue('song_art_file', file)
     }
   }
 
@@ -705,6 +709,9 @@ function UploadContent() {
     setCroppedImage(croppedFile)
     setIsModalOpen(false)
     
+    // Set the cropped image file in the form values
+    form.setValue('song_art_file', croppedFile)
+
     setImageUploadStatus('uploading')
     setImageUploadProgress(0)
     try {
@@ -1657,7 +1664,8 @@ function UploadContent() {
                                     const imageUrl = URL.createObjectURL(file)
                                     setCropImageUrl(imageUrl)
                                     setIsModalOpen(true)
-                                    form.setValue('song_art_file', file)
+                                    // Remove this line to avoid using the original image file
+                                    // form.setValue('song_art_file', file)
                                   }
                                 }}
                               />
@@ -1677,7 +1685,7 @@ function UploadContent() {
                                 size="icon"
                                 onClick={async () => {
                                   try {
-                                    const response = await axios.delete('/api/delete-file', { data: { fileKey: form.getValues('song_art_url') } });
+                                    const response = await axios.post('/api/delete-file', { fileKey: form.getValues('song_art_url') });
                                     if (response.status === 200) {
                                       form.setValue('song_art_file', undefined, { shouldValidate: true });
                                       form.setValue('song_art_url', undefined, { shouldValidate: true });
