@@ -559,10 +559,15 @@ function UploadContent() {
     setSelectedChapters({})
   }
 
+  const [openBibleVerses, setOpenBibleVerses] = useState(false)
+  const [bibleVerseSearch, setBibleVerseSearch] = useState('')
+  const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>([])
+
+  // Update the useQuery hook for fetching Bible verses
   const { data: bibleVerses, isLoading } = useQuery(
     ['bibleVerses', selectedBibleBooks, selectedChapters],
     async () => {
-      if (selectedBibleBooks.length === 0) return {}
+      if (selectedBibleBooks.length === 0) return {};
       const verses = await Promise.all(
         selectedBibleBooks.flatMap(book => 
           (selectedChapters[book] || []).map(chapter => 
@@ -582,18 +587,14 @@ function UploadContent() {
       }, {} as Record<string, Record<number, any[]>>);
     },
     { enabled: selectedBibleBooks.length > 0 && Object.keys(selectedChapters).length > 0 }
-  )
+  );
 
-  const [openBibleVerses, setOpenBibleVerses] = useState(false)
-  const [bibleVerseSearch, setBibleVerseSearch] = useState('')
-  const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>([])
-
+  // Update the filteredBibleVerses function
   const filteredBibleVerses = useCallback(() => {
-    if (!bibleVerses) return {}
+    if (!bibleVerses) return {};
     return Object.entries(bibleVerses).reduce((acc, [book, chapters]) => {
       acc[book] = Object.entries(chapters).reduce((chapterAcc, [chapter, verses]) => {
         chapterAcc[chapter] = verses.filter((verse: any) =>
-          verse.KJV_text.toLowerCase().includes(bibleVerseSearch.toLowerCase()) ||
           `${verse.book} ${verse.chapter}:${verse.verse}`.toLowerCase().includes(bibleVerseSearch.toLowerCase())
         );
         return chapterAcc;
