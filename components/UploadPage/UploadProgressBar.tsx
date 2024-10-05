@@ -10,7 +10,7 @@ interface UploadProgressBarProps {
 
 const steps = [
   { name: "AI Info", fields: ["ai_used_for_lyrics", "music_ai_generated", "lyric_ai_prompt", "music_model_used", "music_ai_prompt"] },
-  { name: "Song Info", fields: ["title", "genre", "lyrics"] },
+  { name: "Song Info", fields: ["title", "genres", "lyrics"] }, // Changed 'genre' to 'genres'
   { name: "Bible Info", fields: ["bible_translation_used", "lyrics_scripture_adherence", "is_continuous_passage", "bible_books", "bible_verses"] },
   { name: "Upload", fields: ["audio_url", "song_art_url"] }
 ];
@@ -31,7 +31,14 @@ const UploadProgressBar: React.FC<UploadProgressBarProps> = ({ onProgressChange 
         if ((field === "music_model_used" || field === "music_ai_prompt") && !watchedFields.music_ai_generated) return;
         
         totalFields++;
-        if (watchedFields[field] !== undefined && watchedFields[field] !== "") {
+        if (field === "genres") {
+          // Check if genres array is not empty
+          if (Array.isArray(watchedFields[field]) && watchedFields[field].length > 0) {
+            filledFields++;
+          } else {
+            missing.push(field);
+          }
+        } else if (watchedFields[field] !== undefined && watchedFields[field] !== "") {
           filledFields++;
         } else {
           missing.push(field);

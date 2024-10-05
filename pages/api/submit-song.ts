@@ -25,6 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     music_model_used,
     song_art_url,
     bible_verses,
+    genres,
   } = req.body;
 
   console.log('Received request body:', req.body);
@@ -46,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!lyrics_scripture_adherence) missingFields.push('lyrics_scripture_adherence');
   if (!lyrics) missingFields.push('lyrics');
   if (!bible_verses) missingFields.push('bible_verses');
+  if (!genres || genres.length === 0) missingFields.push('genres');
 
   if (missingFields.length > 0) {
     console.log('Missing required fields:', missingFields);
@@ -97,6 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       music_ai_prompt: music_ai_prompt || null,
       music_model_used: music_model_used || null,
       song_art_url: fullSongArtUrl,
+      genres: genres || [], // This will now be an array
     }).returning('id');
 
     if (!insertedSong || typeof insertedSong.id !== 'number') {

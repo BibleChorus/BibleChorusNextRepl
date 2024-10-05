@@ -126,11 +126,7 @@ function UploadContent() {
   const [progress, setProgress] = useState(0); // Add progress state
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: async (...args) => {
-      const result = await zodResolver(formSchema)(...args);
-      console.log("Zod resolver result:", result);
-      return result;
-    },
+    resolver: zodResolver(formSchema),
     defaultValues: {
       ai_used_for_lyrics: true,
       music_ai_generated: true,
@@ -142,7 +138,7 @@ function UploadContent() {
       lyrics: "",
       genres: [], // Initialize genres as an empty array
     },
-    mode: "onBlur", // Change this from "onChange" to reduce unnecessary validations
+    mode: "onBlur",
   })
 
   const [openGenre, setOpenGenre] = useState(false)
@@ -186,10 +182,8 @@ function UploadContent() {
   const handleGenreToggle = (genre: string) => {
     let updatedGenres: string[];
     if (selectedGenres.includes(genre)) {
-      // Remove the genre if it's already selected
       updatedGenres = selectedGenres.filter(g => g !== genre);
     } else {
-      // Add the genre if it's not already selected
       updatedGenres = [...selectedGenres, genre];
     }
     setSelectedGenres(updatedGenres);
