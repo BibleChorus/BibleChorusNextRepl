@@ -34,6 +34,7 @@ import { useRouter } from 'next/router'
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
+// Update the form schema to include duration
 const formSchema = z.object({
   // Step 1: AI Info
   ai_used_for_lyrics: z.boolean(),
@@ -70,6 +71,7 @@ const formSchema = z.object({
 
   // Added uploaded_by field
   uploaded_by: z.union([z.string(), z.number()]).optional(),
+  duration: z.number().optional(), // Add this line
 }).refine((data) => {
   if (data.ai_used_for_lyrics && (!data.lyric_ai_prompt || data.lyric_ai_prompt.trim().length === 0)) {
     return false;
@@ -137,6 +139,7 @@ function UploadContent() {
       artist: "",
       lyrics: "",
       genres: [], // Initialize genres as an empty array
+      duration: undefined, // Add this line
     },
     mode: "onBlur",
   })
@@ -388,6 +391,14 @@ function UploadContent() {
     if (isValid) {
       console.log("Form is valid, submitting...");
       const formData = form.getValues();
+      
+      // Round the duration to the nearest integer
+      form.setValue('duration', Math.round(audioDuration || 0));
+      
+      // Ensure genres is an array
+      if (!Array.isArray(formData.genres)) {
+        formData.genres = selectedGenres;
+      }
       
       // Remove file objects and use URLs instead
       delete formData.audio_file;
@@ -1599,12 +1610,13 @@ function UploadContent() {
                               size="icon"
                               onClick={async () => {
                                 try {
-                                  const response = await axios.delete('/api/delete-file', { data: { fileKey: form.getValues('audio_url') } });
+                                  const response = await axios.post('/api/delete-file', { fileKey: form.getValues('audio_url') });
                                   if (response.status === 200) {
                                     form.setValue('audio_file', undefined, { shouldValidate: true });
                                     form.setValue('audio_url', undefined, { shouldValidate: true });
                                     setAudioUploadStatus('idle');
                                     setAudioUploadProgress(0);
+                                    setAudioDuration(null); // Reset audio duration
                                     toast.success('Audio file removed successfully');
                                     // Reset the file input
                                     const fileInput = document.querySelector('input[type="file"][accept="audio/*"]') as HTMLInputElement;
