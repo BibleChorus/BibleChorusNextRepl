@@ -42,7 +42,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'songs.is_continuous_passage',
           'songs.ai_used_for_lyrics',
           'songs.music_ai_generated',
-          'songs.music_model_used'
+          'songs.music_model_used',
+          'songs.duration', // Add this line
+          'songs.play_count' // Add this line if not already present
         )
         .join('users', 'songs.uploaded_by', 'users.id')
         .limit(limitNum)

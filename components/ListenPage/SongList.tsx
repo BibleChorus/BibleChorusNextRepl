@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X } from 'lucide-react'
+import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Play } from 'lucide-react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 import { formatBibleVerses } from '@/lib/utils'
@@ -39,6 +39,8 @@ export type Song = {
   lyrics_scripture_adherence?: string;
   is_continuous_passage?: boolean;
   bible_verses?: { book: string; chapter: number; verse: number }[];
+  play_count?: number;
+  duration?: number;
 };
 
 interface SongListProps {
@@ -60,6 +62,15 @@ interface VoteCounts {
     [voteType: string]: number;
   };
 }
+
+const formatDuration = (seconds: number): string => {
+  if (typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) {
+    return '0:00';
+  }
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
 
 export const SongList = React.memo(function SongList({ songs }: SongListProps) {
   const [voteStates, setVoteStates] = useState<VoteState>({})
@@ -189,18 +200,21 @@ export const SongList = React.memo(function SongList({ songs }: SongListProps) {
 
   return (
     <div className="space-y-2 sm:space-y-4">
-      {songs.map((song) => (
-        <SongListItem
-          key={song.id}
-          song={song}
-          likeCounts={likeCounts}
-          voteCounts={voteCounts}
-          likeStates={likeStates}
-          voteStates={voteStates}
-          handleLike={handleLike}
-          handleVoteClick={handleVoteClick}
-        />
-      ))}
+      {songs.map((song) => {
+        console.log('Full song object:', song); // Add this line
+        return (
+          <SongListItem
+            key={song.id}
+            song={song}
+            likeCounts={likeCounts}
+            voteCounts={voteCounts}
+            likeStates={likeStates}
+            voteStates={voteStates}
+            handleLike={handleLike}
+            handleVoteClick={handleVoteClick}
+          />
+        );
+      })}
     </div>
   )
 })
@@ -229,6 +243,9 @@ const SongListItem = React.memo(function SongListItem({
   const [selectedVoteType, setSelectedVoteType] = useState<string>('')
   const [localVoteCounts, setLocalVoteCounts] = useState(voteCounts[song.id] || {})
   const [localVoteStates, setLocalVoteStates] = useState(voteStates[song.id] || {})
+
+  // Add this console.log to debug the duration
+  console.log(`Song ${song.id} duration:`, song.duration);
 
   useEffect(() => {
     setLocalVoteCounts(voteCounts[song.id] || {})
@@ -328,12 +345,12 @@ const SongListItem = React.memo(function SongListItem({
 
   return (
     <motion.div
-      className="flex items-stretch p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden"
+      className="flex items-center p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden group song-card"
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
     >
       {/* Song Art with Play Button Overlay */}
-      <div className="w-12 h-12 sm:w-16 sm:h-16 mr-3 sm:mr-4 relative group flex-shrink-0">
+      <div className="w-20 h-20 sm:w-24 sm:h-24 mr-3 sm:mr-4 relative flex-shrink-0">
         {song.song_art_url && !imageError[song.id] ? (
           <img
             src={`${CDN_URL}${song.song_art_url}`}
@@ -346,20 +363,27 @@ const SongListItem = React.memo(function SongListItem({
             No Image
           </div>
         )}
-        <motion.div 
+        <div 
           className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          initial={{ opacity: 0 }}
-          whileHover={{ opacity: 1 }}
         >
-          <motion.button
+          <button
             className="text-white p-1 sm:p-2"
             onClick={() => console.log('Play song:', song.audio_url)}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
           >
-            <PlayCircle className="h-6 w-6 sm:h-8 sm:w-8" />
-          </motion.button>
-        </motion.div>
+            <PlayCircle className="h-8 w-8 sm:h-10 sm:w-10" />
+          </button>
+        </div>
+        {/* Play Count */}
+        <div className="absolute top-1 left-1 inline-flex items-center bg-black bg-opacity-50 rounded px-1 py-0.5">
+          <Play className="h-3 w-3 mr-1 text-white" />
+          <span className="text-white text-xs">{song.play_count || 0}</span>
+        </div>
+        {/* Duration */}
+        <div className="absolute bottom-1 right-1 inline-flex items-center bg-black bg-opacity-50 rounded px-1 py-0.5">
+          <span className="text-white text-xs">
+            {typeof song.duration === 'number' ? formatDuration(song.duration) : '0:00'}
+          </span>
+        </div>
       </div>
 
       {/* Song Details */}
@@ -540,3 +564,5 @@ const SongListItem = React.memo(function SongListItem({
     </motion.div>
   )
 })
+
+export default SongList

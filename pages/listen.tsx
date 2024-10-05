@@ -14,10 +14,16 @@ import { useInView } from 'react-intersection-observer';
 import useSWRInfinite from 'swr/infinite';
 import { useRouter } from 'next/router'
 
-const fetcher = (url: string) => fetch(url).then(res => res.json()).then(data => ({
-  songs: data.songs || [],
-  total: data.total || 0,
-}));
+const fetcher = (url: string) => fetch(url).then(res => res.json()).then(data => {
+  console.log('Raw API response data:', data);
+  return {
+    songs: data.songs.map((song: any) => ({
+      ...song,
+      duration: song.duration, // Explicitly include duration
+    })),
+    total: data.total || 0,
+  };
+});
 
 // Updated Song type definition
 export type Song = {
@@ -35,6 +41,8 @@ export type Song = {
   lyrics_scripture_adherence?: string;
   is_continuous_passage?: boolean;
   bible_verses?: { book: string; chapter: number; verse: number }[];
+  play_count?: number;
+  duration?: number;
 };
 
 export default function Listen() {

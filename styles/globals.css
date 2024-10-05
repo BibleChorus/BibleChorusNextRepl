@@ -134,3 +134,23 @@ a {
 .form-message {
   color: hsl(var(--destructive));
 }
+
+@layer base {
+  :root {
+    --card-hover-bg: rgba(0, 0, 0, 0.02);
+  }
+
+  .dark {
+    --card-hover-bg: rgba(255, 255, 255, 0.02);
+  }
+}
+
+@layer components {
+  .song-card {
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  .song-card:hover {
+    background-color: var(--card-hover-bg);
+  }
+}
