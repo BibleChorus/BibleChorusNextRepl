@@ -91,7 +91,7 @@ const formSchema = z.object({
 // Create a client
 const queryClient = new QueryClient()
 
-export default function Upload() {
+function Upload() {
   return (
     <QueryClientProvider client={queryClient}>
       <UploadContent />
@@ -228,6 +228,8 @@ function UploadContent() {
     };
   }, [uploadedFiles]);
 
+  const [audioDuration, setAudioDuration] = useState<number | null>(null);
+
   const uploadFile = async (file: File, fileType: 'audio' | 'image') => {
     const fileExtension = file.name.split('.').pop();
     const contentType = file.type;
@@ -286,6 +288,20 @@ function UploadContent() {
       } else if (fileType === 'image') {
         form.setValue('song_art_url', data.fileKey, { shouldValidate: false });
       }
+
+      // Update this part
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const arrayBuffer = event.target!.result as ArrayBuffer;
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        const audioContext = new AudioContext();
+        audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+          const duration = audioBuffer.duration;
+          setAudioDuration(duration);
+          console.log("Audio duration:", duration);
+        });
+      };
+      reader.readAsArrayBuffer(file);
 
       return data.fileKey;
     } catch (error) {
@@ -701,6 +717,20 @@ function UploadContent() {
   const handleCropCancel = () => {
     setCropImageUrl(null)
     setIsModalOpen(false)
+  }
+
+  // Add this helper function to format the duration
+  function formatDuration(durationInSeconds: number): string {
+    const totalSeconds = Math.floor(durationInSeconds);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    } else {
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
   }
 
   return (
@@ -1521,6 +1551,21 @@ function UploadContent() {
                                       toast.error("Audio file size exceeds the limit of 200MB");
                                       return;
                                     }
+
+                                    // Get audio duration
+                                    const reader = new FileReader();
+                                    reader.onload = function (event) {
+                                      const arrayBuffer = event.target!.result as ArrayBuffer;
+                                      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+                                      const audioContext = new AudioContext();
+                                      audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+                                        const duration = audioBuffer.duration;
+                                        setAudioDuration(duration);
+                                        console.log("Audio duration:", duration);
+                                      });
+                                    };
+                                    reader.readAsArrayBuffer(file);
+
                                     field.onChange(file);
                                     setAudioUploadStatus('uploading');
                                     setAudioUploadProgress(0);
@@ -1536,7 +1581,12 @@ function UploadContent() {
                             ) : (
                               <div className="flex items-center space-x-2">
                                 <FileIcon className="h-5 w-5 text-gray-500" />
-                                <p className="text-sm text-gray-500">{field.value?.name}</p>
+                                <p className="text-sm text-gray-500">
+                                  {field.value?.name}
+                                  {audioDuration !== null && (
+                                    <> - {formatDuration(audioDuration)}</>
+                                  )}
+                                </p>
                               </div>
                             )}
                           </div>
@@ -1709,3 +1759,5 @@ function UploadContent() {
     </div>
   )
 }
+
+export default Upload
