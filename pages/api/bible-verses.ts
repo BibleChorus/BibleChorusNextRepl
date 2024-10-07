@@ -6,17 +6,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { book, chapter } = req.query;
+  const { search } = req.query;
 
-  if (!book || !chapter) {
-    return res.status(400).json({ message: 'Book and chapter are required' });
+  if (!search || typeof search !== 'string' || search.trim() === '') {
+    return res.status(400).json({ message: 'Search parameter is required' });
   }
 
   try {
     const verses = await db('bible_verses')
       .select('book', 'chapter', 'verse')
-      .where({ book, chapter })
-      .orderBy('verse');
+      .whereRaw(
+        `CONCAT(book, ' ', chapter, ':', verse) ILIKE ?`,
+        [`%${search}%`]
+      )
+      .orderBy(['book', 'chapter', 'verse']);
 
     res.status(200).json(verses);
   } catch (error) {

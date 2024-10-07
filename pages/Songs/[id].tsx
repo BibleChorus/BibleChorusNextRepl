@@ -37,6 +37,7 @@ import { BOLLS_LIFE_API_BIBLE_TRANSLATIONS } from '@/lib/constants'
 import DOMPurify from 'isomorphic-dompurify';
 import { ImageCropper } from '@/components/UploadPage/ImageCropper'
 import { parsePostgresArray } from '@/lib/utils'; // Add a utility function to parse PostgreSQL arrays
+import { components } from 'react-select';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -166,6 +167,9 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   const [isImageCropperOpen, setIsImageCropperOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Define the MultiValue component inside the SongPage function
+  const MultiValue = () => null;
+
   // Function to sanitize and render HTML
   const renderHTML = (html: string) => {
     return { __html: DOMPurify.sanitize(html) };
@@ -247,6 +251,10 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
   // Add these functions near the top of your component, after the state declarations
   const loadBibleVerses = async (inputValue: string) => {
+    if (!inputValue || inputValue.trim() === '') {
+      return [];
+    }
+
     try {
       const response = await axios.get('/api/bible-verses', { params: { search: inputValue } });
       return response.data.map((verse: any) => ({
@@ -261,7 +269,8 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
   const handleBibleVersesChange = (selectedOptions: any) => {
     const verses = selectedOptions ? selectedOptions.map((option: any) => option.value) : [];
-    setSelectedBibleVerses(verses);
+    const uniqueVerses = Array.from(new Set([...selectedBibleVerses, ...verses]));
+    setSelectedBibleVerses(uniqueVerses);
   };
 
   const handleBibleVerseRemove = (verseToRemove: string) => {
@@ -1601,9 +1610,11 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                   defaultOptions
                   loadOptions={loadBibleVerses}
                   onChange={handleBibleVersesChange}
-                  value={selectedBibleVerses.map(verse => ({ label: verse, value: verse }))}
+                  value={[]}
                   placeholder="Search and select Bible verses..."
+                  components={{ MultiValue }}
                   styles={{
+                    control: (provided) => ({ ...provided, minHeight: '56px' }),
                     menu: (provided) => ({ ...provided, zIndex: 9999 }),
                   }}
                 />
