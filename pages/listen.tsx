@@ -506,9 +506,11 @@ function ListenContent() {
                 <Button variant="outline" className="w-[200px] justify-between">
                   {selectedPlaylist ? (
                     <>
-                      {playlists?.find(p => p.id.toString() === selectedPlaylist)?.name || 'Select a playlist'}
+                      <span className="truncate mr-2">
+                        {playlists?.find(p => p.id.toString() === selectedPlaylist)?.name || 'Select a playlist'}
+                      </span>
                       <X
-                        className="h-4 w-4 ml-2 hover:text-destructive"
+                        className="h-4 w-4 flex-shrink-0 hover:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation()
                           clearPlaylistSelection()
