@@ -5,6 +5,14 @@ import s3Client from '@/lib/s3';
 import { Knex } from 'knex';
 import { refreshProgressMaterializedView } from '@/lib/db-utils';
 
+const CDN_URL = process.env.CDN_URL || '';
+
+// Add this function to extract the file key from the URL
+function extractFileKey(url: string): string {
+  const decodedUrl = decodeURIComponent(url);
+  return decodedUrl.replace(CDN_URL, '').replace(/^\/+/, '');
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE') {
     return res.status(405).json({ message: 'Method not allowed' });
@@ -26,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Delete song art from S3
     if (song.song_art_url) {
-      const fileKey = song.song_art_url.split('/').pop();
+      const fileKey = extractFileKey(song.song_art_url);
       const deleteCommand = new DeleteObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: fileKey,
@@ -37,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Delete audio file from S3
     if (song.audio_url) {
-      const audioFileKey = song.audio_url.split('/').pop();
+      const audioFileKey = extractFileKey(song.audio_url);
       const deleteAudioCommand = new DeleteObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: audioFileKey,
@@ -89,7 +97,8 @@ async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData
     .where('song_id', songId)
     .pluck('verse_id');
 
-  const genres = songData.genre.split(',').map((g: string) => g.trim());
+  // Update this line to use 'genres' instead of 'genre' and ensure it's an array
+  const genres = songData.genres || [];
 
   for (const verseId of verseIds) {
     const updateObj: any = {

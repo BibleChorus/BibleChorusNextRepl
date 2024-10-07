@@ -1,10 +1,10 @@
 import Head from 'next/head'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
 import { Filters, FilterOptions } from '@/components/ListenPage/Filters'
 import { motion, AnimatePresence } from "framer-motion"
-import { Filter, X, Info } from "lucide-react"
+import { Filter, X, Info, Save } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -13,6 +13,12 @@ import { SongListSkeleton } from '@/components/ListenPage/SongListSkeleton'
 import { useInView } from 'react-intersection-observer';
 import useSWRInfinite from 'swr/infinite';
 import { useRouter } from 'next/router'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import Image from 'next/image'
+import axios from 'axios'
+import { useAuth } from '@/contexts/AuthContext'
+import { toast } from "sonner"
 
 const fetcher = (url: string) => fetch(url).then(res => res.json()).then(data => {
   console.log('Raw API response data:', data);
@@ -144,35 +150,99 @@ function ListenContent() {
   // State to track if more songs are available
   const [hasMore, setHasMore] = useState(true);
 
-  // Use SWRInfinite for infinite loading
+  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null)
+  const [playlistSongs, setPlaylistSongs] = useState<Song[]>([])
+  const { user } = useAuth()
+
+  // Fetch playlists
+  const { data: playlists, error: playlistError } = useSWR(
+    user ? `/api/users/${user.id}/playlists` : null,
+    (url) => axios.get(url).then(res => res.data)
+  )
+
+  // Move the useSWRInfinite hook before handlePlaylistChange
   const {
     data,
     error,
     isValidating,
     size,
     setSize,
+    mutate,
   } = useSWRInfinite(
-    (index) => `/api/songs?${buildQueryString(debouncedFilters, index + 1)}`,
-    fetcher,
+    (index) => selectedPlaylist
+      ? null // Don't fetch when a playlist is selected
+      : `/api/songs?${buildQueryString(debouncedFilters, index + 1)}`,
+    selectedPlaylist ? null : fetcher, // Don't use fetcher when a playlist is selected
     {
       revalidateOnFocus: false,
-      revalidateFirstPage: false, // Add this line
-      // Add onSuccess callback to update hasMore state
+      revalidateFirstPage: false,
       onSuccess: (data) => {
-        const total = data?.[0]?.total || 0;
-        const loadedSongs = data ? data.flatMap((page) => page.songs).length : 0;
-        // Determine if there are more songs to load
-        if (loadedSongs >= total) {
-          setHasMore(false);
-        } else {
-          setHasMore(true);
+        if (!selectedPlaylist) {
+          const total = data?.[0]?.total || 0;
+          const loadedSongs = data ? data.flatMap((page) => page.songs).length : 0;
+          setHasMore(loadedSongs < total);
         }
       },
     }
   );
 
-  // Merge the paginated data
-  const songs = data ? data.flatMap((page) => page.songs) : [];
+  const handlePlaylistChange = useCallback(async (playlistId: string) => {
+    setSelectedPlaylist(playlistId)
+    
+    // Clear existing filters
+    setFilterOptions({
+      lyricsAdherence: [],
+      isContinuous: "all",
+      aiMusic: "all",
+      genres: [],
+      aiUsedForLyrics: "all",
+      musicModelUsed: "",
+      title: "",
+      artist: "",
+      bibleTranslation: "",
+      bibleBooks: [],
+      bibleChapters: {},
+      bibleVerses: [],
+      search: "",
+    })
+
+    // Fetch songs for the selected playlist
+    if (playlistId) {
+      try {
+        const response = await axios.get(`/api/playlists/${playlistId}/songs`)
+        const playlistSongs = response.data.map((song: any) => ({
+          ...song,
+          id: song.id || song.song_id,
+          username: song.username || 'Unknown User',
+          uploaded_by: song.uploaded_by || song.user_id,
+          genres: Array.isArray(song.genres) ? song.genres : (song.genres ? [song.genres] : []),
+          bible_verses: Array.isArray(song.bible_verses) ? song.bible_verses : [],
+          duration: song.duration || 0,
+          play_count: song.play_count || 0,
+        }))
+
+        setPlaylistSongs(playlistSongs)
+        // Update the songs state with the playlist songs
+        setSize(1) // Reset pagination
+        mutate(() => [{
+          songs: playlistSongs,
+          total: playlistSongs.length
+        }], false) // Set revalidate to false
+      } catch (error) {
+        console.error('Error fetching playlist songs:', error)
+        toast.error('Failed to fetch playlist songs')
+      }
+    } else {
+      // If no playlist is selected, clear the playlist songs
+      setPlaylistSongs([])
+      // Reset to fetching all songs
+      setSize(1)
+      mutate()
+    }
+  }, [setFilterOptions, setSize, mutate])
+
+  // Merge the paginated data or use playlist songs
+  const songs = selectedPlaylist ? playlistSongs : (data ? data.flatMap((page) => page.songs) : []);
 
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0,
@@ -382,6 +452,11 @@ function ListenContent() {
     return tags
   }
 
+  const handleSavePlaylist = () => {
+    // TODO: Implement save playlist dialog
+    console.log('Save playlist clicked')
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Head>
@@ -397,6 +472,39 @@ function ListenContent() {
               Listen to Songs
             </h1>
           </div>
+        </div>
+
+        {/* Playlist Selection and Save Button */}
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Select value={selectedPlaylist || ''} onValueChange={handlePlaylistChange}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select a playlist" />
+              </SelectTrigger>
+              <SelectContent>
+                {playlists && playlists.map((playlist: any) => (
+                  <SelectItem key={playlist.id} value={playlist.id.toString()}>
+                    {playlist.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedPlaylist && (
+              <div className="w-12 h-12 relative">
+                <Image
+                  src={playlists?.find((p: any) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
+                  alt="Playlist cover"
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-md"
+                />
+              </div>
+            )}
+          </div>
+          <Button onClick={handleSavePlaylist} className="flex items-center space-x-2">
+            <Save className="w-4 h-4" />
+            <span>Save Playlist</span>
+          </Button>
         </div>
 
         {/* Filter Group Section */}
@@ -420,22 +528,6 @@ function ListenContent() {
           )}
         </AnimatePresence>
 
-        {/* Filter Toggle Button */}
-        {!isFilterExpanded && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => setIsFilterExpanded(true)}
-            className={`fixed right-4 z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${
-              isHeaderVisible ? 'top-16' : 'top-12'
-            }`}
-            aria-label="Expand filters"
-          >
-            <Filter className="h-5 w-5" />
-          </motion.button>
-        )}
         <Separator />
       </div>
 
@@ -471,6 +563,21 @@ function ListenContent() {
           <p>No songs found.</p>
         )}
       </main>
+
+      {/* Filter Toggle Button - Moved to bottom right */}
+      {!isFilterExpanded && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.2 }}
+          onClick={() => setIsFilterExpanded(true)}
+          className="fixed right-4 bottom-4 z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300"
+          aria-label="Expand filters"
+        >
+          <Filter className="h-5 w-5" />
+        </motion.button>
+      )}
     </div>
   )
 }
