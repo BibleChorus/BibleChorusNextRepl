@@ -346,6 +346,7 @@ function UploadContent() {
         audio_url: audioUrl,
         song_art_url: songArtUrl,
         uploaded_by: user?.id,
+        duration: audioDuration ? Math.round(audioDuration) : undefined, // Add this line
       };
 
       // Send the form data to your backend
@@ -393,7 +394,7 @@ function UploadContent() {
       const formData = form.getValues();
       
       // Round the duration to the nearest integer
-      form.setValue('duration', Math.round(audioDuration || 0));
+      formData.duration = audioDuration ? Math.round(audioDuration) : undefined;
       
       // Ensure genres is an array
       if (!Array.isArray(formData.genres)) {

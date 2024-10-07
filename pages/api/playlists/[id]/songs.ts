@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
+import { parsePostgresArray } from '@/lib/utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
@@ -15,6 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'songs.title',
           'users.username',
           'songs.uploaded_by',
+          'songs.artist',
           'songs.genres',
           'songs.created_at',
           'songs.audio_url',
@@ -49,7 +51,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       songs.forEach(song => {
         song.bible_verses = versesBySongId[song.id] || [];
-        song.genres = song.genres ? JSON.parse(song.genres) : [];
+        // Use parsePostgresArray to handle genres
+        song.genres = parsePostgresArray(song.genres);
       });
 
       res.status(200).json(songs);

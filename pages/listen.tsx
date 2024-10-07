@@ -19,17 +19,22 @@ import Image from 'next/image'
 import axios from 'axios'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from "sonner"
+import { parsePostgresArray } from '@/lib/utils'; // Import the utility function
 
-const fetcher = (url: string) => fetch(url).then(res => res.json()).then(data => {
-  console.log('Raw API response data:', data);
-  return {
-    songs: data.songs.map((song: any) => ({
-      ...song,
-      duration: song.duration, // Explicitly include duration
-    })),
-    total: data.total || 0,
-  };
-});
+const fetcher = (url: string) =>
+  fetch(url)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log('Raw API response data:', data);
+      return {
+        songs: data.songs.map((song: any) => ({
+          ...song,
+          duration: song.duration, // Explicitly include duration
+          genres: parsePostgresArray(song.genres), // Parse genres to an array
+        })),
+        total: data.total || 0,
+      };
+    });
 
 // Updated Song type definition
 export type Song = {
@@ -38,8 +43,7 @@ export type Song = {
   username: string;
   uploaded_by: number;
   artist: string;
-  // Remove 'genre: string;'
-  genres: string[]; // Add this line
+  genres: string[]; // Ensure genres is typed as an array of strings
   created_at: string;
   audio_url: string;
   song_art_url?: string;
@@ -215,7 +219,7 @@ function ListenContent() {
           id: song.id || song.song_id,
           username: song.username || 'Unknown User',
           uploaded_by: song.uploaded_by || song.user_id,
-          genres: Array.isArray(song.genres) ? song.genres : (song.genres ? [song.genres] : []),
+          genres: parsePostgresArray(song.genres), // Parse genres to an array
           bible_verses: Array.isArray(song.bible_verses) ? song.bible_verses : [],
           duration: song.duration || 0,
           play_count: song.play_count || 0,

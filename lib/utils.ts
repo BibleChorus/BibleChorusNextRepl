@@ -37,3 +37,22 @@ export function formatBibleVerses(verses: BibleVerse[]): string {
 
   return formattedVerses.join('; ');
 }
+
+export function parsePostgresArray(pgArray: unknown): string[] {
+  if (!pgArray) return [];
+  if (Array.isArray(pgArray)) {
+    return pgArray.map(String); // Ensure all elements are strings
+  }
+  if (typeof pgArray !== 'string') {
+    return [];
+  }
+  return pgArray
+    .slice(1, -1) // Remove the curly braces
+    .split(',')
+    .map((item) =>
+      item
+        .trim()
+        .replace(/^"|"$/g, '')
+        .replace(/\\"/g, '"')
+    );
+}

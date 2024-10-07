@@ -36,6 +36,7 @@ import AsyncSelect from 'react-select/async'
 import { BOLLS_LIFE_API_BIBLE_TRANSLATIONS } from '@/lib/constants'
 import DOMPurify from 'isomorphic-dompurify';
 import { ImageCropper } from '@/components/UploadPage/ImageCropper'
+import { parsePostgresArray } from '@/lib/utils'; // Add a utility function to parse PostgreSQL arrays
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -1683,19 +1684,32 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { id } = context.params as { id: string }
+  const { id } = context.params as { id: string };
 
   try {
     const song = await db('songs')
       .join('users', 'songs.uploaded_by', 'users.id')
       .where('songs.id', id)
       .select('songs.*', 'users.username')
-      .first()
+      .first();
 
     if (!song) {
       return {
-        notFound: true
-      }
+        notFound: true,
+      };
+    }
+
+    console.log('song.genres:', song.genres);
+    console.log('Type of song.genres:', typeof song.genres);
+
+    // Only parse if genres is a string
+    if (typeof song.genres === 'string') {
+      song.genres = parsePostgresArray(song.genres);
+    } else if (Array.isArray(song.genres)) {
+      // Already an array, no need to parse
+    } else {
+      // Handle unexpected types
+      song.genres = [];
     }
 
     // Fetch Bible verses for the song, excluding KJV_text
@@ -1715,9 +1729,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: { song: JSON.parse(JSON.stringify(song)) }
     }
   } catch (error) {
-    console.error('Error fetching song:', error)
+    console.error('Error fetching song:', error);
     return {
-      notFound: true
-    }
+      notFound: true,
+    };
   }
-}
+};

@@ -24,7 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     music_model_used,
     song_art_url,
     bible_verses,
-    genres,
     duration,
   } = req.body;
 
@@ -46,8 +45,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!lyrics_scripture_adherence) missingFields.push('lyrics_scripture_adherence');
   if (!lyrics) missingFields.push('lyrics');
   if (!bible_verses) missingFields.push('bible_verses');
-  if (!Array.isArray(genres) || genres.length === 0) missingFields.push('genres');
   if (duration === undefined || duration === null) missingFields.push('duration');
+
+  // Ensure genres is an array
+  const genres = Array.isArray(req.body.genres) ? req.body.genres : [];
+
+  // Validate genres
+  if (genres.length === 0) {
+    missingFields.push('genres');
+  }
 
   if (missingFields.length > 0) {
     console.log('Missing required fields:', missingFields);
@@ -98,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ai_used_for_lyrics: ai_used_for_lyrics || false,
       music_ai_generated: music_ai_generated || false,
       bible_translation_used,
-      genres, // This should now be an array
+      genres, // Use the genres array directly
       lyrics_scripture_adherence: mappedAdherence,
       is_continuous_passage: is_continuous_passage || false,
       lyrics,
@@ -186,7 +192,6 @@ async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData
     .where('song_id', songId)
     .pluck('verse_id');
 
-  // Remove the split operation as genres is already an array
   const genres = songData.genres;
 
   for (const verseId of verseIds) {
@@ -208,12 +213,11 @@ async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData
       `, [songData.bible_translation_used, songData.bible_translation_used, JSON.stringify([songId])])
     };
 
-    // Update the bible_verses table with all fields except genre_song_ids
     await trx('bible_verses')
       .where('id', verseId)
       .update(updateObj);
 
-    // Update genre_song_ids separately for each genre
+    // Update genre_song_ids for each genre
     for (const genre of genres) {
       await trx('bible_verses')
         .where('id', verseId)
