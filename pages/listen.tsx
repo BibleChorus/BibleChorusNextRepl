@@ -4,7 +4,7 @@ import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
 import { Filters, FilterOptions } from '@/components/ListenPage/Filters'
 import { motion, AnimatePresence } from "framer-motion"
-import { Filter, X, Info, Save } from "lucide-react"
+import { Filter, X, Info, Save, Search, Check } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -20,6 +20,10 @@ import axios from 'axios'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from "sonner"
 import { parsePostgresArray } from '@/lib/utils'; // Import the utility function
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
 
 const fetcher = (url: string) =>
   fetch(url)
@@ -164,6 +168,22 @@ function ListenContent() {
     (url) => axios.get(url).then(res => res.data)
   )
 
+  const [playlistSearch, setPlaylistSearch] = useState('')
+  const [isPlaylistPopoverOpen, setIsPlaylistPopoverOpen] = useState(false)
+
+  const filteredPlaylists = playlists?.filter(playlist =>
+    playlist.name.toLowerCase().includes(playlistSearch.toLowerCase())
+  ) || []
+
+  const handlePlaylistSelect = (playlistId: string) => {
+    handlePlaylistChange(playlistId)
+    setIsPlaylistPopoverOpen(false)
+  }
+
+  const clearPlaylistSelection = () => {
+    handlePlaylistChange('')  // Change this line
+  }
+
   // Move the useSWRInfinite hook before handlePlaylistChange
   const {
     data,
@@ -191,7 +211,7 @@ function ListenContent() {
   );
 
   const handlePlaylistChange = useCallback(async (playlistId: string) => {
-    setSelectedPlaylist(playlistId)
+    setSelectedPlaylist(playlistId || null)  // Add this line to handle empty string
     
     // Clear existing filters
     setFilterOptions({
@@ -481,22 +501,63 @@ function ListenContent() {
         {/* Playlist Selection and Save Button */}
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Select value={selectedPlaylist || ''} onValueChange={handlePlaylistChange}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select a playlist" />
-              </SelectTrigger>
-              <SelectContent>
-                {playlists && playlists.map((playlist: any) => (
-                  <SelectItem key={playlist.id} value={playlist.id.toString()}>
-                    {playlist.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[200px] justify-between">
+                  {selectedPlaylist ? (
+                    <>
+                      {playlists?.find(p => p.id.toString() === selectedPlaylist)?.name || 'Select a playlist'}
+                      <X
+                        className="h-4 w-4 ml-2 hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          clearPlaylistSelection()
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <>Select a playlist</>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[200px] p-0">
+                <div className="p-2">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search playlists..."
+                      value={playlistSearch}
+                      onChange={(e) => setPlaylistSearch(e.target.value)}
+                      className="h-8"
+                    />
+                  </div>
+                  <ScrollArea className="h-[200px]">
+                    {filteredPlaylists.map((playlist) => (
+                      <div
+                        key={playlist.id}
+                        className={cn(
+                          "flex items-center px-2 py-1 cursor-pointer hover:bg-accent",
+                          selectedPlaylist === playlist.id.toString() && "bg-accent"
+                        )}
+                        onClick={() => handlePlaylistSelect(playlist.id.toString())}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedPlaylist === playlist.id.toString() ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        <span>{playlist.name}</span>
+                      </div>
+                    ))}
+                  </ScrollArea>
+                </div>
+              </PopoverContent>
+            </Popover>
             {selectedPlaylist && (
               <div className="w-12 h-12 relative">
                 <Image
-                  src={playlists?.find((p: any) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
+                  src={playlists?.find((p) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
                   alt="Playlist cover"
                   layout="fill"
                   objectFit="cover"
