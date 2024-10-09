@@ -24,6 +24,15 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { TooltipProvider } from '@/components/ui/tooltip'; // Ensure the correct import path
+
+// Define the User type here
+type User = {
+  id: string;
+  username: string;
+  email: string;
+  profile_image_url?: string;
+};
 
 const fetcher = (url: string) =>
   fetch(url)
@@ -61,13 +70,16 @@ export type Song = {
 
 export default function Listen() {
   return (
-    <ListenContent />
-  )
+    <TooltipProvider>
+      <ListenContent />
+    </TooltipProvider>
+  );
 }
 
 function ListenContent() {
   const router = useRouter()
   const querySearch = router.query.search as string || ''
+  const { user } = useAuth(); // Use useAuth at the top level
 
   // Initialize filterOptions with URL query
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
@@ -84,6 +96,10 @@ function ListenContent() {
     search: querySearch,
     bibleChapters: {},
     bibleVerses: [],
+    showLikedSongs: false,
+    showBestMusically: false,
+    showBestLyrically: false,
+    showBestOverall: false,
   })
 
   useEffect(() => {
@@ -106,7 +122,12 @@ function ListenContent() {
   }, [filterOptions])
 
   // Build query string for filters
-  const buildQueryString = (filters: FilterOptions, page: number) => {
+  const buildQueryString = (
+    filters: FilterOptions,
+    page: number,
+    user: User | null,
+    selectedPlaylist: string | null
+  ) => {
     const params = new URLSearchParams()
 
     // Add filters to params
@@ -149,6 +170,30 @@ function ListenContent() {
     // Add bibleVerses to params
     filters.bibleVerses.forEach(verse => params.append('bibleVerses', verse))
 
+    if (selectedPlaylist) {
+      params.append('playlist_id', selectedPlaylist);
+    }
+
+    if (filters.showLikedSongs) {
+      params.append('showLikedSongs', 'true');
+    }
+
+    if (filters.showBestMusically) {
+      params.append('showBestMusically', 'true');
+    }
+
+    if (filters.showBestLyrically) {
+      params.append('showBestLyrically', 'true');
+    }
+
+    if (filters.showBestOverall) {
+      params.append('showBestOverall', 'true');
+    }
+
+    if (user) {
+      params.append('userId', user.id.toString());
+    }
+
     params.append('page', page.toString())
     params.append('limit', '20')
 
@@ -159,8 +204,6 @@ function ListenContent() {
   const [hasMore, setHasMore] = useState(true);
 
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null)
-  const [playlistSongs, setPlaylistSongs] = useState<Song[]>([])
-  const { user } = useAuth()
 
   // Fetch playlists
   const { data: playlists, error: playlistError } = useSWR(
@@ -175,16 +218,7 @@ function ListenContent() {
     playlist.name.toLowerCase().includes(playlistSearch.toLowerCase())
   ) || []
 
-  const handlePlaylistSelect = (playlistId: string) => {
-    handlePlaylistChange(playlistId)
-    setIsPlaylistPopoverOpen(false)
-  }
-
-  const clearPlaylistSelection = () => {
-    handlePlaylistChange('')  // Change this line
-  }
-
-  // Move the useSWRInfinite hook before handlePlaylistChange
+  // Infinite scroll data fetching
   const {
     data,
     error,
@@ -193,80 +227,44 @@ function ListenContent() {
     setSize,
     mutate,
   } = useSWRInfinite(
-    (index) => selectedPlaylist
-      ? null // Don't fetch when a playlist is selected
-      : `/api/songs?${buildQueryString(debouncedFilters, index + 1)}`,
-    selectedPlaylist ? null : fetcher, // Don't use fetcher when a playlist is selected
+    (index) =>
+      `/api/songs?${buildQueryString(
+        debouncedFilters,
+        index + 1,
+        user,
+        selectedPlaylist
+      )}`,
+    fetcher,
     {
       revalidateOnFocus: false,
       revalidateFirstPage: false,
       onSuccess: (data) => {
-        if (!selectedPlaylist) {
-          const total = data?.[0]?.total || 0;
-          const loadedSongs = data ? data.flatMap((page) => page.songs).length : 0;
-          setHasMore(loadedSongs < total);
-        }
+        const total = data?.[0]?.total || 0;
+        const loadedSongs = data ? data.flatMap((page) => page.songs).length : 0;
+        setHasMore(loadedSongs < total);
       },
     }
-  );
+  )
 
-  const handlePlaylistChange = useCallback(async (playlistId: string) => {
-    setSelectedPlaylist(playlistId || null)  // Add this line to handle empty string
-    
-    // Clear existing filters
-    setFilterOptions({
-      lyricsAdherence: [],
-      isContinuous: "all",
-      aiMusic: "all",
-      genres: [],
-      aiUsedForLyrics: "all",
-      musicModelUsed: "",
-      title: "",
-      artist: "",
-      bibleTranslation: "",
-      bibleBooks: [],
-      bibleChapters: {},
-      bibleVerses: [],
-      search: "",
-    })
+  // Handle playlist selection
+  const handlePlaylistSelect = (playlistId: string) => {
+    handlePlaylistChange(playlistId);
+    setIsPlaylistPopoverOpen(false);
+  }
 
-    // Fetch songs for the selected playlist
-    if (playlistId) {
-      try {
-        const response = await axios.get(`/api/playlists/${playlistId}/songs`)
-        const playlistSongs = response.data.map((song: any) => ({
-          ...song,
-          id: song.id || song.song_id,
-          username: song.username || 'Unknown User',
-          uploaded_by: song.uploaded_by || song.user_id,
-          genres: parsePostgresArray(song.genres), // Parse genres to an array
-          bible_verses: Array.isArray(song.bible_verses) ? song.bible_verses : [],
-          duration: song.duration || 0,
-          play_count: song.play_count || 0,
-        }))
+  const handlePlaylistChange = (playlistId: string) => {
+    setSelectedPlaylist(playlistId || null);
+    setSize(1); // Reset pagination
+    mutate();   // Re-fetch data with new playlist selection
+  }
 
-        setPlaylistSongs(playlistSongs)
-        // Update the songs state with the playlist songs
-        setSize(1) // Reset pagination
-        mutate(() => [{
-          songs: playlistSongs,
-          total: playlistSongs.length
-        }], false) // Set revalidate to false
-      } catch (error) {
-        console.error('Error fetching playlist songs:', error)
-        toast.error('Failed to fetch playlist songs')
-      }
-    } else {
-      // If no playlist is selected, clear the playlist songs
-      setPlaylistSongs([])
-      // Reset to fetching all songs
-      setSize(1)
-      mutate()
-    }
-  }, [setFilterOptions, setSize, mutate])
+  // Clear playlist selection
+  const clearPlaylistSelection = () => {
+    handlePlaylistChange('');
+  }
 
-  // Merge the paginated data or use playlist songs
-  const songs = selectedPlaylist ? playlistSongs : (data ? data.flatMap((page) => page.songs) : []);
+  // Songs are derived from the data fetched by SWRInfinite
+  const songs = data ? data.flatMap((page) => page.songs) : []
 
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0,
@@ -292,7 +290,17 @@ function ListenContent() {
 
   const removeFilter = (filterType: keyof FilterOptions, value?: string) => {
     setFilterOptions((prev) => {
-      if (filterType === 'aiUsedForLyrics') {
+      if (
+        filterType === 'showLikedSongs' ||
+        filterType === 'showBestMusically' ||
+        filterType === 'showBestLyrically' ||
+        filterType === 'showBestOverall'
+      ) {
+        return {
+          ...prev,
+          [filterType]: false,
+        };
+      } else if (filterType === 'aiUsedForLyrics') {
         return {
           ...prev,
           aiUsedForLyrics: 'all'  // Reset to 'all' when the tag is removed
@@ -470,6 +478,34 @@ function ListenContent() {
           label: `Verse: ${verse}`,
           value: verse,
         });
+      });
+    }
+
+    if (filterOptions.showLikedSongs) {
+      tags.push({
+        type: 'showLikedSongs',
+        label: 'Liked Songs',
+      });
+    }
+
+    if (filterOptions.showBestMusically) {
+      tags.push({
+        type: 'showBestMusically',
+        label: 'Voted Best Musically',
+      });
+    }
+
+    if (filterOptions.showBestLyrically) {
+      tags.push({
+        type: 'showBestLyrically',
+        label: 'Voted Best Lyrically',
+      });
+    }
+
+    if (filterOptions.showBestOverall) {
+      tags.push({
+        type: 'showBestOverall',
+        label: 'Voted Best Overall',
       });
     }
 

@@ -20,6 +20,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         page = '1',
         limit = '20',
         search,
+        playlist_id,
+        showLikedSongs,
+        showBestMusically,
+        showBestLyrically,
+        showBestOverall,
+        userId,
       } = req.query;
 
       // Adjust limit and offset for infinite scroll
@@ -27,6 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const pageNum = parseInt(page as string, 10) || 1;
       const offset = (pageNum - 1) * limitNum;
 
+      // Start building the query
       let query = db('songs')
         .select(
           'songs.id',
@@ -46,9 +53,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'songs.duration', // Add this line
           'songs.play_count' // Add this line if not already present
         )
-        .join('users', 'songs.uploaded_by', 'users.id')
-        .limit(limitNum)
-        .offset(offset);
+        .join('users', 'songs.uploaded_by', 'users.id');
+
+      // Handle user-specific filters
+      if (userId && (showLikedSongs || showBestMusically || showBestLyrically || showBestOverall)) {
+        query = query.whereIn('songs.id', function () {
+          this.select('s.id')
+            .from('songs as s');
+
+          if (showLikedSongs) {
+            this.join('likes', function () {
+              this.on('likes.likeable_id', '=', 's.id')
+                .andOn('likes.likeable_type', '=', db.raw('?', ['song']))
+                .andOn('likes.user_id', '=', db.raw('?', [userId]));
+            });
+          }
+
+          if (showBestMusically || showBestLyrically || showBestOverall) {
+            this.join('votes', function () {
+              this.on('votes.song_id', '=', 's.id')
+                .andOn('votes.user_id', '=', db.raw('?', [userId]));
+            });
+
+            if (showBestMusically) {
+              this.orWhere(function () {
+                this.where('votes.vote_type', 'Best Musically')
+                  .andWhere('votes.vote_value', 1);
+              });
+            }
+
+            if (showBestLyrically) {
+              this.orWhere(function () {
+                this.where('votes.vote_type', 'Best Lyrically')
+                  .andWhere('votes.vote_value', 1);
+              });
+            }
+
+            if (showBestOverall) {
+              this.orWhere(function () {
+                this.where('votes.vote_type', 'Best Overall')
+                  .andWhere('votes.vote_value', 1);
+              });
+            }
+          }
+        });
+      }
+
+      // If a playlist_id is provided, join with the playlist_songs table
+      if (playlist_id) {
+        query = query
+          .join('playlist_songs', 'songs.id', 'playlist_songs.song_id')
+          .where('playlist_songs.playlist_id', playlist_id);
+      }
 
       // Apply filters
       if (lyricsAdherence) {

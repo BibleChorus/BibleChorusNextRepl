@@ -10,6 +10,7 @@ import { Toaster } from 'sonner'
 import { useState, useEffect } from 'react'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import Router from 'next/router'
+import { TooltipProvider } from '@/components/ui/tooltip'; // Adjust the import path if necessary
 
 const queryClient = new QueryClient()
 

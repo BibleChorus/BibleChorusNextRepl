@@ -4,7 +4,7 @@ import { Dispatch, SetStateAction, useState, useCallback, useEffect } from "reac
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark } from "lucide-react"
+import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark, Heart, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export interface FilterOptions {
   lyricsAdherence: string[]
@@ -28,6 +33,10 @@ export interface FilterOptions {
   bibleChapters: { [book: string]: number[] }
   bibleVerses: string[]
   search: string
+  showLikedSongs?: boolean;
+  showBestMusically?: boolean;
+  showBestLyrically?: boolean;
+  showBestOverall?: boolean;
 }
 
 interface FiltersProps {
@@ -53,6 +62,27 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
   const [openBibleVerses, setOpenBibleVerses] = useState(false)
   const [bibleVerseSearch, setBibleVerseSearch] = useState('')
   const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>(filterOptions.bibleVerses || [])
+
+  // Add state for user interactions
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  // Handle window resize to adjust layout
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 768); // Adjust breakpoint as needed
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Function to handle Like and Vote Type filters
+  const toggleUserFilter = (key: keyof FilterOptions) => {
+    setFilterOptions((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
 
   // Synchronize selectedChapters with filterOptions.bibleChapters
   useEffect(() => {
@@ -152,6 +182,10 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       bibleChapters: {},
       bibleVerses: [],
       search: "",
+      showLikedSongs: false,
+      showBestMusically: false,
+      showBestLyrically: false,
+      showBestOverall: false,
     })
   }
 
@@ -239,21 +273,114 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center space-x-2">
-          <h2 className="text-lg font-semibold">Filters</h2>
-          <Popover>
-            <PopoverTrigger>
-              <Info className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer" />
-            </PopoverTrigger>
-            <PopoverContent>
-              <p className="text-sm">
-                Adjust filters to refine your song list.
-              </p>
-            </PopoverContent>
-          </Popover>
+      <div className="flex flex-col sm:flex-row items-center justify-between mb-4 space-y-2 sm:space-y-0">
+        <div className="flex items-center justify-between w-full sm:w-auto">
+          <div className="flex items-center space-x-2">
+            <h2 className="text-lg font-semibold">Filters</h2>
+            <Popover>
+              <PopoverTrigger>
+                <Info className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+              </PopoverTrigger>
+              <PopoverContent>
+                <p className="text-sm">
+                  Adjust filters to refine your song list.
+                </p>
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="flex items-center space-x-2 sm:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearFilters}
+              className="text-xs"
+            >
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Clear
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsFilterExpanded(false)}
+              className="text-xs"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Close
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
+
+        {/* Like and Vote Type Icons */}
+        <div className="flex items-center space-x-2 w-full sm:w-auto sm:justify-center justify-start">
+          {/* Like Filter Icon */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={filterOptions.showLikedSongs ? "secondary" : "outline"}
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => toggleUserFilter('showLikedSongs')}
+              >
+                <Heart className="h-3 w-3" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Show Liked Songs</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Vote Type Filter Icons */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={filterOptions.showBestMusically ? "secondary" : "outline"}
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => toggleUserFilter('showBestMusically')}
+              >
+                <Music className="h-3 w-3" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Best Musically Voted</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={filterOptions.showBestLyrically ? "secondary" : "outline"}
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => toggleUserFilter('showBestLyrically')}
+              >
+                <BookOpen className="h-3 w-3" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Best Lyrically Voted</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={filterOptions.showBestOverall ? "secondary" : "outline"}
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => toggleUserFilter('showBestOverall')}
+              >
+                <Star className="h-3 w-3" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Best Overall Voted</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
+        {/* Clear Filters and Close Filters Buttons (visible on larger screens) */}
+        <div className="hidden sm:flex items-center space-x-2">
           <Button
             variant="outline"
             size="sm"
@@ -263,14 +390,15 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
             <RefreshCw className="h-4 w-4" />
             Clear Filters
           </Button>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setIsFilterExpanded(false)}
-            className="text-sm flex items-center text-muted-foreground hover:text-foreground"
-            aria-label="Close filters"
+            className="flex items-center gap-2"
           >
             Close Filters
-            <X className="h-4 w-4 ml-1" />
-          </button>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       </div>
       
