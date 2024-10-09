@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
 import { Filters, FilterOptions } from '@/components/ListenPage/Filters'
@@ -25,6 +25,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { TooltipProvider } from '@/components/ui/tooltip'; // Ensure the correct import path
+import SavePlaylistDialog from '@/components/ListenPage/SavePlaylistDialog'
+import { ImageCropper } from '@/components/UploadPage/ImageCropper';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { uploadFile } from '@/lib/uploadUtils';
+import { useForm } from 'react-hook-form';
 
 // Define the User type here
 type User = {
@@ -512,10 +517,44 @@ function ListenContent() {
     return tags
   }
 
+  const [isSavePlaylistDialogOpen, setIsSavePlaylistDialogOpen] = useState(false);
+
+  // New state variables for image cropping
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
+
+  // Handler to open the ImageCropper
+  const openImageCropper = () => {
+    setIsCropperOpen(true);
+  };
+
+  // Handler when cropping is complete
+  const onImageCropComplete = async (croppedFile: File) => {
+    // Handle the cropped image file
+    // Upload the cropped file and update the form value in SavePlaylistDialog
+    await uploadCoverArt(croppedFile);
+    setIsCropperOpen(false);
+  };
+
+  // Function to upload the cover art
+  const uploadCoverArt = async (file: File) => {
+    if (!user) return;
+    try {
+      const fileKey = await uploadFile(file, 'image', Number(user.id));
+      // Update the form value in SavePlaylistDialog
+      formRef.current?.setValue('cover_art_url', fileKey, { shouldValidate: true });
+      toast.success('Cover art uploaded');
+    } catch (error) {
+      console.error('Error uploading cover art:', error);
+      toast.error('Failed to upload cover art');
+    }
+  };
+
   const handleSavePlaylist = () => {
-    // TODO: Implement save playlist dialog
-    console.log('Save playlist clicked')
+    setIsSavePlaylistDialogOpen(true)
   }
+
+  const formRef = useRef<ReturnType<typeof useForm<FormValues>>>(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -681,6 +720,32 @@ function ListenContent() {
           <Filter className="h-5 w-5" />
         </motion.button>
       )}
+
+      {/* Add SavePlaylistDialog */}
+      <SavePlaylistDialog
+        isOpen={isSavePlaylistDialogOpen}
+        onClose={() => setIsSavePlaylistDialogOpen(false)}
+        songs={songs} // Pass the current list of songs
+        filterOptions={filterOptions}
+        playlists={playlists}
+        user={user}
+        onImageCropComplete={onImageCropComplete} // New prop
+        openImageCropper={openImageCropper}       // New prop
+        formRef={formRef}
+      />
+
+      {/* Image Cropper Dialog */}
+      <Dialog open={isCropperOpen} onOpenChange={setIsCropperOpen}>
+        <DialogContent>
+          {cropImageUrl && (
+            <ImageCropper
+              imageUrl={cropImageUrl}
+              onCropComplete={onImageCropComplete}
+              onCancel={() => setIsCropperOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
