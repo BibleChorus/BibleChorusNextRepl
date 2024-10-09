@@ -13,26 +13,45 @@ interface Song {
   created_at: string;
 }
 
+interface Playlist {
+  id: number;
+  name: string;
+  description?: string;
+  created_at: string;
+}
+
 export default function Profile() {
   const { user } = useAuth();
   const router = useRouter()
   const [songs, setSongs] = useState<Song[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
 
   useEffect(() => {
     if (!user) {
       router.push('/login')
     } else {
       fetchUserSongs();
+      fetchUserPlaylists();
     }
   }, [user, router])
 
   const fetchUserSongs = async () => {
-    if (!user) return; // Add this check
+    if (!user) return;
     try {
       const response = await axios.get(`/api/users/${user.id}/songs`);
       setSongs(response.data);
     } catch (error) {
       console.error('Error fetching user songs:', error);
+    }
+  };
+
+  const fetchUserPlaylists = async () => {
+    if (!user) return;
+    try {
+      const response = await axios.get(`/api/users/${user.id}/playlists`);
+      setPlaylists(response.data);
+    } catch (error) {
+      console.error('Error fetching user playlists:', error);
     }
   };
 
@@ -63,6 +82,25 @@ export default function Profile() {
         <button className="mb-8 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
           Edit Profile
         </button>
+
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Your Playlists</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {playlists.map((playlist) => (
+            <Link
+              href={`/playlists/${playlist.id}`}
+              key={playlist.id}
+              className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+            >
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{playlist.name}</h3>
+              {playlist.description && (
+                <p className="text-gray-600 dark:text-gray-400">{playlist.description}</p>
+              )}
+              <p className="text-xs text-gray-400 dark:text-gray-600 mt-2">
+                {new Date(playlist.created_at).toLocaleDateString()}
+              </p>
+            </Link>
+          ))}
+        </div>
 
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Your Uploaded Songs</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

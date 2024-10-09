@@ -6,15 +6,49 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     try {
-      const playlists = await db('playlists')
+      // Fetch user's own playlists
+      const userPlaylists = await db('playlists')
         .where('user_id', id)
-        .orWhere('is_public', true)
-        .select('id', 'name', 'cover_art_url', 'is_public', 'user_id');
+        .select('id', 'name', 'description', 'created_at', 'is_public', 'is_auto', 'cover_art_url', 'user_id');
 
-      res.status(200).json(playlists);
+      // Fetch public playlists created by other users
+      const publicPlaylists = await db('playlists')
+        .where('is_public', true)
+        .andWhereNot('user_id', id)
+        .select('id', 'name', 'description', 'created_at', 'is_public', 'is_auto', 'cover_art_url', 'user_id');
+
+      // Fetch auto playlists (where creator is null)
+      const autoPlaylists = await db('playlists')
+        .whereNull('user_id')
+        .select('id', 'name', 'description', 'created_at', 'is_public', 'is_auto', 'cover_art_url', 'user_id');
+
+      // Combine all playlists
+      const allPlaylists = [
+        ...userPlaylists,
+        ...publicPlaylists,
+        ...autoPlaylists
+      ];
+
+      // Fetch usernames for public playlists
+      const userIds = new Set(publicPlaylists.map(playlist => playlist.user_id));
+      const users = await db('users')
+        .whereIn('id', Array.from(userIds))
+        .select('id', 'username');
+
+      const userMap = new Map(users.map(user => [user.id, user.username]));
+
+      // Add creator_username to playlists
+      const playlistsWithCreators = allPlaylists.map(playlist => ({
+        ...playlist,
+        creator_username: playlist.user_id 
+          ? (playlist.user_id === Number(id) ? 'You' : userMap.get(playlist.user_id) || 'Unknown')
+          : 'Auto Playlist'
+      }));
+
+      res.status(200).json(playlistsWithCreators);
     } catch (error) {
-      console.error('Error fetching playlists:', error);
-      res.status(500).json({ message: 'Error fetching playlists', error });
+      console.error('Error fetching user playlists:', error);
+      res.status(500).json({ message: 'Error fetching user playlists', error });
     }
   } else {
     res.setHeader('Allow', ['GET']);
