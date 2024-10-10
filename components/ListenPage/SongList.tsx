@@ -247,7 +247,7 @@ const SongListItem = React.memo(function SongListItem({
   const [selectedVoteType, setSelectedVoteType] = useState<string>('')
   const [localVoteCounts, setLocalVoteCounts] = useState(voteCounts[song.id] || {})
   const [localVoteStates, setLocalVoteStates] = useState(voteStates[song.id] || {})
-  const { playSong, currentSong, isPlaying } = useMusicPlayer()
+  const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer()
 
   // Add this console.log to debug the duration
   console.log(`Song ${song.id} duration:`, song.duration);
@@ -354,7 +354,7 @@ const SongListItem = React.memo(function SongListItem({
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Song Art with Play Button Overlay */}
+      {/* Song Art with Play/Pause Button */}
       <div className="w-20 h-20 sm:w-24 sm:h-24 mr-3 sm:mr-4 relative flex-shrink-0">
         {song.song_art_url && !imageError[song.id] ? (
           <img
@@ -369,30 +369,36 @@ const SongListItem = React.memo(function SongListItem({
           </div>
         )}
         <div 
-          className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          className={`absolute inset-0 flex items-center justify-center 
+            ${currentSong?.id === song.id ? 'bg-black bg-opacity-50' : 'bg-black bg-opacity-50 opacity-0 group-hover:opacity-100'} 
+            transition-opacity duration-300`}
         >
           <button
             className="text-white p-1 sm:p-2"
-            onClick={() =>
-              playSong(
-                {
-                  id: song.id,
-                  title: song.title,
-                  artist: song.artist || song.username,
-                  audioUrl: song.audio_url,
-                  coverArtUrl: song.song_art_url,
-                  duration: song.duration,
-                },
-                songs.map((s) => ({
-                  id: s.id,
-                  title: s.title,
-                  artist: s.artist || s.username,
-                  audioUrl: s.audio_url,
-                  coverArtUrl: s.song_art_url,
-                  duration: s.duration,
-                })) // Pass the queue
-              )
-            }
+            onClick={() => {
+              if (currentSong?.id === song.id) {
+                isPlaying ? pause() : resume();
+              } else {
+                playSong(
+                  {
+                    id: song.id,
+                    title: song.title,
+                    artist: song.artist || song.username,
+                    audioUrl: song.audio_url,
+                    coverArtUrl: song.song_art_url,
+                    duration: song.duration,
+                  },
+                  songs.map((s) => ({
+                    id: s.id,
+                    title: s.title,
+                    artist: s.artist || s.username,
+                    audioUrl: s.audio_url,
+                    coverArtUrl: s.song_art_url,
+                    duration: s.duration,
+                  }))
+                );
+              }
+            }}
           >
             {currentSong?.id === song.id && isPlaying ? (
               <Pause className="h-8 w-8 sm:h-10 sm:w-10" />

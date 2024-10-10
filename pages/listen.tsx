@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Head from 'next/head'
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
 import { Filters, FilterOptions } from '@/components/ListenPage/Filters'
@@ -94,7 +93,8 @@ function ListenContent() {
   const filterButtonBottomClass = useMemo(() => {
     if (currentSong) {
       if (isSmallScreen) {
-        return isMinimized ? 'bottom-16' : 'bottom-24';
+        // Adjusted values for better visibility
+        return isMinimized ? 'bottom-16' : 'bottom-40'; // Increased from 'bottom-24' to 'bottom-40'
       } else {
         return 'bottom-20';
       }
