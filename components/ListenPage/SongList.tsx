@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import axios from 'axios'
 import { toast } from "sonner"
 import { MusicFilled, BookOpenFilled, StarFilled } from '@/components/ui/custom-icons'
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext'
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -243,6 +244,7 @@ const SongListItem = React.memo(function SongListItem({
   const [selectedVoteType, setSelectedVoteType] = useState<string>('')
   const [localVoteCounts, setLocalVoteCounts] = useState(voteCounts[song.id] || {})
   const [localVoteStates, setLocalVoteStates] = useState(voteStates[song.id] || {})
+  const { playSong } = useMusicPlayer()
 
   // Add this console.log to debug the duration
   console.log(`Song ${song.id} duration:`, song.duration);
@@ -368,9 +370,18 @@ const SongListItem = React.memo(function SongListItem({
         >
           <button
             className="text-white p-1 sm:p-2"
-            onClick={() => console.log('Play song:', song.audio_url)}
+            onClick={() =>
+              playSong({
+                id: song.id,
+                title: song.title,
+                artist: song.artist || song.username,
+                audioUrl: song.audio_url,
+                coverArtUrl: song.song_art_url,
+                duration: song.duration,
+              })
+            }
           >
-            <PlayCircle className="h-8 w-8 sm:h-10 sm:w-10" />
+            <Play className="h-8 w-8 sm:h-10 sm:w-10" />
           </button>
         </div>
         {/* Play Count */}

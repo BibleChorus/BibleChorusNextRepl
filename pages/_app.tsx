@@ -11,6 +11,8 @@ import { useState, useEffect } from 'react'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import Router from 'next/router'
 import { TooltipProvider } from '@/components/ui/tooltip'; // Adjust the import path if necessary
+import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
+import FloatingMusicPlayer from '@/components/MusicPlayer/FloatingMusicPlayer';
 
 const queryClient = new QueryClient()
 
@@ -61,17 +63,20 @@ function MyApp({ Component, pageProps }: AppProps) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <AuthProvider>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <LoadingWrapper>
-            {isHomePage ? (
-              <Component {...pageProps} />
-            ) : (
-              <Layout>
+        <MusicPlayerProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <LoadingWrapper>
+              {isHomePage ? (
                 <Component {...pageProps} />
-              </Layout>
-            )}
-          </LoadingWrapper>
-        </ThemeProvider>
+              ) : (
+                <Layout>
+                  <Component {...pageProps} />
+                </Layout>
+              )}
+            </LoadingWrapper>
+            <FloatingMusicPlayer />
+          </ThemeProvider>
+        </MusicPlayerProvider>
       </AuthProvider>
       <Toaster />
     </QueryClientProvider>
