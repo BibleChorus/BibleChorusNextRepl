@@ -32,6 +32,7 @@ export type Song = {
   title: string;
   username: string;
   uploaded_by: number;
+  artist?: string; // Make artist optional
   genres?: string[];
   created_at: string;
   audio_url: string;

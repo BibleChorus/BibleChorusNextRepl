@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useRef, useEffect } from 'react';
+import axios from 'axios'; // Import axios for API calls
 
 // Define the Song type
 type Song = {
@@ -47,6 +48,45 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Ref for the audio element
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // State to track if play count has been incremented for the current song
+  const [hasIncrementedPlayCount, setHasIncrementedPlayCount] = useState<boolean>(false);
+
+  // Function to increment play count
+  const incrementPlayCount = async (songId: number) => {
+    try {
+      await axios.post(`/api/songs/${songId}/increment-play-count`);
+      setHasIncrementedPlayCount(true);
+    } catch (error) {
+      console.error('Error incrementing play count:', error);
+    }
+  };
+
+  // Watch for playback progress to increment play count after a certain duration
+  useEffect(() => {
+    if (audioRef.current && currentSong) {
+      const audioElement = audioRef.current;
+
+      const handleTimeUpdate = () => {
+        const playedPercentage = (audioElement.currentTime / (currentSong.duration || 0)) * 100;
+        // Adjust the percentage or time threshold as needed
+        if (!hasIncrementedPlayCount && playedPercentage > 30) {
+          incrementPlayCount(currentSong.id);
+        }
+      };
+
+      audioElement.addEventListener('timeupdate', handleTimeUpdate);
+
+      return () => {
+        audioElement.removeEventListener('timeupdate', handleTimeUpdate);
+      };
+    }
+  }, [audioRef, currentSong, hasIncrementedPlayCount]);
+
+  // Reset hasIncrementedPlayCount when the song changes
+  useEffect(() => {
+    setHasIncrementedPlayCount(false);
+  }, [currentSong]);
+
   // Play a new song (optionally with a new queue)
   const playSong = (song: Song, newQueue?: Song[]) => {
     if (newQueue) {
@@ -69,6 +109,9 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       audioRef.current.src = song.audioUrl;
       audioRef.current.play();
     }
+
+    // Increment play count when a new song starts playing
+    incrementPlayCount(song.id);
   };
 
   // Pause playback

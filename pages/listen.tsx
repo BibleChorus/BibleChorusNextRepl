@@ -29,7 +29,7 @@ import SavePlaylistDialog from '@/components/ListenPage/SavePlaylistDialog'
 import { ImageCropper } from '@/components/UploadPage/ImageCropper';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { uploadFile } from '@/lib/uploadUtils';
-import { useForm } from 'react-hook-form';
+import { useForm, UseFormReturn } from 'react-hook-form'; // Add this import
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 // Define the User type here
@@ -81,6 +81,17 @@ export default function Listen() {
     </TooltipProvider>
   );
 }
+
+// Update the FormValues type to match SavePlaylistDialog
+type FormValues = {
+  action: 'create' | 'add';
+  playlistId?: string;
+  name?: string;
+  description?: string;
+  isPublic: boolean;
+  coverArtFile?: File;
+  cover_art_url?: string;
+};
 
 function ListenContent() {
   const router = useRouter()
@@ -570,7 +581,7 @@ function ListenContent() {
     setIsSavePlaylistDialogOpen(true)
   }
 
-  const formRef = useRef<ReturnType<typeof useForm<FormValues>>>(null);
+  const formRef = useRef<UseFormReturn<FormValues>>(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -741,12 +752,12 @@ function ListenContent() {
       <SavePlaylistDialog
         isOpen={isSavePlaylistDialogOpen}
         onClose={() => setIsSavePlaylistDialogOpen(false)}
-        songs={songs} // Pass the current list of songs
+        songs={songs}
         filterOptions={filterOptions}
         playlists={playlists}
         user={user}
-        onImageCropComplete={onImageCropComplete} // New prop
-        openImageCropper={openImageCropper}       // New prop
+        onImageCropComplete={onImageCropComplete}
+        openImageCropper={openImageCropper}
         formRef={formRef}
       />
 
