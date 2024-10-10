@@ -202,11 +202,12 @@ export const SongList = React.memo(function SongList({ songs }: SongListProps) {
   return (
     <div className="space-y-2 sm:space-y-4">
       {songs.map((song) => {
-        console.log('Full song object:', song); // Add this line
+        console.log('Full song object:', song);
         return (
           <SongListItem
             key={song.id}
             song={song}
+            songs={songs} // Pass the full list of songs
             likeCounts={likeCounts}
             voteCounts={voteCounts}
             likeStates={likeStates}
@@ -222,6 +223,7 @@ export const SongList = React.memo(function SongList({ songs }: SongListProps) {
 
 const SongListItem = React.memo(function SongListItem({ 
   song, 
+  songs, 
   likeCounts, 
   voteCounts, 
   likeStates, 
@@ -230,6 +232,7 @@ const SongListItem = React.memo(function SongListItem({
   handleVoteClick 
 }: { 
   song: Song, 
+  songs: Song[], 
   likeCounts: Record<number, number>, 
   voteCounts: VoteCounts, 
   likeStates: LikeState, 
@@ -371,14 +374,24 @@ const SongListItem = React.memo(function SongListItem({
           <button
             className="text-white p-1 sm:p-2"
             onClick={() =>
-              playSong({
-                id: song.id,
-                title: song.title,
-                artist: song.artist || song.username,
-                audioUrl: song.audio_url,
-                coverArtUrl: song.song_art_url,
-                duration: song.duration,
-              })
+              playSong(
+                {
+                  id: song.id,
+                  title: song.title,
+                  artist: song.artist || song.username,
+                  audioUrl: song.audio_url,
+                  coverArtUrl: song.song_art_url,
+                  duration: song.duration,
+                },
+                songs.map((s) => ({
+                  id: s.id,
+                  title: s.title,
+                  artist: s.artist || s.username,
+                  audioUrl: s.audio_url,
+                  coverArtUrl: s.song_art_url,
+                  duration: s.duration,
+                })) // Pass the queue
+              )
             }
           >
             <Play className="h-8 w-8 sm:h-10 sm:w-10" />
