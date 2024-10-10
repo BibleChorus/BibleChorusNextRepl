@@ -4,6 +4,7 @@ import { Upload, Search, Map, List, Vote, Headphones, User, HelpCircle, X } from
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import Image from 'next/image'; // Add this import
 import Link from 'next/link'; // Add this import
+import { useSidebar } from '@/contexts/SidebarContext';
 
 const menuItems = [
   { name: 'Upload Songs', icon: Upload, href: '/upload' },
@@ -23,7 +24,9 @@ interface SidebarProps {
   setIsMobileOpen: (isMobileOpen: boolean) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobileOpen, setIsMobileOpen }) => {
+const Sidebar: React.FC = () => {
+  const { isOpen, setIsOpen, isMobileOpen, setIsMobileOpen } = useSidebar();
+
   const router = useRouter();
 
   const handleItemClick = (href: string) => {

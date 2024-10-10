@@ -3,16 +3,16 @@ import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import Layout from '../components/layout'
 import { useRouter } from 'next/router'
-import { ThemeProvider } from 'next-themes'
+import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { QueryClient, QueryClientProvider, useIsFetching } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import { useState, useEffect } from 'react'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import Router from 'next/router'
-import { TooltipProvider } from '@/components/ui/tooltip'; // Adjust the import path if necessary
-import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
-import FloatingMusicPlayer from '@/components/MusicPlayer/FloatingMusicPlayer';
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext'
+import FloatingMusicPlayer from '@/components/MusicPlayer/FloatingMusicPlayer'
+import { SidebarProvider } from '@/contexts/SidebarContext'
 
 const queryClient = new QueryClient()
 
@@ -52,10 +52,16 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     // Disable the default loading indicator
-    Router.events.on('routeChangeStart', () => {})
-    Router.events.on('routeChangeComplete', () => {})
-    Router.events.on('routeChangeError', () => {})
-  }, [])
+    const handleRouteChange = () => {}
+    router.events.on('routeChangeStart', handleRouteChange)
+    router.events.on('routeChangeComplete', handleRouteChange)
+    router.events.on('routeChangeError', handleRouteChange)
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChange)
+      router.events.off('routeChangeComplete', handleRouteChange)
+      router.events.off('routeChangeError', handleRouteChange)
+    }
+  }, [router])
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -64,18 +70,22 @@ function MyApp({ Component, pageProps }: AppProps) {
       </Head>
       <AuthProvider>
         <MusicPlayerProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <LoadingWrapper>
-              {isHomePage ? (
-                <Component {...pageProps} />
-              ) : (
-                <Layout>
-                  <Component {...pageProps} />
-                </Layout>
-              )}
-            </LoadingWrapper>
-            <FloatingMusicPlayer />
-          </ThemeProvider>
+          <SidebarProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              <TooltipProvider>
+                <LoadingWrapper>
+                  {isHomePage ? (
+                    <Component {...pageProps} />
+                  ) : (
+                    <Layout>
+                      <Component {...pageProps} />
+                    </Layout>
+                  )}
+                </LoadingWrapper>
+                <FloatingMusicPlayer />
+              </TooltipProvider>
+            </ThemeProvider>
+          </SidebarProvider>
         </MusicPlayerProvider>
       </AuthProvider>
       <Toaster />
