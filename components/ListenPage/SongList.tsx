@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Play } from 'lucide-react'
+import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Play, Pause } from 'lucide-react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 import { formatBibleVerses } from '@/lib/utils'
@@ -247,7 +247,7 @@ const SongListItem = React.memo(function SongListItem({
   const [selectedVoteType, setSelectedVoteType] = useState<string>('')
   const [localVoteCounts, setLocalVoteCounts] = useState(voteCounts[song.id] || {})
   const [localVoteStates, setLocalVoteStates] = useState(voteStates[song.id] || {})
-  const { playSong } = useMusicPlayer()
+  const { playSong, currentSong, isPlaying } = useMusicPlayer()
 
   // Add this console.log to debug the duration
   console.log(`Song ${song.id} duration:`, song.duration);
@@ -394,7 +394,11 @@ const SongListItem = React.memo(function SongListItem({
               )
             }
           >
-            <Play className="h-8 w-8 sm:h-10 sm:w-10" />
+            {currentSong?.id === song.id && isPlaying ? (
+              <Pause className="h-8 w-8 sm:h-10 sm:w-10" />
+            ) : (
+              <Play className="h-8 w-8 sm:h-10 sm:w-10" />
+            )}
           </button>
         </div>
         {/* Play Count */}

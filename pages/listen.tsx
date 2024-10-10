@@ -1,5 +1,6 @@
+import React from 'react';
 import Head from 'next/head'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
 import { Filters, FilterOptions } from '@/components/ListenPage/Filters'
@@ -30,6 +31,7 @@ import { ImageCropper } from '@/components/UploadPage/ImageCropper';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { uploadFile } from '@/lib/uploadUtils';
 import { useForm } from 'react-hook-form';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 // Define the User type here
 type User = {
@@ -85,6 +87,21 @@ function ListenContent() {
   const router = useRouter()
   const querySearch = router.query.search as string || ''
   const { user } = useAuth(); // Use useAuth at the top level
+  const { currentSong, isMinimized } = useMusicPlayer();
+  const isSmallScreen = useMediaQuery("(max-width: 768px)");
+
+  // Adjust bottom offset for filter button
+  const filterButtonBottomClass = useMemo(() => {
+    if (currentSong) {
+      if (isSmallScreen) {
+        return isMinimized ? 'bottom-16' : 'bottom-24';
+      } else {
+        return 'bottom-20';
+      }
+    } else {
+      return 'bottom-4';
+    }
+  }, [currentSong, isSmallScreen, isMinimized]);
 
   // Initialize filterOptions with URL query
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
@@ -116,7 +133,6 @@ function ListenContent() {
 
   const [isFilterExpanded, setIsFilterExpanded] = useState(false)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
-  const isSmallScreen = useMediaQuery("(max-width: 768px)")
   const [page, setPage] = useState(1)
 
   // Debounce filter changes
@@ -714,7 +730,7 @@ function ListenContent() {
           exit={{ opacity: 0, scale: 0.9 }}
           transition={{ duration: 0.2 }}
           onClick={() => setIsFilterExpanded(true)}
-          className="fixed right-4 bottom-4 z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300"
+          className={`fixed right-4 z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
           aria-label="Expand filters"
         >
           <Filter className="h-5 w-5" />

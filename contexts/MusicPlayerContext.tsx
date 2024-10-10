@@ -27,6 +27,8 @@ type MusicPlayerContextType = {
   repeatMode: RepeatMode;
   queue: Song[];
   audioElement: HTMLAudioElement | null;
+  isMinimized: boolean;
+  setIsMinimized: React.Dispatch<React.SetStateAction<boolean>>;
   // ... additional controls
 };
 
@@ -40,6 +42,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isShuffling, setIsShuffling] = useState<boolean>(false);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
+  const [isMinimized, setIsMinimized] = useState<boolean>(false);
 
   // Ref for the audio element
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -210,6 +213,8 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         repeatMode,
         queue,
         audioElement: audioRef.current, // Expose audio element
+        isMinimized,
+        setIsMinimized,
         // ... other controls
       }}
     >
