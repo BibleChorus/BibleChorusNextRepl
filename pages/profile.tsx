@@ -18,6 +18,7 @@ interface Playlist {
   name: string;
   description?: string;
   created_at: string;
+  cover_art_url?: string;
 }
 
 export default function Profile() {
@@ -48,7 +49,7 @@ export default function Profile() {
   const fetchUserPlaylists = async () => {
     if (!user) return;
     try {
-      const response = await axios.get(`/api/users/${user.id}/playlists`);
+      const response = await axios.get(`/api/users/${user.id}/playlists?createdOnly=true`);
       setPlaylists(response.data);
     } catch (error) {
       console.error('Error fetching user playlists:', error);
@@ -91,6 +92,13 @@ export default function Profile() {
               key={playlist.id}
               className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
             >
+              {playlist.cover_art_url && (
+                <img
+                  src={playlist.cover_art_url}
+                  alt={playlist.name}
+                  className="w-full h-32 object-cover rounded-md mb-2"
+                />
+              )}
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{playlist.name}</h3>
               {playlist.description && (
                 <p className="text-gray-600 dark:text-gray-400">{playlist.description}</p>

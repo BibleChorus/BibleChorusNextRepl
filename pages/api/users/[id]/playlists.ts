@@ -9,18 +9,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Fetch user's own playlists
       const userPlaylists = await db('playlists')
         .where('user_id', id)
-        .select('id', 'name', 'description', 'created_at', 'is_public', 'is_auto', 'cover_art_url', 'user_id');
+        .select('id', 'name', 'description', 'created_at', 'is_public', 'is_auto', 'cover_art_url', 'user_id')
+        .orderBy('id', 'desc'); // Add this line to sort in descending order of id
 
       // Fetch public playlists created by other users
       const publicPlaylists = await db('playlists')
         .where('is_public', true)
         .andWhereNot('user_id', id)
-        .select('id', 'name', 'description', 'created_at', 'is_public', 'is_auto', 'cover_art_url', 'user_id');
+        .select('id', 'name', 'description', 'created_at', 'is_public', 'is_auto', 'cover_art_url', 'user_id')
+        .orderBy('id', 'desc'); // Add this line to sort in descending order of id
 
       // Fetch auto playlists (where creator is null)
       const autoPlaylists = await db('playlists')
         .whereNull('user_id')
-        .select('id', 'name', 'description', 'created_at', 'is_public', 'is_auto', 'cover_art_url', 'user_id');
+        .select('id', 'name', 'description', 'created_at', 'is_public', 'is_auto', 'cover_art_url', 'user_id')
+        .orderBy('id', 'desc'); // Add this line to sort in descending order of id
 
       // Combine all playlists
       const allPlaylists = [
