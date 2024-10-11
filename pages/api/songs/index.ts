@@ -26,6 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         showBestLyrically,
         showBestOverall,
         userId,
+        sortBy = 'mostRecent',
+        sortOrder = 'desc',
       } = req.query;
 
       // Adjust limit and offset for infinite scroll
@@ -181,6 +183,61 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `songs.search_vector @@ websearch_to_tsquery('english', ?)`,
           [search]
         );
+      }
+
+      // Before applying filters or pagination, compute aggregate fields
+      query = query
+        .leftJoin('likes', function () {
+          this.on('likes.likeable_id', '=', 'songs.id')
+            .andOn('likes.likeable_type', '=', db.raw('?', ['song']));
+        })
+        .leftJoin('votes as votes_musically', function () {
+          this.on('votes_musically.song_id', '=', 'songs.id')
+            .andOn('votes_musically.vote_type', '=', db.raw('?', ['Best Musically']));
+        })
+        .leftJoin('votes as votes_lyrically', function () {
+          this.on('votes_lyrically.song_id', '=', 'songs.id')
+            .andOn('votes_lyrically.vote_type', '=', db.raw('?', ['Best Lyrically']));
+        })
+        .leftJoin('votes as votes_overall', function () {
+          this.on('votes_overall.song_id', '=', 'songs.id')
+            .andOn('votes_overall.vote_type', '=', db.raw('?', ['Best Overall']));
+        })
+        .countDistinct('likes.id as like_count')
+        .sum('votes_musically.vote_value as best_musically_votes')
+        .sum('votes_lyrically.vote_value as best_lyrically_votes')
+        .sum('votes_overall.vote_value as best_overall_votes')
+        .groupBy('songs.id', 'users.id', 'users.username');  // Add 'users.id' and 'users.username' here
+
+      // Apply sorting
+      switch (sortBy) {
+        case 'playCount':
+          query = query.orderBy('songs.play_count', sortOrder);
+          break;
+        case 'likes':
+          query = query.orderBy('like_count', sortOrder);
+          break;
+        case 'voteBestMusically':
+          query = query.orderBy('best_musically_votes', sortOrder);
+          break;
+        case 'voteBestLyrically':
+          query = query.orderBy('best_lyrically_votes', sortOrder);
+          break;
+        case 'voteBestOverall':
+          query = query.orderBy('best_overall_votes', sortOrder);
+          break;
+        case 'firstBibleVerse':
+          query = query
+            .leftJoin('song_verses', 'songs.id', 'song_verses.song_id')
+            .leftJoin('bible_verses', 'song_verses.verse_id', 'bible_verses.id')
+            .orderBy([
+              { column: 'bible_verses.book', order: sortOrder },
+              { column: 'bible_verses.chapter', order: sortOrder },
+              { column: 'bible_verses.verse', order: sortOrder },
+            ]);
+          break;
+        default:
+          query = query.orderBy('songs.created_at', sortOrder);
       }
 
       // After applying all filters, select songs

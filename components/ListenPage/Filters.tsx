@@ -1,6 +1,6 @@
 "use client"
 
-import { Dispatch, SetStateAction, useState, useCallback, useEffect } from "react"
+import React, { Dispatch, SetStateAction, useState, useCallback, useEffect } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
@@ -37,6 +37,8 @@ export interface FilterOptions {
   showBestMusically?: boolean;
   showBestLyrically?: boolean;
   showBestOverall?: boolean;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
 }
 
 interface FiltersProps {
@@ -186,6 +188,8 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       showBestMusically: false,
       showBestLyrically: false,
       showBestOverall: false,
+      sortBy: 'mostRecent',
+      sortOrder: 'desc',
     })
   }
 
@@ -757,7 +761,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                             <div key={`${book}-${chapter}`} className="mb-2">
                               <h4 className="font-semibold mb-1">{`${book} ${chapter}`}</h4>
                               <div className="flex flex-wrap gap-1">
-                                {verses.filter((verse: any) =>
+                                {(verses as any[]).filter((verse: any) =>
                                   verse.KJV_text.toLowerCase().includes(bibleVerseSearch.toLowerCase()) ||
                                   `${verse.book} ${verse.chapter}:${verse.verse}`.toLowerCase().includes(bibleVerseSearch.toLowerCase())
                                 ).map((verse: any) => (

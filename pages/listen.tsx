@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Head from 'next/head'
 import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
-import { Filters, FilterOptions } from '@/components/ListenPage/Filters'
+import { Filters } from '@/components/ListenPage/Filters'
 import { motion, AnimatePresence } from "framer-motion"
-import { Filter, X, Info, Save, Search, Check, ListMusic } from "lucide-react"
+import { Filter, X, Info, Save, Search, Check, ListMusic, ArrowUpDown } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -31,6 +31,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { uploadFile } from '@/lib/uploadUtils';
 import { useForm, UseFormReturn } from 'react-hook-form'; // Add this import
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { SortOptions } from '@/components/ListenPage/SortOptions';
 
 // Define the User type here
 type User = {
@@ -74,6 +75,28 @@ export type Song = {
   duration?: number;
 };
 
+export type FilterOptions = {
+  lyricsAdherence: string[];
+  isContinuous: "all" | "true" | "false";
+  aiMusic: "all" | "true" | "false";
+  genres: string[];
+  aiUsedForLyrics: "all" | "true" | "false";
+  musicModelUsed: string;
+  title: string;
+  artist: string;
+  bibleTranslation: string;
+  bibleBooks: string[];
+  search: string;
+  bibleChapters: { [book: string]: number[] };
+  bibleVerses: string[];
+  showLikedSongs: boolean;
+  showBestMusically: boolean;
+  showBestLyrically: boolean;
+  showBestOverall: boolean;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+};
+
 export default function Listen() {
   return (
     <TooltipProvider>
@@ -102,10 +125,10 @@ function ListenContent() {
 
   // Adjust bottom offset for filter button
   const filterButtonBottomClass = useMemo(() => {
+    // Adjusted values to ensure both buttons align correctly
     if (currentSong) {
       if (isSmallScreen) {
-        // Adjusted values for better visibility
-        return isMinimized ? 'bottom-16' : 'bottom-40'; // Increased from 'bottom-24' to 'bottom-40'
+        return isMinimized ? 'bottom-16' : 'bottom-40';
       } else {
         return 'bottom-20';
       }
@@ -133,6 +156,8 @@ function ListenContent() {
     showBestMusically: false,
     showBestLyrically: false,
     showBestOverall: false,
+    sortBy: 'mostRecent',     // Default sorting criterion
+    sortOrder: 'desc',        // Default sorting order
   })
 
   useEffect(() => {
@@ -228,6 +253,14 @@ function ListenContent() {
 
     params.append('page', page.toString())
     params.append('limit', '20')
+
+    // Add sort options
+    if (filters.sortBy) {
+      params.append('sortBy', filters.sortBy);
+    }
+    if (filters.sortOrder) {
+      params.append('sortOrder', filters.sortOrder);
+    }
 
     return params.toString()
   }
@@ -583,6 +616,8 @@ function ListenContent() {
 
   const formRef = useRef<UseFormReturn<FormValues>>(null);
 
+  const [isSortExpanded, setIsSortExpanded] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       <Head>
@@ -696,6 +731,27 @@ function ListenContent() {
           )}
         </AnimatePresence>
 
+        {/* Sort Group Section */}
+        <AnimatePresence>
+          {isSortExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+            >
+              <div className="container mx-auto px-4 py-4">
+                <SortOptions
+                  filterOptions={filterOptions as FilterOptions}
+                  setFilterOptions={setFilterOptions}
+                  setIsSortExpanded={setIsSortExpanded}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <Separator />
       </div>
 
@@ -744,6 +800,21 @@ function ListenContent() {
           aria-label="Expand filters"
         >
           <Filter className="h-5 w-5" />
+        </motion.button>
+      )}
+
+      {/* Sort Toggle Button - Left aligned */}
+      {!isSortExpanded && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.2 }}
+          onClick={() => setIsSortExpanded(true)}
+          className={`fixed left-4 z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
+          aria-label="Expand sorting"
+        >
+          <ArrowUpDown className="h-5 w-5" />
         </motion.button>
       )}
 

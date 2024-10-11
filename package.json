@@ -55,7 +55,7 @@
     "dotenv": "^16.4.5",
     "embla-carousel-react": "^8.2.1",
     "formidable": "^3.5.1",
-    "framer-motion": "^11.8.0",
+    "framer-motion": "^11.11.7",
     "get-audio-duration": "^4.0.1",
     "input-otp": "^1.2.4",
     "isomorphic-dompurify": "^2.16.0",
