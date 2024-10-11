@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
+import { BIBLE_BOOKS } from '@/lib/constants';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
@@ -57,9 +58,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           // Include these columns conditionally
           ...(sortBy === 'firstBibleVerse'
             ? [
-                'first_bible_verse.book as first_book',
-                'first_bible_verse.chapter as first_chapter',
-                'first_bible_verse.verse as first_verse',
+                'first_verse.first_book',
+                'first_verse.first_chapter',
+                'first_verse.first_verse_number',
               ]
             : []),
           // Subqueries for vote counts
@@ -211,11 +212,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         );
       }
 
-      // Include joins for firstBibleVerse sorting
+      // Include LATERAL join for firstBibleVerse sorting
       if (sortBy === 'firstBibleVerse') {
-        query = query
-          .leftJoin('song_verses as first_verse', 'songs.id', 'first_verse.song_id')
-          .leftJoin('bible_verses as first_bible_verse', 'first_verse.verse_id', 'first_bible_verse.id');
+        query = query.leftJoin(
+          db.raw(`LATERAL (
+            SELECT
+              "bible_verses"."book" AS "first_book",
+              "bible_verses"."chapter" AS "first_chapter",
+              "bible_verses"."verse" AS "first_verse_number"
+            FROM "song_verses"
+            JOIN "bible_verses" ON "song_verses"."verse_id" = "bible_verses"."id"
+            WHERE "song_verses"."song_id" = "songs"."id"
+            ORDER BY
+              array_position(ARRAY[${BIBLE_BOOKS.map(() => '?').join(',')}], "bible_verses"."book") ASC,
+              "bible_verses"."chapter" ASC,
+              "bible_verses"."verse" ASC
+            LIMIT 1
+          ) AS "first_verse"`, BIBLE_BOOKS),
+          function () {
+            this.on(db.raw('TRUE'));
+          }
+        );
       }
 
       // Apply sorting
@@ -236,10 +253,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           query = query.orderBy('best_overall_votes', sortOrder);
           break;
         case 'firstBibleVerse':
+          query = query.orderByRaw(
+            `array_position(ARRAY[${BIBLE_BOOKS.map(() => '?').join(',')}], "first_verse"."first_book") ${sortOrder}`,
+            BIBLE_BOOKS
+          );
           query = query.orderBy([
-            { column: 'first_bible_verse.book', order: sortOrder },
-            { column: 'first_bible_verse.chapter', order: sortOrder },
-            { column: 'first_bible_verse.verse', order: sortOrder },
+            { column: 'first_verse.first_chapter', order: sortOrder },
+            { column: 'first_verse.first_verse_number', order: sortOrder },
           ]);
           break;
         default:
@@ -250,8 +270,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const songsQuery = query.clone().offset(offset).limit(limitNum);
       const songs = await songsQuery;
 
-      // **Clone the existing query for total count**
-      const totalQuery = query.clone()
+      // Clone the existing query for total count
+      const totalQuery = query
+        .clone()
         .clearSelect()
         .clearOrder()
         .countDistinct('songs.id as total');
@@ -260,12 +281,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const total = totalResult ? Number(totalResult.total) : 0;
 
       // Fetch Bible verses for each song
-      const songIds = songs.map(song => song.id);
+      const songIds = songs.map((song) => song.id);
 
       const verses = await db('song_verses')
         .join('bible_verses', 'song_verses.verse_id', 'bible_verses.id')
         .whereIn('song_verses.song_id', songIds)
-        .select('song_verses.song_id', 'bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse')
+        .select(
+          'song_verses.song_id',
+          'bible_verses.book',
+          'bible_verses.chapter',
+          'bible_verses.verse'
+        )
         .orderBy(['bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse']);
 
       // Attach verses to songs
@@ -273,18 +299,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!acc[verse.song_id]) {
           acc[verse.song_id] = [];
         }
-        acc[verse.song_id].push({ book: verse.book, chapter: verse.chapter, verse: verse.verse });
+        acc[verse.song_id].push({
+          book: verse.book,
+          chapter: verse.chapter,
+          verse: verse.verse,
+        });
         return acc;
       }, {} as Record<number, { book: string; chapter: number; verse: number }[]>);
 
-      songs.forEach(song => {
+      songs.forEach((song) => {
         song.bible_verses = versesBySongId[song.id] || [];
       });
 
       res.status(200).json({ songs: songs || [], total });
     } catch (error) {
       console.error('Error fetching songs:', error);
-      res.status(500).json({ message: 'Error fetching songs', error: error.message });
+      res
+        .status(500)
+        .json({ message: 'Error fetching songs', error: error.message });
     }
   } else {
     res.setHeader('Allow', ['GET']);
