@@ -25,12 +25,12 @@ export function SortOptions({ filterOptions, setFilterOptions, setIsSortExpanded
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Sort Options</h2>
-        <Button variant="ghost" size="sm" onClick={() => setIsSortExpanded(false)} className="flex items-center gap-2">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-sm font-semibold">Sort Options</h2>
+        <Button variant="ghost" size="sm" onClick={() => setIsSortExpanded(false)} className="h-7 text-xs px-2 flex items-center gap-1">
           Close
-          <X className="h-4 w-4" />
+          <X className="h-3 w-3" />
         </Button>
       </div>
 
@@ -38,12 +38,12 @@ export function SortOptions({ filterOptions, setFilterOptions, setIsSortExpanded
         value={filterOptions.sortBy}
         onValueChange={(value) => setFilterOptions(prev => ({ ...prev, sortBy: value }))}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full h-8 text-xs">
           <SelectValue placeholder="Select sorting criteria" />
         </SelectTrigger>
         <SelectContent>
           {sortOptions.map(option => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem key={option.value} value={option.value} className="text-xs">
               {option.label}
             </SelectItem>
           ))}
@@ -54,12 +54,12 @@ export function SortOptions({ filterOptions, setFilterOptions, setIsSortExpanded
         value={filterOptions.sortOrder}
         onValueChange={(value) => setFilterOptions(prev => ({ ...prev, sortOrder: value as 'asc' | 'desc' }))}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full h-8 text-xs">
           <SelectValue placeholder="Select sort order" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="asc">Ascending</SelectItem>
-          <SelectItem value="desc">Descending</SelectItem>
+          <SelectItem value="asc" className="text-xs">Ascending</SelectItem>
+          <SelectItem value="desc" className="text-xs">Descending</SelectItem>
         </SelectContent>
       </Select>
     </div>

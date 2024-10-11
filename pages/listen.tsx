@@ -631,230 +631,232 @@ function ListenContent() {
   const [isSortExpanded, setIsSortExpanded] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Head>
-        <title>BibleChorus - Listen</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <TooltipProvider>
+      <div className="min-h-screen bg-background">
+        <Head>
+          <title>BibleChorus - Listen</title>
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
 
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        {/* Header Section */}
-        <div className={`container mx-auto px-4 transition-all duration-300 ${isHeaderVisible ? 'h-16' : 'h-12'}`}>
-          <div className="flex items-center justify-between h-full">
-            <h1 className={`text-2xl font-bold text-foreground transition-opacity duration-300 ${isHeaderVisible ? 'opacity-100' : 'opacity-0'}`}>
-              Listen to Songs
-            </h1>
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          {/* Header Section */}
+          <div className={`container mx-auto px-2 transition-all duration-300 ${isHeaderVisible ? 'h-12' : 'h-8'}`}>
+            <div className="flex items-center justify-between h-full">
+              <h1 className={`text-xl font-bold text-foreground transition-opacity duration-300 ${isHeaderVisible ? 'opacity-100' : 'opacity-0'}`}>
+                Listen to Songs
+              </h1>
+            </div>
           </div>
-        </div>
 
-        {/* Playlist Selection and Save Button */}
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[200px] justify-between">
-                  <div className="flex items-center overflow-hidden">
-                    <ListMusic className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span className="truncate">
-                      {selectedPlaylist
-                        ? playlists?.find(p => p.id.toString() === selectedPlaylist)?.name
-                        : 'Select a playlist'}
-                    </span>
+          {/* Playlist Selection and Save Button */}
+          <div className={`container mx-auto px-2 py-2 flex items-center transition-all duration-300 ${isHeaderVisible ? 'mt-0' : 'mt-2'}`}>
+            <div className="flex items-center space-x-2 flex-grow">
+              <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[200px] justify-between h-8 text-xs">
+                    <div className="flex items-center overflow-hidden">
+                      <ListMusic className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span className="truncate">
+                        {selectedPlaylist
+                          ? playlists?.find(p => p.id.toString() === selectedPlaylist)?.name
+                          : 'Select a playlist'}
+                      </span>
+                    </div>
+                    {selectedPlaylist && (
+                      <X
+                        className="h-3 w-3 flex-shrink-0 hover:text-destructive ml-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearPlaylistSelection();
+                        }}
+                      />
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                  <div className="p-2">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Search className="h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search playlists..."
+                        value={playlistSearch}
+                        onChange={(e) => setPlaylistSearch(e.target.value)}
+                        className="h-8"
+                      />
+                    </div>
+                    <ScrollArea className="h-[200px]">
+                      {filteredPlaylists.map((playlist) => (
+                        <div
+                          key={playlist.id}
+                          className={cn(
+                            "flex items-center px-2 py-1 cursor-pointer hover:bg-accent",
+                            selectedPlaylist === playlist.id.toString() && "bg-accent"
+                          )}
+                          onClick={() => handlePlaylistSelect(playlist.id.toString())}
+                        >
+                          <ListMusic className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span className="break-words overflow-hidden">{playlist.name}</span>
+                          {selectedPlaylist === playlist.id.toString() && (
+                            <Check className="ml-auto h-4 w-4 flex-shrink-0" />
+                          )}
+                        </div>
+                      ))}
+                    </ScrollArea>
                   </div>
-                  {selectedPlaylist && (
-                    <X
-                      className="h-4 w-4 flex-shrink-0 hover:text-destructive ml-2"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        clearPlaylistSelection();
-                      }}
-                    />
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
-                <div className="p-2">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search playlists..."
-                      value={playlistSearch}
-                      onChange={(e) => setPlaylistSearch(e.target.value)}
-                      className="h-8"
-                    />
-                  </div>
-                  <ScrollArea className="h-[200px]">
-                    {filteredPlaylists.map((playlist) => (
-                      <div
-                        key={playlist.id}
-                        className={cn(
-                          "flex items-center px-2 py-1 cursor-pointer hover:bg-accent",
-                          selectedPlaylist === playlist.id.toString() && "bg-accent"
-                        )}
-                        onClick={() => handlePlaylistSelect(playlist.id.toString())}
-                      >
-                        <ListMusic className="h-4 w-4 mr-2 flex-shrink-0" />
-                        <span className="break-words overflow-hidden">{playlist.name}</span>
-                        {selectedPlaylist === playlist.id.toString() && (
-                          <Check className="ml-auto h-4 w-4 flex-shrink-0" />
-                        )}
-                      </div>
-                    ))}
-                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
+              {selectedPlaylist && (
+                <div className="w-8 h-8 relative flex-shrink-0">
+                  <Image
+                    src={playlists?.find((p) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
+                    alt="Playlist cover"
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-md"
+                  />
                 </div>
-              </PopoverContent>
-            </Popover>
-            {selectedPlaylist && (
-              <div className="w-12 h-12 relative">
-                <Image
-                  src={playlists?.find((p) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
-                  alt="Playlist cover"
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-md"
-                />
-              </div>
-            )}
+              )}
+              <Button onClick={handleSavePlaylist} className="h-8 text-xs px-2 flex items-center space-x-1">
+                <Save className="w-3 h-3" />
+                <span className="hidden sm:inline">Save</span>
+              </Button>
+            </div>
           </div>
-          <Button onClick={handleSavePlaylist} className="flex items-center space-x-2">
-            <Save className="w-4 h-4" />
-            <span className="hidden sm:inline">Save Playlist</span> {/* Hide text on small screens */}
-          </Button>
-        </div>
 
-        {/* Filter Group Section */}
-        <AnimatePresence>
-          {isFilterExpanded && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-            >
-              <div className="container mx-auto px-4 py-4">
-                <Filters 
-                  filterOptions={filterOptions} 
-                  setFilterOptions={setFilterOptions}
-                  setIsFilterExpanded={setIsFilterExpanded}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Sort Group Section */}
-        <AnimatePresence>
-          {isSortExpanded && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-            >
-              <div className="container mx-auto px-4 py-4">
-                <SortOptions
-                  filterOptions={filterOptions as FilterOptions}
-                  setFilterOptions={setFilterOptions}
-                  setIsSortExpanded={setIsSortExpanded}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <Separator />
-      </div>
-
-      <main className="container mx-auto px-4 py-6">
-        <div className="flex flex-wrap gap-2 mb-4">
-          {getFilterTags().map((tag, index) => (
-            <Badge key={index} variant="secondary" className="flex items-center gap-1">
-              {tag.label}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() => removeFilter(tag.type, tag.value)}
-              />
-            </Badge>
-          ))}
-        </div>
-
-        {songs.length > 0 ? (
-          <>
-            <SongList songs={songs} />
-            {hasMore && (
-              <>
-                {isValidating && <SongListSkeleton />}
-                {/* Sentinel for infinite scroll */}
-                <div ref={loadMoreRef} className="h-1" />
-              </>
+          {/* Filter Group Section */}
+          <AnimatePresence>
+            {isFilterExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+              >
+                <div className="container mx-auto px-2 py-2">
+                  <Filters 
+                    filterOptions={filterOptions} 
+                    setFilterOptions={setFilterOptions}
+                    setIsFilterExpanded={setIsFilterExpanded}
+                  />
+                </div>
+              </motion.div>
             )}
-          </>
-        ) : isValidating ? (
-          // Show skeletons while loading
-          <SongListSkeleton />
-        ) : (
-          // Show 'No songs found' when no songs are available after loading
-          <p>No songs found.</p>
-        )}
-      </main>
+          </AnimatePresence>
 
-      {/* Filter Toggle Button - Moved to bottom right */}
-      {!isFilterExpanded && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.2 }}
-          onClick={() => setIsFilterExpanded(true)}
-          className={`fixed right-4 z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
-          aria-label="Expand filters"
-        >
-          <Filter className="h-5 w-5" />
-        </motion.button>
-      )}
+          {/* Sort Group Section */}
+          <AnimatePresence>
+            {isSortExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+              >
+                <div className="container mx-auto px-2 py-2">
+                  <SortOptions
+                    filterOptions={filterOptions as FilterOptions}
+                    setFilterOptions={setFilterOptions}
+                    setIsSortExpanded={setIsSortExpanded}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-      {/* Sort Toggle Button - Left aligned */}
-      {!isSortExpanded && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.2 }}
-          onClick={() => setIsSortExpanded(true)}
-          className={`fixed ${sortButtonLeftClass} z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
-          aria-label="Expand sorting"
-        >
-          <ArrowUpDown className="h-5 w-5" />
-        </motion.button>
-      )}
+          <Separator />
+        </div>
 
-      {/* Add SavePlaylistDialog */}
-      <SavePlaylistDialog
-        isOpen={isSavePlaylistDialogOpen}
-        onClose={() => setIsSavePlaylistDialogOpen(false)}
-        songs={songs}
-        filterOptions={filterOptions}
-        playlists={playlists}
-        user={user}
-        onImageCropComplete={onImageCropComplete}
-        openImageCropper={openImageCropper}
-        formRef={formRef}
-      />
+        <main className="container mx-auto px-4 py-6">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {getFilterTags().map((tag, index) => (
+              <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                {tag.label}
+                <X
+                  className="h-3 w-3 cursor-pointer"
+                  onClick={() => removeFilter(tag.type, tag.value)}
+                />
+              </Badge>
+            ))}
+          </div>
 
-      {/* Image Cropper Dialog */}
-      <Dialog open={isCropperOpen} onOpenChange={setIsCropperOpen}>
-        <DialogContent>
-          {cropImageUrl && (
-            <ImageCropper
-              imageUrl={cropImageUrl}
-              onCropComplete={onImageCropComplete}
-              onCancel={() => setIsCropperOpen(false)}
-            />
+          {songs.length > 0 ? (
+            <>
+              <SongList songs={songs} />
+              {hasMore && (
+                <>
+                  {isValidating && <SongListSkeleton />}
+                  {/* Sentinel for infinite scroll */}
+                  <div ref={loadMoreRef} className="h-1" />
+                </>
+              )}
+            </>
+          ) : isValidating ? (
+            // Show skeletons while loading
+            <SongListSkeleton />
+          ) : (
+            // Show 'No songs found' when no songs are available after loading
+            <p>No songs found.</p>
           )}
-        </DialogContent>
-      </Dialog>
-    </div>
+        </main>
+
+        {/* Filter Toggle Button - Moved to bottom right */}
+        {!isFilterExpanded && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setIsFilterExpanded(true)}
+            className={`fixed right-4 z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
+            aria-label="Expand filters"
+          >
+            <Filter className="h-5 w-5" />
+          </motion.button>
+        )}
+
+        {/* Sort Toggle Button - Left aligned */}
+        {!isSortExpanded && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setIsSortExpanded(true)}
+            className={`fixed ${sortButtonLeftClass} z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
+            aria-label="Expand sorting"
+          >
+            <ArrowUpDown className="h-5 w-5" />
+          </motion.button>
+        )}
+
+        {/* Add SavePlaylistDialog */}
+        <SavePlaylistDialog
+          isOpen={isSavePlaylistDialogOpen}
+          onClose={() => setIsSavePlaylistDialogOpen(false)}
+          songs={songs}
+          filterOptions={filterOptions}
+          playlists={playlists}
+          user={user}
+          onImageCropComplete={onImageCropComplete}
+          openImageCropper={openImageCropper}
+          formRef={formRef}
+        />
+
+        {/* Image Cropper Dialog */}
+        <Dialog open={isCropperOpen} onOpenChange={setIsCropperOpen}>
+          <DialogContent>
+            {cropImageUrl && (
+              <ImageCropper
+                imageUrl={cropImageUrl}
+                onCropComplete={onImageCropComplete}
+                onCancel={() => setIsCropperOpen(false)}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </TooltipProvider>
   )
 }

@@ -275,61 +275,61 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-2"
     >
-      <div className="flex flex-col sm:flex-row items-center justify-between mb-4 space-y-2 sm:space-y-0">
+      <div className="flex flex-col sm:flex-row items-center justify-between mb-2 space-y-2 sm:space-y-0">
         <div className="flex items-center justify-between w-full sm:w-auto">
-          <div className="flex items-center space-x-2">
-            <h2 className="text-lg font-semibold">Filters</h2>
+          <div className="flex items-center space-x-1">
+            <h2 className="text-sm font-semibold">Filters</h2>
             <Popover>
               <PopoverTrigger>
-                <Info className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                <Info className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-pointer" />
               </PopoverTrigger>
               <PopoverContent>
-                <p className="text-sm">
+                <p className="text-xs">
                   Adjust filters to refine your song list.
                 </p>
               </PopoverContent>
             </Popover>
           </div>
-          <div className="flex items-center space-x-2 sm:hidden">
+          <div className="flex items-center space-x-1 sm:hidden">
             <Button
               variant="outline"
               size="sm"
               onClick={clearFilters}
-              className="text-xs"
+              className="text-xs h-7 px-2"
             >
-              <RefreshCw className="h-4 w-4 mr-1" />
+              <RefreshCw className="h-3 w-3 mr-1" />
               Clear
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsFilterExpanded(false)}
-              className="text-xs"
+              className="text-xs h-7 px-2"
             >
-              <X className="h-4 w-4 mr-1" />
+              <X className="h-3 w-3 mr-1" />
               Close
             </Button>
           </div>
         </div>
 
         {/* Like and Vote Type Icons */}
-        <div className="flex items-center space-x-2 w-full sm:w-auto sm:justify-center justify-start">
+        <div className="flex items-center space-x-1 w-full sm:w-auto sm:justify-center justify-start">
           {/* Like Filter Icon */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant={filterOptions.showLikedSongs ? "secondary" : "outline"}
                 size="icon"
-                className="h-7 w-7"
+                className="h-6 w-6"
                 onClick={() => toggleUserFilter('showLikedSongs')}
               >
                 <Heart className="h-3 w-3" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Show Liked Songs</p>
+              <p className="text-xs">Show Liked Songs</p>
             </TooltipContent>
           </Tooltip>
 
@@ -339,14 +339,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               <Button
                 variant={filterOptions.showBestMusically ? "secondary" : "outline"}
                 size="icon"
-                className="h-7 w-7"
+                className="h-6 w-6"
                 onClick={() => toggleUserFilter('showBestMusically')}
               >
                 <Music className="h-3 w-3" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Best Musically Voted</p>
+              <p className="text-xs">Best Musically Voted</p>
             </TooltipContent>
           </Tooltip>
 
@@ -355,14 +355,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               <Button
                 variant={filterOptions.showBestLyrically ? "secondary" : "outline"}
                 size="icon"
-                className="h-7 w-7"
+                className="h-6 w-6"
                 onClick={() => toggleUserFilter('showBestLyrically')}
               >
                 <BookOpen className="h-3 w-3" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Best Lyrically Voted</p>
+              <p className="text-xs">Best Lyrically Voted</p>
             </TooltipContent>
           </Tooltip>
 
@@ -371,58 +371,58 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               <Button
                 variant={filterOptions.showBestOverall ? "secondary" : "outline"}
                 size="icon"
-                className="h-7 w-7"
+                className="h-6 w-6"
                 onClick={() => toggleUserFilter('showBestOverall')}
               >
                 <Star className="h-3 w-3" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Best Overall Voted</p>
+              <p className="text-xs">Best Overall Voted</p>
             </TooltipContent>
           </Tooltip>
         </div>
 
         {/* Clear Filters and Close Filters Buttons (visible on larger screens) */}
-        <div className="hidden sm:flex items-center space-x-2">
+        <div className="hidden sm:flex items-center space-x-1">
           <Button
             variant="outline"
             size="sm"
             onClick={clearFilters}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 h-7 text-xs"
           >
-            <RefreshCw className="h-4 w-4" />
-            Clear Filters
+            <RefreshCw className="h-3 w-3" />
+            Clear
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsFilterExpanded(false)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 h-7 text-xs"
           >
-            Close Filters
-            <X className="h-4 w-4" />
+            Close
+            <X className="h-3 w-3" />
           </Button>
         </div>
       </div>
       
-      <Tabs value={currentTab} onValueChange={setCurrentTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="AI Info" className="flex items-center gap-2">
-            <Bot className="h-4 w-4" />
+      <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 h-8">
+          <TabsTrigger value="AI Info" className="text-xs py-1 px-2">
+            <Bot className="h-3 w-3 mr-1" />
             AI Info
           </TabsTrigger>
-          <TabsTrigger value="Song Info" className="flex items-center gap-2">
-            <Music className="h-4 w-4" />
+          <TabsTrigger value="Song Info" className="text-xs py-1 px-2">
+            <Music className="h-3 w-3 mr-1" />
             Song Info
           </TabsTrigger>
-          <TabsTrigger value="Bible Info" className="flex items-center gap-2">
-            <Book className="h-4 w-4" />
+          <TabsTrigger value="Bible Info" className="text-xs py-1 px-2">
+            <Book className="h-3 w-3 mr-1" />
             Bible Info
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="AI Info" className="space-y-4">
+        <TabsContent value="AI Info" className="space-y-2">
           <FilterSelect
             title="Lyrics Source"
             value={filterOptions.aiUsedForLyrics}
@@ -457,14 +457,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           />
         </TabsContent>
 
-        <TabsContent value="Song Info" className="space-y-4">
+        <TabsContent value="Song Info" className="space-y-2">
           <div className="relative">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+            <Search className="h-3 w-3 absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search songs..."
               value={filterOptions.search}
               onChange={(e) => handleChange('search', e.target.value)}
-              className="pl-9"
+              className="pl-6 h-7 text-xs"
             />
           </div>
           <Popover open={openGenres} onOpenChange={setOpenGenres}>
@@ -473,15 +473,15 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 variant="outline"
                 role="combobox"
                 aria-expanded={openGenres}
-                className="w-full justify-between"
+                className="w-full justify-between h-7 text-xs"
               >
                 <div className="flex items-center">
-                  <Tag className="h-4 w-4 mr-2" />
+                  <Tag className="h-3 w-3 mr-1" />
                   {filterOptions.genres.length > 0
                     ? `${filterOptions.genres.length} genre(s) selected`
                     : "Select genres..."}
                 </div>
-                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0">
@@ -491,12 +491,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                     placeholder="Search genres..."
                     value={genreSearch}
                     onChange={(e) => setGenreSearch(e.target.value)}
-                    className="mr-2"
+                    className="mr-2 h-7 text-xs"
                   />
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleChange('genres', [])}
+                    className="h-7 text-xs"
                   >
                     Clear
                   </Button>
@@ -523,7 +524,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           </Popover>
         </TabsContent>
 
-        <TabsContent value="Bible Info" className="space-y-4">
+        <TabsContent value="Bible Info" className="space-y-2">
           <FilterSelect
             title="Bible Translation"
             value={filterOptions.bibleTranslation}
@@ -540,15 +541,15 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 variant="outline"
                 role="combobox"
                 aria-expanded={openLyricsAdherence}
-                className="w-full justify-between"
+                className="w-full justify-between h-7 text-xs"
               >
                 <div className="flex items-center">
-                  <AlignJustify className="h-4 w-4 mr-2" />
+                  <AlignJustify className="h-3 w-3 mr-1" />
                   {filterOptions.lyricsAdherence.length > 0
                     ? `${filterOptions.lyricsAdherence.length} selected`
                     : "Select lyrics adherence..."}
                 </div>
-                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0">
@@ -588,15 +589,15 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 variant="outline"
                 role="combobox"
                 aria-expanded={openBibleBooks}
-                className="w-full justify-between"
+                className="w-full justify-between h-7 text-xs"
               >
                 <div className="flex items-center">
-                  <BookOpen className="h-4 w-4 mr-2" />
+                  <BookOpen className="h-3 w-3 mr-1" />
                   {filterOptions.bibleBooks.length > 0
                     ? `${filterOptions.bibleBooks.length} book(s) selected`
                     : "Select Bible books..."}
                 </div>
-                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0">
@@ -606,12 +607,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                     placeholder="Search Bible books..."
                     value={bibleBookSearch}
                     onChange={(e) => setBibleBookSearch(e.target.value)}
-                    className="mr-2"
+                    className="mr-2 h-7 text-xs"
                   />
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleChange('bibleBooks', [])}
+                    className="h-7 text-xs"
                   >
                     Clear
                   </Button>
@@ -645,15 +647,15 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   variant="outline"
                   role="combobox"
                   aria-expanded={openChapters}
-                  className="w-full justify-between"
+                  className="w-full justify-between h-7 text-xs"
                 >
                   <div className="flex items-center">
-                    <Bookmark className="h-4 w-4 mr-2" />
+                    <Bookmark className="h-3 w-3 mr-1" />
                     {Object.values(selectedChapters).flat().length > 0
                       ? `${Object.values(selectedChapters).flat().length} chapter(s) selected`
                       : "Select chapters..."}
                   </div>
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -666,7 +668,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                       placeholder="Search chapters..."
                       value={chapterSearch}
                       onChange={(e) => setChapterSearch(e.target.value)}
-                      className="mr-2"
+                      className="mr-2 h-7 text-xs"
                     />
                     <Button
                       variant="outline"
@@ -675,6 +677,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                         setSelectedChapters({})
                         setFilterOptions(prev => ({ ...prev, bibleChapters: {} }))
                       }}
+                      className="h-7 text-xs"
                     >
                       Clear All
                     </Button>
@@ -720,15 +723,15 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   variant="outline"
                   role="combobox"
                   aria-expanded={openBibleVerses}
-                  className="w-full justify-between"
+                  className="w-full justify-between h-7 text-xs"
                 >
                   <div className="flex items-center">
-                    <FileText className="h-4 w-4 mr-2" />
+                    <FileText className="h-3 w-3 mr-1" />
                     {selectedBibleVerses.length > 0
                       ? `${selectedBibleVerses.length} verse(s) selected`
                       : "Select Bible verses..."}
                   </div>
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0" style={{ maxWidth: '80vw' }}>
@@ -738,7 +741,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                       placeholder="Search Bible verses..."
                       value={bibleVerseSearch}
                       onChange={(e) => setBibleVerseSearch(e.target.value)}
-                      className="mr-2"
+                      className="mr-2 h-7 text-xs"
                     />
                     <Button
                       variant="outline"
@@ -747,6 +750,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                         setSelectedBibleVerses([])
                         setFilterOptions(prev => ({ ...prev, bibleVerses: [] }))
                       }}
+                      className="h-7 text-xs"
                     >
                       Clear All
                     </Button>
@@ -807,19 +811,20 @@ interface FilterSelectProps {
 function FilterSelect({ title, value, onChange, options, icon }: FilterSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full">
+      <SelectTrigger className="w-full h-8 text-xs">
         <div className="flex items-center">
-          {icon}
+          {React.cloneElement(icon as React.ReactElement, { className: "h-3 w-3 mr-1" })}
           <SelectValue placeholder={title} />
         </div>
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          <SelectLabel>{title}</SelectLabel>
+          <SelectLabel className="text-xs">{title}</SelectLabel>
           {options.map((option) => (
             <SelectItem 
               key={option.value} 
               value={option.value || '_empty_'}
+              className="text-xs"
             >
               {option.label}
             </SelectItem>

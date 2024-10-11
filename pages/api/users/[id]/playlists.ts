@@ -8,31 +8,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     try {
       let query = db('playlists')
-        .select('id', 'name', 'description', 'created_at', 'is_public', 'is_auto', 'cover_art_url', 'user_id')
-        .where('user_id', id);
+        .select('playlists.*')
+        .leftJoin('user_playlist_library', function() {
+          this.on('playlists.id', '=', 'user_playlist_library.playlist_id')
+              .andOn('user_playlist_library.user_id', '=', db.raw('?', [id]));
+        });
 
       if (createdOnly === 'true') {
         // Only fetch playlists created by the user
-        query = query.where('user_id', id);
+        query = query.where('playlists.user_id', id);
       } else {
-        // Fetch all playlists accessible to the user (created + collaborative)
+        // Fetch playlists created by the user, added to their library, or public playlists with no user
         query = query.where(function() {
-          this.where('user_id', id)
-            .orWhere('is_public', true)
-            .orWhereExists(function() {
-              this.select('*')
-                .from('user_playlist_library')
-                .whereRaw('user_playlist_library.playlist_id = playlists.id')
-                .andWhere('user_playlist_library.user_id', id);
-            });
+          this.where('playlists.user_id', id)
+              .orWhere('user_playlist_library.user_id', id)
+              .orWhere(function() {
+                this.where('playlists.is_public', true)
+                    .whereNull('playlists.user_id');
+              });
         });
       }
 
-      const playlists = await query.orderBy('id', 'desc');
+      // Add distinct to avoid duplicate results
+      query = query.distinct('playlists.id');
+
+      // Order by playlist ID in descending order
+      query = query.orderBy('playlists.id', 'desc');
+
+      const playlists = await query;
+
       res.status(200).json(playlists);
     } catch (error) {
-      console.error('Error fetching user playlists:', error);
-      res.status(500).json({ message: 'Error fetching user playlists', error });
+      console.error('Error fetching playlists:', error);
+      res.status(500).json({ message: 'Error fetching playlists', error });
     }
   } else {
     res.setHeader('Allow', ['GET']);
