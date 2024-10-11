@@ -672,7 +672,7 @@ function ListenContent() {
           </div>
           <Button onClick={handleSavePlaylist} className="flex items-center space-x-2">
             <Save className="w-4 h-4" />
-            <span>Save Playlist</span>
+            <span className="hidden sm:inline">Save Playlist</span> {/* Hide text on small screens */}
           </Button>
         </div>
 

@@ -16,7 +16,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { useRouter } from 'next/router';
 import { ImageCropper } from '@/components/UploadPage/ImageCropper';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ListMusic, Save } from 'lucide-react'; // Import ListMusic and Save icons
 
 // Define the Song type
 type Song = {
@@ -60,7 +60,7 @@ type FormValues = {
 };
 
 export default function SavePlaylistDialog({
-  isOpen, onClose, songs, playlists, user, onImageCropComplete, openImageCropper, formRef,
+  isOpen, onClose, songs, playlists: initialPlaylists, user, onImageCropComplete, openImageCropper, formRef,
 }: SavePlaylistDialogProps) {
   const [step, setStep] = useState(1);
   const [isCropperOpen, setIsCropperOpen] = useState(false);
@@ -68,6 +68,7 @@ export default function SavePlaylistDialog({
 
   const [croppedImage, setCroppedImage] = useState<File | null>(null);
   const [croppedImageUrl, setCroppedImageUrl] = useState<string | null>(null);
+  const [playlists, setPlaylists] = useState<any[]>(initialPlaylists);
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -99,6 +100,20 @@ export default function SavePlaylistDialog({
       });
     }
   }, [isOpen, form]);
+
+  useEffect(() => {
+    if (isOpen && user) {
+      // Fetch only user-created playlists when the dialog opens
+      axios.get(`/api/users/${user.id}/playlists?createdOnly=true`)
+        .then(response => {
+          setPlaylists(response.data);
+        })
+        .catch(error => {
+          console.error('Error fetching user playlists:', error);
+          toast.error('Failed to fetch playlists');
+        });
+    }
+  }, [isOpen, user]);
 
   useImperativeHandle(formRef, () => form);
 
@@ -325,13 +340,20 @@ export default function SavePlaylistDialog({
                         <FormLabel>Select Playlist</FormLabel>
                         <FormControl>
                           <Select onValueChange={field.onChange} value={field.value || ''}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select a playlist" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent
+                              side="bottom"
+                              align="start"
+                              className="max-h-[300px] overflow-y-auto"
+                            >
                               {playlists?.map((playlist: any) => (
                                 <SelectItem key={playlist.id} value={playlist.id.toString()}>
-                                  {playlist.name}
+                                  <div className="flex items-center">
+                                    <ListMusic className="w-4 h-4 mr-2" />
+                                    {playlist.name}
+                                  </div>
                                 </SelectItem>
                               ))}
                             </SelectContent>
