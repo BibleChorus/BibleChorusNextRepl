@@ -46,7 +46,8 @@ export type Song = {
 };
 
 interface SongListProps {
-  songs: Song[]
+  songs: Song[];
+  isNarrowView: boolean;
 }
 
 interface VoteState {
@@ -74,7 +75,7 @@ const formatDuration = (seconds: number): string => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
-export const SongList = React.memo(function SongList({ songs }: SongListProps) {
+export const SongList = React.memo(function SongList({ songs, isNarrowView }: SongListProps) {
   const [voteStates, setVoteStates] = useState<VoteState>({})
   const [likeStates, setLikeStates] = useState<LikeState>({})
   const [likeCounts, setLikeCounts] = useState<Record<number, number>>({})
@@ -202,22 +203,20 @@ export const SongList = React.memo(function SongList({ songs }: SongListProps) {
 
   return (
     <div className="space-y-2 sm:space-y-4">
-      {songs.map((song) => {
-        console.log('Full song object:', song);
-        return (
-          <SongListItem
-            key={song.id}
-            song={song}
-            songs={songs} // Pass the full list of songs
-            likeCounts={likeCounts}
-            voteCounts={voteCounts}
-            likeStates={likeStates}
-            voteStates={voteStates}
-            handleLike={handleLike}
-            handleVoteClick={handleVoteClick}
-          />
-        );
-      })}
+      {songs.map((song) => (
+        <SongListItem
+          key={song.id}
+          song={song}
+          songs={songs}
+          likeCounts={likeCounts}
+          voteCounts={voteCounts}
+          likeStates={likeStates}
+          voteStates={voteStates}
+          handleLike={handleLike}
+          handleVoteClick={handleVoteClick}
+          isNarrowView={isNarrowView}
+        />
+      ))}
     </div>
   )
 })
@@ -230,7 +229,8 @@ const SongListItem = React.memo(function SongListItem({
   likeStates, 
   voteStates, 
   handleLike, 
-  handleVoteClick 
+  handleVoteClick,
+  isNarrowView
 }: { 
   song: Song, 
   songs: Song[], 
@@ -239,7 +239,8 @@ const SongListItem = React.memo(function SongListItem({
   likeStates: LikeState, 
   voteStates: VoteState, 
   handleLike: (song: Song) => Promise<void>, 
-  handleVoteClick: (song: Song, voteType: string, voteValue: number) => Promise<void> 
+  handleVoteClick: (song: Song, voteType: string, voteValue: number) => Promise<void>,
+  isNarrowView: boolean
 }) {
   const [imageError, setImageError] = useState<Record<number, boolean>>({})
   const router = useRouter()
@@ -351,12 +352,12 @@ const SongListItem = React.memo(function SongListItem({
 
   return (
     <motion.div
-      className="flex items-center p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden group song-card"
+      className={`flex items-center p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden group song-card ${isNarrowView ? 'h-[72px] sm:h-[88px]' : ''}`}
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
     >
       {/* Song Art with Play/Pause Button */}
-      <div className="w-20 h-20 sm:w-24 sm:h-24 mr-3 sm:mr-4 relative flex-shrink-0">
+      <div className={`${isNarrowView ? 'w-16 h-16 sm:w-20 sm:h-20' : 'w-20 h-20 sm:w-24 sm:h-24'} mr-3 sm:mr-4 relative flex-shrink-0`}>
         {song.song_art_url && !imageError[song.id] ? (
           <img
             src={`${CDN_URL}${song.song_art_url}`}
@@ -402,9 +403,9 @@ const SongListItem = React.memo(function SongListItem({
             }}
           >
             {currentSong?.id === song.id && isPlaying ? (
-              <Pause className="h-8 w-8 sm:h-10 sm:w-10" />
+              <Pause className={`${isNarrowView ? 'h-6 w-6 sm:h-8 sm:w-8' : 'h-8 w-8 sm:h-10 sm:w-10'}`} />
             ) : (
-              <Play className="h-8 w-8 sm:h-10 sm:w-10" />
+              <Play className={`${isNarrowView ? 'h-6 w-6 sm:h-8 sm:w-8' : 'h-8 w-8 sm:h-10 sm:w-10'}`} />
             )}
           </button>
         </div>
@@ -482,28 +483,30 @@ const SongListItem = React.memo(function SongListItem({
         </div>
 
         {/* Tags / Badges */}
-        <div className="mt-1 sm:mt-2 flex flex-wrap gap-1">
-          {song.genres && song.genres.map((genre, index) => (
-            <Badge key={`${song.id}-${genre}-${index}`} variant="secondary" className="text-[10px] sm:text-xs px-1 py-0">
-              {genre}
-            </Badge>
-          ))}
-          {song.bible_translation_used && (
-            <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
-              {song.bible_translation_used}
-            </Badge>
-          )}
-          {song.lyrics_scripture_adherence && (
-            <Badge variant="default" className="text-[10px] sm:text-xs px-1 py-0 bg-primary text-primary-foreground">
-              {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
-            </Badge>
-          )}
-          {song.is_continuous_passage !== undefined && (
-            <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
-              {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
-            </Badge>
-          )}
-        </div>
+        {!isNarrowView && (
+          <div className="mt-1 sm:mt-2 flex flex-wrap gap-1">
+            {song.genres && song.genres.map((genre, index) => (
+              <Badge key={`${song.id}-${genre}-${index}`} variant="secondary" className="text-[10px] sm:text-xs px-1 py-0">
+                {genre}
+              </Badge>
+            ))}
+            {song.bible_translation_used && (
+              <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
+                {song.bible_translation_used}
+              </Badge>
+            )}
+            {song.lyrics_scripture_adherence && (
+              <Badge variant="default" className="text-[10px] sm:text-xs px-1 py-0 bg-primary text-primary-foreground">
+                {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
+              </Badge>
+            )}
+            {song.is_continuous_passage !== undefined && (
+              <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
+                {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Dropdown Menu */}

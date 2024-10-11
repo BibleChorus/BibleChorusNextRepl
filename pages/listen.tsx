@@ -4,7 +4,7 @@ import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
 import { Filters } from '@/components/ListenPage/Filters'
 import { motion, AnimatePresence } from "framer-motion"
-import { Filter, X, Info, Save, Search, Check, ListMusic, ArrowUpDown } from "lucide-react"
+import { Filter, X, Info, Save, Search, Check, ListMusic, ArrowUpDown, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Expand, Shrink } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -33,6 +33,7 @@ import { useForm, UseFormReturn } from 'react-hook-form'; // Add this import
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { SortOptions } from '@/components/ListenPage/SortOptions';
 import { useSidebar } from '@/contexts/SidebarContext';  // Import useSidebar
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 // Define the User type here
 type User = {
@@ -630,6 +631,8 @@ function ListenContent() {
 
   const [isSortExpanded, setIsSortExpanded] = useState(false);
 
+  const [isNarrowView, setIsNarrowView] = useState(false);
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background">
@@ -649,8 +652,8 @@ function ListenContent() {
           </div>
 
           {/* Playlist Selection and Save Button */}
-          <div className={`container mx-auto px-2 py-2 flex items-center transition-all duration-300 ${isHeaderVisible ? 'mt-0' : 'mt-2'}`}>
-            <div className="flex items-center space-x-2 flex-grow">
+          <div className={`container mx-auto px-2 py-2 flex items-center justify-between transition-all duration-300 ${isHeaderVisible ? 'mt-0' : 'mt-2'}`}>
+            <div className="flex items-center space-x-2">
               <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-[200px] justify-between h-8 text-xs">
@@ -721,6 +724,25 @@ function ListenContent() {
                 <span className="hidden sm:inline">Save</span>
               </Button>
             </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsNarrowView(!isNarrowView)}
+                  className="h-8 w-8 p-0"
+                >
+                  {isNarrowView ? (
+                    <Expand className="h-4 w-4" />
+                  ) : (
+                    <Shrink className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isNarrowView ? 'Expand view' : 'Narrow view'}</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
 
           {/* Filter Group Section */}
@@ -783,7 +805,7 @@ function ListenContent() {
 
           {songs.length > 0 ? (
             <>
-              <SongList songs={songs} />
+              <SongList songs={songs} isNarrowView={isNarrowView} />
               {hasMore && (
                 <>
                   {isValidating && <SongListSkeleton />}
