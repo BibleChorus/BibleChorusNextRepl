@@ -4,7 +4,7 @@ import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
 import { Filters, FilterOptions } from '@/components/ListenPage/Filters'
 import { motion, AnimatePresence } from "framer-motion"
-import { Filter, X, Info, Save, Search, Check } from "lucide-react"
+import { Filter, X, Info, Save, Search, Check, ListMusic } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -606,21 +606,22 @@ function ListenContent() {
             <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-[200px] justify-between">
-                  {selectedPlaylist ? (
-                    <>
-                      <span className="truncate mr-2">
-                        {playlists?.find(p => p.id.toString() === selectedPlaylist)?.name || 'Select a playlist'}
-                      </span>
-                      <X
-                        className="h-4 w-4 flex-shrink-0 hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          clearPlaylistSelection()
-                        }}
-                      />
-                    </>
-                  ) : (
-                    <>Select a playlist</>
+                  <div className="flex items-center overflow-hidden">
+                    <ListMusic className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">
+                      {selectedPlaylist
+                        ? playlists?.find(p => p.id.toString() === selectedPlaylist)?.name
+                        : 'Select a playlist'}
+                    </span>
+                  </div>
+                  {selectedPlaylist && (
+                    <X
+                      className="h-4 w-4 flex-shrink-0 hover:text-destructive ml-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearPlaylistSelection();
+                      }}
+                    />
                   )}
                 </Button>
               </PopoverTrigger>
@@ -645,13 +646,11 @@ function ListenContent() {
                         )}
                         onClick={() => handlePlaylistSelect(playlist.id.toString())}
                       >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedPlaylist === playlist.id.toString() ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <span>{playlist.name}</span>
+                        <ListMusic className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="break-words overflow-hidden">{playlist.name}</span>
+                        {selectedPlaylist === playlist.id.toString() && (
+                          <Check className="ml-auto h-4 w-4 flex-shrink-0" />
+                        )}
                       </div>
                     ))}
                   </ScrollArea>
