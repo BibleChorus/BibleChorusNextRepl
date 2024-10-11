@@ -52,8 +52,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'songs.ai_used_for_lyrics',
           'songs.music_ai_generated',
           'songs.music_model_used',
-          'songs.duration', // Add this line
-          'songs.play_count' // Add this line if not already present
+          'songs.duration',
+          'songs.play_count',
+          // Include these columns conditionally
+          ...(sortBy === 'firstBibleVerse'
+            ? [
+                'first_bible_verse.book as first_book',
+                'first_bible_verse.chapter as first_chapter',
+                'first_bible_verse.verse as first_verse',
+              ]
+            : []),
+          // Subqueries for vote counts
+          db.raw(`COALESCE((
+            SELECT SUM(vote_value) FROM votes
+            WHERE song_id = songs.id AND vote_type = 'Best Musically'
+          ), 0) AS best_musically_votes`),
+          db.raw(`COALESCE((
+            SELECT SUM(vote_value) FROM votes
+            WHERE song_id = songs.id AND vote_type = 'Best Lyrically'
+          ), 0) AS best_lyrically_votes`),
+          db.raw(`COALESCE((
+            SELECT SUM(vote_value) FROM votes
+            WHERE song_id = songs.id AND vote_type = 'Best Overall'
+          ), 0) AS best_overall_votes`),
+          // Subquery for like count
+          db.raw(`COALESCE((
+            SELECT COUNT(*) FROM likes
+            WHERE likeable_id = songs.id AND likeable_type = 'song'
+          ), 0) AS like_count`),
         )
         .join('users', 'songs.uploaded_by', 'users.id');
 
@@ -185,29 +211,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         );
       }
 
-      // Before applying filters or pagination, compute aggregate fields
-      query = query
-        .leftJoin('likes', function () {
-          this.on('likes.likeable_id', '=', 'songs.id')
-            .andOn('likes.likeable_type', '=', db.raw('?', ['song']));
-        })
-        .leftJoin('votes as votes_musically', function () {
-          this.on('votes_musically.song_id', '=', 'songs.id')
-            .andOn('votes_musically.vote_type', '=', db.raw('?', ['Best Musically']));
-        })
-        .leftJoin('votes as votes_lyrically', function () {
-          this.on('votes_lyrically.song_id', '=', 'songs.id')
-            .andOn('votes_lyrically.vote_type', '=', db.raw('?', ['Best Lyrically']));
-        })
-        .leftJoin('votes as votes_overall', function () {
-          this.on('votes_overall.song_id', '=', 'songs.id')
-            .andOn('votes_overall.vote_type', '=', db.raw('?', ['Best Overall']));
-        })
-        .countDistinct('likes.id as like_count')
-        .sum('votes_musically.vote_value as best_musically_votes')
-        .sum('votes_lyrically.vote_value as best_lyrically_votes')
-        .sum('votes_overall.vote_value as best_overall_votes')
-        .groupBy('songs.id', 'users.id', 'users.username');  // Add 'users.id' and 'users.username' here
+      // Include joins for firstBibleVerse sorting
+      if (sortBy === 'firstBibleVerse') {
+        query = query
+          .leftJoin('song_verses as first_verse', 'songs.id', 'first_verse.song_id')
+          .leftJoin('bible_verses as first_bible_verse', 'first_verse.verse_id', 'first_bible_verse.id');
+      }
 
       // Apply sorting
       switch (sortBy) {
@@ -227,25 +236,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           query = query.orderBy('best_overall_votes', sortOrder);
           break;
         case 'firstBibleVerse':
-          query = query
-            .leftJoin('song_verses', 'songs.id', 'song_verses.song_id')
-            .leftJoin('bible_verses', 'song_verses.verse_id', 'bible_verses.id')
-            .orderBy([
-              { column: 'bible_verses.book', order: sortOrder },
-              { column: 'bible_verses.chapter', order: sortOrder },
-              { column: 'bible_verses.verse', order: sortOrder },
-            ]);
+          query = query.orderBy([
+            { column: 'first_bible_verse.book', order: sortOrder },
+            { column: 'first_bible_verse.chapter', order: sortOrder },
+            { column: 'first_bible_verse.verse', order: sortOrder },
+          ]);
           break;
         default:
           query = query.orderBy('songs.created_at', sortOrder);
       }
 
-      // After applying all filters, select songs
+      // Apply pagination
       const songsQuery = query.clone().offset(offset).limit(limitNum);
       const songs = await songsQuery;
 
-      // Get the total count without pagination
-      const totalQuery = query.clone().clearSelect().countDistinct('songs.id as total');
+      // **Clone the existing query for total count**
+      const totalQuery = query.clone()
+        .clearSelect()
+        .clearOrder()
+        .countDistinct('songs.id as total');
+
       const totalResult = await totalQuery.first();
       const total = totalResult ? Number(totalResult.total) : 0;
 
@@ -265,7 +275,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         acc[verse.song_id].push({ book: verse.book, chapter: verse.chapter, verse: verse.verse });
         return acc;
-      }, {});
+      }, {} as Record<number, { book: string; chapter: number; verse: number }[]>);
 
       songs.forEach(song => {
         song.bible_verses = versesBySongId[song.id] || [];

@@ -32,6 +32,7 @@ import { uploadFile } from '@/lib/uploadUtils';
 import { useForm, UseFormReturn } from 'react-hook-form'; // Add this import
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { SortOptions } from '@/components/ListenPage/SortOptions';
+import { useSidebar } from '@/contexts/SidebarContext';  // Import useSidebar
 
 // Define the User type here
 type User = {
@@ -122,6 +123,8 @@ function ListenContent() {
   const { user } = useAuth(); // Use useAuth at the top level
   const { currentSong, isMinimized } = useMusicPlayer();
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
+  const { isOpen: isSidebarOpen } = useSidebar(); // Get sidebar state
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   // Adjust bottom offset for filter button
   const filterButtonBottomClass = useMemo(() => {
@@ -136,6 +139,15 @@ function ListenContent() {
       return 'bottom-4';
     }
   }, [currentSong, isSmallScreen, isMinimized]);
+
+  // Adjust the left offset for the sort button
+  const sortButtonLeftClass = useMemo(() => {
+    if (isMobile) {
+      return 'left-4';
+    } else {
+      return isSidebarOpen ? 'left-[260px]' : 'left-16';
+    }
+  }, [isMobile, isSidebarOpen]);
 
   // Initialize filterOptions with URL query
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
@@ -811,7 +823,7 @@ function ListenContent() {
           exit={{ opacity: 0, scale: 0.9 }}
           transition={{ duration: 0.2 }}
           onClick={() => setIsSortExpanded(true)}
-          className={`fixed left-4 z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
+          className={`fixed ${sortButtonLeftClass} z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
           aria-label="Expand sorting"
         >
           <ArrowUpDown className="h-5 w-5" />
