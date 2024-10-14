@@ -23,24 +23,24 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onClick, gradient
   return (
     <div
       onClick={onClick}
-      className="w-full h-48 rounded-lg overflow-hidden cursor-pointer transition-transform duration-300 hover:scale-105 relative"
+      className="aspect-square rounded-lg overflow-hidden cursor-pointer transition-transform duration-300 hover:scale-105 relative"
     >
       {hasCoverArt ? (
         <>
           <Image
             src={playlist.cover_art_url || '/default-playlist-cover.jpg'}
             alt={`${playlist.name} Cover`}
-            fill
-            className="object-cover"
+            layout="fill"
+            objectFit="cover"
           />
           <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black to-transparent opacity-70"></div>
-          <p className="absolute bottom-2 left-2 right-2 text-white text-lg font-semibold truncate shadow-sm">
+          <p className="absolute bottom-2 left-2 right-2 text-white text-sm sm:text-base font-semibold truncate shadow-sm">
             {playlist.name}
           </p>
         </>
       ) : (
         <div className={`h-full w-full flex items-center justify-center text-white ${gradientBackground}`}>
-          <p className="text-lg font-semibold text-center px-2">{playlist.name}</p>
+          <p className="text-sm sm:text-base font-semibold text-center px-2">{playlist.name}</p>
         </div>
       )}
     </div>

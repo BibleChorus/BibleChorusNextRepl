@@ -18,7 +18,17 @@ interface PlaylistSectionProps {
 }
 
 const PlaylistSection: React.FC<PlaylistSectionProps> = ({ title, playlists, onPlaylistClick }) => {
-  const [emblaRef] = useEmblaCarousel({ loop: true, align: 'start' }, [AutoPlay()]);
+  const [emblaRef] = useEmblaCarousel(
+    { 
+      loop: true, 
+      align: 'start',
+      dragFree: true,
+      containScroll: 'trimSnaps',
+      dragThreshold: 20,
+      skipSnaps: true
+    }, 
+    [AutoPlay()]
+  );
 
   return (
     <div className="mb-8">
@@ -29,11 +39,15 @@ const PlaylistSection: React.FC<PlaylistSectionProps> = ({ title, playlists, onP
         opts={{
           align: 'start',
           loop: true,
+          dragFree: true,
+          containScroll: 'trimSnaps',
+          dragThreshold: 20,
+          skipSnaps: true
         }}
       >
-        <CarouselContent>
+        <CarouselContent className="-ml-2 md:-ml-4">
           {playlists.map((playlist, index) => (
-            <CarouselItem key={playlist.id} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+            <CarouselItem key={playlist.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
               <PlaylistCard
                 playlist={playlist}
                 onClick={() => onPlaylistClick(playlist.id)}
