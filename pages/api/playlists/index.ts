@@ -1,13 +1,37 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import db from '@/db';
+import db from '../../../lib/db'; // Corrected import path
 
 // Update: Use process.env.CDN_URL for server-side environment variables
-const CDN_URL = process.env.CDN_URL || ''; // Changed from NEXT_PUBLIC_CDN_URL
+const CDN_URL = process.env.CDN_URL || '';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
 
-  if (method === 'POST') {
+  if (method === 'GET') {
+    // Handle GET requests
+    try {
+      // Fetch public playlists from the database
+      const playlists = await db('playlists')
+        .select(
+          'playlists.*',
+          db.raw('COUNT(likes.id) as like_count')
+        )
+        .leftJoin('likes', function () {
+          this.on('playlists.id', '=', 'likes.likeable_id')
+              .andOn('likes.likeable_type', '=', db.raw('?', ['playlist']));
+        })
+        .where('playlists.is_public', true)
+        .groupBy('playlists.id')
+        .orderBy('like_count', 'desc');
+
+      // Send the playlists as JSON
+      res.status(200).json({ playlists });
+    } catch (error) {
+      console.error('Error fetching playlists:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  } else if (method === 'POST') {
+    // Handle POST requests (create a new playlist)
     const {
       name,
       description,
@@ -33,14 +57,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           name,
           description,
           is_public,
-          cover_art_url: fullCoverArtUrl, // Use the full URL here
+          cover_art_url: fullCoverArtUrl,
           user_id,
           created_at: new Date(),
           last_updated: new Date(),
         })
         .returning('id');
 
-      const playlistId = playlist.id; // Extract the id from the returned object
+      const playlistId = playlist.id;
 
       // Insert into user_playlist_library with is_creator = true
       await db('user_playlist_library').insert({
@@ -53,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (song_ids && song_ids.length > 0) {
         const playlistSongs = song_ids.map((song_id: number, index: number) => ({
-          playlist_id: playlistId, // Use the extracted playlistId
+          playlist_id: playlistId,
           song_id,
           position: index + 1,
           added_by: user_id,
@@ -68,7 +92,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(500).json({ message: 'Error creating playlist', error });
     }
   } else {
-    res.setHeader('Allow', ['POST']);
+    // Return 405 for other methods
+    res.setHeader('Allow', ['GET', 'POST']);
     res.status(405).end(`Method ${method} Not Allowed`);
   }
 }
