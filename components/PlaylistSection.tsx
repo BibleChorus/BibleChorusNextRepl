@@ -1,8 +1,15 @@
 import React from 'react';
-// Import the PlaylistCard component to display individual playlists
 import PlaylistCard from './PlaylistCard';
-// Import types for TypeScript
 import { Playlist } from '../types';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
+import useEmblaCarousel from 'embla-carousel-react';
+import AutoPlay from 'embla-carousel-autoplay';
 
 interface PlaylistSectionProps {
   title: string;
@@ -10,23 +17,34 @@ interface PlaylistSectionProps {
   onPlaylistClick: (playlistId: number) => void;
 }
 
-// Component for displaying a section of playlists (e.g., Auto Playlists)
 const PlaylistSection: React.FC<PlaylistSectionProps> = ({ title, playlists, onPlaylistClick }) => {
+  const [emblaRef] = useEmblaCarousel({ loop: true, align: 'start' }, [AutoPlay()]);
+
   return (
     <div className="mb-8">
-      {/* Section title */}
       <h2 className="text-2xl font-bold mb-4">{title}</h2>
-      {/* Horizontally scrollable row of playlist cards */}
-      <div className="flex space-x-4 overflow-x-auto">
-        {/* Loop through each playlist and render a PlaylistCard */}
-        {playlists.map((playlist) => (
-          <PlaylistCard
-            key={playlist.id}
-            playlist={playlist}
-            onClick={() => onPlaylistClick(playlist.id)}
-          />
-        ))}
-      </div>
+      <Carousel
+        ref={emblaRef}
+        className="w-full"
+        opts={{
+          align: 'start',
+          loop: true,
+        }}
+      >
+        <CarouselContent>
+          {playlists.map((playlist, index) => (
+            <CarouselItem key={playlist.id} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+              <PlaylistCard
+                playlist={playlist}
+                onClick={() => onPlaylistClick(playlist.id)}
+                gradientIndex={index}
+              />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
+      </Carousel>
     </div>
   );
 };

@@ -1,45 +1,48 @@
 import React from 'react';
-// Import types for TypeScript
 import { Playlist } from '../types';
+import Image from 'next/image';
 
 interface PlaylistCardProps {
   playlist: Playlist;
   onClick: () => void;
+  gradientIndex: number;
 }
 
-// Component for displaying an individual playlist card
-const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onClick }) => {
-  // Determine if the playlist has cover art
-  const hasCoverArt = !!playlist.cover_art_url;
+const gradients = [
+  'from-purple-500 to-indigo-600',
+  'from-blue-500 to-teal-400',
+  'from-red-500 to-pink-500',
+  'from-yellow-400 to-orange-500',
+  'from-green-400 to-cyan-500',
+];
 
-  // Generate a gradient background if no cover art is available
-  const gradientBackground = `bg-gradient-to-br from-purple-500 to-indigo-600`;
+const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onClick, gradientIndex }) => {
+  const hasCoverArt = !!playlist.cover_art_url;
+  const gradientBackground = `bg-gradient-to-br ${gradients[gradientIndex % gradients.length]}`;
 
   return (
     <div
       onClick={onClick}
-      className="w-48 flex-shrink-0 cursor-pointer"
+      className="w-full h-48 rounded-lg overflow-hidden cursor-pointer transition-transform duration-300 hover:scale-105 relative"
     >
-      {/* Playlist image or gradient background */}
-      <div
-        className={`h-48 w-full rounded-lg mb-2 overflow-hidden ${!hasCoverArt && gradientBackground}`}
-      >
-        {hasCoverArt ? (
-          // Display the cover art image
-          <img
-            src={playlist.cover_art_url}
+      {hasCoverArt ? (
+        <>
+          <Image
+            src={playlist.cover_art_url || '/default-playlist-cover.jpg'}
             alt={`${playlist.name} Cover`}
-            className="h-full w-full object-cover"
+            fill
+            className="object-cover"
           />
-        ) : (
-          // Display the initials of the playlist name if no cover art
-          <div className="h-full w-full flex items-center justify-center text-white text-4xl font-bold">
-            {playlist.name.charAt(0)}
-          </div>
-        )}
-      </div>
-      {/* Playlist name */}
-      <p className="text-sm font-semibold truncate">{playlist.name}</p>
+          <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black to-transparent opacity-70"></div>
+          <p className="absolute bottom-2 left-2 right-2 text-white text-lg font-semibold truncate shadow-sm">
+            {playlist.name}
+          </p>
+        </>
+      ) : (
+        <div className={`h-full w-full flex items-center justify-center text-white ${gradientBackground}`}>
+          <p className="text-lg font-semibold text-center px-2">{playlist.name}</p>
+        </div>
+      )}
     </div>
   );
 };
