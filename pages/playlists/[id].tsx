@@ -5,22 +5,43 @@ import db from '@/db'; // Database connection
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Play } from 'lucide-react';
+import { Play, Edit } from 'lucide-react';
 import { formatBibleVerses, parsePostgresArray } from '@/lib/utils'; // Add parsePostgresArray import
 import { Playlist, Song } from '@/types'; // Define these types as needed
 import SongList from '@/components/PlaylistPage/SongList'; // New SongList component for the playlist page
+import EditPlaylistDialog from '@/components/PlaylistPage/EditPlaylistDialog';
+import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth hook
 
 interface PlaylistPageProps {
   playlist: Playlist;
   songs: Song[];
+  creatorUsername: string;
 }
 
-export default function PlaylistPage({ playlist, songs }: PlaylistPageProps) {
+export default function PlaylistPage({ playlist: initialPlaylist, songs: initialSongs, creatorUsername }: PlaylistPageProps) {
   const router = useRouter();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [playlist, setPlaylist] = useState(initialPlaylist);
+  const [songs, setSongs] = useState(initialSongs);
+  const { user } = useAuth(); // Use the useAuth hook
 
   const handlePlayPlaylist = () => {
     router.push(`/listen?playlistId=${playlist.id}`);
   };
+
+  const handleEditClick = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditComplete = (updatedPlaylist: Playlist, updatedSongs: Song[]) => {
+    setPlaylist(updatedPlaylist);
+    setSongs(updatedSongs);
+    setIsEditDialogOpen(false);
+  };
+
+  // Change this line to compare string values
+  const isCreator = user && user.id.toString() === playlist.user_id.toString();
 
   return (
     <div className="min-h-screen bg-background">
@@ -44,7 +65,7 @@ export default function PlaylistPage({ playlist, songs }: PlaylistPageProps) {
           {playlist.description && (
             <p className="text-xl sm:text-2xl mb-4">{playlist.description}</p>
           )}
-          <p className="text-lg">Created by: {playlist.creator_username}</p>
+          <p className="text-lg">Created by: {creatorUsername}</p>
           <div className="flex flex-wrap items-center justify-center mt-2">
             {playlist.is_auto && (
               <Badge variant="default" className="mr-2">Auto Playlist</Badge>
@@ -53,14 +74,26 @@ export default function PlaylistPage({ playlist, songs }: PlaylistPageProps) {
               <Badge key={tag} variant="secondary" className="mr-2">{tag}</Badge>
             ))}
           </div>
-          <Button 
-            onClick={handlePlayPlaylist} 
-            className="mt-4 flex items-center"
-            variant="default"
-          >
-            <Play className="mr-2 h-4 w-4" />
-            Play Playlist
-          </Button>
+          <div className="flex space-x-4 mt-4">
+            <Button 
+              onClick={handlePlayPlaylist} 
+              className="flex items-center"
+              variant="default"
+            >
+              <Play className="mr-2 h-4 w-4" />
+              Play Playlist
+            </Button>
+            {isCreator && (
+              <Button
+                onClick={handleEditClick}
+                className="flex items-center"
+                variant="outline"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Playlist
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -72,6 +105,14 @@ export default function PlaylistPage({ playlist, songs }: PlaylistPageProps) {
           <p className="text-center text-lg">No songs found in this playlist.</p>
         )}
       </main>
+
+      <EditPlaylistDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        playlist={playlist}
+        songs={songs}
+        onEditComplete={handleEditComplete}
+      />
     </div>
   );
 }
@@ -107,10 +148,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Fetch creator's username
     const creator = await db('users')
       .where('id', playlist.user_id)
-      .first();
+      .first('username');
 
-    // Add creator_username to playlist
-    playlist.creator_username = creator ? creator.username : 'Unknown';
+    const creatorUsername = creator ? creator.username : 'Unknown';
 
     // Parse genres for each song
     songs.forEach((song: any) => {
@@ -141,6 +181,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         playlist: JSON.parse(JSON.stringify(playlist)),
         songs: JSON.parse(JSON.stringify(songs)),
+        creatorUsername,
       },
     };
   } catch (error) {
