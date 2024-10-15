@@ -2,9 +2,10 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { PlayCircle } from 'lucide-react';
+import { PlayCircle, Pause } from 'lucide-react';
 import { formatBibleVerses } from '@/lib/utils';
 import { Song } from '@/types';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 interface SongListProps {
   songs: Song[];
@@ -14,19 +15,52 @@ export const SongList: React.FC<SongListProps> = ({ songs }) => {
   return (
     <div className="space-y-6">
       {songs.map((song) => (
-        <SongListItem key={song.id} song={song} />
+        <SongListItem key={song.id} song={song} allSongs={songs} />
       ))}
     </div>
   );
 };
 
-const SongListItem: React.FC<{ song: Song }> = ({ song }) => {
+const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSongs }) => {
+  const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
+
+  const handlePlayClick = () => {
+    if (currentSong?.id === song.id) {
+      if (isPlaying) {
+        pause();
+      } else {
+        resume();
+      }
+    } else {
+      playSong(
+        {
+          id: song.id,
+          title: song.title,
+          artist: song.artist || song.username,
+          audioUrl: song.audio_url,
+          coverArtUrl: song.song_art_url,
+          duration: song.duration,
+        },
+        allSongs.map((s) => ({
+          id: s.id,
+          title: s.title,
+          artist: s.artist || s.username,
+          audioUrl: s.audio_url,
+          coverArtUrl: s.song_art_url,
+          duration: s.duration,
+        }))
+      );
+    }
+  };
+
+  const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+
   return (
     <div className="p-6 bg-card rounded-lg shadow-md flex flex-col md:flex-row md:items-center">
       {/* Song Art */}
       <div className="flex-shrink-0 w-full md:w-64 h-64 relative mb-4 md:mb-0 md:mr-6">
         <Image
-          src={song.song_art_url ? song.song_art_url : '/biblechorus-icon.png'}
+          src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
           alt={song.title}
           layout="fill"
           objectFit="cover"
@@ -34,8 +68,12 @@ const SongListItem: React.FC<{ song: Song }> = ({ song }) => {
         />
         {/* Play Button Overlay */}
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-          <button className="text-white p-2">
-            <PlayCircle className="w-16 h-16" />
+          <button onClick={handlePlayClick} className="text-white p-2">
+            {currentSong?.id === song.id && isPlaying ? (
+              <Pause className="w-16 h-16" />
+            ) : (
+              <PlayCircle className="w-16 h-16" />
+            )}
           </button>
         </div>
       </div>

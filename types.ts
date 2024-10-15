@@ -24,6 +24,7 @@ export interface Song {
   lyrics_scripture_adherence?: string;
   is_continuous_passage?: boolean;
   bible_verses?: { book: string; chapter: number; verse: number }[];
+  duration: number; // Duration of the song in seconds
   // Add any other fields as needed
 }
 
