@@ -25,6 +25,7 @@ export const NewCommentForm: React.FC<NewCommentFormProps> = ({ songId, onCommen
       const response = await axios.post(`/api/songs/${songId}/comments`, {
         comment: commentText,
         parent_comment_id: parentCommentId || null,
+        user_id: user.id, // Include the user_id in the request
       });
       onCommentAdded(response.data);
       setCommentText('');
@@ -43,7 +44,7 @@ export const NewCommentForm: React.FC<NewCommentFormProps> = ({ songId, onCommen
         onChange={(e) => setCommentText(e.target.value)}
         className="mb-2"
       />
-      <Button onClick={handleAddComment} disabled={!commentText}>
+      <Button onClick={handleAddComment} disabled={!commentText || !user}>
         {parentCommentId ? 'Reply' : 'Add Comment'}
       </Button>
     </div>

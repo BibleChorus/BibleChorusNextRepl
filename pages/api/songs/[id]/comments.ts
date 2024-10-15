@@ -26,10 +26,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } else if (method === 'POST') {
     // Create a new comment
-    const { comment, parent_comment_id } = req.body;
-    const session = await getSession({ req });
+    const { comment, parent_comment_id, user_id } = req.body;
 
-    if (!session?.user?.id) {
+    if (!user_id) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
@@ -37,14 +36,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const [newComment] = await db('song_comments')
         .insert({
           song_id: songId,
-          user_id: session.user.id,
+          user_id,
           comment,
           parent_comment_id,
           created_at: new Date(),
         })
         .returning('*');
 
-      const user = await db('users').where('id', session.user.id).first();
+      const user = await db('users').where('id', user_id).first();
 
       res.status(201).json({ ...newComment, username: user.username });
     } catch (error) {
