@@ -100,9 +100,22 @@ export type FilterOptions = {
 };
 
 export default function Listen() {
+  const router = useRouter()
+  const { playlistId } = router.query
+
+  // ... existing state declarations ...
+
+  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (playlistId && typeof playlistId === 'string') {
+      setSelectedPlaylist(playlistId)
+    }
+  }, [playlistId])
+
   return (
     <TooltipProvider>
-      <ListenContent />
+      <ListenContent selectedPlaylist={selectedPlaylist} />
     </TooltipProvider>
   );
 }
@@ -118,7 +131,7 @@ type FormValues = {
   cover_art_url?: string;
 };
 
-function ListenContent() {
+function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selectedPlaylist: string | null }) {
   const router = useRouter()
   const querySearch = router.query.search as string || ''
   const { user } = useAuth(); // Use useAuth at the top level
@@ -126,6 +139,8 @@ function ListenContent() {
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
   const { isOpen: isSidebarOpen } = useSidebar(); // Get sidebar state
   const isMobile = useMediaQuery("(max-width: 768px)");
+
+  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(initialSelectedPlaylist)
 
   // Adjust bottom offset for filter button
   const filterButtonBottomClass = useMemo(() => {
@@ -280,8 +295,6 @@ function ListenContent() {
 
   // State to track if more songs are available
   const [hasMore, setHasMore] = useState(true);
-
-  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null)
 
   // Fetch playlists
   const { data: playlists, error: playlistError } = useSWR(
@@ -632,6 +645,12 @@ function ListenContent() {
   const [isSortExpanded, setIsSortExpanded] = useState(false);
 
   const [isNarrowView, setIsNarrowView] = useState(false);
+
+  useEffect(() => {
+    if (initialSelectedPlaylist) {
+      handlePlaylistChange(initialSelectedPlaylist);
+    }
+  }, [initialSelectedPlaylist]);
 
   return (
     <TooltipProvider>
