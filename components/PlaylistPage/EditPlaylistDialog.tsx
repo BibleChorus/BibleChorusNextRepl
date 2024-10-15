@@ -52,7 +52,7 @@ export default function EditPlaylistDialog({
 
   const handleRemoveSongs = async () => {
     try {
-      await axios.delete(`/api/playlists/${playlist.id}/songs`, {
+      await axios.delete(`/api/playlists/${playlist.id}`, {
         data: { song_ids: selectedSongs },
       });
 
