@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { Upload, Search, Map, List, Vote, Headphones, User, HelpCircle, X } from 'lucide-react';
+import { Upload, Search, Map, List, MessageSquare, Headphones, User, HelpCircle, X } from 'lucide-react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import Image from 'next/image'; // Add this import
 import Link from 'next/link'; // Add this import
@@ -11,7 +11,7 @@ const menuItems = [
   { name: 'Advanced Search', icon: Search, href: '/search' },
   { name: 'Progress Map', icon: Map, href: '/progress' },
   { name: 'Playlists', icon: List, href: '/playlists' },
-  { name: 'Vote on Songs', icon: Vote, href: '/vote' },
+  { name: 'Forum', icon: MessageSquare, href: '/forum' },
   { name: 'Listen', icon: Headphones, href: '/listen' },
   { name: 'Profile', icon: User, href: '/profile' },
   { name: 'How To', icon: HelpCircle, href: '/how-to' },
