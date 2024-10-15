@@ -54,3 +54,14 @@ export interface Comment {
   topic_id: number;
   created_at: string;
 }
+
+export interface SongComment {
+  id: number;
+  comment: string;
+  user_id: number;
+  username: string;
+  song_id: number;
+  parent_comment_id?: number;
+  created_at: string;
+  // Add any other fields as needed
+}

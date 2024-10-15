@@ -38,6 +38,9 @@ import DOMPurify from 'isomorphic-dompurify';
 import { ImageCropper } from '@/components/UploadPage/ImageCropper'
 import { parsePostgresArray } from '@/lib/utils'; // Add a utility function to parse PostgreSQL arrays
 import { components } from 'react-select';
+import { MessageCircle } from 'lucide-react'; // Add this import
+import { CommentList } from '@/components/SongComments/CommentList'; // Add this import
+import { NewCommentForm } from '@/components/SongComments/NewCommentForm'; // Add this import
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -166,6 +169,11 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
   const [isImageCropperOpen, setIsImageCropperOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Add these state variables
+  const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsCount, setCommentsCount] = useState(0);
 
   // Define the MultiValue component inside the SongPage function
   const MultiValue = () => null;
@@ -804,6 +812,40 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     setCropImageUrl(null)
   }
 
+  useEffect(() => {
+    if (isCommentsDialogOpen) {
+      fetchComments();
+    }
+  }, [isCommentsDialogOpen]);
+
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get(`/api/songs/${song.id}/comments`);
+      setComments(response.data);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
+  };
+
+  const handleCommentAdded = (newComment: Comment) => {
+    setComments((prevComments) => {
+      const updatedComments = [...prevComments];
+      if (newComment.parent_comment_id) {
+        // Find the parent comment and add the reply
+        const parentIndex = updatedComments.findIndex(c => c.id === newComment.parent_comment_id);
+        if (parentIndex !== -1) {
+          updatedComments.splice(parentIndex + 1, 0, newComment);
+        } else {
+          updatedComments.push(newComment);
+        }
+      } else {
+        updatedComments.push(newComment);
+      }
+      return updatedComments;
+    });
+    setCommentsCount((prevCount) => prevCount + 1);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Head>
@@ -988,6 +1030,16 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                   <div className="flex items-center">
                     {getVoteIcon('Best Overall')}
                     <span className="text-lg">{voteCounts['Best Overall'] || 0}</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setIsCommentsDialogOpen(true)}
+                  className="flex items-center justify-between text-gray-500 hover:text-blue-500 transition-colors duration-200"
+                >
+                  <span>Comments</span>
+                  <div className="flex items-center">
+                    <MessageCircle className="h-6 w-6 mr-2" />
+                    <span className="text-lg">{commentsCount}</span>
                   </div>
                 </button>
               </div>
@@ -1688,6 +1740,31 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               onCancel={handleCropCancel}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Comments Dialog */}
+      <Dialog open={isCommentsDialogOpen} onOpenChange={setIsCommentsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Comments</DialogTitle>
+            <DialogDescription>
+              Join the discussion about this song.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            {user && (
+              <NewCommentForm
+                songId={song.id}
+                onCommentAdded={handleCommentAdded}
+              />
+            )}
+            <CommentList
+              comments={comments}
+              songId={song.id}
+              onCommentAdded={handleCommentAdded}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

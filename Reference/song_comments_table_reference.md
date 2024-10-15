@@ -1,7 +1,7 @@
 # Song Comments Table
 
 ## Purpose
-This table stores comments made by users on songs, allowing for discussion and feedback on individual songs.
+This table stores comments made by users on songs, allowing for discussion and feedback on individual songs. It now supports nested comments (replies).
 
 ## Columns and Types
 
@@ -16,7 +16,7 @@ This table stores comments made by users on songs, allowing for discussion and f
 | likes | integer | UNSIGNED | 0 | Number of likes the comment has received |
 | is_pinned | boolean | | false | Indicates if the comment is pinned |
 | is_approved | boolean | | true | Indicates if the comment has been approved |
-| parent_comment_id | integer | UNSIGNED, FOREIGN KEY | | ID of the parent comment (for replies) |
+| parent_comment_id | integer | UNSIGNED, FOREIGN KEY | NULL | ID of the parent comment (for replies) |
 | is_edited | boolean | | false | Indicates if the comment has been edited |
 | sentiment | string(20) | | | Sentiment analysis of the comment |
 | contains_scripture_reference | boolean | | false | Indicates if the comment contains a scripture reference |
@@ -25,7 +25,7 @@ This table stores comments made by users on songs, allowing for discussion and f
 
 - Foreign key on `song_id` referencing the `songs` table with CASCADE on delete
 - Foreign key on `user_id` referencing the `users` table with CASCADE on delete
-- Foreign key on `parent_comment_id` referencing the `song_comments` table with SET NULL on delete
+- Foreign key on `parent_comment_id` referencing the `song_comments` table with CASCADE on delete
 
 ## Indexes
 
@@ -45,6 +45,7 @@ This table stores comments made by users on songs, allowing for discussion and f
 ## Notes
 
 - The `parent_comment_id` allows for nested comments (replies).
+- Comments with `parent_comment_id` set to NULL are top-level comments.
 - The `is_pinned` flag can be used to highlight important comments.
 - The `is_approved` flag allows for moderation of comments before they are publicly visible.
 - The `sentiment` column can be used to store the result of sentiment analysis on the comment.
@@ -52,10 +53,10 @@ This table stores comments made by users on songs, allowing for discussion and f
 
 ## Example Queries
 
-1. Get all approved comments for a specific song:
+1. Get all approved top-level comments for a specific song:
    ```sql
    SELECT * FROM song_comments
-   WHERE song_id = ? AND is_approved = true
+   WHERE song_id = ? AND is_approved = true AND parent_comment_id IS NULL
    ORDER BY created_at DESC;
    ```
 
