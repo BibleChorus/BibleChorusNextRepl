@@ -2,7 +2,6 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { PlayCircle } from 'lucide-react';
 import { formatBibleVerses } from '@/lib/utils';
 import { Song } from '@/types';
 
@@ -32,12 +31,6 @@ const SongListItem: React.FC<{ song: Song }> = ({ song }) => {
           objectFit="cover"
           className="rounded-lg"
         />
-        {/* Play Button Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-          <button className="text-white p-2">
-            <PlayCircle className="w-16 h-16" />
-          </button>
-        </div>
       </div>
       {/* Song Details */}
       <div className="flex-grow">

@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 import db from '@/db'; // Database connection
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Play } from 'lucide-react';
 import { formatBibleVerses, parsePostgresArray } from '@/lib/utils'; // Add parsePostgresArray import
 import { Playlist, Song } from '@/types'; // Define these types as needed
 import SongList from '@/components/PlaylistPage/SongList'; // New SongList component for the playlist page
@@ -15,6 +17,10 @@ interface PlaylistPageProps {
 
 export default function PlaylistPage({ playlist, songs }: PlaylistPageProps) {
   const router = useRouter();
+
+  const handlePlayPlaylist = () => {
+    router.push(`/listen?playlistId=${playlist.id}`);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,6 +53,14 @@ export default function PlaylistPage({ playlist, songs }: PlaylistPageProps) {
               <Badge key={tag} variant="secondary" className="mr-2">{tag}</Badge>
             ))}
           </div>
+          <Button 
+            onClick={handlePlayPlaylist} 
+            className="mt-4 flex items-center"
+            variant="default"
+          >
+            <Play className="mr-2 h-4 w-4" />
+            Play Playlist
+          </Button>
         </div>
       </div>
 
