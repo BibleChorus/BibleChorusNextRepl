@@ -34,3 +34,23 @@ export interface User {
   email: string;
   profile_image_url?: string;
 }
+
+export interface Topic {
+  id: number;
+  title: string;
+  content: string;
+  user_id: number;
+  username: string;
+  created_at: string;
+  song_id?: number;
+  comments?: Comment[];
+}
+
+export interface Comment {
+  id: number;
+  content: string;
+  user_id: number;
+  username: string;
+  topic_id: number;
+  created_at: string;
+}
