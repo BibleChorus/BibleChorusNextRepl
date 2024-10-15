@@ -26,3 +26,10 @@ export interface Song {
   bible_verses?: { book: string; chapter: number; verse: number }[];
   // Add any other fields as needed
 }
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  profile_image_url?: string;
+}

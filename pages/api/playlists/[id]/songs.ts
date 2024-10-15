@@ -2,7 +2,12 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 import { parsePostgresArray } from '@/lib/utils';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+// Add this type declaration
+interface AuthenticatedRequest extends NextApiRequest {
+  user?: { id: number };
+}
+
+export default async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { id } = req.query;
   const playlistId = Number(id);
 

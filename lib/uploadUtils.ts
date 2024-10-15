@@ -2,33 +2,31 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 export async function uploadFile(
-  file: File,
-  fileType: 'audio' | 'image',
-  userId: number
+  file: File, 
+  type: 'image' | 'audio', 
+  userId: number, 
+  uploadType: 'song_art' | 'playlist_cover' = 'song_art' // Default to 'song_art'
 ) {
-  const fileExtension = file.name ? file.name.split('.').pop() : 'jpg'; // Default to 'jpg' if no name
-  const contentType = file.type || 'image/jpeg';
-  const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+  const response = await axios.post('/api/upload-url', { 
+    fileType: file.type, 
+    fileExtension: file.name.split('.').pop(), 
+    title: file.name, 
+    userId, 
+    fileSize: file.size,
+    uploadType, // Pass uploadType to the API
+  });
+
+  if (response.status !== 200) {
+    return response.data.message;
+  }
+
+  const { signedUrl, fileKey } = response.data;
 
   try {
-    const { data } = await axios.post('/api/upload-url', {
-      fileType: file.type,
-      fileExtension,
-      title: 'playlist_cover',
-      userId,
-      fileSize: file.size,
-    });
-
-    await axios.put(data.signedUrl, file, {
-      headers: {
-        'Content-Type': contentType,
-      },
-    });
-
-    return `${CDN_URL}${data.fileKey}`;
+    await axios.put(signedUrl, file, { headers: { 'Content-Type': file.type } });
+    return { fileKey };
   } catch (error) {
     console.error('Error uploading file:', error);
-    toast.error(`Upload failed: ${error.message}`);
-    throw error;
+    return 'Failed to upload file';
   }
 }

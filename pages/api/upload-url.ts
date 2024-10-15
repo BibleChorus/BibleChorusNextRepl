@@ -13,7 +13,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { fileType, fileExtension, title, userId, fileSize } = req.body;
+  // Add 'uploadType' to the request body
+  const { fileType, fileExtension, title, userId, fileSize, uploadType } = req.body;
+
+  // Define allowed upload types
+  const allowedUploadTypes = ['song_art', 'playlist_cover'];
+  const finalUploadType = uploadType && allowedUploadTypes.includes(uploadType) ? uploadType : 'song_art';
 
   if (!fileType || !fileExtension || !userId || !fileSize) {
     return res.status(400).json({ message: 'File type, extension, user ID, and file size are required' });
@@ -43,9 +48,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     fileName = `${formattedDate}.${sanitizedTitle}.${fileExtension}`;
     fileKey = `uploads/${userId}/audio/${fileName}`;
   } else if (fileType.startsWith('image/')) {
-    // Image files: uploads/userId/song_art/yyyyMMddhhMMss.FILENAME.EXT
+    // Construct the file name
     fileName = `${formattedDate}.${sanitizedTitle}.${fileExtension}`;
-    fileKey = `uploads/${userId}/song_art/${fileName}`;
+    
+    // Set the file key based on uploadType
+    fileKey = `uploads/${userId}/${finalUploadType}/${fileName}`;
   } else {
     return res.status(400).json({ message: 'Unsupported file type' });
   }
