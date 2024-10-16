@@ -41,6 +41,7 @@ import { components } from 'react-select';
 import { MessageCircle } from 'lucide-react'; // Add this import
 import { CommentList } from '@/components/SongComments/CommentList'; // Add this import
 import { NewCommentForm } from '@/components/SongComments/NewCommentForm'; // Add this import
+import { SongComment } from '@/types';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -172,7 +173,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
   // Add these state variables
   const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<SongComment[]>([]);
   const [commentsCount, setCommentsCount] = useState(0);
 
   // Define the MultiValue component inside the SongPage function
@@ -336,6 +337,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     // Always fetch like and vote counts
     fetchLikeCount()
     fetchVoteCounts()
+    fetchCommentsCount() // Add this line
     
     if (user) {
       fetchUserVote()
@@ -431,6 +433,16 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       console.error('Error fetching vote counts:', error)
     }
   }, [song.id])
+
+  // Add this function to fetch the comments count
+  const fetchCommentsCount = async () => {
+    try {
+      const response = await axios.get(`/api/songs/${song.id}/comments/count`);
+      setCommentsCount(response.data.count);
+    } catch (error) {
+      console.error('Error fetching comments count:', error);
+    }
+  };
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying)
@@ -827,7 +839,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     }
   };
 
-  const handleCommentAdded = (newComment: Comment) => {
+  const handleCommentAdded = (newComment: SongComment) => {
     setComments((prevComments) => {
       const updatedComments = [...prevComments];
       if (newComment.parent_comment_id) {
@@ -1034,7 +1046,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                 </button>
                 <button
                   onClick={() => setIsCommentsDialogOpen(true)}
-                  className="flex items-center justify-between text-gray-500 hover:text-blue-500 transition-colors duration-200"
+                  className="flex items-center justify-between text-gray-500 hover:text-purple-500 transition-colors duration-200"
                 >
                   <span>Comments</span>
                   <div className="flex items-center">
