@@ -33,6 +33,16 @@ export interface User {
   username: string;
   email: string;
   profile_image_url?: string;
+  is_admin: boolean;
+  is_moderator: boolean;
+  region?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  name?: string;
+  email_verified: boolean;
+  last_login?: string;
+  bio?: string;
+  website?: string;
+  preferences?: any; // Consider creating a more specific type for preferences
 }
 
 export interface Topic {
@@ -65,4 +75,11 @@ export interface SongComment {
   parent_comment_id?: number;
   created_at: string;
   // Add any other fields as needed
+}
+
+export interface ForumCategory {
+  id: number;
+  name: string;
+  description?: string;
+  parent_category_id?: number;
 }

@@ -6,9 +6,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     try {
-      const likes = await db('likes')
+      const { likeable_type } = req.query;
+      let query = db('likes')
         .where('user_id', id)
         .select('likeable_type', 'likeable_id')
+
+      if (likeable_type) {
+        query = query.andWhere('likeable_type', likeable_type)
+      }
+
+      const likes = await query
 
       res.status(200).json(likes)
     } catch (error) {

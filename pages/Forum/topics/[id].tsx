@@ -7,9 +7,10 @@ import { NewCommentForm } from '@/components/ForumPage/NewCommentForm';
 import Head from 'next/head';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, ArrowLeft } from 'lucide-react';
+import { Play, Pause, ArrowLeft, Lock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import ReactHtmlParser from 'html-react-parser';
 
 export default function TopicPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function TopicPage() {
   const { user } = useAuth();
   const [topic, setTopic] = useState<any>(null);
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -24,6 +26,7 @@ export default function TopicPage() {
         try {
           const response = await axios.get(`/api/forum/topics/${id}`);
           setTopic(response.data);
+          setIsLocked(response.data.is_locked);
         } catch (error) {
           console.error('Error fetching topic:', error);
         }
@@ -66,6 +69,15 @@ export default function TopicPage() {
     }));
   };
 
+  const handleLockTopic = async () => {
+    try {
+      await axios.patch(`/api/forum/topics/${id}/lock`);
+      setIsLocked(true);
+    } catch (error) {
+      console.error('Error locking topic:', error);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <Head>
@@ -87,7 +99,7 @@ export default function TopicPage() {
         Posted by {topic.username} on {new Date(topic.created_at).toLocaleDateString()}
       </p>
       <div className="prose mb-6">
-        <p>{topic.content}</p>
+        {ReactHtmlParser(topic.content)}
       </div>
 
       {topic.song && (
@@ -134,6 +146,12 @@ export default function TopicPage() {
         topicId={topic.id}
         onCommentAdded={handleCommentAdded}
       />
+
+      {user?.is_moderator && !isLocked && (
+        <Button variant="ghost" size="sm" onClick={handleLockTopic}>
+          <Lock className="h-4 w-4" /> Lock Topic
+        </Button>
+      )}
     </div>
   );
 }
