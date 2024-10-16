@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const likeCounts = await db('likes')
         .whereIn('likeable_id', idsArray)
-        .andWhere('likeable_type', 'forum_comment') // Changed from 'comment' to 'forum_comment'
+        .andWhere('likeable_type', 'forum_comment')
         .select('likeable_id')
         .count('* as count')
         .groupBy('likeable_id');
