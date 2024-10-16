@@ -7,8 +7,9 @@ import { NewCommentForm } from '@/components/ForumPage/NewCommentForm';
 import Head from 'next/head';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { Button } from '@/components/ui/button';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function TopicPage() {
   const router = useRouter();
@@ -71,6 +72,15 @@ export default function TopicPage() {
         <title>{topic.title} - BibleChorus Forum</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
+
+      <div className="mb-6">
+        <Link href="/forum">
+          <Button variant="outline" size="sm" className="flex items-center">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Forum
+          </Button>
+        </Link>
+      </div>
 
       <h1 className="text-3xl font-bold mb-2">{topic.title}</h1>
       <p className="text-sm text-muted-foreground mb-4">
