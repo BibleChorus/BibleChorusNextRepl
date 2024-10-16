@@ -58,6 +58,13 @@ export default function TopicPage() {
 
   const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
+  const handleCommentAdded = (newComment: any) => {
+    setTopic((prevTopic: any) => ({
+      ...prevTopic,
+      comments: [newComment, ...prevTopic.comments],
+    }));
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <Head>
@@ -108,13 +115,15 @@ export default function TopicPage() {
       {user && (
         <NewCommentForm
           topicId={topic.id}
-          onCommentAdded={(newComment) =>
-            setTopic({ ...topic, comments: [newComment, ...topic.comments] })
-          }
+          onCommentAdded={handleCommentAdded}
         />
       )}
 
-      <CommentList comments={topic.comments || []} />
+      <CommentList 
+        comments={topic.comments || []} 
+        topicId={topic.id}
+        onCommentAdded={handleCommentAdded}
+      />
     </div>
   );
 }

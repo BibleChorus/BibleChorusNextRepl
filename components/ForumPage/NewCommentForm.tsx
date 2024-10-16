@@ -8,9 +8,10 @@ import { toast } from 'sonner';
 interface NewCommentFormProps {
   topicId: number;
   onCommentAdded: (comment: any) => void;
+  parentCommentId?: number;
 }
 
-export const NewCommentForm: React.FC<NewCommentFormProps> = ({ topicId, onCommentAdded }) => {
+export const NewCommentForm: React.FC<NewCommentFormProps> = ({ topicId, onCommentAdded, parentCommentId }) => {
   const { user } = useAuth();
   const [content, setContent] = useState('');
 
@@ -19,6 +20,7 @@ export const NewCommentForm: React.FC<NewCommentFormProps> = ({ topicId, onComme
       const response = await axios.post(`/api/forum/topics/${topicId}/comments`, {
         content,
         user_id: user?.id,
+        parent_comment_id: parentCommentId,
       });
       onCommentAdded(response.data);
       setContent('');
@@ -38,7 +40,7 @@ export const NewCommentForm: React.FC<NewCommentFormProps> = ({ topicId, onComme
         className="mb-2"
       />
       <Button onClick={handleAddComment} disabled={!content}>
-        Add Comment
+        {parentCommentId ? 'Reply' : 'Add Comment'}
       </Button>
     </div>
   );

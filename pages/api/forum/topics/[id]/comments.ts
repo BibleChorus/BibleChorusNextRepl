@@ -7,7 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const topicId = Number(id);
 
   if (method === 'POST') {
-    const { content, user_id } = req.body;
+    const { content, user_id, parent_comment_id } = req.body;
 
     if (!user_id) {
       return res.status(401).json({ message: 'Unauthorized' });
@@ -19,6 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           content,
           user_id,
           topic_id: topicId,
+          parent_comment_id: parent_comment_id || null,
           created_at: new Date(),
         })
         .returning('*');

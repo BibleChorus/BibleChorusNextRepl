@@ -53,6 +53,7 @@ export interface Comment {
   username: string;
   topic_id: number;
   created_at: string;
+  parent_comment_id?: number;
 }
 
 export interface SongComment {
