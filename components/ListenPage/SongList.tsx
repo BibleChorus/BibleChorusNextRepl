@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Play, Pause } from 'lucide-react'
+import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Play, Pause, MessageCircle } from 'lucide-react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 import { formatBibleVerses } from '@/lib/utils'
@@ -24,6 +24,9 @@ import axios from 'axios'
 import { toast } from "sonner"
 import { MusicFilled, BookOpenFilled, StarFilled } from '@/components/ui/custom-icons'
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext'
+import { CommentList } from '@/components/SongComments/CommentList';
+import { NewCommentForm } from '@/components/SongComments/NewCommentForm';
+import { SongComment } from '@/types';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -43,6 +46,7 @@ export type Song = {
   bible_verses?: { book: string; chapter: number; verse: number }[];
   play_count?: number;
   duration?: number;
+  comments_count?: number;
 };
 
 interface SongListProps {
@@ -215,6 +219,7 @@ export const SongList = React.memo(function SongList({ songs, isNarrowView }: So
           handleLike={handleLike}
           handleVoteClick={handleVoteClick}
           isNarrowView={isNarrowView}
+          commentsCount={song.comments_count || 0}
         />
       ))}
     </div>
@@ -230,7 +235,8 @@ const SongListItem = React.memo(function SongListItem({
   voteStates, 
   handleLike, 
   handleVoteClick,
-  isNarrowView
+  isNarrowView,
+  commentsCount
 }: { 
   song: Song, 
   songs: Song[], 
@@ -240,7 +246,8 @@ const SongListItem = React.memo(function SongListItem({
   voteStates: VoteState, 
   handleLike: (song: Song) => Promise<void>, 
   handleVoteClick: (song: Song, voteType: string, voteValue: number) => Promise<void>,
-  isNarrowView: boolean
+  isNarrowView: boolean,
+  commentsCount: number
 }) {
   const [imageError, setImageError] = useState<Record<number, boolean>>({})
   const router = useRouter()
@@ -250,6 +257,55 @@ const SongListItem = React.memo(function SongListItem({
   const [localVoteCounts, setLocalVoteCounts] = useState(voteCounts[song.id] || {})
   const [localVoteStates, setLocalVoteStates] = useState(voteStates[song.id] || {})
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer()
+  const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
+  const [comments, setComments] = useState<SongComment[]>([]);
+  const [localCommentsCount, setLocalCommentsCount] = useState(commentsCount);
+
+  useEffect(() => {
+    const fetchCommentsCount = async () => {
+      try {
+        const response = await axios.get(`/api/songs/${song.id}/comments/count`);
+        setLocalCommentsCount(response.data.count);
+      } catch (error) {
+        console.error('Error fetching comments count:', error);
+      }
+    };
+
+    fetchCommentsCount();
+  }, [song.id]);
+
+  useEffect(() => {
+    if (isCommentsDialogOpen) {
+      fetchComments();
+    }
+  }, [isCommentsDialogOpen]);
+
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get(`/api/songs/${song.id}/comments`);
+      setComments(response.data);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
+  };
+
+  const handleCommentAdded = (newComment: SongComment) => {
+    setComments((prevComments) => {
+      const updatedComments = [...prevComments];
+      if (newComment.parent_comment_id) {
+        const parentIndex = updatedComments.findIndex(c => c.id === newComment.parent_comment_id);
+        if (parentIndex !== -1) {
+          updatedComments.splice(parentIndex + 1, 0, newComment);
+        } else {
+          updatedComments.push(newComment);
+        }
+      } else {
+        updatedComments.push(newComment);
+      }
+      return updatedComments;
+    });
+    setLocalCommentsCount((prevCount) => prevCount + 1);
+  };
 
   // Add this console.log to debug the duration
   console.log(`Song ${song.id} duration:`, song.duration);
@@ -463,6 +519,13 @@ const SongListItem = React.memo(function SongListItem({
               {getVoteIcon('Best Overall')}
               <span>{localVoteCounts['Best Overall'] || 0}</span>
             </button>
+            <button
+              onClick={() => setIsCommentsDialogOpen(true)}
+              className="flex items-center text-gray-500 hover:text-purple-500 transition-colors duration-200 ml-2"
+            >
+              <MessageCircle className="h-4 w-4 mr-1" />
+              <span>{localCommentsCount}</span>
+            </button>
           </div>
         </div>
         <div className="flex items-center text-xs sm:text-sm mt-1">
@@ -596,6 +659,31 @@ const SongListItem = React.memo(function SongListItem({
           </div>
           <div className="text-sm text-center text-muted-foreground mt-4">
             Your current vote: {getVoteLabel(getCurrentVote(selectedVoteType))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Comments Dialog */}
+      <Dialog open={isCommentsDialogOpen} onOpenChange={setIsCommentsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Comments</DialogTitle>
+            <DialogDescription>
+              Join the discussion about this song.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-grow overflow-y-auto pr-4">
+            {user && (
+              <NewCommentForm
+                songId={song.id}
+                onCommentAdded={handleCommentAdded}
+              />
+            )}
+            <CommentList
+              comments={comments}
+              songId={song.id}
+              onCommentAdded={handleCommentAdded}
+            />
           </div>
         </DialogContent>
       </Dialog>

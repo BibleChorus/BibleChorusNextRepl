@@ -1757,14 +1757,14 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
       {/* Comments Dialog */}
       <Dialog open={isCommentsDialogOpen} onOpenChange={setIsCommentsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Comments</DialogTitle>
             <DialogDescription>
               Join the discussion about this song.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4">
+          <div className="flex-grow overflow-y-auto pr-4">
             {user && (
               <NewCommentForm
                 songId={song.id}
