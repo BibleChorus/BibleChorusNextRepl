@@ -9,9 +9,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const topics = await db('forum_topics')
         .join('users', 'forum_topics.user_id', 'users.id')
+        .leftJoin('forum_categories', 'forum_topics.category_id', 'forum_categories.id')
         .select(
           'forum_topics.*',
-          'users.username'
+          'users.username',
+          db.raw('COALESCE(forum_categories.name, ?) as category', ['Uncategorized'])
         )
         .orderBy('forum_topics.created_at', 'desc');
 
@@ -22,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } else if (method === 'POST') {
     // Create a new topic
-    const { title, content, user_id } = req.body;
+    const { title, content, user_id, category_id } = req.body;
 
     if (!user_id) {
       return res.status(401).json({ message: 'Unauthorized' });
@@ -34,6 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           title,
           content,
           user_id,
+          category_id: category_id || null,
           created_at: new Date(),
         })
         .returning('*');

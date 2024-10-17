@@ -59,12 +59,13 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated }
         user_id: user?.id,
         category_id: parseInt(categoryId),
       });
+
       onTopicCreated(response.data);
+      setIsOpen(false);
       setTitle('');
       setContent('');
       setCategoryId('');
-      setIsOpen(false);
-      toast.success('Topic created successfully!');
+      toast.success('Topic created successfully');
     } catch (error) {
       console.error('Error creating topic:', error);
       toast.error('Failed to create topic');

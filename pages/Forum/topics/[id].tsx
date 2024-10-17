@@ -11,6 +11,7 @@ import { Play, Pause, ArrowLeft, Lock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import ReactHtmlParser from 'html-react-parser';
+import { Badge } from '@/components/ui/badge';
 
 export default function TopicPage() {
   const router = useRouter();
@@ -94,7 +95,12 @@ export default function TopicPage() {
         </Link>
       </div>
 
-      <h1 className="text-3xl font-bold mb-2">{topic.title}</h1>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-3xl font-bold">{topic.title}</h1>
+        {topic.category && (
+          <Badge variant="secondary">{topic.category}</Badge>
+        )}
+      </div>
       <p className="text-sm text-muted-foreground mb-4">
         Posted by {topic.username} on {new Date(topic.created_at).toLocaleDateString()}
       </p>

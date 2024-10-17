@@ -54,6 +54,8 @@ export interface Topic {
   created_at: string;
   song_id?: number;
   comments?: Comment[];
+  category?: string;
+  category_id?: number;
 }
 
 export interface Comment {
