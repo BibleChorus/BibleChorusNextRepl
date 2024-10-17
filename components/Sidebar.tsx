@@ -1,14 +1,13 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { Upload, Search, Map, List, MessageSquare, Headphones, User, HelpCircle, X } from 'lucide-react';
+import { Upload, Map, List, MessageSquare, Headphones, User, HelpCircle, X } from 'lucide-react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import Image from 'next/image'; // Add this import
-import Link from 'next/link'; // Add this import
+import Image from 'next/image';
+import Link from 'next/link';
 import { useSidebar } from '@/contexts/SidebarContext';
 
 const menuItems = [
   { name: 'Upload Songs', icon: Upload, href: '/upload' },
-  { name: 'Advanced Search', icon: Search, href: '/search' },
   { name: 'Progress Map', icon: Map, href: '/progress' },
   { name: 'Playlists', icon: List, href: '/playlists' },
   { name: 'Forum', icon: MessageSquare, href: '/forum' },
