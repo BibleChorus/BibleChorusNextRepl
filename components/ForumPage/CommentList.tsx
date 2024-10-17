@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import qs from 'qs';
 
 interface CommentListProps {
   comments: Comment[];
@@ -12,10 +13,14 @@ interface CommentListProps {
   onCommentAdded: (comment: Comment) => void;
 }
 
-export const CommentList: React.FC<CommentListProps> = ({ comments, topicId, onCommentAdded }) => {
+export const CommentList: React.FC<CommentListProps> = ({
+  comments,
+  topicId,
+  onCommentAdded,
+}) => {
   const { user } = useAuth();
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
-  const [likes, setLikes] = useState<Record<number, number>>({});
+  const [likes, setLikes] = useState<Record<string, number>>({});
   const [likedComments, setLikedComments] = useState<number[]>([]);
 
   useEffect(() => {
@@ -25,18 +30,28 @@ export const CommentList: React.FC<CommentListProps> = ({ comments, topicId, onC
       try {
         const response = await axios.get('/api/likes/comments/likes-count', {
           params: {
-            commentIds: comments.map(comment => comment.id),
+            commentIds: comments.map((comment) => comment.id).join(','),
           },
         });
-        setLikes(response.data);
+        const likesData: Record<string, number> = {};
+
+        Object.entries(response.data).forEach(([likeableId, count]) => {
+          likesData[likeableId] = Number(count) || 0;
+        });
+        setLikes(likesData);
 
         if (user) {
-          const userLikesResponse = await axios.get(`/api/users/${user.id}/likes`, {
-            params: {
-              likeable_type: 'forum_comment',
-            },
-          });
-          setLikedComments(userLikesResponse.data.map((like: any) => like.likeable_id));
+          const userLikesResponse = await axios.get(
+            `/api/users/${user.id}/likes`,
+            {
+              params: {
+                likeable_type: 'forum_comment',
+              },
+            }
+          );
+          setLikedComments(
+            userLikesResponse.data.map((like: any) => like.likeable_id)
+          );
         }
       } catch (error) {
         console.error('Error fetching likes:', error);
@@ -56,7 +71,9 @@ export const CommentList: React.FC<CommentListProps> = ({ comments, topicId, onC
     try {
       const hasLiked = likedComments.includes(commentId);
       let response;
+
       if (hasLiked) {
+        // User wants to unlike the comment
         response = await axios.delete('/api/likes', {
           data: {
             user_id: user.id,
@@ -64,8 +81,9 @@ export const CommentList: React.FC<CommentListProps> = ({ comments, topicId, onC
             likeable_id: commentId,
           },
         });
-        setLikedComments(likedComments.filter(id => id !== commentId));
+        setLikedComments(likedComments.filter((id) => id !== commentId));
       } else {
+        // User wants to like the comment
         response = await axios.post('/api/likes', {
           user_id: user.id,
           likeable_type: 'forum_comment',
@@ -73,11 +91,11 @@ export const CommentList: React.FC<CommentListProps> = ({ comments, topicId, onC
         });
         setLikedComments([...likedComments, commentId]);
       }
-      
+
       // Update the likes count with the new value from the server
-      setLikes(prevLikes => ({
+      setLikes((prevLikes) => ({
         ...prevLikes,
-        [commentId]: response.data.count,
+        [commentId.toString()]: Number(response.data.count) || 0,
       }));
     } catch (error) {
       console.error('Error liking comment:', error);
@@ -85,19 +103,32 @@ export const CommentList: React.FC<CommentListProps> = ({ comments, topicId, onC
     }
   };
 
-  const renderComments = (commentList: Comment[], parentId: number | null = null, depth: number = 0) => {
+  // Recursive function to render nested comments
+  const renderComments = (
+    commentList: Comment[],
+    parentId: number | null = null,
+    depth: number = 0
+  ) => {
     return commentList
       .filter((comment) => comment.parent_comment_id === parentId)
       .map((comment) => (
-        <div key={comment.id} className={`p-4 bg-card rounded-lg shadow-sm ${depth > 0 ? 'ml-4 mt-2' : 'mt-4'}`}>
+        <div
+          key={comment.id}
+          className={`p-4 bg-card rounded-lg shadow-sm ${
+            depth > 0 ? 'ml-4 mt-2' : 'mt-4'
+          }`}
+        >
           <p className="text-sm text-muted-foreground mb-2">
-            {comment.username} • {new Date(comment.created_at).toLocaleString()}
+            {comment.username} •{' '}
+            {new Date(comment.created_at).toLocaleString()}
           </p>
           <p>{comment.content}</p>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              setReplyingTo(replyingTo === comment.id ? null : comment.id)
+            }
             className="mt-2"
           >
             {replyingTo === comment.id ? 'Cancel Reply' : 'Reply'}
@@ -113,8 +144,13 @@ export const CommentList: React.FC<CommentListProps> = ({ comments, topicId, onC
             />
           )}
           <div className="flex items-center mt-2">
-            <Button variant="ghost" size="sm" onClick={() => handleLike(comment.id)}>
-              {likedComments.includes(comment.id) ? '👎 Unlike' : '👍 Like'} ({likes[comment.id] || 0})
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleLike(comment.id)}
+            >
+              {likedComments.includes(comment.id) ? '👎 Unlike' : '👍 Like'} (
+              {likes[comment.id.toString()] || 0})
             </Button>
           </div>
           <div className="mt-2">
