@@ -3,29 +3,32 @@ import db from '@/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
-    const { commentIds } = req.query;
+    const { commentIds, commentType } = req.query;
     
     console.log('Received commentIds:', commentIds);
+    console.log('Received commentType:', commentType);
 
-    if (!commentIds) {
-      return res.status(200).json({}); // Return an empty object if no commentIds are provided
+    if (!commentIds || !commentType) {
+      return res.status(400).json({ message: 'Missing commentIds or commentType' });
+    }
+
+    if (commentType !== 'forum_comment' && commentType !== 'song_comment') {
+      return res.status(400).json({ message: 'Invalid commentType' });
     }
 
     let idsArray: number[] = [];
 
     try {
       if (Array.isArray(commentIds)) {
-        // If commentIds is an array of strings
         idsArray = commentIds.flatMap(id => id.split(',').map(Number));
       } else if (typeof commentIds === 'string') {
-        // If commentIds is a comma-separated string
         idsArray = commentIds.split(',').map(Number);
       }
 
-      idsArray = idsArray.filter(id => !isNaN(id)); // Remove any NaN values
+      idsArray = idsArray.filter(id => !isNaN(id));
 
       if (idsArray.length === 0) {
-        return res.status(200).json({}); // Return an empty object if all IDs were invalid
+        return res.status(200).json({});
       }
     } catch (error) {
       console.error('Error parsing commentIds:', error);
@@ -37,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const likeCounts = await db('likes')
         .whereIn('likeable_id', idsArray)
-        .andWhere('likeable_type', 'forum_comment')
+        .andWhere('likeable_type', commentType)
         .select('likeable_id')
         .count('* as count')
         .groupBy('likeable_id');
@@ -49,7 +52,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         likesData[item.likeable_id.toString()] = Number(item.count);
       });
 
-      // Ensure all requested IDs are in the response, even if they have no likes
       idsArray.forEach(id => {
         if (!(id.toString() in likesData)) {
           likesData[id.toString()] = 0;

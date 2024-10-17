@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import qs from 'qs';
 import ReactHtmlParser from 'html-react-parser';
 
 interface CommentListProps {
@@ -32,14 +31,10 @@ export const CommentList: React.FC<CommentListProps> = ({
         const response = await axios.get('/api/likes/comments/likes-count', {
           params: {
             commentIds: comments.map((comment) => comment.id).join(','),
+            commentType: 'forum_comment'  // Add this line
           },
         });
-        const likesData: Record<string, number> = {};
-
-        Object.entries(response.data).forEach(([likeableId, count]) => {
-          likesData[likeableId] = Number(count) || 0;
-        });
-        setLikes(likesData);
+        setLikes(response.data);
 
         if (user) {
           const userLikesResponse = await axios.get(
@@ -56,7 +51,7 @@ export const CommentList: React.FC<CommentListProps> = ({
         }
       } catch (error) {
         console.error('Error fetching likes:', error);
-        toast.error('Failed to load likes. Please try refreshing the page.');
+        toast.error('Failed to load comment likes');
       }
     };
 
@@ -65,17 +60,13 @@ export const CommentList: React.FC<CommentListProps> = ({
 
   const handleLike = async (commentId: number) => {
     if (!user) {
-      toast.error('Please log in to like comments.');
+      toast.error('You must be logged in to like comments');
       return;
     }
 
     try {
-      const hasLiked = likedComments.includes(commentId);
-      let response;
-
-      if (hasLiked) {
-        // User wants to unlike the comment
-        response = await axios.delete('/api/likes', {
+      if (likedComments.includes(commentId)) {
+        await axios.delete('/api/likes', {
           data: {
             user_id: user.id,
             likeable_type: 'forum_comment',
@@ -84,8 +75,7 @@ export const CommentList: React.FC<CommentListProps> = ({
         });
         setLikedComments(likedComments.filter((id) => id !== commentId));
       } else {
-        // User wants to like the comment
-        response = await axios.post('/api/likes', {
+        await axios.post('/api/likes', {
           user_id: user.id,
           likeable_type: 'forum_comment',
           likeable_id: commentId,
@@ -93,18 +83,19 @@ export const CommentList: React.FC<CommentListProps> = ({
         setLikedComments([...likedComments, commentId]);
       }
 
-      // Update the likes count with the new value from the server
-      setLikes((prevLikes) => ({
-        ...prevLikes,
-        [commentId.toString()]: Number(response.data.count) || 0,
-      }));
+      const response = await axios.get('/api/likes/comments/likes-count', {
+        params: {
+          commentIds: commentId,
+          commentType: 'forum_comment'  // Add this line
+        },
+      });
+      setLikes({ ...likes, [commentId]: response.data[commentId] });
     } catch (error) {
-      console.error('Error liking comment:', error);
+      console.error('Error updating like:', error);
       toast.error('Failed to update like');
     }
   };
 
-  // Recursive function to render nested comments
   const renderComments = (
     commentList: Comment[],
     parentId: number | null = null,

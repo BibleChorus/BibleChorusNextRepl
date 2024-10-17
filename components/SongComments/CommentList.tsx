@@ -31,6 +31,7 @@ export const CommentList: React.FC<CommentListProps> = ({
         const response = await axios.get('/api/likes/comments/likes-count', {
           params: {
             commentIds: comments.map((comment) => comment.id).join(','),
+            commentType: 'song_comment'
           },
         });
         setLikes(response.data);
@@ -50,7 +51,7 @@ export const CommentList: React.FC<CommentListProps> = ({
         }
       } catch (error) {
         console.error('Error fetching likes:', error);
-        toast.error('Failed to load likes. Please try refreshing the page.');
+        toast.error('Failed to load comment likes');
       }
     };
 
@@ -59,35 +60,38 @@ export const CommentList: React.FC<CommentListProps> = ({
 
   const handleLike = async (commentId: number) => {
     if (!user) {
-      toast.error('Please log in to like comments.');
+      toast.error('You must be logged in to like comments');
       return;
     }
 
     try {
-      const isLiked = likedComments.includes(commentId);
-      const method = isLiked ? 'DELETE' : 'POST';
-      const response = await axios({
-        method,
-        url: '/api/likes',
-        data: {
+      if (likedComments.includes(commentId)) {
+        await axios.delete('/api/likes', {
+          data: {
+            user_id: user.id,
+            likeable_type: 'song_comment',
+            likeable_id: commentId,
+          },
+        });
+        setLikedComments(likedComments.filter((id) => id !== commentId));
+      } else {
+        await axios.post('/api/likes', {
           user_id: user.id,
           likeable_type: 'song_comment',
           likeable_id: commentId,
+        });
+        setLikedComments([...likedComments, commentId]);
+      }
+
+      const response = await axios.get('/api/likes/comments/likes-count', {
+        params: {
+          commentIds: commentId,
+          commentType: 'song_comment'
         },
       });
-
-      setLikedComments((prev) =>
-        isLiked
-          ? prev.filter((id) => id !== commentId)
-          : [...prev, commentId]
-      );
-
-      setLikes((prevLikes) => ({
-        ...prevLikes,
-        [commentId.toString()]: Number(response.data.count) || 0,
-      }));
+      setLikes({ ...likes, [commentId]: response.data[commentId] });
     } catch (error) {
-      console.error('Error liking comment:', error);
+      console.error('Error updating like:', error);
       toast.error('Failed to update like');
     }
   };
