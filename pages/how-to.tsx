@@ -53,10 +53,10 @@ export default function HowTo() {
                   Step 1: Choose a Scripture Passage
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p className="mb-2">Select a Bible passage that inspires you. Consider the message and themes you want to convey in your song.</p>
+                  <p className="mb-2">Select a Bible passage that inspires you. Or, view the progress map on BibleChorus.com to select a passage that has yet to be turned into a song.</p>
                   <Alert className="bg-blue-50 text-blue-800 border-blue-200">
                     <AlertDescription>
-                      Example: Psalm 23 - The Lord is my shepherd
+                      Example: Psalm 23
                     </AlertDescription>
                   </Alert>
                 </AccordionContent>
@@ -77,11 +77,11 @@ export default function HowTo() {
                 </AccordionTrigger>
                 <AccordionContent>
                   <p className="mb-2">
-                    Write a detailed prompt for the AI, including the scripture reference, desired themes, mood, and any specific instructions.
+                    Write a detailed prompt for the AI, including the scripture reference, scripture adherence, and any specific instructions.
                   </p>
                   <Alert className="bg-green-50 text-green-800 border-green-200">
                     <AlertDescription>
-                      Example Prompt: "Create lyrics for a worship song based on Psalm 23. The song should have a calm and reassuring tone, emphasizing God's guidance and protection. Include a chorus that's easy to remember and sing along to."
+                      Example Prompt: "Make the following into a song in the style of George Herbert, but with language that a modern listener would understand. Use verses, chorus, bridge, and outro. Stay as close to the passage of Scripture as possible. Use a rhyming scheme that is suitable for song."
                     </AlertDescription>
                   </Alert>
                 </AccordionContent>
@@ -92,7 +92,7 @@ export default function HowTo() {
                   Step 4: Refine the Generated Lyrics
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p>Review the AI-generated lyrics and make any necessary edits to ensure they align with your vision.</p>
+                  <p>Review the AI-generated lyrics and make any necessary edits to get they lyrics just right.</p>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -146,7 +146,7 @@ export default function HowTo() {
                   <p className="mb-2">Describe the style, genre, mood, and any instruments you want in your music.</p>
                   <Alert className="bg-green-50 text-green-800 border-green-200">
                     <AlertDescription>
-                      Example Prompt: "Create a gentle acoustic guitar melody with soft piano accompaniment. The style should be contemporary Christian, with a calm and uplifting mood suitable for a song based on Psalm 23."
+                      Example Prompt: "gentle acoustic guitar melody, soft piano accompaniment; calm, uplifting, Psalm."
                     </AlertDescription>
                   </Alert>
                 </AccordionContent>
@@ -157,7 +157,7 @@ export default function HowTo() {
                   Step 3: Generate and Download the Music
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p>Use the AI platform to generate the music. Listen to the result, and if satisfied, download the audio file.</p>
+                  <p>Use the AI platform to generate the music. Listen to the result, iterate, and when satisfied, download the audio file. Only pick the best generation to upload to BibleChorus.com so as not to water down the quality of content.</p>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -175,7 +175,7 @@ export default function HowTo() {
                   Step 1: Prepare Your Files
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p>Ensure you have your lyrics and music files ready for upload.</p>
+                  <p>Ensure you have your music files ready for upload, along with metadata such as lyrics, prompts used, genre information, etc. Also create song art for your song using GPT-4o or another AI image creator.</p>
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="step2">
@@ -198,12 +198,13 @@ export default function HowTo() {
                   Step 3: Fill in Song Details
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p>Provide the song title, artist name, and any other required information.</p>
+                  <p>Provide the song title, scripture adherence, bible verses covered, and any other required information.</p>
                   <Alert className="bg-green-50 text-green-800 border-green-200 mt-2">
                     <AlertDescription>
                       Example: <br />
                       Title: "The Lord, My Shepherd" <br />
-                      Artist: Your Name
+                      Genres: Pop, Indie, Folk
+                      Etc.
                     </AlertDescription>
                   </Alert>
                 </AccordionContent>
@@ -214,16 +215,16 @@ export default function HowTo() {
                   Step 4: Upload Files
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p>Upload your lyrics and music files.</p>
+                  <p>Upload your audio file and song art.</p>
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="step5">
                 <AccordionTrigger>
                   <CheckCircle className="mr-2 h-4 w-4 text-orange-500" />
-                  Step 5: Submit for Review
+                  Step 5: Submit for the BibleChorus Community to Enjoy
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p>Once all information and files are uploaded, submit your song for review.</p>
+                  <p>Once all information and files are uploaded, submit your song for the BibleChorus community to enjoy. Engage with other users by commenting on songs, voting, and creating playlists.</p>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
