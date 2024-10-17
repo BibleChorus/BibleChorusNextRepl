@@ -63,32 +63,46 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({ onTopicCreated }) =>
   return (
     <div className="mb-6 p-4 bg-card rounded-lg shadow-sm">
       <h2 className="text-2xl font-semibold mb-4">Create a New Topic</h2>
-      <Input
-        placeholder="Topic Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="mb-2"
-      />
-      <ReactQuill
-        value={content}
-        onChange={setContent}
-        className="mb-2"
-      />
-      <Select value={categoryId} onValueChange={setCategoryId}>
-        <SelectTrigger className="mb-2">
-          <SelectValue placeholder="Select Category" />
-        </SelectTrigger>
-        <SelectContent>
-          {categories.map((category) => (
-            <SelectItem key={category.id} value={category.id.toString()}>
-              {category.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Button onClick={handleCreateTopic} disabled={!title || !content || !categoryId}>
-        Create Topic
-      </Button>
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="title" className="block text-sm font-medium mb-1">Title</label>
+          <Input
+            id="title"
+            placeholder="Topic Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor="content" className="block text-sm font-medium mb-1">Description</label>
+          <div className="border rounded-md">
+            <ReactQuill
+              id="content"
+              value={content}
+              onChange={setContent}
+              className="[&_.ql-editor]:min-h-[100px]"
+            />
+          </div>
+        </div>
+        <div>
+          <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
+          <Select value={categoryId} onValueChange={setCategoryId}>
+            <SelectTrigger id="category">
+              <SelectValue placeholder="Select Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id.toString()}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button onClick={handleCreateTopic} disabled={!title || !content || !categoryId}>
+          Create Topic
+        </Button>
+      </div>
     </div>
   );
 };

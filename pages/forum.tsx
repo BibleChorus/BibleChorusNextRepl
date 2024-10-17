@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { TopicList } from '@/components/ForumPage/TopicList';
-import { NewTopicForm } from '@/components/ForumPage/NewTopicForm';
+import { NewTopicDialog } from '@/components/ForumPage/NewTopicDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 import Head from 'next/head';
@@ -37,9 +37,10 @@ export default function Forum() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <h1 className="text-3xl font-bold mb-6">Forum</h1>
-
-      {user && <NewTopicForm onTopicCreated={(newTopic: Topic) => setTopics([newTopic, ...topics])} />}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Forum</h1>
+        {user && <NewTopicDialog onTopicCreated={(newTopic: Topic) => setTopics([newTopic, ...topics])} />}
+      </div>
 
       <Input
         placeholder="Search topics..."
