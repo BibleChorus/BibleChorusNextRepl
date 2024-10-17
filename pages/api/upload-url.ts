@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { fileType, fileExtension, title, userId, fileSize, uploadType } = req.body;
 
   // Define allowed upload types
-  const allowedUploadTypes = ['song_art', 'playlist_cover'];
+  const allowedUploadTypes = ['song_art', 'playlist_cover', 'profile_image'];
   const finalUploadType = uploadType && allowedUploadTypes.includes(uploadType) ? uploadType : 'song_art';
 
   if (!fileType || !fileExtension || !userId || !fileSize) {

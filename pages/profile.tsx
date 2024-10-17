@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/contexts/AuthContext'
 import axios from 'axios'
@@ -9,6 +9,10 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
 import { CommentList } from '@/components/SongComments/CommentList' // Adjust the import path as needed
+import { ImageCropper } from '@/components/UploadPage/ImageCropper'
+import { Pencil } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { toast } from "sonner"
 
 interface Song {
   id: number;
@@ -40,6 +44,9 @@ interface SongComment {
   created_at: string;
 }
 
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
 export default function Profile() {
   const { user } = useAuth();
   const router = useRouter()
@@ -47,6 +54,11 @@ export default function Profile() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [forumComments, setForumComments] = useState<ForumComment[]>([]);
   const [songComments, setSongComments] = useState<SongComment[]>([]);
+
+  const [isEditProfileImageDialogOpen, setIsEditProfileImageDialogOpen] = useState(false)
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
+  const [isImageCropperOpen, setIsImageCropperOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!user) {
@@ -118,6 +130,36 @@ export default function Profile() {
     }, {} as Record<number, { topic_title: string; comments: ForumComment[] }>);
   };
 
+  const handleEditProfileImageClick = () => {
+    setIsEditProfileImageDialogOpen(true)
+  }
+
+  const handleReplaceClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > MAX_IMAGE_FILE_SIZE) {
+        toast.error(`File size exceeds the limit of 5MB`)
+        return
+      }
+      const imageUrl = URL.createObjectURL(file)
+      setCropImageUrl(imageUrl)
+      setIsImageCropperOpen(true)
+    }
+  }
+
+  const handleCropComplete = async (croppedImageBlob: Blob) => {
+    // ... (keep existing handleCropComplete logic)
+  }
+
+  const handleCropCancel = () => {
+    setIsImageCropperOpen(false)
+    setCropImageUrl(null)
+  }
+
   if (!user) {
     return null;
   }
@@ -125,28 +167,38 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-background">
       <Head>
-        <title>{user.username} - Profile</title>
+        <title>{user ? `${user.username}'s Profile` : 'Profile'} | BibleChorus</title>
+        <meta name="description" content="User profile page" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {/* Image banner at the top */}
-      <div className="relative h-64 sm:h-80 w-full mb-8">
-        <Image
-          src={user.profile_image_url ? user.profile_image_url : '/default-profile-banner.jpg'}
-          alt={`${user.username} profile banner`}
-          layout="fill"
-          objectFit="cover"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">{user.username}</h1>
-          {/* Add other user info if desired */}
-        </div>
-      </div>
-
-      {/* Main content */}
       <main className="container mx-auto px-4 py-8">
+        {/* Image banner at the top */}
+        <div className="relative h-64 sm:h-80 w-full mb-8">
+          <Image
+            src={user?.profile_image_url ? `${CDN_URL}${user.profile_image_url}` : '/default-profile-banner.jpg'}
+            alt={`${user?.username} profile banner`}
+            layout="fill"
+            objectFit="cover"
+            className="object-cover"
+          />
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-white">{user?.username}</h1>
+            {/* Add other user info if desired */}
+          </div>
+          {user && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 text-white hover:text-primary-300 transition-colors"
+              onClick={handleEditProfileImageClick}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
+        {/* Main content */}
         <Button variant="outline" onClick={() => router.back()} className="mb-4">
           Back
         </Button>
@@ -305,6 +357,47 @@ export default function Profile() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Edit Profile Image Dialog */}
+        <Dialog open={isEditProfileImageDialogOpen} onOpenChange={setIsEditProfileImageDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Profile Image</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col items-center">
+              <Image
+                src={user?.profile_image_url ? `${CDN_URL}${user.profile_image_url}` : '/default-profile-image.jpg'}
+                alt="Current Profile Image"
+                width={200}
+                height={200}
+                className="rounded-full mb-4"
+              />
+              <Button onClick={handleReplaceClick}>Replace Image</Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isImageCropperOpen} onOpenChange={setIsImageCropperOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Crop Image</DialogTitle>
+            </DialogHeader>
+            {cropImageUrl && (
+              <ImageCropper
+                imageUrl={cropImageUrl}
+                onCropComplete={handleCropComplete}
+                onCancel={handleCropCancel}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   )

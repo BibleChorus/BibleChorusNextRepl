@@ -7,9 +7,10 @@ interface ImageCropperProps {
   imageUrl: string
   onCropComplete: (croppedImageBlob: Blob) => void
   onCancel: () => void
+  maxHeight?: number // Add this prop
 }
 
-export function ImageCropper({ imageUrl, onCropComplete, onCancel }: ImageCropperProps) {
+export function ImageCropper({ imageUrl, onCropComplete, onCancel, maxHeight }: ImageCropperProps) {
   const [crop, setCrop] = useState<Crop>({ unit: '%', width: 100, height: 100, x: 0, y: 0 })
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null)
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null)
@@ -63,7 +64,7 @@ export function ImageCropper({ imageUrl, onCropComplete, onCancel }: ImageCroppe
   }, [completedCrop, imageRef, onCropComplete])
 
   return (
-    <div className="p-4">
+    <div className="p-4" style={{ maxHeight: maxHeight ? `${maxHeight}px` : 'none', overflowY: 'auto' }}>
       <ReactCrop
         crop={crop}
         onChange={(c, percentCrop) => setCrop(percentCrop)}
@@ -72,7 +73,7 @@ export function ImageCropper({ imageUrl, onCropComplete, onCancel }: ImageCroppe
         maxWidth={1260}
         maxHeight={1260}
       >
-        <img src={imageUrl} onLoad={(e) => onLoad(e.currentTarget)} alt="Crop me" />
+        <img src={imageUrl} onLoad={(e) => onLoad(e.currentTarget)} alt="Crop me" style={{ maxHeight: '100%', width: 'auto' }} />
       </ReactCrop>
       <div className="mt-4 flex justify-end space-x-2">
         <Button onClick={onCancel} variant="outline" type="button">Cancel</Button>
