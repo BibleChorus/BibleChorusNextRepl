@@ -113,7 +113,11 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated }
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id.toString()}>
+                  <SelectItem 
+                    key={category.id} 
+                    value={category.id.toString()}
+                    disabled={category.name === 'Announcements' && user?.id !== 1}
+                  >
                     {category.name}
                   </SelectItem>
                 ))}

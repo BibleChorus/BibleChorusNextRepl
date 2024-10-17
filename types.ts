@@ -56,6 +56,7 @@ export interface Topic {
   comments?: Comment[];
   category?: string;
   category_id?: number;
+  profile_image_url?: string;
 }
 
 export interface Comment {

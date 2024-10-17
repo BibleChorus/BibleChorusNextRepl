@@ -31,6 +31,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
+      // Check if the category is "Announcements" and if the user is allowed to post in it
+      const category = await db('forum_categories').where('id', category_id).first();
+      if (category && category.name === 'Announcements' && user_id !== 1) {
+        return res.status(403).json({ message: 'You are not authorized to post in the Announcements category' });
+      }
+
       const [topic] = await db('forum_topics')
         .insert({
           title,

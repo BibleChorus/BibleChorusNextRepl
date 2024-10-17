@@ -4,16 +4,18 @@ import { NewTopicDialog } from '@/components/ForumPage/NewTopicDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 import Head from 'next/head';
-import { Topic } from '@/types';  // Import the Topic type from the types file
+import { Topic, ForumCategory } from '@/types';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function Forum() {
   const { user } = useAuth();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [categories, setCategories] = useState<ForumCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
-    // Fetch topics from the API
     const fetchTopics = async () => {
       try {
         const response = await axios.get<Topic[]>('/api/forum/topics');
@@ -23,11 +25,22 @@ export default function Forum() {
       }
     };
 
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get<ForumCategory[]>('/api/forum/categories');
+        setCategories(response.data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
     fetchTopics();
+    fetchCategories();
   }, []);
 
   const filteredTopics = topics.filter((topic) =>
-    topic.title.toLowerCase().includes(searchTerm.toLowerCase())
+    topic.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (selectedCategory === 'all' || topic.category === selectedCategory)
   );
 
   return (
@@ -42,12 +55,27 @@ export default function Forum() {
         {user && <NewTopicDialog onTopicCreated={(newTopic: Topic) => setTopics([newTopic, ...topics])} />}
       </div>
 
-      <Input
-        placeholder="Search topics..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="mb-4"
-      />
+      <div className="flex space-x-4 mb-4">
+        <Input
+          placeholder="Search topics..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-grow"
+        />
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.name}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <TopicList topics={filteredTopics} />
     </div>
