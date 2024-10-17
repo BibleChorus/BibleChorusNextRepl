@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
+
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+import 'react-quill/dist/quill.snow.css';
 
 interface NewCommentFormProps {
   topicId: number;
@@ -33,12 +36,13 @@ export const NewCommentForm: React.FC<NewCommentFormProps> = ({ topicId, onComme
 
   return (
     <div className="mb-6">
-      <Textarea
-        placeholder="Write your comment here..."
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        className="mb-2"
-      />
+      <div className="border rounded-md mb-2">
+        <ReactQuill
+          value={content}
+          onChange={setContent}
+          className="[&_.ql-editor]:min-h-[100px]"
+        />
+      </div>
       <Button onClick={handleAddComment} disabled={!content}>
         {parentCommentId ? 'Reply' : 'Add Comment'}
       </Button>

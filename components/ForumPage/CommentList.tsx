@@ -6,6 +6,7 @@ import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import qs from 'qs';
+import ReactHtmlParser from 'html-react-parser';
 
 interface CommentListProps {
   comments: Comment[];
@@ -122,7 +123,7 @@ export const CommentList: React.FC<CommentListProps> = ({
             {comment.username} •{' '}
             {new Date(comment.created_at).toLocaleString()}
           </p>
-          <p>{comment.content}</p>
+          <div className="prose">{ReactHtmlParser(comment.content)}</div>
           <Button
             variant="ghost"
             size="sm"

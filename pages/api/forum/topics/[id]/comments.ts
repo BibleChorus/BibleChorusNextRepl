@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
+import sanitizeHtml from 'sanitize-html'; // You'll need to install this package
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
@@ -14,9 +15,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
+      const sanitizedContent = sanitizeHtml(content, {
+        allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+        allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, '*': ['class'] },
+      });
+
       const [comment] = await db('forum_comments')
         .insert({
-          content,
+          content: sanitizedContent,
           user_id,
           topic_id: topicId,
           parent_comment_id: parent_comment_id || null,
