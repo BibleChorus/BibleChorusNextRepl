@@ -6,7 +6,7 @@ import {
   SkipBack,
   SkipForward,
   Repeat,
-  Repeat1, // Import Repeat1 icon
+  Repeat1,
   Shuffle,
   ListMusic,
   X,
@@ -14,12 +14,10 @@ import {
   Maximize2,
 } from 'lucide-react';
 import Image from 'next/image';
-// Import necessary hooks
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useSidebar } from '@/contexts/SidebarContext';
 
 export default function FloatingMusicPlayer() {
-  // Access music player context
   const {
     currentSong,
     isPlaying,
@@ -42,15 +40,12 @@ export default function FloatingMusicPlayer() {
   const [duration, setDuration] = useState<number>(0);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
 
-  // Use media query to detect screen size
   const isMobile = useMediaQuery('(max-width: 768px)');
-
+  const isSmallMobile = useMediaQuery('(max-width: 400px)');
   const { isOpen } = useSidebar();
 
-  // Adjust left offset based on sidebar state
-  const leftOffset = isMobile ? 'left-0' : isOpen ? 'left-64' : 'left-16'; // Adjust widths as per your sidebar sizes
+  const leftOffset = isMobile ? 'left-0' : isOpen ? 'left-64' : 'left-16';
 
-  // Update current time and duration
   useEffect(() => {
     if (audioElement) {
       const handleTimeUpdate = () => {
@@ -64,7 +59,6 @@ export default function FloatingMusicPlayer() {
     }
   }, [audioElement]);
 
-  // Handle time slider change
   const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = Number(event.target.value);
     if (audioElement) {
@@ -73,14 +67,12 @@ export default function FloatingMusicPlayer() {
     setCurrentTime(newTime);
   };
 
-  // Format time in mm:ss
   const formatTime = (time: number): string => {
     const minutes = Math.floor(time / 60) || 0;
     const seconds = Math.floor(time % 60) || 0;
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
-  // Hide the player if no song is selected
   if (!currentSong) return null;
 
   return (
@@ -88,7 +80,7 @@ export default function FloatingMusicPlayer() {
       {isMobile && isMinimized ? (
         // Minimized player view for mobile
         <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
-          <div className="container mx-auto px-4 py-1 flex items-center justify-between">
+          <div className="container mx-auto px-2 py-1 flex items-center justify-between">
             <button onClick={() => setIsMinimized(false)} className="p-1">
               <Maximize2 className="w-4 h-4" />
             </button>
@@ -103,7 +95,16 @@ export default function FloatingMusicPlayer() {
                 <SkipForward className="w-5 h-5" />
               </button>
             </div>
-            <div className="w-4 h-4"></div> {/* Spacer */}
+            <div className={`flex-grow ${isSmallMobile ? 'max-w-[80px]' : 'max-w-[120px]'} ml-2`}>
+              <input
+                type="range"
+                min="0"
+                max={duration}
+                value={currentTime}
+                onChange={handleTimeChange}
+                className="w-full h-1"
+              />
+            </div>
           </div>
         </div>
       ) : (
@@ -150,7 +151,6 @@ export default function FloatingMusicPlayer() {
               </div>
               {/* Playback Controls */}
               <div className="flex items-center space-x-2">
-                {/* Shuffle Button with Animation */}
                 <button
                   onClick={toggleShuffle}
                   className={`p-2 relative ${isShuffling ? 'text-purple-500 glow' : ''}`}
@@ -173,7 +173,6 @@ export default function FloatingMusicPlayer() {
                 <button onClick={next} className="p-2">
                   <SkipForward className="w-6 h-6" />
                 </button>
-                {/* Repeat Button with Modes and Animation */}
                 <button
                   onClick={toggleRepeat}
                   className={`p-2 relative ${repeatMode !== 'none' ? 'text-purple-500 glow' : ''}`}
@@ -184,7 +183,6 @@ export default function FloatingMusicPlayer() {
                     <Repeat className="w-5 h-5" />
                   )}
                 </button>
-                {/* Queue Button */}
                 <button
                   onClick={() => setIsQueueVisible(!isQueueVisible)}
                   className="p-2"
@@ -243,7 +241,6 @@ export default function FloatingMusicPlayer() {
                     {song.artist}
                   </div>
                 </div>
-                {/* Play this song immediately */}
                 <button onClick={() => playSong(song)} className="p-1">
                   <Play className="w-4 h-4" />
                 </button>

@@ -42,6 +42,7 @@ import { MessageCircle } from 'lucide-react'; // Add this import
 import { CommentList } from '@/components/SongComments/CommentList'; // Add this import
 import { NewCommentForm } from '@/components/SongComments/NewCommentForm'; // Add this import
 import { SongComment } from '@/types';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext'
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -81,10 +82,10 @@ interface BibleVerse {
 
 export default function SongPage({ song: initialSong }: SongPageProps) {
   const [song, setSong] = useState(initialSong)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
   const { user } = useAuth()
+  const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer()
+  const [isDeleting, setIsDeleting] = useState(false)
   const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false)
   const [selectedVoteType, setSelectedVoteType] = useState<string>('')
   const [voteStates, setVoteStates] = useState<Record<string, number>>({})
@@ -444,10 +445,34 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     }
   };
 
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying)
-    // Implement audio playback logic here
-  }
+  const handlePlayClick = () => {
+    if (currentSong?.id === song.id) {
+      if (isPlaying) {
+        pause();
+      } else {
+        resume();
+      }
+    } else {
+      playSong(
+        {
+          id: song.id,
+          title: song.title,
+          artist: song.artist || song.username,
+          audioUrl: song.audio_url,
+          coverArtUrl: song.song_art_url,
+          duration: song.duration,
+        },
+        [{ // Create a queue with just this song
+          id: song.id,
+          title: song.title,
+          artist: song.artist || song.username,
+          audioUrl: song.audio_url,
+          coverArtUrl: song.song_art_url,
+          duration: song.duration,
+        }]
+      );
+    }
+  };
 
   const deleteSong = async () => {
     setIsDeleting(true)
@@ -957,11 +982,20 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             </CardContent>
             <CardFooter className="flex flex-col space-y-2">
               <Button
-                onClick={togglePlay}
+                onClick={handlePlayClick}
                 className="w-full"
               >
-                {isPlaying ? <Pause className="mr-2" /> : <Play className="mr-2" />}
-                {isPlaying ? 'Pause' : 'Play'}
+                {currentSong?.id === song.id && isPlaying ? (
+                  <>
+                    <Pause className="mr-2" />
+                    Pause
+                  </>
+                ) : (
+                  <>
+                    <Play className="mr-2" />
+                    Play
+                  </>
+                )}
               </Button>
               <div className="flex w-full space-x-2">
                 <Button variant="outline" className="flex-1">
