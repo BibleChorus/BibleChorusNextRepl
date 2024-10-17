@@ -48,7 +48,7 @@ const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const router = useRouter()
   const [songs, setSongs] = useState<Song[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -59,6 +59,7 @@ export default function Profile() {
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
   const [isImageCropperOpen, setIsImageCropperOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0)
 
   useEffect(() => {
     if (!user) {
@@ -70,6 +71,20 @@ export default function Profile() {
       fetchUserSongComments();
     }
   }, [user, router])
+
+  useEffect(() => {
+    const updateCropperMaxHeight = () => {
+      const viewportHeight = window.innerHeight
+      setCropperMaxHeight(Math.floor(viewportHeight * 0.8)) // Set max height to 80% of viewport height
+    }
+
+    updateCropperMaxHeight()
+    window.addEventListener('resize', updateCropperMaxHeight)
+
+    return () => {
+      window.removeEventListener('resize', updateCropperMaxHeight)
+    }
+  }, [])
 
   const fetchUserSongs = async () => {
     if (!user) return;
@@ -152,13 +167,71 @@ export default function Profile() {
   }
 
   const handleCropComplete = async (croppedImageBlob: Blob) => {
-    // ... (keep existing handleCropComplete logic)
-  }
+    setIsImageCropperOpen(false);
+    setIsEditProfileImageDialogOpen(false);
+
+    if (!user) {
+      toast.error('User not logged in');
+      return;
+    }
+
+    try {
+      // First, delete the old profile image if it exists
+      if (user.profile_image_url) {
+        const fileKey = user.profile_image_url.replace(CDN_URL, '').replace(/^\/+/, '');
+        await axios.post('/api/delete-file', { fileKey });
+      }
+
+      const fileExtension = 'jpg';
+      const fileType = 'image/jpeg';
+      const userId = user.id;
+      const fileSize = croppedImageBlob.size.toString();
+
+      // Get signed URL for uploading new profile image
+      const uploadUrlResponse = await axios.post('/api/upload-url', {
+        fileType,
+        fileExtension,
+        userId,
+        fileSize,
+        uploadType: 'profile_image',
+      });
+
+      if (uploadUrlResponse.status !== 200) {
+        throw new Error('Failed to get upload URL');
+      }
+
+      const { signedUrl, fileKey } = uploadUrlResponse.data;
+
+      // Upload the image to S3 using the signed URL
+      await axios.put(signedUrl, croppedImageBlob, {
+        headers: {
+          'Content-Type': fileType,
+        },
+      });
+
+      // Update the user with the new profile image URL
+      const updateResponse = await axios.put(`/api/users/${user.id}/update-profile-image`, {
+        profileImageUrl: fileKey,
+      });
+
+      if (updateResponse.status === 200) {
+        // Update the user context with the new profile image URL
+        const updatedUser = { ...user, profile_image_url: updateResponse.data.updatedUrl };
+        login(updatedUser);
+        toast.success('Profile image updated successfully');
+      } else {
+        throw new Error('Failed to update profile image URL');
+      }
+    } catch (error) {
+      console.error('Error updating profile image:', error);
+      toast.error('Failed to update profile image');
+    }
+  };
 
   const handleCropCancel = () => {
-    setIsImageCropperOpen(false)
-    setCropImageUrl(null)
-  }
+    setIsImageCropperOpen(false);
+    setCropImageUrl(null);
+  };
 
   if (!user) {
     return null;
@@ -385,8 +458,8 @@ export default function Profile() {
         </Dialog>
 
         <Dialog open={isImageCropperOpen} onOpenChange={setIsImageCropperOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
+          <DialogContent className="sm:max-w-[600px] p-0">
+            <DialogHeader className="p-4">
               <DialogTitle>Crop Image</DialogTitle>
             </DialogHeader>
             {cropImageUrl && (
@@ -394,6 +467,7 @@ export default function Profile() {
                 imageUrl={cropImageUrl}
                 onCropComplete={handleCropComplete}
                 onCancel={handleCropCancel}
+                maxHeight={cropperMaxHeight}
               />
             )}
           </DialogContent>

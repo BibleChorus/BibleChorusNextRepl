@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 
-const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+// Use 'process.env.CDN_URL' for server-side code
+const CDN_URL = process.env.CDN_URL || '';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PUT') {
@@ -15,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Ensure the profileImageUrl doesn't already include the CDN_URL
     const fullProfileImageUrl = profileImageUrl.startsWith(CDN_URL)
       ? profileImageUrl
-      : `${CDN_URL}${profileImageUrl}`;
+      : `${CDN_URL.replace(/\/+$/, '')}/${profileImageUrl.replace(/^\/+/, '')}`;
 
     await db('users')
       .where('id', id)
