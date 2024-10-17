@@ -747,6 +747,22 @@ function UploadContent() {
     }
   }
 
+  const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0)
+
+  useEffect(() => {
+    const updateCropperMaxHeight = () => {
+      const viewportHeight = window.innerHeight
+      setCropperMaxHeight(Math.floor(viewportHeight * 0.8)) // Set max height to 80% of viewport height
+    }
+
+    updateCropperMaxHeight()
+    window.addEventListener('resize', updateCropperMaxHeight)
+
+    return () => {
+      window.removeEventListener('resize', updateCropperMaxHeight)
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Head>
@@ -1739,6 +1755,7 @@ function UploadContent() {
                       imageUrl={cropImageUrl}
                       onCropComplete={handleCropComplete}
                       onCancel={handleCropCancel}
+                      maxHeight={cropperMaxHeight}
                     />
                   )}
                 </Modal>

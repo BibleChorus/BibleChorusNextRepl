@@ -180,6 +180,23 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   // Define the MultiValue component inside the SongPage function
   const MultiValue = () => null;
 
+  // State for controlling the maximum height of the ImageCropper
+  const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0)
+
+  useEffect(() => {
+    const updateCropperMaxHeight = () => {
+      const viewportHeight = window.innerHeight
+      setCropperMaxHeight(Math.floor(viewportHeight * 0.8)) // Set max height to 80% of viewport height
+    }
+
+    updateCropperMaxHeight()
+    window.addEventListener('resize', updateCropperMaxHeight)
+
+    return () => {
+      window.removeEventListener('resize', updateCropperMaxHeight)
+    }
+  }, [])
+
   // Function to sanitize and render HTML
   const renderHTML = (html: string) => {
     return { __html: DOMPurify.sanitize(html) };
@@ -1775,8 +1792,8 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       </Dialog>
 
       <Dialog open={isImageCropperOpen} onOpenChange={setIsImageCropperOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[600px] p-0">
+          <DialogHeader className="p-4">
             <DialogTitle>Crop Image</DialogTitle>
           </DialogHeader>
           {cropImageUrl && (
@@ -1784,6 +1801,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               imageUrl={cropImageUrl}
               onCropComplete={handleCropComplete}
               onCancel={handleCropCancel}
+              maxHeight={cropperMaxHeight}
             />
           )}
         </DialogContent>

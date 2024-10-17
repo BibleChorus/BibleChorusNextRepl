@@ -10,7 +10,7 @@ import { formatBibleVerses, parsePostgresArray } from '@/lib/utils'; // Add pars
 import { Playlist, Song } from '@/types'; // Define these types as needed
 import SongList from '@/components/PlaylistPage/SongList'; // New SongList component for the playlist page
 import EditPlaylistDialog from '@/components/PlaylistPage/EditPlaylistDialog';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth hook
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ImageCropper } from '@/components/UploadPage/ImageCropper';
@@ -38,6 +38,21 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
   const [isImageCropperOpen, setIsImageCropperOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0);
+
+  useEffect(() => {
+    const updateCropperMaxHeight = () => {
+      const viewportHeight = window.innerHeight;
+      setCropperMaxHeight(Math.floor(viewportHeight * 0.8)); // Set max height to 80% of viewport height
+    };
+
+    updateCropperMaxHeight();
+    window.addEventListener('resize', updateCropperMaxHeight);
+
+    return () => {
+      window.removeEventListener('resize', updateCropperMaxHeight);
+    };
+  }, []);
 
   const handlePlayPlaylist = () => {
     router.push(`/listen?playlistId=${playlist.id}`);
@@ -231,8 +246,8 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
       </Dialog>
 
       <Dialog open={isImageCropperOpen} onOpenChange={setIsImageCropperOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[600px] p-0">
+          <DialogHeader className="p-4">
             <DialogTitle>Crop Image</DialogTitle>
           </DialogHeader>
           {cropImageUrl && (
@@ -240,6 +255,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
               imageUrl={cropImageUrl}
               onCropComplete={handleCropComplete}
               onCancel={handleCropCancel}
+              maxHeight={cropperMaxHeight}
             />
           )}
         </DialogContent>
