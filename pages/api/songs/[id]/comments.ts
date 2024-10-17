@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 import { getSession } from 'next-auth/react';
+import sanitizeHtml from 'sanitize-html';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
@@ -33,12 +34,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
+      const sanitizedComment = sanitizeHtml(comment, {
+        allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+        allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, '*': ['class'] },
+      });
+
       const [newComment] = await db('song_comments')
         .insert({
           song_id: songId,
           user_id,
-          comment,
-          parent_comment_id,
+          comment: sanitizedComment,
+          parent_comment_id: parent_comment_id || null,
           created_at: new Date(),
         })
         .returning('*');
