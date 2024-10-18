@@ -27,6 +27,7 @@ import { useMusicPlayer } from '@/contexts/MusicPlayerContext'
 import { CommentList } from '@/components/SongComments/CommentList';
 import { NewCommentForm } from '@/components/SongComments/NewCommentForm';
 import { SongComment } from '@/types';
+import { ReportDialog } from '@/components/ReportDialog';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -260,6 +261,7 @@ const SongListItem = React.memo(function SongListItem({
   const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
   const [comments, setComments] = useState<SongComment[]>([]);
   const [localCommentsCount, setLocalCommentsCount] = useState(commentsCount);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchCommentsCount = async () => {
@@ -622,7 +624,7 @@ const SongListItem = React.memo(function SongListItem({
               <Trash2 className="mr-2 h-4 w-4" />
               <span>Delete</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => console.log('Report song:', song.id)}>
+            <DropdownMenuItem onClick={() => setIsReportDialogOpen(true)}>
               <Flag className="mr-2 h-4 w-4" />
               <span>Report</span>
             </DropdownMenuItem>
@@ -687,6 +689,17 @@ const SongListItem = React.memo(function SongListItem({
           </div>
         </DialogContent>
       </Dialog>
+
+      {user && (
+        <ReportDialog
+          isOpen={isReportDialogOpen}
+          onClose={() => setIsReportDialogOpen(false)}
+          songId={song.id}
+          userId={user.id}
+          username={user.username}
+          userEmail={user.email}
+        />
+      )}
     </motion.div>
   )
 })
