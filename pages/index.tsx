@@ -20,7 +20,7 @@ export default function Home() {
 
   const features = [
     { title: 'Listen to Bible Songs', description: 'Explore a vast collection of Bible-inspired music.', icon: Music, link: '/listen' },
-    { title: 'Create and Upload', description: 'Share your own Bible-inspired compositions.', icon: Upload, link: '/upload' },
+    { title: 'Upload Your Songs', description: 'Share your own Bible-inspired compositions.', icon: Upload, link: '/upload' },
     { title: 'Track Progress', description: 'See which parts of the Bible have been put to music.', icon: Map, link: '/progress' },
     { title: 'Join Discussions', description: 'Engage with the community in our forum.', icon: MessageSquare, link: '/forum' },
   ];
@@ -60,7 +60,7 @@ export default function Home() {
             Explore Scripture Through Music
           </h1>
           <p className="text-xl mb-8">
-            Discover, create, and share Bible-inspired songs with BibleChorus
+            Discover, upload, and share Bible-inspired songs with BibleChorus
           </p>
           <Button onClick={handleGetStarted} size="lg">
             Get Started
@@ -78,13 +78,12 @@ export default function Home() {
               <Card className="h-full">
                 <CardHeader>
                   <feature.icon className="h-8 w-8 mb-2 text-primary" />
-                  <CardTitle>{feature.title}</CardTitle>
+                  <Link href={feature.link} className="hover:underline">
+                    <CardTitle>{feature.title}</CardTitle>
+                  </Link>
                 </CardHeader>
                 <CardContent>
                   <CardDescription>{feature.description}</CardDescription>
-                  <Link href={feature.link}>
-                    <Button variant="link" className="mt-4">Learn More</Button>
-                  </Link>
                 </CardContent>
               </Card>
             </motion.div>
@@ -101,11 +100,17 @@ export default function Home() {
           <p className="text-xl mb-8">
             Connect with fellow music lovers and Bible enthusiasts
           </p>
-          <Link href="/login?view=signup">
-            <Button variant="outline" size="lg">
-              Sign Up Now
+          {user ? (
+            <Button variant="outline" size="lg" onClick={handleGetStarted}>
+              Get Started
             </Button>
-          </Link>
+          ) : (
+            <Link href="/login?view=signup">
+              <Button variant="outline" size="lg">
+                Sign Up Now
+              </Button>
+            </Link>
+          )}
         </motion.div>
       </main>
 
