@@ -40,7 +40,7 @@ export function ReportDialog({ isOpen, onClose, songId, userId, username, userEm
         <DialogHeader>
           <DialogTitle>Report Song</DialogTitle>
           <DialogDescription>
-            Please provide details about why you're reporting this song.
+            Please provide details about why you're reporting this song. For example, explain whether the song is incorrectly described, linked to incorrect Bible verses, or is not consistent with this site's purpose.
           </DialogDescription>
         </DialogHeader>
         <Textarea
