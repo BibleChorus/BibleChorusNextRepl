@@ -387,6 +387,7 @@ export default function SavePlaylistDialog({
               imageUrl={cropImageUrl}
               onCropComplete={handleCropComplete}
               onCancel={() => setIsCropperOpen(false)}
+              maxHeight={300} // Add this line with an appropriate value
             />
           )}
         </DialogContent>

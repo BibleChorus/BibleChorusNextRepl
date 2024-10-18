@@ -410,6 +410,34 @@ const SongListItem = React.memo(function SongListItem({
     }
   };
 
+  const handleShare = useCallback(async () => {
+    const songUrl = `${window.location.origin}/Songs/${song.id}`;
+    const shareData = {
+      title: song.title,
+      text: `Check out this song: ${song.title} by ${song.artist || song.username}`,
+      url: songUrl,
+    };
+
+    if (navigator.share && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        toast.success('Song shared successfully');
+      } catch (error) {
+        console.error('Error sharing song:', error);
+        toast.error('Failed to share song');
+      }
+    } else {
+      // Fallback to copying the link
+      try {
+        await navigator.clipboard.writeText(songUrl);
+        toast.success('Song link copied to clipboard');
+      } catch (error) {
+        console.error('Error copying song link:', error);
+        toast.error('Failed to copy song link');
+      }
+    }
+  }, [song]);
+
   return (
     <motion.div
       className={`flex items-center p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden group song-card ${isNarrowView ? 'h-[72px] sm:h-[88px]' : ''}`}
@@ -590,7 +618,7 @@ const SongListItem = React.memo(function SongListItem({
               <Heart className={`mr-2 h-4 w-4 ${likeStates[song.id] ? 'fill-current text-red-500' : ''}`} />
               <span>{likeStates[song.id] ? 'Unlike' : 'Like'}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => console.log('Share song:', song.id)}>
+            <DropdownMenuItem onClick={handleShare}>
               <Share2 className="mr-2 h-4 w-4" />
               <span>Share</span>
             </DropdownMenuItem>
@@ -695,7 +723,7 @@ const SongListItem = React.memo(function SongListItem({
           isOpen={isReportDialogOpen}
           onClose={() => setIsReportDialogOpen(false)}
           songId={song.id}
-          userId={user.id}
+          userId={user.id.toString()}
           username={user.username}
           userEmail={user.email}
         />
