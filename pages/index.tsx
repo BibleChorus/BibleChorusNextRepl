@@ -15,7 +15,8 @@ export default function Home() {
   const router = useRouter();
 
   const handleGetStarted = () => {
-    router.push('/listen');
+    // Update the redirection to the playlists page
+    router.push('/playlists');
   };
 
   const features = [
