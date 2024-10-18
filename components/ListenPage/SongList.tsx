@@ -616,18 +616,16 @@ const SongListItem = React.memo(function SongListItem({
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
-            <DropdownMenuItem onClick={() => router.push(`/edit-song/${song.id}`)}>
-              <Edit className="mr-2 h-4 w-4" />
-              <span>Edit</span>
+            <DropdownMenuItem onClick={() => setIsCommentsDialogOpen(true)}>
+              <MessageCircle className="mr-2 h-4 w-4" />
+              <span>Comment</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => console.log('Delete song:', song.id)}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              <span>Delete</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setIsReportDialogOpen(true)}>
-              <Flag className="mr-2 h-4 w-4" />
-              <span>Report</span>
-            </DropdownMenuItem>
+            {user && (
+              <DropdownMenuItem onClick={() => setIsReportDialogOpen(true)}>
+                <Flag className="mr-2 h-4 w-4" />
+                <span>Report</span>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
