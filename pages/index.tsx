@@ -9,6 +9,7 @@ import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Music, BookOpen, Upload, Map, MessageSquare } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Home() {
   const { user } = useAuth();
@@ -37,7 +38,13 @@ export default function Home() {
         <div className="flex justify-between items-center mb-8">
           <Link href="/">
             <div className="flex items-center">
-              <img src="/biblechorus-icon.png" alt="BibleChorus Logo" className="h-10 w-10 mr-2" />
+              <Image
+                src="/biblechorus-icon.png"
+                alt="BibleChorus Logo"
+                width={40}
+                height={40}
+                className="mr-2"
+              />
               <span className="text-2xl font-bold">BibleChorus</span>
             </div>
           </Link>

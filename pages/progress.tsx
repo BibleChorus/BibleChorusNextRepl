@@ -3,18 +3,19 @@
 import { useEffect, useState } from "react"
 import Head from "next/head"
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
-import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis, Cell } from "recharts"
+import { Bar, BarChart, CartesianGrid, Tooltip as RechartsTooltip, XAxis, YAxis, Cell } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ProgressStats } from "@/components/ProgressPage/ProgressStats"
 import { Filters, FilterOptions } from "@/components/ProgressPage/Filters"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import { Filter, X, Info, RefreshCw } from "lucide-react"
+import { Filter, X, Info, RefreshCw, HelpCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Separator } from "@/components/ui/separator"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { PieChartGroup } from "@/components/ProgressPage/PieChartGroup"
 import { BIBLE_BOOKS } from "@/lib/constants"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface ChartData {
   "Old Testament": {
@@ -157,6 +158,18 @@ export default function Progress() {
             <h1 className={`text-2xl font-bold text-foreground transition-opacity duration-300 ${isHeaderVisible ? 'opacity-100' : 'opacity-0'}`}>
               Progress Map
             </h1>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-5 w-5 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs text-sm">
+                    This progress map shows the total Bible verses covered by all uploaded songs on BibleChorus. It reflects our community's collective effort in setting Scripture to music.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
@@ -201,6 +214,10 @@ export default function Progress() {
       </div>
 
       <main className="container mx-auto px-4 py-6">
+        <div className="text-sm text-muted-foreground mb-4">
+          This progress map visualizes the Bible verses covered by all songs uploaded to BibleChorus. It represents our community's collective effort in setting Scripture to music.
+        </div>
+        
         <div className="grid grid-cols-1 gap-6 mt-6">
           {chartData && (
             <PieChartGroup 
@@ -266,7 +283,7 @@ export default function Progress() {
                         <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
                       </>
                     )}
-                    <Tooltip content={<ChartTooltipContent showPercentage />} />
+                    <RechartsTooltip content={<ChartTooltipContent showPercentage />} />
                     <Bar 
                       dataKey="filtered_book_percentage" 
                       fill="#8884d8" 
