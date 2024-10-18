@@ -28,6 +28,7 @@ import { CommentList } from '@/components/SongComments/CommentList';
 import { NewCommentForm } from '@/components/SongComments/NewCommentForm';
 import { SongComment } from '@/types';
 import { ReportDialog } from '@/components/ReportDialog';
+import { AddToPlaylistDialog } from './AddToPlaylistDialog';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -262,6 +263,7 @@ const SongListItem = React.memo(function SongListItem({
   const [comments, setComments] = useState<SongComment[]>([]);
   const [localCommentsCount, setLocalCommentsCount] = useState(commentsCount);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [isAddToPlaylistDialogOpen, setIsAddToPlaylistDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchCommentsCount = async () => {
@@ -592,7 +594,7 @@ const SongListItem = React.memo(function SongListItem({
               <Share2 className="mr-2 h-4 w-4" />
               <span>Share</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => console.log('Add to playlist:', song.id)}>
+            <DropdownMenuItem onClick={() => setIsAddToPlaylistDialogOpen(true)}>
               <ListPlus className="mr-2 h-4 w-4" />
               <span>Add to Playlist</span>
             </DropdownMenuItem>
@@ -698,6 +700,12 @@ const SongListItem = React.memo(function SongListItem({
           userEmail={user.email}
         />
       )}
+
+      <AddToPlaylistDialog
+        isOpen={isAddToPlaylistDialogOpen}
+        onClose={() => setIsAddToPlaylistDialogOpen(false)}
+        songId={song.id}
+      />
     </motion.div>
   )
 })
