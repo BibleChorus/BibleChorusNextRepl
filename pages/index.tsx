@@ -6,57 +6,114 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AuthButtons } from '@/components/AuthButtons';
 import { UserDropdown } from '@/components/UserDropdown';
 import { useRouter } from 'next/router';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Music, BookOpen, Upload, Map, MessageSquare } from 'lucide-react';
 
 export default function Home() {
   const { user } = useAuth();
   const router = useRouter();
 
   const handleGetStarted = () => {
-    router.push('/playlists');
+    router.push('/listen');
   };
 
+  const features = [
+    { title: 'Listen to Bible Songs', description: 'Explore a vast collection of Bible-inspired music.', icon: Music, link: '/listen' },
+    { title: 'Create and Upload', description: 'Share your own Bible-inspired compositions.', icon: Upload, link: '/upload' },
+    { title: 'Track Progress', description: 'See which parts of the Bible have been put to music.', icon: Map, link: '/progress' },
+    { title: 'Join Discussions', description: 'Engage with the community in our forum.', icon: MessageSquare, link: '/forum' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-900">
       <Head>
-        <title>BibleChorus - Home</title>
+        <title>BibleChorus - Explore Scripture Through Music</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="text-center">
-        <div className="absolute top-4 right-4 flex items-center space-x-4">
-          {user ? (
-            <UserDropdown user={user} />
-          ) : (
-            <AuthButtons />
-          )}
-          <ModeToggle />
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <Link href="/">
+            <div className="flex items-center">
+              <img src="/biblechorus-icon.png" alt="BibleChorus Logo" className="h-10 w-10 mr-2" />
+              <span className="text-2xl font-bold">BibleChorus</span>
+            </div>
+          </Link>
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <UserDropdown user={user} />
+            ) : (
+              <AuthButtons />
+            )}
+            <ModeToggle />
+          </div>
         </div>
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-5xl font-bold text-gray-800 dark:text-gray-100 mb-8"
+          className="text-center mb-12"
         >
-          Welcome to BibleChorus
-        </motion.h1>
-        <motion.p
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">
+            Explore Scripture Through Music
+          </h1>
+          <p className="text-xl mb-8">
+            Discover, create, and share Bible-inspired songs with BibleChorus
+          </p>
+          <Button onClick={handleGetStarted} size="lg">
+            Get Started
+          </Button>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {features.map((feature, index) => (
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <Card className="h-full">
+                <CardHeader>
+                  <feature.icon className="h-8 w-8 mb-2 text-primary" />
+                  <CardTitle>{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>{feature.description}</CardDescription>
+                  <Link href={feature.link}>
+                    <Button variant="link" className="mt-4">Learn More</Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-xl text-gray-600 dark:text-gray-300 mb-8"
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="text-center"
         >
-          Explore, sing, and share your favorite Bible songs
-        </motion.p>
-        <motion.button
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          className="bg-purple-600 text-white px-6 py-3 rounded-md text-lg font-semibold hover:bg-purple-700 transition-colors duration-300"
-          onClick={handleGetStarted}
-        >
-          Get Started
-        </motion.button>
+          <h2 className="text-3xl font-bold mb-4">Join Our Community</h2>
+          <p className="text-xl mb-8">
+            Connect with fellow music lovers and Bible enthusiasts
+          </p>
+          <Link href="/login?view=signup">
+            <Button variant="outline" size="lg">
+              Sign Up Now
+            </Button>
+          </Link>
+        </motion.div>
       </main>
+
+      <footer className="bg-gray-100 dark:bg-gray-800 py-6 mt-12">
+        <div className="container mx-auto px-4 text-center">
+          <p>&copy; 2024 BibleChorus. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 }
