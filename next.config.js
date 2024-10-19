@@ -11,6 +11,10 @@ const nextConfig = {
       },
     ],
   },
+  // Add this section to explicitly include environment variables
+  env: {
+    JWT_SECRET: process.env.JWT_SECRET || 'fallback-secret-for-debugging',
+  },
 };
 
 module.exports = nextConfig
