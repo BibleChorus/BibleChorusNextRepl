@@ -184,12 +184,136 @@ function UploadContent() {
     )
   }, [translationSearch])
 
-  // Add the filteredBibleBooks useMemo hook
+  // Add the filteredBibleBooks hook
   const filteredBibleBooks = useCallback(() => {
     return BIBLE_BOOKS.filter(book =>
       book.toLowerCase().includes(bibleBookSearch.toLowerCase())
     )
   }, [bibleBookSearch])
+
+  // Replace the existing useQuery hook with this:
+
+  const {
+    data: availableChapters,
+    isLoading: isLoadingChapters
+  } = useQuery(
+    ['chapters', selectedBibleBooks],
+    async () => {
+      if (selectedBibleBooks.length === 0) return {}
+      const response = await axios.get('/api/chapters', {
+        params: { books: selectedBibleBooks.join(',') }
+      })
+      return response.data
+    },
+    {
+      enabled: selectedBibleBooks.length > 0,
+      // Add a select function to handle the case when selectedBibleBooks is empty
+      select: (data) => selectedBibleBooks.length === 0 ? {} : data
+    }
+  )
+
+  // Then update the filteredChapters function:
+
+  const filteredChapters = useCallback(() => {
+    if (!availableChapters || Object.keys(availableChapters).length === 0) return {}
+    return Object.entries(availableChapters).reduce((acc, [book, chapters]) => {
+      acc[book] = (chapters as number[]).filter(chapter => 
+        chapter.toString().includes(chapterSearch)
+      )
+      return acc
+    }, {} as Record<string, number[]>)
+  }, [availableChapters, chapterSearch])
+
+  const handleChapterToggle = (book: string, chapter: number) => {
+    setSelectedChapters(prev => {
+      const bookChapters = prev[book] || []
+      if (bookChapters.includes(chapter)) {
+        return { ...prev, [book]: bookChapters.filter(ch => ch !== chapter) }
+      } else {
+        return { ...prev, [book]: [...bookChapters, chapter].sort((a, b) => a - b) }
+      }
+    })
+  }
+
+  const clearChapters = () => {
+    setSelectedChapters({})
+  }
+
+  // Update the useQuery hook for fetching Bible verses
+  const { data: bibleVerses, isLoading } = useQuery(
+    ['bibleVerses', selectedBibleBooks, selectedChapters],
+    async () => {
+      if (selectedBibleBooks.length === 0) return {};
+      const verses = await Promise.all(
+        selectedBibleBooks.flatMap(book => 
+          (selectedChapters[book] || []).map(chapter => 
+            axios.get('/api/bible-verses', { params: { book, chapter } })
+          )
+        )
+      );
+      return verses.reduce((acc, response) => {
+        const verses = response.data;
+        if (verses.length > 0) {
+          const book = verses[0].book;
+          const chapter = verses[0].chapter;
+          if (!acc[book]) acc[book] = {};
+          acc[book][chapter] = verses;
+        }
+        return acc;
+      }, {} as Record<string, Record<number, any[]>>);
+    },
+    { enabled: selectedBibleBooks.length > 0 && Object.keys(selectedChapters).length > 0 }
+  );
+
+  // Update the filteredBibleVerses function
+  const filteredBibleVerses = useCallback(() => {
+    if (!bibleVerses) return {};
+    return Object.entries(bibleVerses).reduce((acc, [book, chapters]) => {
+      acc[book] = Object.entries(chapters).reduce((chapterAcc, [chapter, verses]) => {
+        chapterAcc[chapter] = verses.filter((verse: any) =>
+          `${verse.book} ${verse.chapter}:${verse.verse}`.toLowerCase().includes(bibleVerseSearch.toLowerCase())
+        );
+        return chapterAcc;
+      }, {} as Record<string, any[]>);
+      return acc;
+    }, {} as Record<string, Record<string, any[]>>);
+  }, [bibleVerses, bibleVerseSearch]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (genreRef.current && !genreRef.current.contains(event.target as Node)) {
+        setOpenGenre(false)
+      }
+      if (translationRef.current && !translationRef.current.contains(event.target as Node)) {
+        setOpenTranslation(false)
+      }
+      if (bibleBookRef.current && !bibleBookRef.current.contains(event.target as Node)) {
+        setOpenBibleBooks(false)
+      }
+      if (bibleVerseRef.current && !bibleVerseRef.current.contains(event.target as Node)) {
+        setOpenBibleVerses(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  const handleBibleVerseToggle = (verse: string) => {
+    let updatedVerses: string[];
+    if (selectedBibleVerses.includes(verse)) {
+      updatedVerses = selectedBibleVerses.filter(v => v !== verse);
+    } else {
+      updatedVerses = [...selectedBibleVerses, verse];
+    }
+    setSelectedBibleVerses(updatedVerses);
+    form.setValue('bible_verses', updatedVerses.join(', '), { shouldValidate: true });
+    
+    const isContinuous = areVersesContinuous(updatedVerses);
+    form.setValue('is_continuous_passage', isContinuous, { shouldValidate: true });
+  };
 
   // Effects
   useEffect(() => {
@@ -235,6 +359,13 @@ function UploadContent() {
     };
   }, [form]);
 
+  useEffect(() => {
+    if (!watchAiUsedForLyrics) {
+      form.setValue("lyric_ai_prompt", undefined ?? "");
+    }
+    form.trigger("lyric_ai_prompt");
+  }, [watchAiUsedForLyrics, form]);
+  
   // Move this useEffect outside of any conditional statements
   useEffect(() => {
     if (watchScriptureAdherence === "word_for_word" && watchAiUsedForLyrics) {
@@ -249,9 +380,30 @@ function UploadContent() {
     }
   }, [watchScriptureAdherence, watchAiUsedForLyrics, form]);
 
+  useEffect(() => {
+    if (selectedBibleVerses.length > 0) {
+      const isContinuous = areVersesContinuous(selectedBibleVerses);
+      form.setValue('is_continuous_passage', isContinuous, { shouldValidate: true });
+    }
+  }, [selectedBibleVerses, form]);
+
   if (!user) {
     return null // or a loading spinner if you prefer
   }
+
+  useEffect(() => {
+    const updateCropperMaxHeight = () => {
+      const viewportHeight = window.innerHeight
+      setCropperMaxHeight(Math.floor(viewportHeight * 0.8)) // Set max height to 80% of viewport height
+    }
+
+    updateCropperMaxHeight()
+    window.addEventListener('resize', updateCropperMaxHeight)
+
+    return () => {
+      window.removeEventListener('resize', updateCropperMaxHeight)
+    }
+  }, [])
 
   const handleGenreToggle = (genre: string) => {
     let updatedGenres: string[];
@@ -494,13 +646,6 @@ function UploadContent() {
     }
   };
 
-  useEffect(() => {
-    if (!watchAiUsedForLyrics) {
-      form.setValue("lyric_ai_prompt", undefined ?? "");
-    }
-    form.trigger("lyric_ai_prompt");
-  }, [watchAiUsedForLyrics, form]);
-
   const handleBibleBookToggle = (book: string) => {
     let updatedBooks: string[];
     if (selectedBibleBooks.includes(book)) {
@@ -519,119 +664,6 @@ function UploadContent() {
     setSelectedChapters({});
     form.setValue('bible_books', '', { shouldValidate: true });
   }
-
-  const { data: availableChapters, isLoading: isLoadingChapters } = useQuery(
-    ['chapters', selectedBibleBooks],
-    async () => {
-      if (selectedBibleBooks.length === 0) return {}
-      const response = await axios.get('/api/chapters', {
-        params: { books: selectedBibleBooks.join(',') }
-      })
-      return response.data
-    },
-    { enabled: selectedBibleBooks.length > 0 }
-  )
-
-  const filteredChapters = useCallback(() => {
-    if (!availableChapters) return {}
-    return Object.entries(availableChapters as Record<string, number[]>).reduce((acc, [book, chapters]) => {
-      acc[book] = chapters.filter(chapter => 
-        chapter.toString().includes(chapterSearch)
-      )
-      return acc
-    }, {} as Record<string, number[]>)
-  }, [availableChapters, chapterSearch])
-
-  const handleChapterToggle = (book: string, chapter: number) => {
-    setSelectedChapters(prev => {
-      const bookChapters = prev[book] || []
-      if (bookChapters.includes(chapter)) {
-        return { ...prev, [book]: bookChapters.filter(ch => ch !== chapter) }
-      } else {
-        return { ...prev, [book]: [...bookChapters, chapter].sort((a, b) => a - b) }
-      }
-    })
-  }
-
-  const clearChapters = () => {
-    setSelectedChapters({})
-  }
-
-  // Update the useQuery hook for fetching Bible verses
-  const { data: bibleVerses, isLoading } = useQuery(
-    ['bibleVerses', selectedBibleBooks, selectedChapters],
-    async () => {
-      if (selectedBibleBooks.length === 0) return {};
-      const verses = await Promise.all(
-        selectedBibleBooks.flatMap(book => 
-          (selectedChapters[book] || []).map(chapter => 
-            axios.get('/api/bible-verses', { params: { book, chapter } })
-          )
-        )
-      );
-      return verses.reduce((acc, response) => {
-        const verses = response.data;
-        if (verses.length > 0) {
-          const book = verses[0].book;
-          const chapter = verses[0].chapter;
-          if (!acc[book]) acc[book] = {};
-          acc[book][chapter] = verses;
-        }
-        return acc;
-      }, {} as Record<string, Record<number, any[]>>);
-    },
-    { enabled: selectedBibleBooks.length > 0 && Object.keys(selectedChapters).length > 0 }
-  );
-
-  // Update the filteredBibleVerses function
-  const filteredBibleVerses = useCallback(() => {
-    if (!bibleVerses) return {};
-    return Object.entries(bibleVerses).reduce((acc, [book, chapters]) => {
-      acc[book] = Object.entries(chapters).reduce((chapterAcc, [chapter, verses]) => {
-        chapterAcc[chapter] = verses.filter((verse: any) =>
-          `${verse.book} ${verse.chapter}:${verse.verse}`.toLowerCase().includes(bibleVerseSearch.toLowerCase())
-        );
-        return chapterAcc;
-      }, {} as Record<string, any[]>);
-      return acc;
-    }, {} as Record<string, Record<string, any[]>>);
-  }, [bibleVerses, bibleVerseSearch]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (genreRef.current && !genreRef.current.contains(event.target as Node)) {
-        setOpenGenre(false)
-      }
-      if (translationRef.current && !translationRef.current.contains(event.target as Node)) {
-        setOpenTranslation(false)
-      }
-      if (bibleBookRef.current && !bibleBookRef.current.contains(event.target as Node)) {
-        setOpenBibleBooks(false)
-      }
-      if (bibleVerseRef.current && !bibleVerseRef.current.contains(event.target as Node)) {
-        setOpenBibleVerses(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-
-  const handleBibleVerseToggle = (verse: string) => {
-    let updatedVerses: string[];
-    if (selectedBibleVerses.includes(verse)) {
-      updatedVerses = selectedBibleVerses.filter(v => v !== verse);
-    } else {
-      updatedVerses = [...selectedBibleVerses, verse];
-    }
-    setSelectedBibleVerses(updatedVerses);
-    form.setValue('bible_verses', updatedVerses.join(', '), { shouldValidate: true });
-    
-    const isContinuous = areVersesContinuous(updatedVerses);
-    form.setValue('is_continuous_passage', isContinuous, { shouldValidate: true });
-  };
 
   const clearBibleVerses = () => {
     setSelectedBibleVerses([]);
@@ -667,13 +699,6 @@ function UploadContent() {
     }
     return true;
   };
-
-  useEffect(() => {
-    if (selectedBibleVerses.length > 0) {
-      const isContinuous = areVersesContinuous(selectedBibleVerses);
-      form.setValue('is_continuous_passage', isContinuous, { shouldValidate: true });
-    }
-  }, [selectedBibleVerses, form]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault(); // Prevent form submission
@@ -721,20 +746,6 @@ function UploadContent() {
       return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
   }
-
-  useEffect(() => {
-    const updateCropperMaxHeight = () => {
-      const viewportHeight = window.innerHeight
-      setCropperMaxHeight(Math.floor(viewportHeight * 0.8)) // Set max height to 80% of viewport height
-    }
-
-    updateCropperMaxHeight()
-    window.addEventListener('resize', updateCropperMaxHeight)
-
-    return () => {
-      window.removeEventListener('resize', updateCropperMaxHeight)
-    }
-  }, [])
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
