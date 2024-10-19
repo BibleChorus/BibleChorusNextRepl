@@ -2,9 +2,40 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 import { BIBLE_BOOKS } from '@/lib/constants';
 
+// {{ edit_1 }}
+// Add interface for query parameters
+interface SongsQuery {
+  lyricsAdherence?: string | string[];
+  isContinuous?: string;
+  aiMusic?: string;
+  genres?: string | string[];
+  aiUsedForLyrics?: string;
+  musicModelUsed?: string;
+  title?: string;
+  artist?: string;
+  bibleTranslation?: string;
+  bibleBooks?: string | string[];
+  bibleChapters?: string | string[];
+  bibleVerses?: string | string[];
+  page?: string;
+  limit?: string;
+  search?: string;
+  playlist_id?: string | string[];
+  showLikedSongs?: string;
+  showBestMusically?: string;
+  showBestLyrically?: string;
+  showBestOverall?: string;
+  userId?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  showMySongs?: string;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
+      // {{ edit_2 }}
+      // Destructure with type SongsQuery
       const {
         lyricsAdherence,
         isContinuous,
@@ -30,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         sortBy = 'mostRecent',
         sortOrder = 'desc',
         showMySongs,
-      } = req.query;
+      }: SongsQuery = req.query;
 
       // Adjust limit and offset for infinite scroll
       const limitNum = parseInt(limit as string, 10) || 20;
@@ -88,7 +119,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Handle user-specific filters
       if (userId) {
         if (showMySongs === 'true') {
-          query = query.where('songs.uploaded_by', userId);
+          query = query.where('songs.uploaded_by', Number(userId)); // Convert to number
         }
         query = query.whereIn('songs.id', function () {
           this.select('s.id')
@@ -317,10 +348,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       res.status(200).json({ songs: songs || [], total });
     } catch (error) {
-      console.error('Error fetching songs:', error);
-      res
-        .status(500)
-        .json({ message: 'Error fetching songs', error: error.message });
+      // {{ edit_4 }}
+      // Remove console.error and use error.message for response
+      res.status(500).json({ message: 'Error fetching songs', error: error.message });
     }
   } else {
     res.setHeader('Allow', ['GET']);
