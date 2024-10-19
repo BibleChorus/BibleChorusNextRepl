@@ -67,7 +67,7 @@ export default function HowTo() {
                   Step 2: Use an AI Assistant
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p>Utilize an AI language model (like OpenAI's GPT-4) to help generate lyrics based on your chosen scripture.</p>
+                  <p>Utilize an AI language model (like OpenAI&apos;s GPT-4) to help generate lyrics based on your chosen scripture.</p>
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="step3">
@@ -81,7 +81,7 @@ export default function HowTo() {
                   </p>
                   <Alert className="bg-green-50 text-green-800 border-green-200">
                     <AlertDescription>
-                      Example Prompt: "Make the following into a song in the style of George Herbert, but with language that a modern listener would understand. Use verses, chorus, bridge, and outro. Stay as close to the passage of Scripture as possible. Use a rhyming scheme that is suitable for song."
+                      Example Prompt: &quot;Make the following into a song in the style of George Herbert, but with language that a modern listener would understand. Use verses, chorus, bridge, and outro. Stay as close to the passage of Scripture as possible. Use a rhyming scheme that is suitable for song.&quot;
                     </AlertDescription>
                   </Alert>
                 </AccordionContent>
@@ -202,7 +202,7 @@ export default function HowTo() {
                   <Alert className="bg-green-50 text-green-800 border-green-200 mt-2">
                     <AlertDescription>
                       Example: <br />
-                      Title: &quot;The Lord, My Shepherd&quot; <br />
+                      Title: &apos;The Lord, My Shepherd&apos; <br />
                       Genres: Pop, Indie, Folk
                       Etc.
                     </AlertDescription>

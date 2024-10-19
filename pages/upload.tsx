@@ -1,5 +1,6 @@
 import Head from 'next/head'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import Image from 'next/image'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -205,17 +206,31 @@ function UploadContent() {
     };
   }, [form]);
 
+  // Move this useEffect outside of any conditional statements
+  useEffect(() => {
+    if (watchScriptureAdherence === "word_for_word" && watchAiUsedForLyrics) {
+      form.setValue("ai_used_for_lyrics", false);
+      toast.info("AI used for lyrics has been set to No as Word-for-word adherence was selected.", {
+        duration: 5000,
+        action: {
+          label: "Close",
+          onClick: () => toast.dismiss(),
+        },
+      });
+    }
+  }, [watchScriptureAdherence, watchAiUsedForLyrics, form]);
+
   if (!user) {
     return null // or a loading spinner if you prefer
   }
 
-  const filteredGenres = useCallback(() => {
+  const filteredGenres = useMemo(() => {
     return GENRES.filter(genre =>
       genre.toLowerCase().includes(genreSearch.toLowerCase())
     )
   }, [genreSearch])
 
-  const filteredTranslations = useCallback(() => {
+  const filteredTranslations = useMemo(() => {
     return BIBLE_TRANSLATIONS.filter(translation =>
       translation.toLowerCase().includes(translationSearch.toLowerCase())
     )
@@ -463,21 +478,6 @@ function UploadContent() {
   };
 
   useEffect(() => {
-    if (watchScriptureAdherence === "word_for_word") {
-      if (watchAiUsedForLyrics) {
-        form.setValue("ai_used_for_lyrics", false);
-        toast.info("AI used for lyrics has been set to No as Word-for-word adherence was selected.", {
-          duration: 5000,
-          action: {
-            label: "Close",
-            onClick: () => toast.dismiss(),
-          },
-        });
-      }
-    }
-  }, [watchScriptureAdherence, watchAiUsedForLyrics, form]);
-
-  useEffect(() => {
     if (!watchAiUsedForLyrics) {
       form.setValue("lyric_ai_prompt", undefined ?? "");
     }
@@ -669,21 +669,20 @@ function UploadContent() {
     }
   }, [selectedBibleVerses, form]);
 
-  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
-  const [croppedImage, setCroppedImage] = useState<File | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  // Move all useState calls to the top level of the component
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
+  const [croppedImage, setCroppedImage] = useState<File | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault(); // Prevent form submission
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file)
-      setCropImageUrl(imageUrl)
-      setIsModalOpen(true)
-      // Remove this line to avoid using the original image file
-      // form.setValue('song_art_file', file)
+      const imageUrl = URL.createObjectURL(file);
+      setCropImageUrl(imageUrl);
+      setIsModalOpen(true);
     }
-  }
+  };
 
   const handleCropComplete = async (croppedImageBlob: Blob) => {
     const croppedFile = new File([croppedImageBlob], 'cropped_image.jpg', { type: 'image/jpeg' })
@@ -1005,7 +1004,7 @@ function UploadContent() {
                               </Button>
                             </div>
                             <div className="max-h-[200px] overflow-y-auto">
-                              {filteredGenres().map((genre) => (
+                              {filteredGenres.map((genre) => (
                                 <div
                                   key={genre}
                                   className={cn(
@@ -1413,7 +1412,7 @@ function UploadContent() {
                                   )}
                                 </div>
                                 <div className="max-h-[200px] overflow-y-auto">
-                                  {filteredTranslations().map((translation) => (
+                                  {filteredTranslations.map((translation) => (
                                     <div
                                       key={translation}
                                       className={cn(
@@ -1654,16 +1653,7 @@ function UploadContent() {
                               <Input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0]
-                                  if (file) {
-                                    const imageUrl = URL.createObjectURL(file)
-                                    setCropImageUrl(imageUrl)
-                                    setIsModalOpen(true)
-                                    // Remove this line to avoid using the original image file
-                                    // form.setValue('song_art_file', file)
-                                  }
-                                }}
+                                onChange={handleFileChange}
                               />
                             ) : (
                               <div className="flex items-center space-x-2">
@@ -1674,7 +1664,13 @@ function UploadContent() {
                           </div>
                           {imageUploadStatus === 'success' && croppedImage && (
                             <div className="flex items-center space-x-2">
-                              <img src={URL.createObjectURL(croppedImage)} alt="Uploaded Song Art" className="w-14 h-14 object-cover rounded" />
+                              <Image 
+                                src={URL.createObjectURL(croppedImage)} 
+                                alt="Uploaded Song Art" 
+                                width={56} 
+                                height={56} 
+                                className="object-cover rounded" 
+                              />
                               <Button
                                 type="button"
                                 variant="destructive"

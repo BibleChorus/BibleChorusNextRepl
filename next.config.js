@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Configure image optimization and remote patterns
   images: {
     remotePatterns: [
       {
@@ -9,8 +10,9 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-    domains: [process.env.NEXT_PUBLIC_CDN_URL?.replace(/^https?:\/\//, '')],
   },
-}
+  // Optimize for deployment on Replit
+  output: 'standalone',
+};
 
 module.exports = nextConfig

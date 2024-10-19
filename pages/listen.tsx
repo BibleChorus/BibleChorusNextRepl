@@ -349,7 +349,7 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
     setSelectedPlaylist(playlistId || null);
     setSize(1); // Reset pagination
     mutate();   // Re-fetch data with new playlist selection
-  }, [mutate]);
+  }, [mutate, setSize]); // Added 'setSize' to dependencies
 
   // Clear playlist selection
   const clearPlaylistSelection = () => {
