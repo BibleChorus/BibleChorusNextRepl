@@ -35,13 +35,8 @@ import { SortOptions } from '@/components/ListenPage/SortOptions';
 import { useSidebar } from '@/contexts/SidebarContext';  // Import useSidebar
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
-// Define the User type here
-type User = {
-  id: string;
-  username: string;
-  email: string;
-  profile_image_url?: string;
-};
+// Import User from types.ts
+import { User } from '@/types'; // Ensure correct path based on your project structure
 
 const fetcher = (url: string) =>
   fetch(url)
@@ -135,7 +130,7 @@ type FormValues = {
 function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selectedPlaylist: string | null }) {
   const router = useRouter()
   const querySearch = router.query.search as string || ''
-  const { user } = useAuth(); // Use useAuth at the top level
+  const { user } = useAuth(); // useAuth already provides User | null with correct type
   const { currentSong, isMinimized } = useMusicPlayer();
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
   const { isOpen: isSidebarOpen } = useSidebar(); // Get sidebar state
@@ -349,11 +344,12 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
     setIsPlaylistPopoverOpen(false);
   }
 
-  const handlePlaylistChange = (playlistId: string) => {
+  // Memoize handlePlaylistChange to prevent unnecessary re-renders and fix linter warning
+  const handlePlaylistChange = useCallback((playlistId: string) => {
     setSelectedPlaylist(playlistId || null);
     setSize(1); // Reset pagination
     mutate();   // Re-fetch data with new playlist selection
-  }
+  }, [mutate]);
 
   // Clear playlist selection
   const clearPlaylistSelection = () => {
@@ -664,7 +660,7 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
     if (initialSelectedPlaylist) {
       handlePlaylistChange(initialSelectedPlaylist);
     }
-  }, [initialSelectedPlaylist]);
+  }, [initialSelectedPlaylist, handlePlaylistChange]);
 
   return (
     <TooltipProvider>
@@ -893,7 +889,7 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
           songs={songs}
           filterOptions={filterOptions}
           playlists={playlists}
-          user={user}
+          user={user ? { ...user, id: user.id.toString() } : null}
           onImageCropComplete={onImageCropComplete}
           openImageCropper={openImageCropper}
           formRef={formRef}
@@ -907,6 +903,7 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
                 imageUrl={cropImageUrl}
                 onCropComplete={onImageCropComplete}
                 onCancel={() => setIsCropperOpen(false)}
+                maxHeight={500} // Added maxHeight prop
               />
             )}
           </DialogContent>
