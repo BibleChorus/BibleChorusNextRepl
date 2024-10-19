@@ -27,15 +27,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ message: 'Invalid credentials' })
     }
 
-    console.log('Password is valid, login successful')
+    console.log('Password is valid, generating JWT token')
     const { password_hash, ...userWithoutPassword } = user
     
     // Generate JWT token
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '1d' })
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not defined')
+      return res.status(500).json({ message: 'Server configuration error' })
+    }
+    
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' })
 
+    console.log('Login successful, returning user data and token')
     res.status(200).json({ user: userWithoutPassword, token })
   } catch (error) {
     console.error('Error in login process:', error)
-    res.status(500).json({ message: 'Error authenticating user' })
+    res.status(500).json({ message: 'Error authenticating user', error: error.message })
   }
 }

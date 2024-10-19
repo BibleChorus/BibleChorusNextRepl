@@ -11,8 +11,6 @@ const nextConfig = {
       },
     ],
   },
-  // Optimize for deployment on Replit
-  output: 'standalone',
 };
 
 module.exports = nextConfig

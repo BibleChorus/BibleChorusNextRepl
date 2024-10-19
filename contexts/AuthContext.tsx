@@ -19,25 +19,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedToken = localStorage.getItem('token');
     console.log("Stored token on init:", storedToken); // Debug log
     if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      setToken(storedToken);
+      try {
+        setUser(JSON.parse(storedUser));
+        setToken(storedToken);
+      } catch (error) {
+        console.error("Error parsing stored user data:", error);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
     }
   }, []);
 
   const login = (userData: User, authToken: string) => {
     setUser(userData);
     setToken(authToken);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', authToken);
-    console.log("Token set on login:", authToken); // Debug log
+    try {
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', authToken);
+      console.log("Token set on login:", authToken); // Debug log
+    } catch (error) {
+      console.error("Error storing user data:", error);
+    }
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    console.log("Token removed on logout"); // Debug log
+    try {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      console.log("Token removed on logout"); // Debug log
+    } catch (error) {
+      console.error("Error removing user data:", error);
+    }
   };
 
   const getAuthToken = async (): Promise<string | null> => {

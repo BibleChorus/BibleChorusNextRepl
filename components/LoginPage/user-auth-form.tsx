@@ -16,47 +16,46 @@ interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = React.useState(false)
-  const [formData, setFormData] = React.useState({
-    username: '',
-    email: '',
-    password: '',
-  })
+  const [error, setError] = React.useState<string | null>(null)
   const router = useRouter()
   const { login } = useAuth();
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value })
-  }
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault()
     setIsLoading(true)
+    setError(null)
 
-    try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        // Check if both user and token are present in the response
-        if (data.user && data.token) {
-          login(data.user, data.token);
-          router.push('/profile')
-        } else {
-          console.error('Invalid response format')
-        }
-      } else {
-        console.error('Authentication failed')
-      }
-    } catch (error) {
-      console.error('Error during authentication:', error)
+    const target = event.target as typeof event.target & {
+      email: { value: string }
+      password: { value: string }
+      username?: { value: string }
     }
 
-    setIsLoading(false)
+    const email = target.email.value
+    const password = target.password.value
+    const username = target.username?.value
+
+    try {
+      const response = await fetch(`/api/auth/${isLogin ? 'login' : 'register'}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(isLogin ? { email, password } : { username, email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Authentication failed')
+      }
+
+      login(data.user, data.token)
+      router.push('/')
+    } catch (error) {
+      console.error('Authentication error:', error)
+      setError(error.message || 'An unexpected error occurred')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -70,11 +69,9 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
                 id="username"
                 placeholder="Username"
                 type="text"
-                autoCapitalize="words"
-                autoComplete="username"
+                autoCapitalize="none"
                 autoCorrect="off"
                 disabled={isLoading}
-                onChange={handleInputChange}
               />
             </div>
           )}
@@ -88,7 +85,6 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
               autoComplete="email"
               autoCorrect="off"
               disabled={isLoading}
-              onChange={handleInputChange}
             />
           </div>
           <div className="grid gap-1">
@@ -98,18 +94,21 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
               placeholder="Password"
               type="password"
               autoCapitalize="none"
-              autoComplete={isLogin ? "current-password" : "new-password"}
-              autoCorrect="off"
+              autoComplete="current-password"
               disabled={isLoading}
-              onChange={handleInputChange}
             />
           </div>
           <Button disabled={isLoading}>
-            {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading && (
+              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+            )}
             {isLogin ? "Sign In" : "Sign Up"}
           </Button>
         </div>
       </form>
+      {error && (
+        <p className="text-sm text-red-500 mt-2">{error}</p>
+      )}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
@@ -120,9 +119,13 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
           </span>
         </div>
       </div>
-      <Button variant="outline" type="button" disabled={isLoading} onClick={() => signIn('google')}>
-        {isLoading ? <Icons.spinner className="mr-2 h-4 w-4 animate-spin" /> : <Icons.google className="mr-2 h-4 w-4" />}
-        Google
+      <Button variant="outline" type="button" disabled={isLoading}>
+        {isLoading ? (
+          <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Icons.gitHub className="mr-2 h-4 w-4" />
+        )}{" "}
+        GitHub
       </Button>
     </div>
   )
