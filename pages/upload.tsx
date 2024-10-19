@@ -111,23 +111,10 @@ function UploadContent() {
   // Move all hooks and state declarations to the top level
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      ai_used_for_lyrics: true,
-      music_ai_generated: true,
-      is_continuous_passage: false,
-      music_model_used: undefined,
-      music_ai_prompt: undefined,
-      title: "",
-      artist: "",
-      lyrics: "",
-      genres: [],
-      duration: undefined,
-    },
-    mode: "onBlur",
-  });
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
+  const [croppedImage, setCroppedImage] = useState<File | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0);
 
   // State hooks
   const [openGenre, setOpenGenre] = useState(false);
@@ -150,13 +137,35 @@ function UploadContent() {
   const [openBibleVerses, setOpenBibleVerses] = useState(false);
   const [bibleVerseSearch, setBibleVerseSearch] = useState('');
   const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>([]);
-  const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0);
+
+  // Add the remaining useState hooks
+  const [openBibleBooks, setOpenBibleBooks] = useState(false);
+  const [bibleBookSearch, setBibleBookSearch] = useState('');
+  const [selectedBibleBooks, setSelectedBibleBooks] = useState<string[]>([]);
+  const [selectedChapters, setSelectedChapters] = useState<{[book: string]: number[]}>({});
 
   // Refs
   const genreRef = useRef<HTMLDivElement>(null);
   const translationRef = useRef<HTMLDivElement>(null);
   const bibleVerseRef = useRef<HTMLDivElement>(null);
   const bibleBookRef = useRef<HTMLDivElement>(null);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      ai_used_for_lyrics: true,
+      music_ai_generated: true,
+      is_continuous_passage: false,
+      music_model_used: undefined,
+      music_ai_prompt: undefined,
+      title: "",
+      artist: "",
+      lyrics: "",
+      genres: [],
+      duration: undefined,
+    },
+    mode: "onBlur",
+  });
 
   // Form watchers
   const watchAiUsedForLyrics = form.watch("ai_used_for_lyrics");
@@ -665,11 +674,6 @@ function UploadContent() {
       form.setValue('is_continuous_passage', isContinuous, { shouldValidate: true });
     }
   }, [selectedBibleVerses, form]);
-
-  // Move all useState calls to the top level of the component
-  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
-  const [croppedImage, setCroppedImage] = useState<File | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault(); // Prevent form submission
