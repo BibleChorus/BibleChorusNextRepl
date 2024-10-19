@@ -9,6 +9,7 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    domains: [process.env.NEXT_PUBLIC_CDN_URL?.replace(/^https?:\/\//, '')],
   },
 }
 

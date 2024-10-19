@@ -29,6 +29,7 @@ import { NewCommentForm } from '@/components/SongComments/NewCommentForm';
 import { SongComment } from '@/types';
 import { ReportDialog } from '@/components/ReportDialog';
 import { AddToPlaylistDialog } from './AddToPlaylistDialog';
+import Image from 'next/image' // Import Next.js Image component
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -265,6 +266,15 @@ const SongListItem = React.memo(function SongListItem({
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [isAddToPlaylistDialogOpen, setIsAddToPlaylistDialogOpen] = useState(false);
 
+  const fetchComments = useCallback(async () => {
+    try {
+      const response = await axios.get(`/api/songs/${song.id}/comments`);
+      setComments(response.data);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
+  }, [song.id]);
+
   useEffect(() => {
     const fetchCommentsCount = async () => {
       try {
@@ -282,16 +292,7 @@ const SongListItem = React.memo(function SongListItem({
     if (isCommentsDialogOpen) {
       fetchComments();
     }
-  }, [isCommentsDialogOpen]);
-
-  const fetchComments = async () => {
-    try {
-      const response = await axios.get(`/api/songs/${song.id}/comments`);
-      setComments(response.data);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-    }
-  };
+  }, [isCommentsDialogOpen, fetchComments]);
 
   const handleCommentAdded = (newComment: SongComment) => {
     setComments((prevComments) => {
@@ -447,10 +448,12 @@ const SongListItem = React.memo(function SongListItem({
       {/* Song Art with Play/Pause Button */}
       <div className={`${isNarrowView ? 'w-16 h-16 sm:w-20 sm:h-20' : 'w-20 h-20 sm:w-24 sm:h-24'} mr-3 sm:mr-4 relative flex-shrink-0`}>
         {song.song_art_url && !imageError[song.id] ? (
-          <img
+          <Image
             src={`${CDN_URL}${song.song_art_url}`}
             alt={song.title}
-            className="w-full h-full object-cover rounded"
+            layout="fill"
+            objectFit="cover"
+            className="rounded"
             onError={() => setImageError(prev => ({ ...prev, [song.id]: true }))}
           />
         ) : (

@@ -105,27 +105,11 @@ function UploadContent() {
   console.log("Upload component rendered");
 
   const { user } = useAuth();
-  const router = useRouter()
+  const router = useRouter();
 
-  useEffect(() => {
-    if (!user) {
-      toast.error("You need to be logged in to upload a song.", {
-        duration: 5000,
-        action: {
-          label: "Login",
-          onClick: () => router.push('/login?view=login'),
-        },
-      })
-      router.push('/login?view=login')
-    }
-  }, [user, router])
-
-  if (!user) {
-    return null // or a loading spinner if you prefer
-  }
-
-  const [currentStep, setCurrentStep] = useState(0)
-  const [progress, setProgress] = useState(0); // Add progress state
+  // Move all hooks and state declarations to the top level
+  const [currentStep, setCurrentStep] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -138,18 +122,92 @@ function UploadContent() {
       title: "",
       artist: "",
       lyrics: "",
-      genres: [], // Initialize genres as an empty array
-      duration: undefined, // Add this line
+      genres: [],
+      duration: undefined,
     },
     mode: "onBlur",
-  })
+  });
 
-  const [openGenre, setOpenGenre] = useState(false)
-  const [openTranslation, setOpenTranslation] = useState(false)
-  const [genreSearch, setGenreSearch] = useState('')
-  const [translationSearch, setTranslationSearch] = useState('')
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([])
-  const [selectedTranslation, setSelectedTranslation] = useState<string>('')
+  // State hooks
+  const [openGenre, setOpenGenre] = useState(false);
+  const [openTranslation, setOpenTranslation] = useState(false);
+  const [genreSearch, setGenreSearch] = useState('');
+  const [translationSearch, setTranslationSearch] = useState('');
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedTranslation, setSelectedTranslation] = useState<string>('');
+  const [showValidationMessages, setShowValidationMessages] = useState(false);
+  const [audioUploadProgress, setAudioUploadProgress] = useState(0);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
+  const [audioUploadStatus, setAudioUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [imageUploadStatus, setImageUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [audioDuration, setAudioDuration] = useState<number | null>(null);
+  const [hasShownValidMessage, setHasShownValidMessage] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [openChapters, setOpenChapters] = useState(false);
+  const [chapterSearch, setChapterSearch] = useState('');
+  const [openBibleVerses, setOpenBibleVerses] = useState(false);
+  const [bibleVerseSearch, setBibleVerseSearch] = useState('');
+  const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>([]);
+  const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0);
+
+  // Refs
+  const genreRef = useRef<HTMLDivElement>(null);
+  const translationRef = useRef<HTMLDivElement>(null);
+  const bibleVerseRef = useRef<HTMLDivElement>(null);
+  const bibleBookRef = useRef<HTMLDivElement>(null);
+
+  // Form watchers
+  const watchAiUsedForLyrics = form.watch("ai_used_for_lyrics");
+  const watchScriptureAdherence = form.watch("lyrics_scripture_adherence");
+
+  // Effects
+  useEffect(() => {
+    if (!user) {
+      toast.error("You need to be logged in to upload a song.", {
+        duration: 5000,
+        action: {
+          label: "Login",
+          onClick: () => router.push('/login?view=login'),
+        },
+      });
+      router.push('/login?view=login');
+    }
+  }, [user, router]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (uploadedFiles.length > 0) {
+        const data = JSON.stringify({ fileKeys: uploadedFiles });
+        navigator.sendBeacon('/api/cleanup-unsubmitted-files', data);
+        console.log('Sending cleanup request for files:', uploadedFiles);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [uploadedFiles]);
+
+  useEffect(() => {
+    console.log("Setting up form subscription");
+    const subscription = form.watch(() => {
+      console.log("Form changed");
+      console.log("Form state:", form.formState);
+      console.log("Is form valid?", form.formState.isValid);
+      console.log("Form errors:", form.formState.errors);
+    });
+
+    return () => {
+      console.log("Cleaning up form subscription");
+      subscription.unsubscribe();
+    };
+  }, [form]);
+
+  if (!user) {
+    return null // or a loading spinner if you prefer
+  }
 
   const filteredGenres = useCallback(() => {
     return GENRES.filter(genre =>
@@ -162,25 +220,6 @@ function UploadContent() {
       translation.toLowerCase().includes(translationSearch.toLowerCase())
     )
   }, [translationSearch])
-
-  const genreRef = useRef<HTMLDivElement>(null)
-  const translationRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (genreRef.current && !genreRef.current.contains(event.target as Node)) {
-        setOpenGenre(false)
-      }
-      if (translationRef.current && !translationRef.current.contains(event.target as Node)) {
-        setOpenTranslation(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
 
   const handleGenreToggle = (genre: string) => {
     let updatedGenres: string[];
@@ -197,35 +236,6 @@ function UploadContent() {
     setSelectedGenres([]);
     form.setValue('genres', [], { shouldValidate: true });
   }
-
-  const [showValidationMessages, setShowValidationMessages] = useState(false)
-
-  const [audioUploadProgress, setAudioUploadProgress] = useState(0);
-  const [imageUploadProgress, setImageUploadProgress] = useState(0);
-  const [audioUploadStatus, setAudioUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
-  const [imageUploadStatus, setImageUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
-
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
-
-  useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (uploadedFiles.length > 0) {
-        const data = JSON.stringify({ fileKeys: uploadedFiles });
-        navigator.sendBeacon('/api/cleanup-unsubmitted-files', data);
-        
-        // For debugging purposes
-        console.log('Sending cleanup request for files:', uploadedFiles);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [uploadedFiles]);
-
-  const [audioDuration, setAudioDuration] = useState<number | null>(null);
 
   const uploadFile = async (file: File, fileType: 'audio' | 'image') => {
     const fileExtension = file.name.split('.').pop();
@@ -315,25 +325,6 @@ function UploadContent() {
     }
   };
 
-  const [hasShownValidMessage, setHasShownValidMessage] = useState(false);
-
-  useEffect(() => {
-    console.log("Setting up form subscription");
-    const subscription = form.watch(() => {
-      console.log("Form changed");
-      console.log("Form state:", form.formState);
-      console.log("Is form valid?", form.formState.isValid);
-      console.log("Form errors:", form.formState.errors);
-      
-      // Remove the toast from here, we'll show it only on submit
-    });
-
-    return () => {
-      console.log("Cleaning up form subscription");
-      subscription.unsubscribe();
-    };
-  }, [form]);
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       // Modify audio_url and song_art_url to use Cloudfront CDN
@@ -375,8 +366,6 @@ function UploadContent() {
     console.log("Form errors:", form.formState.errors);
     toast.info(`Form is ${form.formState.isValid ? 'valid' : 'invalid'}`);
   };
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Update the handleSubmit function
   const handleSubmit = async (e: React.FormEvent) => {
@@ -454,9 +443,6 @@ function UploadContent() {
 
   const steps = ["AI Info", "Song Info", "Bible Info", "Upload"]
 
-  const watchAiUsedForLyrics = form.watch("ai_used_for_lyrics");
-  const watchScriptureAdherence = form.watch("lyrics_scripture_adherence");
-
   const handleAILyricsChange = (checked: boolean) => {
     if (watchScriptureAdherence === "word_for_word") {
       toast.info("Cannot enable AI for lyrics when Word-for-word adherence is selected.", {
@@ -528,9 +514,6 @@ function UploadContent() {
     form.setValue('bible_books', '', { shouldValidate: true });
   }
 
-  const [openChapters, setOpenChapters] = useState(false)
-  const [chapterSearch, setChapterSearch] = useState('')
-
   const { data: availableChapters, isLoading: isLoadingChapters } = useQuery(
     ['chapters', selectedBibleBooks],
     async () => {
@@ -567,10 +550,6 @@ function UploadContent() {
   const clearChapters = () => {
     setSelectedChapters({})
   }
-
-  const [openBibleVerses, setOpenBibleVerses] = useState(false)
-  const [bibleVerseSearch, setBibleVerseSearch] = useState('')
-  const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>([])
 
   // Update the useQuery hook for fetching Bible verses
   const { data: bibleVerses, isLoading } = useQuery(
@@ -612,9 +591,6 @@ function UploadContent() {
     }, {} as Record<string, Record<string, any[]>>);
   }, [bibleVerses, bibleVerseSearch]);
 
-  const bibleVerseRef = useRef<HTMLDivElement>(null)
-  const bibleBookRef = useRef<HTMLDivElement>(null)
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (genreRef.current && !genreRef.current.contains(event.target as Node)) {
@@ -655,7 +631,6 @@ function UploadContent() {
     setSelectedBibleVerses([]);
     form.setValue('bible_verses', '', { shouldValidate: true });
   }
-
   const areVersesContinuous = (verses: string[]) => {
     if (verses.length === 0) return false;
     const sortedVerses = verses.sort((a, b) => {
@@ -746,8 +721,6 @@ function UploadContent() {
       return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
   }
-
-  const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0)
 
   useEffect(() => {
     const updateCropperMaxHeight = () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -30,13 +30,8 @@ export function AddToPlaylistDialog({ isOpen, onClose, songId }: AddToPlaylistDi
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('');
   const { user, getAuthToken } = useAuth();
 
-  useEffect(() => {
-    if (isOpen && user) {
-      fetchUserPlaylists();
-    }
-  }, [isOpen, user]);
-
-  const fetchUserPlaylists = async () => {
+  // Memoize fetchUserPlaylists to prevent unnecessary re-creations
+  const fetchUserPlaylists = useCallback(async () => {
     try {
       const token = await getAuthToken();
       console.log("Fetched token for playlists:", token); // Debug log
@@ -53,7 +48,13 @@ export function AddToPlaylistDialog({ isOpen, onClose, songId }: AddToPlaylistDi
       console.error('Error fetching user playlists:', error);
       toast.error('Failed to fetch playlists');
     }
-  };
+  }, [getAuthToken, user?.id]); // Added dependencies to useCallback
+
+  useEffect(() => {
+    if (isOpen && user) {
+      fetchUserPlaylists();
+    }
+  }, [isOpen, user, fetchUserPlaylists]); // Included fetchUserPlaylists in dependencies
 
   const handleAddToPlaylist = async () => {
     if (!selectedPlaylistId) {

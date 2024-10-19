@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/router';
 import { ImageCropper } from '@/components/UploadPage/ImageCropper';
 import { Trash2, ListMusic, Save } from 'lucide-react'; // Import ListMusic and Save icons
+import Image from 'next/image'; // Import Next.js Image component
 
 // Define the Song type
 type Song = {
@@ -294,10 +295,12 @@ export default function SavePlaylistDialog({
                         <FormControl>
                           {croppedImageUrl ? (
                             <div className="flex items-center space-x-2">
-                              <img
+                              <Image
                                 src={croppedImageUrl}
                                 alt="Cover Art Preview"
-                                className="w-16 h-16 object-cover rounded"
+                                width={64} // Tailwind w-16 corresponds to 64px
+                                height={64} // Tailwind h-16 corresponds to 64px
+                                className="object-cover rounded"
                               />
                               <Button
                                 type="button"
