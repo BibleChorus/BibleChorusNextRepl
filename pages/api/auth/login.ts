@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import db from '../../../db'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -28,7 +29,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log('Password is valid, login successful')
     const { password_hash, ...userWithoutPassword } = user
-    res.status(200).json({ user: userWithoutPassword })
+    
+    // Generate JWT token
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '1d' })
+
+    res.status(200).json({ user: userWithoutPassword, token })
   } catch (error) {
     console.error('Error in login process:', error)
     res.status(500).json({ message: 'Error authenticating user' })

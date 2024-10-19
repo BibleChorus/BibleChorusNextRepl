@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import db from '../../../db'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -17,7 +18,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       password_hash: hashedPassword,
     }).returning('*')
 
-    res.status(201).json({ user: { id: user.id, username: user.username, email: user.email } })
+    // Generate JWT token
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '1d' })
+
+    res.status(201).json({ 
+      user: { id: user.id, username: user.username, email: user.email },
+      token
+    })
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Error creating user' })

@@ -345,6 +345,20 @@ function UploadContent() {
   }, [uploadedFiles]);
 
   useEffect(() => {
+    const updateCropperMaxHeight = () => {
+      const viewportHeight = window.innerHeight
+      setCropperMaxHeight(Math.floor(viewportHeight * 0.8)) // Set max height to 80% of viewport height
+    }
+
+    updateCropperMaxHeight()
+    window.addEventListener('resize', updateCropperMaxHeight)
+
+    return () => {
+      window.removeEventListener('resize', updateCropperMaxHeight)
+    }
+  }, [])
+
+  useEffect(() => {
     console.log("Setting up form subscription");
     const subscription = form.watch(() => {
       console.log("Form changed");
@@ -390,20 +404,6 @@ function UploadContent() {
   if (!user) {
     return null // or a loading spinner if you prefer
   }
-
-  useEffect(() => {
-    const updateCropperMaxHeight = () => {
-      const viewportHeight = window.innerHeight
-      setCropperMaxHeight(Math.floor(viewportHeight * 0.8)) // Set max height to 80% of viewport height
-    }
-
-    updateCropperMaxHeight()
-    window.addEventListener('resize', updateCropperMaxHeight)
-
-    return () => {
-      window.removeEventListener('resize', updateCropperMaxHeight)
-    }
-  }, [])
 
   const handleGenreToggle = (genre: string) => {
     let updatedGenres: string[];

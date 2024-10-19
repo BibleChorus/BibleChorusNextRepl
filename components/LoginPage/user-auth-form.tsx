@@ -42,8 +42,13 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
 
       if (response.ok) {
         const data = await response.json()
-        login(data.user);
-        router.push('/profile')
+        // Check if both user and token are present in the response
+        if (data.user && data.token) {
+          login(data.user, data.token);
+          router.push('/profile')
+        } else {
+          console.error('Invalid response format')
+        }
       } else {
         console.error('Authentication failed')
       }
