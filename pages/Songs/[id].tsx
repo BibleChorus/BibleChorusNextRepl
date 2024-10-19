@@ -67,6 +67,7 @@ interface Song {
   created_at: string
   username: string
   bible_verses?: { book: string; chapter: number; verse: number; text: string }[]
+  duration: number // Added duration field
 }
 
 interface SongPageProps {
