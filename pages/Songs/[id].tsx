@@ -352,62 +352,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     }
   };
 
-  useEffect(() => {
-    // Always fetch like and vote counts
-    fetchLikeCount()
-    fetchVoteCounts()
-    fetchCommentsCount() // Add this line
-    
-    if (user) {
-      fetchUserVote()
-      fetchUserLike()
-    }
-
-    // Function to set default Accordion values based on screen width
-    const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        // For screens md and larger, expand all accordions by default
-        setAccordionDefaultValues(['lyrics', 'ai-info'])
-      } else {
-        // For smaller screens, collapse all accordions by default
-        setAccordionDefaultValues([])
-      }
-    }
-
-    // Initial check
-    handleResize()
-
-    // Add event listener
-    window.addEventListener('resize', handleResize)
-
-    // Clean up event listener
-    return () => {
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [user, song.id])
-
-  useEffect(() => {
-    if (initialSong.bible_verses) {
-      const books = Array.from(new Set(initialSong.bible_verses.map(verse => verse.book)))
-      setSelectedBibleBooks(books)
-      
-      const chapters: {[book: string]: number[]} = {}
-      const verses: string[] = []
-      initialSong.bible_verses.forEach(verse => {
-        if (!chapters[verse.book]) {
-          chapters[verse.book] = []
-        }
-        if (!chapters[verse.book].includes(verse.chapter)) {
-          chapters[verse.book].push(verse.chapter)
-        }
-        verses.push(`${verse.book} ${verse.chapter}:${verse.verse}`)
-      })
-      setSelectedChapters(chapters)
-      setSelectedBibleVerses(verses)
-    }
-  }, [initialSong.bible_verses])
-
-  const fetchUserVote = async () => {
+  const fetchUserVote = useCallback(async () => {
     try {
       const response = await axios.get(`/api/votes`, {
         params: { user_id: user?.id, song_id: song.id }
@@ -422,7 +367,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     } catch (error) {
       console.error('Error fetching user votes:', error)
     }
-  }
+  }, [user?.id, song.id])
 
   const fetchUserLike = useCallback(async () => {
     if (!user) return
@@ -453,15 +398,65 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     }
   }, [song.id])
 
-  // Add this function to fetch the comments count
-  const fetchCommentsCount = async () => {
+  const fetchCommentsCount = useCallback(async () => {
     try {
       const response = await axios.get(`/api/songs/${song.id}/comments/count`);
       setCommentsCount(response.data.count);
     } catch (error) {
       console.error('Error fetching comments count:', error);
     }
-  };
+  }, [song.id]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchLikeCount();
+      await fetchVoteCounts();
+      await fetchCommentsCount();
+      
+      if (user) {
+        await fetchUserVote();
+        await fetchUserLike();
+      }
+    };
+
+    fetchData();
+
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setAccordionDefaultValues(['lyrics', 'ai-info']);
+      } else {
+        setAccordionDefaultValues([]);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [user, song.id, fetchLikeCount, fetchVoteCounts, fetchCommentsCount, fetchUserVote, fetchUserLike]);
+
+  useEffect(() => {
+    if (initialSong.bible_verses) {
+      const books = Array.from(new Set(initialSong.bible_verses.map(verse => verse.book)))
+      setSelectedBibleBooks(books)
+      
+      const chapters: {[book: string]: number[]} = {}
+      const verses: string[] = []
+      initialSong.bible_verses.forEach(verse => {
+        if (!chapters[verse.book]) {
+          chapters[verse.book] = []
+        }
+        if (!chapters[verse.book].includes(verse.chapter)) {
+          chapters[verse.book].push(verse.chapter)
+        }
+        verses.push(`${verse.book} ${verse.chapter}:${verse.verse}`)
+      })
+      setSelectedChapters(chapters)
+      setSelectedBibleVerses(verses)
+    }
+  }, [initialSong.bible_verses])
 
   const handlePlayClick = () => {
     if (currentSong?.id === song.id) {
@@ -867,22 +862,23 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     setCropImageUrl(null)
   }
 
-  useEffect(() => {
-    if (isCommentsDialogOpen) {
-      fetchComments();
-    }
-  }, [isCommentsDialogOpen]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const response = await axios.get(`/api/songs/${song.id}/comments`);
       setComments(response.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
     }
-  };
+  }, [song.id]);
 
-  const handleCommentAdded = (newComment: SongComment) => {
+  useEffect(() => {
+    if (isCommentsDialogOpen) {
+      fetchComments();
+    }
+  }, [isCommentsDialogOpen, fetchComments]);
+
+  // Add this function to handle new comments
+  const handleCommentAdded = useCallback((newComment: SongComment) => {
     setComments((prevComments) => {
       const updatedComments = [...prevComments];
       if (newComment.parent_comment_id) {
@@ -899,7 +895,35 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       return updatedComments;
     });
     setCommentsCount((prevCount) => prevCount + 1);
-  };
+  }, []);
+
+  const handleShare = useCallback(async () => {
+    const songUrl = `${window.location.origin}/Songs/${song.id}`;
+    const shareData = {
+      title: song.title,
+      text: `Check out this song: ${song.title} by ${song.artist || song.username}`,
+      url: songUrl,
+    };
+
+    if (navigator.share && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        toast.success('Song shared successfully');
+      } catch (error) {
+        console.error('Error sharing song:', error);
+        toast.error('Failed to share song');
+      }
+    } else {
+      // Fallback to copying the link
+      try {
+        await navigator.clipboard.writeText(songUrl);
+        toast.success('Song link copied to clipboard');
+      } catch (error) {
+        console.error('Error copying song link:', error);
+        toast.error('Failed to copy song link');
+      }
+    }
+  }, [song]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -1016,7 +1040,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                 )}
               </Button>
               <div className="flex w-full space-x-2">
-                <Button variant="outline" className="flex-1">
+                <Button variant="outline" className="flex-1" onClick={handleShare}>
                   <Share2 className="mr-2" />Share
                 </Button>
                 {isCreator && (
