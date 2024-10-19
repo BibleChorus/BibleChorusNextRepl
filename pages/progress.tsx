@@ -165,7 +165,7 @@ export default function Progress() {
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="max-w-xs text-sm">
-                    This progress map shows the total Bible verses covered by all uploaded songs on BibleChorus. It reflects our community's collective effort in setting Scripture to music.
+                    This progress map shows the total Bible verses covered by all uploaded songs on BibleChorus. It reflects our community&apos;s collective effort in setting Scripture to music.
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -215,7 +215,7 @@ export default function Progress() {
 
       <main className="container mx-auto px-4 py-6">
         <div className="text-sm text-muted-foreground mb-4">
-          This progress map visualizes the Bible verses covered by all songs uploaded to BibleChorus. It represents our community's collective effort in setting Scripture to music.
+          This progress map visualizes the Bible verses covered by all songs uploaded to BibleChorus. It represents our community&apos;s collective effort in setting Scripture to music.
         </div>
         
         <div className="grid grid-cols-1 gap-6 mt-6">
