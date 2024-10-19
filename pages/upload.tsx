@@ -162,6 +162,26 @@ function UploadContent() {
   const watchAiUsedForLyrics = form.watch("ai_used_for_lyrics");
   const watchScriptureAdherence = form.watch("lyrics_scripture_adherence");
 
+  // Move useMemo hooks here, outside of any conditional statements
+  const filteredGenres = useMemo(() => {
+    return GENRES.filter(genre =>
+      genre.toLowerCase().includes(genreSearch.toLowerCase())
+    )
+  }, [genreSearch])
+
+  const filteredTranslations = useMemo(() => {
+    return BIBLE_TRANSLATIONS.filter(translation =>
+      translation.toLowerCase().includes(translationSearch.toLowerCase())
+    )
+  }, [translationSearch])
+
+  // Add the filteredBibleBooks useMemo hook
+  const filteredBibleBooks = useCallback(() => {
+    return BIBLE_BOOKS.filter(book =>
+      book.toLowerCase().includes(bibleBookSearch.toLowerCase())
+    )
+  }, [bibleBookSearch])
+
   // Effects
   useEffect(() => {
     if (!user) {
@@ -223,18 +243,6 @@ function UploadContent() {
   if (!user) {
     return null // or a loading spinner if you prefer
   }
-
-  const filteredGenres = useMemo(() => {
-    return GENRES.filter(genre =>
-      genre.toLowerCase().includes(genreSearch.toLowerCase())
-    )
-  }, [genreSearch])
-
-  const filteredTranslations = useMemo(() => {
-    return BIBLE_TRANSLATIONS.filter(translation =>
-      translation.toLowerCase().includes(translationSearch.toLowerCase())
-    )
-  }, [translationSearch])
 
   const handleGenreToggle = (genre: string) => {
     let updatedGenres: string[];
@@ -483,17 +491,6 @@ function UploadContent() {
     }
     form.trigger("lyric_ai_prompt");
   }, [watchAiUsedForLyrics, form]);
-
-  const [openBibleBooks, setOpenBibleBooks] = useState(false)
-  const [bibleBookSearch, setBibleBookSearch] = useState('')
-  const [selectedBibleBooks, setSelectedBibleBooks] = useState<string[]>([])
-  const [selectedChapters, setSelectedChapters] = useState<{[book: string]: number[]}>({})
-
-  const filteredBibleBooks = useCallback(() => {
-    return BIBLE_BOOKS.filter(book =>
-      book.toLowerCase().includes(bibleBookSearch.toLowerCase())
-    )
-  }, [bibleBookSearch])
 
   const handleBibleBookToggle = (book: string) => {
     let updatedBooks: string[];
