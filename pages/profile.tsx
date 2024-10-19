@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import Image from 'next/image'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/contexts/AuthContext'
 import axios from 'axios'
@@ -61,6 +61,53 @@ export default function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0)
 
+  // Wrap fetch functions with useCallback to include them in useEffect dependencies
+  const fetchUserSongs = useCallback(async () => {
+    if (!user) return;
+    try {
+      const response = await axios.get(`/api/users/${user.id}/songs`);
+      setSongs(response.data);
+    } catch (error) {
+      console.error('Error fetching user songs:', error);
+    }
+  }, [user]);
+
+  const fetchUserPlaylists = useCallback(async () => {
+    if (!user) return;
+    try {
+      const response = await axios.get(`/api/users/${user.id}/playlists?createdOnly=true`);
+      setPlaylists(response.data);
+    } catch (error) {
+      console.error('Error fetching user playlists:', error);
+    }
+  }, [user]);
+
+  const fetchUserForumComments = useCallback(async () => {
+    if (!user) return;
+    try {
+      console.log('Fetching forum comments for user:', user.id);
+      const response = await axios.get(`/api/users/${user.id}/forum-comments`);
+      console.log('Forum comments response:', response.data);
+      setForumComments(response.data);
+    } catch (error) {
+      console.error('Error fetching user forum comments:', error.response?.data || error.message);
+      // Optionally, you can set an error state here to display to the user
+    }
+  }, [user]);
+
+  const fetchUserSongComments = useCallback(async () => {
+    if (!user) return;
+    try {
+      console.log('Fetching song comments for user:', user.id);
+      const response = await axios.get(`/api/users/${user.id}/song-comments`);
+      console.log('Song comments response:', response.data);
+      setSongComments(response.data);
+    } catch (error) {
+      console.error('Error fetching user song comments:', error.response?.data || error.message);
+      // Optionally, you can set an error state here to display to the user
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!user) {
       router.push('/login')
@@ -70,7 +117,7 @@ export default function Profile() {
       fetchUserForumComments();
       fetchUserSongComments();
     }
-  }, [user, router])
+  }, [user, router, fetchUserSongs, fetchUserPlaylists, fetchUserForumComments, fetchUserSongComments]); // Added fetch functions to dependencies
 
   useEffect(() => {
     const updateCropperMaxHeight = () => {
@@ -85,52 +132,6 @@ export default function Profile() {
       window.removeEventListener('resize', updateCropperMaxHeight)
     }
   }, [])
-
-  const fetchUserSongs = async () => {
-    if (!user) return;
-    try {
-      const response = await axios.get(`/api/users/${user.id}/songs`);
-      setSongs(response.data);
-    } catch (error) {
-      console.error('Error fetching user songs:', error);
-    }
-  };
-
-  const fetchUserPlaylists = async () => {
-    if (!user) return;
-    try {
-      const response = await axios.get(`/api/users/${user.id}/playlists?createdOnly=true`);
-      setPlaylists(response.data);
-    } catch (error) {
-      console.error('Error fetching user playlists:', error);
-    }
-  };
-
-  const fetchUserForumComments = async () => {
-    if (!user) return;
-    try {
-      console.log('Fetching forum comments for user:', user.id);
-      const response = await axios.get(`/api/users/${user.id}/forum-comments`);
-      console.log('Forum comments response:', response.data);
-      setForumComments(response.data);
-    } catch (error) {
-      console.error('Error fetching user forum comments:', error.response?.data || error.message);
-      // Optionally, you can set an error state here to display to the user
-    }
-  };
-
-  const fetchUserSongComments = async () => {
-    if (!user) return;
-    try {
-      console.log('Fetching song comments for user:', user.id);
-      const response = await axios.get(`/api/users/${user.id}/song-comments`);
-      console.log('Song comments response:', response.data);
-      setSongComments(response.data);
-    } catch (error) {
-      console.error('Error fetching user song comments:', error.response?.data || error.message);
-      // Optionally, you can set an error state here to display to the user
-    }
-  };
 
   const groupCommentsByTopic = (comments: ForumComment[]) => {
     return comments.reduce((acc, comment) => {
