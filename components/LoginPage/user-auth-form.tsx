@@ -119,13 +119,23 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
           </span>
         </div>
       </div>
-      <Button variant="outline" type="button" disabled={isLoading}>
+      <Button variant="outline" type="button" disabled={isLoading} onClick={() => {
+        setIsLoading(true);
+        signIn('google')
+          .catch((error) => {
+            console.error('Google Sign-In error:', error);
+            setError('Failed to sign in with Google');
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+      }}>
         {isLoading ? (
           <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
         ) : (
-          <Icons.gitHub className="mr-2 h-4 w-4" />
+          <Icons.google className="mr-2 h-4 w-4" />
         )}{" "}
-        GitHub
+        Google
       </Button>
     </div>
   )
