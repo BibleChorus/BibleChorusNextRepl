@@ -113,7 +113,8 @@ const UploadProgressBar: React.FC<UploadProgressBarProps> = ({ onProgressChange 
               <p className="mt-2 text-sm text-gray-600">Fill these in to complete your upload!</p>
             </>
           ) : (
-            <p className="text-green-600 font-semibold">Great job! All required fields are filled. You're ready to submit!</p>
+            // Escaped apostrophe in the following line
+            <p className="text-green-600 font-semibold">Great job! All required fields are filled. You&apos;re ready to submit!</p>
           )}
         </HoverCardContent>
       </HoverCard>

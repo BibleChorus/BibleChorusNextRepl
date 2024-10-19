@@ -29,14 +29,14 @@ const UploadInfoDialog = () => {
         <DialogHeader>
           <DialogTitle>Why We Ask for Detailed Information</DialogTitle>
           <DialogDescription>
-            Your detailed submissions enhance the BibleChorus experience for everyone. Here's how:
+            Your detailed submissions enhance the BibleChorus experience for everyone. Here&apos;s how:
           </DialogDescription>
         </DialogHeader>
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1">
             <AccordionTrigger>Powerful Search and Filtering</AccordionTrigger>
             <AccordionContent>
-              Detailed information allows users to <strong>find songs by specific Bible verses, genres, or adherence to Scripture</strong>. This precision helps listeners discover exactly what they're looking for, whether it's for personal devotion, study, or worship planning.
+              Detailed information allows users to <strong>find songs by specific Bible verses, genres, or adherence to Scripture</strong>. This precision helps listeners discover exactly what they&apos;re looking for, whether it&apos;s for personal devotion, study, or worship planning.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-2">
@@ -71,7 +71,7 @@ const UploadInfoDialog = () => {
           </AccordionItem>
         </Accordion>
         <p className="mt-4 text-sm text-muted-foreground">
-          By providing detailed information, you're not just uploading a song – you're <strong>empowering users to engage deeply with scripture through music</strong>. Your thoroughness helps make BibleChorus a more valuable resource for everyone.
+          By providing detailed information, you&apos;re not just uploading a song – you&apos;re <strong>empowering users to engage deeply with scripture through music</strong>. Your thoroughness helps make BibleChorus a more valuable resource for everyone.
         </p>
       </DialogContent>
     </Dialog>

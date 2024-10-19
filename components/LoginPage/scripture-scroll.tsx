@@ -19,12 +19,36 @@ export function ScriptureScroll() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // Function to check if the text fits within the card height
+    const isTextFitting = (cardHeight: number, fontSize: number) => {
+      const testDiv = document.createElement('div')
+      testDiv.style.fontSize = `${fontSize}px`
+      testDiv.style.position = 'absolute'
+      testDiv.style.visibility = 'hidden'
+      testDiv.style.width = `${containerRef.current!.clientWidth - 32}px` // Subtracting padding
+      document.body.appendChild(testDiv)
+
+      let isFitting = true
+      for (let index of currentIndices) {
+        // Set the HTML content for testing
+        testDiv.innerHTML = `<h3 class="font-semibold mb-2">${scriptures[index].reference}</h3><p>${scriptures[index].verse}</p>`
+        if (testDiv.offsetHeight > cardHeight) {
+          isFitting = false
+          break
+        }
+      }
+
+      document.body.removeChild(testDiv) // Clean up the test div
+      return isFitting
+    }
+
     const adjustFontSize = () => {
       if (containerRef.current) {
         const containerHeight = containerRef.current.clientHeight
-        const cardHeight = containerHeight / 3 - 16 // Subtracting margin
-        let newFontSize = 18
+        const cardHeight = containerHeight / 3 - 16 // Subtracting margin for three cards
+        let newFontSize = 18 // Starting font size
 
+        // Decrease font size until the text fits or the minimum font size is reached
         while (newFontSize > 12) {
           if (isTextFitting(cardHeight, newFontSize)) {
             break
@@ -32,14 +56,14 @@ export function ScriptureScroll() {
           newFontSize -= 0.5
         }
 
-        setFontSize(newFontSize)
+        setFontSize(newFontSize) // Update the font size state
       }
     }
 
-    adjustFontSize()
-    window.addEventListener('resize', adjustFontSize)
-    return () => window.removeEventListener('resize', adjustFontSize)
-  }, [currentIndices])
+    adjustFontSize() // Initial font size adjustment
+    window.addEventListener('resize', adjustFontSize) // Adjust font size on window resize
+    return () => window.removeEventListener('resize', adjustFontSize) // Clean up the event listener
+  }, [currentIndices]) // Re-run the effect when currentIndices changes
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -48,27 +72,6 @@ export function ScriptureScroll() {
 
     return () => clearInterval(interval)
   }, [])
-
-  const isTextFitting = (cardHeight: number, fontSize: number) => {
-    const testDiv = document.createElement('div')
-    testDiv.style.fontSize = `${fontSize}px`
-    testDiv.style.position = 'absolute'
-    testDiv.style.visibility = 'hidden'
-    testDiv.style.width = `${containerRef.current!.clientWidth - 32}px` // Subtracting padding
-    document.body.appendChild(testDiv)
-
-    let isFitting = true
-    for (let index of currentIndices) {
-      testDiv.innerHTML = `<h3 class="font-semibold mb-2">${scriptures[index].reference}</h3><p>${scriptures[index].verse}</p>`
-      if (testDiv.offsetHeight > cardHeight) {
-        isFitting = false
-        break
-      }
-    }
-
-    document.body.removeChild(testDiv)
-    return isFitting
-  }
 
   const handlePrev = () => {
     setCurrentIndices(prev => {

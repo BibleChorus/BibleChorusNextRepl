@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react'
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { Button } from "@/components/ui/button"
+import Image from 'next/image' // Importing Next.js Image component
 
 interface ImageCropperProps {
   imageUrl: string
@@ -20,7 +21,7 @@ export function ImageCropper({ imageUrl, onCropComplete, onCancel, maxHeight }: 
     setImageRef(img)
     
     // Calculate the maximum crop size while maintaining aspect ratio
-    const maxSize = Math.min(img.width, img.height, 1260)
+    const maxSize = Math.min(img.width, img.height, 1920)
     const cropPercentage = (maxSize / Math.max(img.width, img.height)) * 100
     const newCrop = { unit: '%', width: cropPercentage, height: cropPercentage, x: 0, y: 0 } as Crop
     setCrop(newCrop)
@@ -73,7 +74,13 @@ export function ImageCropper({ imageUrl, onCropComplete, onCancel, maxHeight }: 
         maxWidth={1260}
         maxHeight={1260}
       >
-        <img src={imageUrl} onLoad={(e) => onLoad(e.currentTarget)} alt="Crop me" style={{ maxHeight: `${maxHeight - 100}px`, width: 'auto' }} />
+        <Image 
+          src={imageUrl} 
+          alt="Crop me" 
+          onLoadingComplete={(img) => onLoad(img)} 
+          style={{ maxHeight: `${maxHeight - 100}px`, width: 'auto' }} 
+          layout="responsive" // Ensures responsive sizing
+        />
       </ReactCrop>
       <div className="mt-4 flex justify-end space-x-2">
         <Button onClick={onCancel} variant="outline" type="button">Cancel</Button>
