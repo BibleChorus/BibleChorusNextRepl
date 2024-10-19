@@ -4,7 +4,7 @@ import React, { Dispatch, SetStateAction, useState, useCallback, useEffect } fro
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark, Heart, Star } from "lucide-react"
+import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark, Heart, Star, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
@@ -39,6 +39,7 @@ export interface FilterOptions {
   showBestOverall?: boolean;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
+  showMySongs: boolean;
 }
 
 interface FiltersProps {
@@ -190,6 +191,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       showBestOverall: false,
       sortBy: 'mostRecent',
       sortOrder: 'desc',
+      showMySongs: false,
     })
   }
 
@@ -379,6 +381,23 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs">Best Overall Voted</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* My Songs Filter Icon */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={filterOptions.showMySongs ? "secondary" : "outline"}
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => toggleUserFilter('showMySongs')}
+              >
+                <User className="h-3 w-3" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">My Songs</p>
             </TooltipContent>
           </Tooltip>
         </div>

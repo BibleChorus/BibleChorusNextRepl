@@ -97,6 +97,7 @@ export type FilterOptions = {
   showBestOverall: boolean;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
+  showMySongs: boolean; // Add this line
 };
 
 export default function Listen() {
@@ -186,6 +187,7 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
     showBestOverall: false,
     sortBy: 'mostRecent',     // Default sorting criterion
     sortOrder: 'desc',        // Default sorting order
+    showMySongs: false, // Add this line
   })
 
   useEffect(() => {
@@ -290,6 +292,10 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
       params.append('sortOrder', filters.sortOrder);
     }
 
+    if (filters.showMySongs && user) {
+      params.append('showMySongs', 'true');
+    }
+
     return params.toString()
   }
 
@@ -385,7 +391,8 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
         filterType === 'showLikedSongs' ||
         filterType === 'showBestMusically' ||
         filterType === 'showBestLyrically' ||
-        filterType === 'showBestOverall'
+        filterType === 'showBestOverall' ||
+        filterType === 'showMySongs' // Add this line
       ) {
         return {
           ...prev,
@@ -597,6 +604,13 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
       tags.push({
         type: 'showBestOverall',
         label: 'Voted Best Overall',
+      });
+    }
+
+    if (filterOptions.showMySongs) {
+      tags.push({
+        type: 'showMySongs',
+        label: 'My Songs',
       });
     }
 

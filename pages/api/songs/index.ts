@@ -29,6 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         userId,
         sortBy = 'mostRecent',
         sortOrder = 'desc',
+        showMySongs,
       } = req.query;
 
       // Adjust limit and offset for infinite scroll
@@ -85,7 +86,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .join('users', 'songs.uploaded_by', 'users.id');
 
       // Handle user-specific filters
-      if (userId && (showLikedSongs || showBestMusically || showBestLyrically || showBestOverall)) {
+      if (userId) {
+        if (showMySongs === 'true') {
+          query = query.where('songs.uploaded_by', userId);
+        }
         query = query.whereIn('songs.id', function () {
           this.select('s.id')
             .from('songs as s');
