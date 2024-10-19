@@ -92,7 +92,7 @@ export default function HowTo() {
                   Step 4: Refine the Generated Lyrics
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p>Review the AI-generated lyrics and make any necessary edits to get they lyrics just right.</p>
+                  <p>Review the AI-generated lyrics and make any necessary edits to get the lyrics just right.</p>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -146,7 +146,7 @@ export default function HowTo() {
                   <p className="mb-2">Describe the style, genre, mood, and any instruments you want in your music.</p>
                   <Alert className="bg-green-50 text-green-800 border-green-200">
                     <AlertDescription>
-                      Example Prompt: "gentle acoustic guitar melody, soft piano accompaniment; calm, uplifting, Psalm."
+                      Example Prompt: &quot;gentle acoustic guitar melody, soft piano accompaniment; calm, uplifting, Psalm.&quot;
                     </AlertDescription>
                   </Alert>
                 </AccordionContent>
@@ -202,7 +202,7 @@ export default function HowTo() {
                   <Alert className="bg-green-50 text-green-800 border-green-200 mt-2">
                     <AlertDescription>
                       Example: <br />
-                      Title: "The Lord, My Shepherd" <br />
+                      Title: &quot;The Lord, My Shepherd&quot; <br />
                       Genres: Pop, Indie, Folk
                       Etc.
                     </AlertDescription>
