@@ -48,7 +48,7 @@ const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
 export default function Profile() {
-  const { user, login } = useAuth();
+  const { user, login, getAuthToken } = useAuth();
   const router = useRouter()
   const [songs, setSongs] = useState<Song[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -217,8 +217,14 @@ export default function Profile() {
       if (updateResponse.status === 200) {
         // Update the user context with the new profile image URL
         const updatedUser = { ...user, profile_image_url: updateResponse.data.updatedUrl };
-        login(updatedUser);
-        toast.success('Profile image updated successfully');
+        // Get the current auth token
+        const currentToken = await getAuthToken();
+        if (currentToken) {
+          login(updatedUser, currentToken);
+          toast.success('Profile image updated successfully');
+        } else {
+          throw new Error('No auth token available');
+        }
       } else {
         throw new Error('Failed to update profile image URL');
       }
