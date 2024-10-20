@@ -678,6 +678,13 @@ function ListenContent({
     setParentFilterOptions(filterOptions)
   }, [filterOptions, setParentFilterOptions])
 
+  // Add this useEffect to synchronize the search term
+  useEffect(() => {
+    if (querySearch) {
+      setFilterOptions(prev => ({ ...prev, search: querySearch }))
+    }
+  }, [querySearch])
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background">

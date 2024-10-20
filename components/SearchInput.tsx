@@ -25,7 +25,7 @@ export function SearchInput() {
 
   const isSmallScreen = useMediaQuery('(max-width: 768px)')
   const placeholderText = isSmallScreen
-    ? 'Search songs...'
+    ? 'Search...'
     : 'Search songs by passage, lyrics, AI prompt, genre...'
 
   return (

@@ -6,6 +6,9 @@ import {
   Type,
   GithubIcon,
   Loader2,
+  User,
+  UserPlus,
+  LogIn,
 } from "lucide-react"
 
 export const Icons = {
@@ -44,4 +47,7 @@ export const Icons = {
       />
     </svg>
   ),
+  user: User,
+  userPlus: UserPlus,
+  login: LogIn,
 }
