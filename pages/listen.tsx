@@ -307,10 +307,39 @@ function ListenContent({
   const [hasMore, setHasMore] = useState(true);
 
   // Fetch playlists
-  const { data: playlists, error: playlistError } = useSWR(
+  const { data: userPlaylists } = useSWR(
     user ? `/api/users/${user.id}/playlists` : null,
     (url) => axios.get(url).then(res => res.data)
-  )
+  );
+
+  const { data: publicPlaylists } = useSWR(
+    `/api/playlists`,
+    (url) => axios.get(url).then(res => res.data.playlists)
+  );
+
+  // Merge user playlists and public playlists and sort them
+  const playlists = React.useMemo(() => {
+    let combinedPlaylists: typeof userPlaylists = [];
+
+    if (user && userPlaylists) {
+      // If user is logged in, merge user playlists and public playlists
+      const mergedPlaylists = [...userPlaylists];
+      publicPlaylists?.forEach(publicPlaylist => {
+        if (!mergedPlaylists.some(userPlaylist => userPlaylist.id === publicPlaylist.id)) {
+          mergedPlaylists.push(publicPlaylist);
+        }
+      });
+      combinedPlaylists = mergedPlaylists;
+    } else {
+      // If user is logged out, return only public playlists
+      combinedPlaylists = publicPlaylists || [];
+    }
+
+    // Sort the combined playlists in descending order of playlist ID
+    combinedPlaylists.sort((a, b) => b.id - a.id);
+
+    return combinedPlaylists;
+  }, [user, userPlaylists, publicPlaylists]);
 
   const [playlistSearch, setPlaylistSearch] = useState('')
   const [isPlaylistPopoverOpen, setIsPlaylistPopoverOpen] = useState(false)
