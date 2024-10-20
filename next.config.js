@@ -15,6 +15,17 @@ const nextConfig = {
   env: {
     JWT_SECRET: process.env.JWT_SECRET || 'fallback-secret-for-debugging',
   },
+  // Add standalone optimization for production in deployment mode on Replit
+  output: 'standalone',
 };
+
+// Conditionally apply the standalone optimization only in production
+if (process.env.NODE_ENV === 'production') {
+  nextConfig.experimental = {
+    ...nextConfig.experimental,
+    // Enable optimizations for Replit deployment
+    outputStandalone: true,
+  };
+}
 
 module.exports = nextConfig

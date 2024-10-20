@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo, Dispatch, SetStateAction } from 'react';
 import Head from 'next/head'
 import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
@@ -99,19 +99,47 @@ export default function Listen() {
   const router = useRouter()
   const { playlistId } = router.query
 
-  // ... existing state declarations ...
-
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null)
+  const [initialLoad, setInitialLoad] = useState(true)
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    lyricsAdherence: [],
+    isContinuous: "all",
+    aiMusic: "all",
+    genres: [],
+    aiUsedForLyrics: 'all',  // Updated from false
+    musicModelUsed: "",
+    title: "",
+    artist: "",
+    bibleTranslation: "",
+    bibleBooks: [],
+    search: "",
+    bibleChapters: {},
+    bibleVerses: [],
+    showLikedSongs: false,
+    showBestMusically: false,
+    showBestLyrically: false,
+    showBestOverall: false,
+    sortBy: 'mostRecent',     // Default sorting criterion
+    sortOrder: 'desc',        // Default sorting order
+    showMySongs: false, // Add this line
+  })
 
   useEffect(() => {
-    if (playlistId && typeof playlistId === 'string') {
+    if (playlistId && typeof playlistId === 'string' && initialLoad) {
       setSelectedPlaylist(playlistId)
+      setFilterOptions(prev => ({ ...prev, playlist_id: playlistId }))
+      setInitialLoad(false)
     }
-  }, [playlistId])
+  }, [playlistId, initialLoad])
 
   return (
     <TooltipProvider>
-      <ListenContent selectedPlaylist={selectedPlaylist} />
+      <ListenContent 
+        selectedPlaylist={selectedPlaylist} 
+        setSelectedPlaylist={setSelectedPlaylist}
+        filterOptions={filterOptions}
+        setFilterOptions={setFilterOptions}
+      />
     </TooltipProvider>
   );
 }
@@ -127,7 +155,17 @@ type FormValues = {
   cover_art_url?: string;
 };
 
-function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selectedPlaylist: string | null }) {
+function ListenContent({ 
+  selectedPlaylist: initialSelectedPlaylist,
+  setSelectedPlaylist: setParentSelectedPlaylist,
+  filterOptions: initialFilterOptions,
+  setFilterOptions: setParentFilterOptions
+}: { 
+  selectedPlaylist: string | null,
+  setSelectedPlaylist: (playlistId: string | null) => void,
+  filterOptions: FilterOptions,
+  setFilterOptions: Dispatch<SetStateAction<FilterOptions>>
+}) {
   const router = useRouter()
   const querySearch = router.query.search as string || ''
   const { user } = useAuth(); // useAuth already provides User | null with correct type
@@ -137,6 +175,7 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(initialSelectedPlaylist)
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>(initialFilterOptions)
 
   // Adjust bottom offset for filter button
   const filterButtonBottomClass = useMemo(() => {
@@ -162,36 +201,6 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
   }, [isMobile, isSidebarOpen]);
 
   // Initialize filterOptions with URL query
-  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    lyricsAdherence: [],
-    isContinuous: "all",
-    aiMusic: "all",
-    genres: [],
-    aiUsedForLyrics: 'all',  // Updated from false
-    musicModelUsed: "",
-    title: "",
-    artist: "",
-    bibleTranslation: "",
-    bibleBooks: [],
-    search: querySearch,
-    bibleChapters: {},
-    bibleVerses: [],
-    showLikedSongs: false,
-    showBestMusically: false,
-    showBestLyrically: false,
-    showBestOverall: false,
-    sortBy: 'mostRecent',     // Default sorting criterion
-    sortOrder: 'desc',        // Default sorting order
-    showMySongs: false, // Add this line
-  })
-
-  useEffect(() => {
-    // Update filters if search query changes
-    if (querySearch) {
-      setFilterOptions((prev) => ({ ...prev, search: querySearch }))
-    }
-  }, [querySearch])
-
   const [isFilterExpanded, setIsFilterExpanded] = useState(false)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const [page, setPage] = useState(1)
@@ -345,16 +354,18 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
   }
 
   // Memoize handlePlaylistChange to prevent unnecessary re-renders and fix linter warning
-  const handlePlaylistChange = useCallback((playlistId: string) => {
-    setSelectedPlaylist(playlistId || null);
+  const handlePlaylistChange = useCallback((playlistId: string | null) => {
+    setSelectedPlaylist(playlistId);
+    setParentSelectedPlaylist(playlistId);
+    setFilterOptions(prev => ({ ...prev, playlist_id: playlistId }));
     setSize(1); // Reset pagination
     mutate();   // Re-fetch data with new playlist selection
-  }, [mutate, setSize]); // Added 'setSize' to dependencies
+  }, [mutate, setSize, setParentSelectedPlaylist]);
 
   // Clear playlist selection
-  const clearPlaylistSelection = () => {
-    handlePlaylistChange('');
-  }
+  const clearPlaylistSelection = useCallback(() => {
+    handlePlaylistChange(null);
+  }, [handlePlaylistChange]);
 
   // Songs are derived from the data fetched by SWRInfinite
   const songs = data ? data.flatMap((page) => page.songs) : []
@@ -661,6 +672,11 @@ function ListenContent({ selectedPlaylist: initialSelectedPlaylist }: { selected
       handlePlaylistChange(initialSelectedPlaylist);
     }
   }, [initialSelectedPlaylist, handlePlaylistChange]);
+
+  // Update parent filterOptions when local state changes
+  useEffect(() => {
+    setParentFilterOptions(filterOptions)
+  }, [filterOptions, setParentFilterOptions])
 
   return (
     <TooltipProvider>
