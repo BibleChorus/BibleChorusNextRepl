@@ -76,15 +76,6 @@ const createMarkup = (content: string) => {
   return { __html: DOMPurify.sanitize(content) };
 };
 
-// Add this function to handle activity clicks
-const handleActivityClick = async (activityId: string) => {
-  try {
-    await axios.post(`/api/users/activities/${activityId}/mark-as-read`);
-  } catch (error) {
-    console.error('Error marking activity as read:', error);
-  }
-};
-
 export default function Profile() {
   const { user: currentUser, login, getAuthToken } = useAuth();
   const router = useRouter();
@@ -314,6 +305,17 @@ export default function Profile() {
     setCropImageUrl(null);
   };
 
+  // Add handleActivityClick inside the component
+  const handleActivityClick = async (activityId: string) => {
+    try {
+      await axios.post(`/api/users/activities/${activityId}/mark-as-read`);
+      // Now fetchUserActivities is in scope
+      fetchUserActivities();
+    } catch (error) {
+      console.error('Error marking activity as read:', error);
+    }
+  };
+
   if (!profileUser) {
     return null;
   }
@@ -469,92 +471,104 @@ export default function Profile() {
                             <div
                               key={activity.id}
                               className={cn(
-                                "bg-card p-4 rounded-lg border shadow-sm transition-colors",
-                                activity.is_new && "bg-primary/5 border-primary/20",
-                                "hover:border-primary/30"
+                                "bg-card p-4 rounded-lg border shadow-sm transition-all",
+                                activity.is_new 
+                                  ? "bg-primary/5 border-primary ring-2 ring-primary/20" 
+                                  : "hover:border-primary/30",
+                                "relative" // Add this for the new activity indicator
                               )}
                             >
+                              {activity.is_new && (
+                                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full px-2 py-1">
+                                  New
+                                </span>
+                              )}
                               <div className="flex items-start justify-between">
                                 <div className="space-y-1 flex-grow">
                                   <div className="flex items-center gap-2">
                                     {activity.type === 'song_upload' && (
                                       <>
                                         <Upload className="h-4 w-4 text-blue-500" />
-                                        <Link 
-                                          href={`/songs/${activity.metadata.song_id}`}
-                                          onClick={() => handleActivityClick(activity.id)}
-                                          className={cn(
-                                            "font-medium hover:underline flex items-center gap-2",
-                                            activity.is_new && "text-primary font-semibold"
-                                          )}
-                                        >
-                                          Uploaded new song: {activity.metadata.song_title}
-                                          {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                        <Link href={`/Songs/${activity.metadata.song_id}`} legacyBehavior>
+                                          <a
+                                            onClick={() => handleActivityClick(activity.id)}
+                                            className={cn(
+                                              "font-medium hover:underline flex items-center gap-2",
+                                              activity.is_new && "text-primary font-semibold"
+                                            )}
+                                          >
+                                            Uploaded new song: {activity.metadata.song_title}
+                                            {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                          </a>
                                         </Link>
                                       </>
                                     )}
                                     {activity.type === 'song_comment' && (
                                       <>
                                         <Music className="h-4 w-4 text-purple-500" />
-                                        <Link 
-                                          href={`/songs/${activity.metadata.song_id}`}
-                                          onClick={() => handleActivityClick(activity.id)}
-                                          className={cn(
-                                            "font-medium hover:underline flex items-center gap-2",
-                                            activity.is_new && "text-primary font-semibold"
-                                          )}
-                                        >
-                                          Commented on song: {activity.metadata.song_title}
-                                          {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                        <Link href={`/Songs/${activity.metadata.song_id}`} legacyBehavior>
+                                          <a
+                                            onClick={() => handleActivityClick(activity.id)}
+                                            className={cn(
+                                              "font-medium hover:underline flex items-center gap-2",
+                                              activity.is_new && "text-primary font-semibold"
+                                            )}
+                                          >
+                                            Commented on song: {activity.metadata.song_title}
+                                            {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                          </a>
                                         </Link>
                                       </>
                                     )}
                                     {activity.type === 'forum_comment' && (
                                       <>
                                         <MessageCircle className="h-4 w-4 text-green-500" />
-                                        <Link 
-                                          href={`/forum/topics/${activity.metadata.topic_id}`}
-                                          onClick={() => handleActivityClick(activity.id)}
-                                          className={cn(
-                                            "font-medium hover:underline flex items-center gap-2",
-                                            activity.is_new && "text-primary font-semibold"
-                                          )}
-                                        >
-                                          Commented on topic: {activity.metadata.topic_title}
-                                          {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                        <Link href={`/Forum/topics/${activity.metadata.topic_id}`} legacyBehavior>
+                                          <a
+                                            onClick={() => handleActivityClick(activity.id)}
+                                            className={cn(
+                                              "font-medium hover:underline flex items-center gap-2",
+                                              activity.is_new && "text-primary font-semibold"
+                                            )}
+                                          >
+                                            Commented on topic: {activity.metadata.topic_title}
+                                            {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                          </a>
                                         </Link>
                                       </>
                                     )}
                                     {activity.type === 'song_like' && (
                                       <>
                                         <Heart className="h-4 w-4 text-red-500" />
-                                        <Link 
-                                          href={`/songs/${activity.metadata.song_id}`}
-                                          onClick={() => handleActivityClick(activity.id)}
-                                          className={cn(
-                                            "font-medium hover:underline flex items-center gap-2",
-                                            activity.is_new && "text-primary font-semibold"
-                                          )}
-                                        >
-                                          {activity.metadata.liker_username} liked your song: {activity.metadata.song_title}
-                                          {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                        <Link href={`/Songs/${activity.metadata.song_id}`} legacyBehavior>
+                                          <a
+                                            onClick={() => handleActivityClick(activity.id)}
+                                            className={cn(
+                                              "font-medium hover:underline flex items-center gap-2",
+                                              activity.is_new && "text-primary font-semibold"
+                                            )}
+                                          >
+                                            {activity.metadata.liker_username} liked your song: {activity.metadata.song_title}
+                                            {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                          </a>
                                         </Link>
                                       </>
                                     )}
                                     {activity.type === 'song_vote' && (
                                       <>
                                         <ThumbsUp className="h-4 w-4 text-yellow-500" />
-                                        <Link 
-                                          href={`/songs/${activity.metadata.song_id}`}
-                                          onClick={() => handleActivityClick(activity.id)}
-                                          className={cn(
-                                            "font-medium hover:underline flex items-center gap-2",
-                                            activity.is_new && "text-primary font-semibold"
-                                          )}
-                                        >
-                                          {activity.metadata.voter_username} voted {typeof activity.metadata.vote_value === 'number' && 
-                                            (activity.metadata.vote_value > 0 ? 'up' : 'down')} your song for {activity.metadata.vote_type}: {activity.metadata.song_title}
-                                          {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                        <Link href={`/Songs/${activity.metadata.song_id}`} legacyBehavior>
+                                          <a
+                                            onClick={() => handleActivityClick(activity.id)}
+                                            className={cn(
+                                              "font-medium hover:underline flex items-center gap-2",
+                                              activity.is_new && "text-primary font-semibold"
+                                            )}
+                                          >
+                                            {activity.metadata.voter_username} voted {typeof activity.metadata.vote_value === 'number' && 
+                                              (activity.metadata.vote_value > 0 ? 'up' : 'down')} your song for {activity.metadata.vote_type}: {activity.metadata.song_title}
+                                            {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                          </a>
                                         </Link>
                                       </>
                                     )}
