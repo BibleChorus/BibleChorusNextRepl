@@ -12,6 +12,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ReactHtmlParser from 'html-react-parser';
 import { Badge } from '@/components/ui/badge';
+import { cn } from "@/lib/utils";
 
 export default function TopicPage() {
   const router = useRouter();
@@ -79,6 +80,24 @@ export default function TopicPage() {
     }
   };
 
+  const richTextStyles = {
+    prose: cn(
+      "prose dark:prose-invert max-w-none",
+      // Links
+      "prose-a:text-blue-600 prose-a:underline hover:prose-a:text-blue-500",
+      // Lists
+      "prose-ol:list-decimal prose-ul:list-disc",
+      // Headings
+      "prose-h1:text-2xl prose-h1:font-bold prose-h1:mb-4",
+      "prose-h2:text-xl prose-h2:font-bold prose-h2:mb-3",
+      "prose-h3:text-lg prose-h3:font-bold prose-h3:mb-2",
+      // Add spacing for lists
+      "prose-ol:my-4 prose-ul:my-4",
+      // Ensure proper list indentation
+      "prose-ol:pl-4 prose-ul:pl-4"
+    )
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <Head>
@@ -104,7 +123,7 @@ export default function TopicPage() {
       <p className="text-sm text-muted-foreground mb-4">
         Posted by {topic.username} on {new Date(topic.created_at).toLocaleDateString()}
       </p>
-      <div className="prose mb-6">
+      <div className={richTextStyles.prose}>
         {ReactHtmlParser(topic.content)}
       </div>
 

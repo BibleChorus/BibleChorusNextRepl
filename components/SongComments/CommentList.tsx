@@ -6,6 +6,7 @@ import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import ReactHtmlParser from 'html-react-parser';
+import { cn } from "@/lib/utils";
 
 interface CommentListProps {
   comments: SongComment[];
@@ -114,7 +115,9 @@ export const CommentList: React.FC<CommentListProps> = ({
             {comment.username} •{' '}
             {new Date(comment.created_at).toLocaleString()}
           </p>
-          <div className="prose">{ReactHtmlParser(comment.comment)}</div>
+          <div className={richTextStyles.prose}>
+            {ReactHtmlParser(comment.comment)}
+          </div>
           <Button
             variant="ghost"
             size="sm"
@@ -150,6 +153,24 @@ export const CommentList: React.FC<CommentListProps> = ({
           </div>
         </div>
       ));
+  };
+
+  const richTextStyles = {
+    prose: cn(
+      "prose dark:prose-invert",
+      // Links
+      "prose-a:text-blue-600 prose-a:underline hover:prose-a:text-blue-500",
+      // Lists
+      "prose-ol:list-decimal prose-ul:list-disc",
+      // Headings
+      "prose-h1:text-2xl prose-h1:font-bold prose-h1:mb-4",
+      "prose-h2:text-xl prose-h2:font-bold prose-h2:mb-3",
+      "prose-h3:text-lg prose-h3:font-bold prose-h3:mb-2",
+      // Add spacing for lists
+      "prose-ol:my-4 prose-ul:my-4",
+      // Ensure proper list indentation
+      "prose-ol:pl-4 prose-ul:pl-4"
+    )
   };
 
   return <div className="space-y-4">{renderComments(comments)}</div>;
