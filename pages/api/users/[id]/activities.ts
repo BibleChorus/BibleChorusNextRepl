@@ -8,8 +8,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { id } = req.query;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
 
-    const activities = await db
+    // First, get total count
+    const countResult = await db.raw(
+      `
+      SELECT COUNT(*) as count
+      FROM (
+        SELECT id FROM song_comments WHERE user_id = ?
+        UNION ALL
+        SELECT id FROM forum_comments WHERE user_id = ?
+        UNION ALL
+        SELECT id FROM songs WHERE uploaded_by = ?
+        UNION ALL
+        SELECT l.id FROM likes l JOIN songs s ON s.id = l.likeable_id WHERE s.uploaded_by = ? AND l.likeable_type = 'song'
+        UNION ALL
+        SELECT v.id FROM votes v JOIN songs s ON s.id = v.song_id WHERE s.uploaded_by = ?
+      ) as total
+    `,
+      [id, id, id, id, id]
+    );
+
+    // Extract the count from the result
+    const totalCount = parseInt(countResult.rows[0].count, 10);
+
+    // Then get paginated activities
+    const activitiesQuery = db
       .select(
         db.raw(
           `
@@ -106,9 +132,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           )
         )
           .from('likes as l')
-          .join('songs as s', function() {
-            this.on('s.id', '=', 'l.likeable_id')
-              .andOn('l.likeable_type', '=', db.raw("'song'"))
+          .join('songs as s', function () {
+            this.on('s.id', '=', 'l.likeable_id').andOn(
+              'l.likeable_type',
+              '=',
+              db.raw(`'song'`)
+            );
           })
           .join('users as u', 'u.id', 'l.user_id')
           .where('s.uploaded_by', id);
@@ -138,9 +167,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .where('s.uploaded_by', id);
       })
       .orderBy('created_at', 'desc')
-      .limit(50);
+      .limit(limit)
+      .offset(offset);
 
-    return res.status(200).json(activities);
+    // Execute the activities query
+    const activitiesResult = await activitiesQuery;
+
+    return res.status(200).json({
+      activities: activitiesResult,
+      total: totalCount,
+      page,
+      totalPages: Math.ceil(totalCount / limit),
+    });
   } catch (error) {
     console.error('Error fetching user activities:', error);
     return res.status(500).json({ message: 'Internal server error' });

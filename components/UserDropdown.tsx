@@ -1,21 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { LogOut, User, Bell } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNotifications } from '@/components/Notifications/NotificationProvider';
+import axios from 'axios';
 
 interface UserDropdownProps {
   user: {
+    id: number;
     username: string;
     profile_image_url?: string;
   };
@@ -23,9 +24,9 @@ interface UserDropdownProps {
 
 export function UserDropdown({ user }: UserDropdownProps) {
   const router = useRouter();
-  const { logout } = useAuth();
-  const notifications = useNotifications();
-  const unreadCount = notifications.length;
+  const { logout, getAuthToken } = useAuth();
+
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   const handleLogout = () => {
     logout();
@@ -37,6 +38,28 @@ export function UserDropdown({ user }: UserDropdownProps) {
   const handleNotificationsClick = () => {
     router.push('/profile#activities');
   };
+
+  // Fetch unread activities count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const token = await getAuthToken();
+        const response = await axios.get(`/api/users/${user.id}/unread-activities-count`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUnreadCount(response.data.unreadCount);
+      } catch (error) {
+        console.error('Error fetching unread activities count:', error);
+      }
+    };
+    fetchUnreadCount();
+
+    // Optionally, set up polling to refresh the count periodically
+    const interval = setInterval(fetchUnreadCount, 60000); // Refresh every 60 seconds
+    return () => clearInterval(interval);
+  }, [user.id, getAuthToken]);
 
   return (
     <DropdownMenu>
