@@ -1,18 +1,11 @@
 import knex from 'knex';
+import knexConfig from '@/knexfile';
 
-// Initialize the Knex instance
-const db = knex({
-  client: 'pg',
-  connection: process.env.PGDATABASE ? {
-    host: process.env.PGHOST,
-    port: Number(process.env.PGPORT),
-    user: process.env.PGUSER,
-    password: process.env.PGPASSWORD,
-    database: process.env.PGDATABASE,
-    ssl: { rejectUnauthorized: false },
-  } : process.env.DATABASE_URL, // Adjust for your environment
-  pool: { min: 0, max: 7 },
-});
+// Import environment configuration
+const environment = process.env.NODE_ENV || 'development';
+
+// Initialize the Knex instance with the appropriate environment config
+const db = knex(knexConfig[environment]);
 
 // Export the database client
 export default db;

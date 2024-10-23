@@ -44,6 +44,22 @@ interface SongComment {
   created_at: string;
 }
 
+// Update the Activity interface
+interface Activity {
+  id: string; // Changed from number to string
+  type: 'song_comment' | 'forum_comment' | 'song_upload';
+  content: string;
+  created_at: string;
+  metadata: {
+    song_title?: string;
+    song_id?: number;
+    topic_title?: string;
+    topic_id?: number;
+    comment_likes?: number;
+    new_replies?: number;
+  };
+}
+
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
@@ -56,6 +72,7 @@ export default function Profile() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [forumComments, setForumComments] = useState<ForumComment[]>([]);
   const [songComments, setSongComments] = useState<SongComment[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
 
   const [isEditProfileImageDialogOpen, setIsEditProfileImageDialogOpen] = useState(false)
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
@@ -121,6 +138,18 @@ export default function Profile() {
     }
   }, [profileUser]);
 
+  // Add new fetch function for activities
+  const fetchUserActivities = useCallback(async () => {
+    if (!profileUser) return;
+    try {
+      const response = await axios.get(`/api/users/${profileUser.id}/activities`);
+      setActivities(response.data);
+    } catch (error) {
+      console.error('Error fetching user activities:', error);
+      toast.error('Failed to load user activities');
+    }
+  }, [profileUser]);
+
   // Update useEffect to handle profile loading
   useEffect(() => {
     if (!currentUser && !profileUserId) {
@@ -130,15 +159,14 @@ export default function Profile() {
     }
   }, [currentUser, profileUserId, router, fetchProfileUser]);
 
-  // Add useEffect to fetch data when profileUser changes
+  // Update useEffect to include activities fetch
   useEffect(() => {
     if (profileUser) {
       fetchUserSongs();
       fetchUserPlaylists();
-      fetchUserForumComments();
-      fetchUserSongComments();
+      fetchUserActivities();
     }
-  }, [profileUser, fetchUserSongs, fetchUserPlaylists, fetchUserForumComments, fetchUserSongComments]);
+  }, [profileUser, fetchUserSongs, fetchUserPlaylists, fetchUserActivities]);
 
   // Add helper function to check if current user is viewing their own profile
   const isOwnProfile = currentUser && profileUser && currentUser.id === profileUser.id;
@@ -400,68 +428,88 @@ export default function Profile() {
             </CardContent>
           </Card>
 
-          {/* Forum Comments Card */}
-          <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Your Forum Comments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible>
-                <AccordionItem value="forum-comments">
-                  <AccordionTrigger>View Comments</AccordionTrigger>
-                  <AccordionContent>
-                    {forumComments.length === 0 ? (
-                      <p>No forum comments yet.</p>
-                    ) : (
-                      Object.entries(groupCommentsByTopic(forumComments)).map(([topicId, { topic_title, comments }]) => (
-                        <div key={topicId} className="mb-6">
-                          <Link href={`/forum/topics/${topicId}`}>
-                            <h3 className="text-lg font-semibold mb-2 hover:underline cursor-pointer">{topic_title}</h3>
-                          </Link>
-                          <ul>
-                            {comments.map((comment) => (
-                              <li key={comment.id} className="mb-2">
-                                <p>{comment.content}</p>
-                                <small>{new Date(comment.created_at).toLocaleString()}</small>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-
-          {/* Song Comments Card */}
-          <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Your Song Comments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible>
-                <AccordionItem value="song-comments">
-                  <AccordionTrigger>View Comments</AccordionTrigger>
-                  <AccordionContent>
-                    {songComments.length === 0 ? (
-                      <p>No song comments yet.</p>
-                    ) : (
-                      <ul>
-                        {songComments.map((comment) => (
-                          <li key={comment.id} className="mb-2">
-                            <p>{comment.content}</p>
-                            <small>{new Date(comment.created_at).toLocaleString()}</small>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
+          {/* Replace the Forum Comments and Song Comments cards with the Activity Card */}
+          {isOwnProfile && (
+            <Card className="lg:col-span-6" id="activities">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold">Recent Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="activities">
+                    <AccordionTrigger>View Activity</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        {activities.length === 0 ? (
+                          <p className="text-muted-foreground">No recent activity</p>
+                        ) : (
+                          activities.map((activity) => (
+                            <div
+                              key={activity.id}
+                              className="bg-card p-4 rounded-lg border shadow-sm"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="space-y-1">
+                                  {activity.type === 'song_upload' && (
+                                    <Link href={`/songs/${activity.metadata.song_id}`}>
+                                      <p className="font-medium hover:underline">
+                                        Uploaded new song: {activity.metadata.song_title}
+                                      </p>
+                                    </Link>
+                                  )}
+                                  {activity.type === 'song_comment' && (
+                                    <div>
+                                      <Link href={`/songs/${activity.metadata.song_id}`}>
+                                        <p className="font-medium hover:underline">
+                                          Commented on song: {activity.metadata.song_title}
+                                        </p>
+                                      </Link>
+                                      <p className="text-sm text-muted-foreground">{activity.content}</p>
+                                      {typeof activity.metadata.new_replies === 'number' && 
+                                       activity.metadata.new_replies > 0 && (
+                                        <p className="text-sm text-primary mt-1">
+                                          {activity.metadata.new_replies} new {activity.metadata.new_replies === 1 ? 'reply' : 'replies'}
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                  {activity.type === 'forum_comment' && (
+                                    <div>
+                                      <Link href={`/forum/topics/${activity.metadata.topic_id}`}>
+                                        <p className="font-medium hover:underline">
+                                          Commented on topic: {activity.metadata.topic_title}
+                                        </p>
+                                      </Link>
+                                      <p className="text-sm text-muted-foreground">{activity.content}</p>
+                                      {typeof activity.metadata.new_replies === 'number' && 
+                                       activity.metadata.new_replies > 0 && (
+                                        <p className="text-sm text-primary mt-1">
+                                          {activity.metadata.new_replies} new {activity.metadata.new_replies === 1 ? 'reply' : 'replies'}
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(activity.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                              {typeof activity.metadata.comment_likes === 'number' && 
+                               activity.metadata.comment_likes > 0 && (
+                                <p className="text-sm text-muted-foreground mt-2">
+                                  {activity.metadata.comment_likes} {activity.metadata.comment_likes === 1 ? 'like' : 'likes'}
+                                </p>
+                              )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Edit Profile Image Dialog */}
