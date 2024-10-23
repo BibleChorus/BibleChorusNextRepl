@@ -13,6 +13,7 @@ This table stores information about votes cast by users on songs, allowing for d
 | vote_type | enum | NOT NULL | | Type of vote ('Best Musically', 'Best Lyrically', 'Best Overall') |
 | vote_value | integer | NOT NULL, CHECK IN (-1, 0, 1) | | Value of the vote (-1 for downvote, 0 for neutral, 1 for upvote) |
 | created_at | timestamp with time zone | | CURRENT_TIMESTAMP | Timestamp of when the vote was cast |
+| is_new | boolean | | true | Indicates if the vote is unread by the recipient |
 
 ## Constraints
 
@@ -27,6 +28,7 @@ This table stores information about votes cast by users on songs, allowing for d
 |------------|---------|------|-------------|
 | votes_pkey | id | B-tree | Primary key index |
 | votes_user_song_type_unique | (user_id, song_id, vote_type) | B-tree | Unique constraint index |
+| idx_votes_is_new | is_new | B-tree | For efficient queries on unread votes |
 
 ## Relationships
 

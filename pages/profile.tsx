@@ -13,6 +13,9 @@ import { ImageCropper } from '@/components/UploadPage/ImageCropper'
 import { Pencil } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
+import { Music, MessageCircle, Upload, ArrowRight, Heart, ThumbsUp } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import DOMPurify from 'isomorphic-dompurify';
 
 interface Song {
   id: number;
@@ -46,10 +49,11 @@ interface SongComment {
 
 // Update the Activity interface
 interface Activity {
-  id: string; // Changed from number to string
-  type: 'song_comment' | 'forum_comment' | 'song_upload';
+  id: string;
+  type: 'song_comment' | 'forum_comment' | 'song_upload' | 'song_like' | 'song_vote';
   content: string;
   created_at: string;
+  is_new?: boolean;
   metadata: {
     song_title?: string;
     song_id?: number;
@@ -57,11 +61,29 @@ interface Activity {
     topic_id?: number;
     comment_likes?: number;
     new_replies?: number;
+    liker_username?: string;
+    voter_username?: string;
+    vote_type?: string;
+    vote_value?: number;
   };
 }
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
+// Add this function to safely render HTML content
+const createMarkup = (content: string) => {
+  return { __html: DOMPurify.sanitize(content) };
+};
+
+// Add this function to handle activity clicks
+const handleActivityClick = async (activityId: string) => {
+  try {
+    await axios.post(`/api/users/activities/${activityId}/mark-as-read`);
+  } catch (error) {
+    console.error('Error marking activity as read:', error);
+  }
+};
 
 export default function Profile() {
   const { user: currentUser, login, getAuthToken } = useAuth();
@@ -446,57 +468,118 @@ export default function Profile() {
                           activities.map((activity) => (
                             <div
                               key={activity.id}
-                              className="bg-card p-4 rounded-lg border shadow-sm"
+                              className={cn(
+                                "bg-card p-4 rounded-lg border shadow-sm transition-colors",
+                                activity.is_new && "bg-primary/5 border-primary/20",
+                                "hover:border-primary/30"
+                              )}
                             >
                               <div className="flex items-start justify-between">
-                                <div className="space-y-1">
-                                  {activity.type === 'song_upload' && (
-                                    <Link href={`/songs/${activity.metadata.song_id}`}>
-                                      <p className="font-medium hover:underline">
-                                        Uploaded new song: {activity.metadata.song_title}
-                                      </p>
-                                    </Link>
-                                  )}
-                                  {activity.type === 'song_comment' && (
-                                    <div>
-                                      <Link href={`/songs/${activity.metadata.song_id}`}>
-                                        <p className="font-medium hover:underline">
+                                <div className="space-y-1 flex-grow">
+                                  <div className="flex items-center gap-2">
+                                    {activity.type === 'song_upload' && (
+                                      <>
+                                        <Upload className="h-4 w-4 text-blue-500" />
+                                        <Link 
+                                          href={`/songs/${activity.metadata.song_id}`}
+                                          onClick={() => handleActivityClick(activity.id)}
+                                          className={cn(
+                                            "font-medium hover:underline flex items-center gap-2",
+                                            activity.is_new && "text-primary font-semibold"
+                                          )}
+                                        >
+                                          Uploaded new song: {activity.metadata.song_title}
+                                          {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                        </Link>
+                                      </>
+                                    )}
+                                    {activity.type === 'song_comment' && (
+                                      <>
+                                        <Music className="h-4 w-4 text-purple-500" />
+                                        <Link 
+                                          href={`/songs/${activity.metadata.song_id}`}
+                                          onClick={() => handleActivityClick(activity.id)}
+                                          className={cn(
+                                            "font-medium hover:underline flex items-center gap-2",
+                                            activity.is_new && "text-primary font-semibold"
+                                          )}
+                                        >
                                           Commented on song: {activity.metadata.song_title}
-                                        </p>
-                                      </Link>
-                                      <p className="text-sm text-muted-foreground">{activity.content}</p>
-                                      {typeof activity.metadata.new_replies === 'number' && 
-                                       activity.metadata.new_replies > 0 && (
-                                        <p className="text-sm text-primary mt-1">
-                                          {activity.metadata.new_replies} new {activity.metadata.new_replies === 1 ? 'reply' : 'replies'}
-                                        </p>
-                                      )}
-                                    </div>
-                                  )}
-                                  {activity.type === 'forum_comment' && (
-                                    <div>
-                                      <Link href={`/forum/topics/${activity.metadata.topic_id}`}>
-                                        <p className="font-medium hover:underline">
+                                          {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                        </Link>
+                                      </>
+                                    )}
+                                    {activity.type === 'forum_comment' && (
+                                      <>
+                                        <MessageCircle className="h-4 w-4 text-green-500" />
+                                        <Link 
+                                          href={`/forum/topics/${activity.metadata.topic_id}`}
+                                          onClick={() => handleActivityClick(activity.id)}
+                                          className={cn(
+                                            "font-medium hover:underline flex items-center gap-2",
+                                            activity.is_new && "text-primary font-semibold"
+                                          )}
+                                        >
                                           Commented on topic: {activity.metadata.topic_title}
-                                        </p>
-                                      </Link>
-                                      <p className="text-sm text-muted-foreground">{activity.content}</p>
-                                      {typeof activity.metadata.new_replies === 'number' && 
-                                       activity.metadata.new_replies > 0 && (
-                                        <p className="text-sm text-primary mt-1">
-                                          {activity.metadata.new_replies} new {activity.metadata.new_replies === 1 ? 'reply' : 'replies'}
-                                        </p>
-                                      )}
-                                    </div>
+                                          {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                        </Link>
+                                      </>
+                                    )}
+                                    {activity.type === 'song_like' && (
+                                      <>
+                                        <Heart className="h-4 w-4 text-red-500" />
+                                        <Link 
+                                          href={`/songs/${activity.metadata.song_id}`}
+                                          onClick={() => handleActivityClick(activity.id)}
+                                          className={cn(
+                                            "font-medium hover:underline flex items-center gap-2",
+                                            activity.is_new && "text-primary font-semibold"
+                                          )}
+                                        >
+                                          {activity.metadata.liker_username} liked your song: {activity.metadata.song_title}
+                                          {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                        </Link>
+                                      </>
+                                    )}
+                                    {activity.type === 'song_vote' && (
+                                      <>
+                                        <ThumbsUp className="h-4 w-4 text-yellow-500" />
+                                        <Link 
+                                          href={`/songs/${activity.metadata.song_id}`}
+                                          onClick={() => handleActivityClick(activity.id)}
+                                          className={cn(
+                                            "font-medium hover:underline flex items-center gap-2",
+                                            activity.is_new && "text-primary font-semibold"
+                                          )}
+                                        >
+                                          {activity.metadata.voter_username} voted {typeof activity.metadata.vote_value === 'number' && 
+                                            (activity.metadata.vote_value > 0 ? 'up' : 'down')} your song for {activity.metadata.vote_type}: {activity.metadata.song_title}
+                                          {activity.is_new && <ArrowRight className="h-4 w-4" />}
+                                        </Link>
+                                      </>
+                                    )}
+                                  </div>
+                                  {(activity.type === 'song_comment' || activity.type === 'forum_comment') && (
+                                    <div 
+                                      className="text-sm text-muted-foreground mt-2 prose prose-sm dark:prose-invert max-w-none"
+                                      dangerouslySetInnerHTML={createMarkup(activity.content)}
+                                    />
+                                  )}
+                                  {typeof activity.metadata.new_replies === 'number' && 
+                                   activity.metadata.new_replies > 0 && (
+                                    <p className="text-sm text-primary mt-1 font-medium">
+                                      {activity.metadata.new_replies} new {activity.metadata.new_replies === 1 ? 'reply' : 'replies'}
+                                    </p>
                                   )}
                                 </div>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground whitespace-nowrap ml-4">
                                   {new Date(activity.created_at).toLocaleDateString()}
                                 </p>
                               </div>
                               {typeof activity.metadata.comment_likes === 'number' && 
                                activity.metadata.comment_likes > 0 && (
-                                <p className="text-sm text-muted-foreground mt-2">
+                                <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
+                                  <span className="text-red-500">♥</span>
                                   {activity.metadata.comment_likes} {activity.metadata.comment_likes === 1 ? 'like' : 'likes'}
                                 </p>
                               )}

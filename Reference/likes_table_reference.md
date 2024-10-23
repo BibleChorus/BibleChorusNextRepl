@@ -12,6 +12,7 @@ This table stores information about likes given by users to various entities in 
 | likeable_type | string | NOT NULL | | Type of the liked item (e.g., 'song', 'playlist', 'comment') |
 | likeable_id | integer | NOT NULL, UNSIGNED | | ID of the liked item |
 | created_at | timestamp with time zone | | CURRENT_TIMESTAMP | Timestamp of when the like was created |
+| is_new | boolean | | true | Indicates if the like is unread by the recipient |
 
 ## Constraints
 
@@ -26,6 +27,7 @@ This table stores information about likes given by users to various entities in 
 | likes_user_likeable_unique | (user_id, likeable_type, likeable_id) | B-tree | Unique constraint index |
 | likes_likeable_idx | (likeable_type, likeable_id) | B-tree | For efficient queries on liked items |
 | likes_created_at_idx | created_at | B-tree | For efficient sorting by creation time |
+| idx_likes_is_new | is_new | B-tree | For efficient queries on unread likes |
 
 ## Relationships
 

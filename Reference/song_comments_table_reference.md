@@ -20,6 +20,7 @@ This table stores comments made by users on songs, allowing for discussion and f
 | is_edited | boolean | | false | Indicates if the comment has been edited |
 | sentiment | string(20) | | | Sentiment analysis of the comment |
 | contains_scripture_reference | boolean | | false | Indicates if the comment contains a scripture reference |
+| is_new | boolean | | true | Indicates if the comment is unread by the recipient |
 
 ## Constraints
 
@@ -35,6 +36,7 @@ This table stores comments made by users on songs, allowing for discussion and f
 | song_comments_song_id_idx | song_id | B-tree | For efficient queries on comments for a specific song |
 | song_comments_user_id_idx | user_id | B-tree | For efficient queries on comments by a specific user |
 | song_comments_parent_comment_id_idx | parent_comment_id | B-tree | For efficient queries on replies to comments |
+| idx_song_comments_is_new | is_new | B-tree | For efficient queries on unread comments |
 
 ## Relationships
 

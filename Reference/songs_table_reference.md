@@ -28,6 +28,7 @@ This table stores information about individual songs, including metadata, lyrics
 | verses_text | text | | | Concatenated text of associated Bible verses |
 | duration | integer | UNSIGNED | 0 | Duration of the song in seconds |
 | play_count | integer | UNSIGNED | 0 | Number of times the song has been played |
+| is_new | boolean | | true | Indicates if the song is unread by relevant users |
 
 ## Constraints
 
@@ -55,6 +56,7 @@ This table stores information about individual songs, including metadata, lyrics
 | idx_songs_genres | genres | GIN | For efficient genre filtering |
 | idx_songs_duration | duration | B-tree | For efficient sorting and filtering by song duration |
 | idx_songs_play_count | play_count | B-tree | For efficient sorting and filtering by play count |
+| idx_songs_is_new | is_new | B-tree | For efficient queries on unread songs |
 
 ## Full-Text Search
 

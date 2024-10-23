@@ -14,6 +14,7 @@ This table stores comments made by users on forum topics, allowing for discussio
 | created_at | timestamp with time zone | | CURRENT_TIMESTAMP | Timestamp of when the comment was created |
 | updated_at | timestamp with time zone | | CURRENT_TIMESTAMP | Timestamp of when the comment was last updated |
 | parent_comment_id | integer | UNSIGNED, FOREIGN KEY | NULL | ID of the parent comment (for replies) |
+| is_new | boolean | | true | Indicates if the comment is unread by the recipient |
 
 ## Constraints
 
@@ -30,6 +31,7 @@ This table stores comments made by users on forum topics, allowing for discussio
 | idx_forum_comments_user_id | user_id | B-tree | For efficient queries by user |
 | idx_forum_comments_created_at | created_at | B-tree | For efficient sorting by creation date |
 | idx_forum_comments_parent_comment_id | parent_comment_id | B-tree | For efficient queries on replies to comments |
+| idx_forum_comments_is_new | is_new | B-tree | For efficient queries on unread comments |
 
 ## Relationships
 
