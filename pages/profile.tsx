@@ -105,9 +105,13 @@ export default function Profile() {
   const [totalActivities, setTotalActivities] = useState(0);
   const ITEMS_PER_PAGE = 10;
   const [unreadActivitiesCount, setUnreadActivitiesCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Add a function to fetch profile user data
   const fetchProfileUser = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       if (profileUserId) {
         const response = await axios.get(`/api/users/${profileUserId}`);
@@ -118,7 +122,10 @@ export default function Profile() {
       }
     } catch (error) {
       console.error('Error fetching profile user:', error);
+      setError('Failed to load user profile. Please try again later.');
       toast.error('Failed to load user profile');
+    } finally {
+      setIsLoading(false);
     }
   }, [profileUserId, currentUser]);
 
@@ -378,6 +385,36 @@ export default function Profile() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <main className="container mx-auto px-4 py-8">
+          <div className="animate-pulse">
+            <div className="h-64 sm:h-80 w-full mb-8 bg-gray-200 dark:bg-gray-700" />
+            <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+              <div className="lg:col-span-2 h-48 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+              <div className="lg:col-span-4 h-48 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+              <div className="lg:col-span-6 h-48 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold text-destructive">{error}</h2>
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!profileUser) {
     return null;
   }
@@ -385,8 +422,13 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-background">
       <Head>
-        <title>{profileUser.username}'s Profile | BibleChorus</title>
-        <meta name="description" content={`${profileUser.username}'s profile page`} />
+        <title>{`${profileUser.username}'s Profile | BibleChorus`}</title>
+        <meta name="description" content={`View ${profileUser.username}'s profile, songs, playlists, and activities on BibleChorus`} />
+        <meta property="og:title" content={`${profileUser.username}'s Profile | BibleChorus`} />
+        <meta property="og:description" content={`View ${profileUser.username}'s profile, songs, playlists, and activities on BibleChorus`} />
+        <meta property="og:image" content={profileUser?.profile_image_url ? `${CDN_URL}${profileUser.profile_image_url}` : '/default-profile-banner.jpg'} />
+        <meta property="og:type" content="profile" />
+        <meta name="twitter:card" content="summary_large_image" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -426,7 +468,7 @@ export default function Profile() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl font-bold">Profile Details</CardTitle>
+                <CardTitle className="text-2xl font-bold">{`${profileUser.username}'s Profile Details`}</CardTitle>
                 {isOwnProfile && (
                   <Button variant="ghost" size="sm">
                     {/* Add edit icon if needed */}
