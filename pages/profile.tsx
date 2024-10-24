@@ -56,7 +56,7 @@ interface SongComment {
   created_at: string;
 }
 
-// Update the Activity interface
+// Update the Activity interface to include all metadata fields
 interface Activity {
   id: string;
   type: 'song_comment' | 'forum_comment' | 'song_upload' | 'song_like' | 'song_vote';
@@ -74,6 +74,9 @@ interface Activity {
     voter_username?: string;
     vote_type?: string;
     vote_value?: number;
+    commenter_username?: string;
+    uploader_username?: string;
+    parent_comment_id?: number;
   };
 }
 
@@ -83,6 +86,19 @@ const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 // Add this function to safely render HTML content
 const createMarkup = (content: string) => {
   return { __html: DOMPurify.sanitize(content) };
+};
+
+// Add a helper function to format the date and time
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }).format(date);
 };
 
 export default function Profile() {
@@ -565,7 +581,7 @@ export default function Profile() {
             <Card className="lg:col-span-6" id="activities">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold">Recent Activity</CardTitle>
+                  <CardTitle className="text-xl md:text-2xl font-bold">Recent Activity</CardTitle>
                   {unreadActivitiesCount > 0 && (
                     <span className="bg-primary text-primary-foreground text-sm rounded-full px-3 py-1">
                       {unreadActivitiesCount} new
@@ -583,16 +599,15 @@ export default function Profile() {
                           <p className="text-muted-foreground">No recent activity</p>
                         ) : (
                           <>
-                            {/* Activities list */}
                             {activities.map((activity) => (
                               <div
                                 key={activity.id}
                                 className={cn(
-                                  "bg-card p-4 rounded-lg border shadow-sm transition-all",
+                                  "bg-card p-3 md:p-4 rounded-lg border shadow-sm transition-all",
                                   activity.is_new 
                                     ? "bg-primary/5 border-primary ring-2 ring-primary/20" 
                                     : "hover:border-primary/30",
-                                  "relative" // Add this for the new activity indicator
+                                  "relative"
                                 )}
                               >
                                 {activity.is_new && (
@@ -600,120 +615,88 @@ export default function Profile() {
                                     New
                                   </span>
                                 )}
-                                <div className="flex items-start justify-between">
-                                  <div className="space-y-1 flex-grow">
-                                    <div className="flex items-center gap-2">
-                                      {activity.type === 'song_upload' && (
-                                        <>
-                                          <Upload className="h-4 w-4 text-blue-500" />
-                                          <Link href={`/Songs/${activity.metadata.song_id}`} legacyBehavior>
-                                            <a
-                                              onClick={() => handleActivityClick(activity.id)}
-                                              className={cn(
-                                                "font-medium hover:underline flex items-center gap-2",
-                                                activity.is_new && "text-primary font-semibold"
-                                              )}
-                                            >
-                                              Uploaded new song: {activity.metadata.song_title}
-                                              {activity.is_new && <ArrowRight className="h-4 w-4" />}
-                                            </a>
-                                          </Link>
-                                        </>
-                                      )}
-                                      {activity.type === 'song_comment' && (
-                                        <>
-                                          <Music className="h-4 w-4 text-purple-500" />
-                                          <Link href={`/Songs/${activity.metadata.song_id}`} legacyBehavior>
-                                            <a
-                                              onClick={() => handleActivityClick(activity.id)}
-                                              className={cn(
-                                                "font-medium hover:underline flex items-center gap-2",
-                                                activity.is_new && "text-primary font-semibold"
-                                              )}
-                                            >
-                                              Commented on song: {activity.metadata.song_title}
-                                              {activity.is_new && <ArrowRight className="h-4 w-4" />}
-                                            </a>
-                                          </Link>
-                                        </>
-                                      )}
-                                      {activity.type === 'forum_comment' && (
-                                        <>
-                                          <MessageCircle className="h-4 w-4 text-green-500" />
-                                          <Link href={`/Forum/topics/${activity.metadata.topic_id}`} legacyBehavior>
-                                            <a
-                                              onClick={() => handleActivityClick(activity.id)}
-                                              className={cn(
-                                                "font-medium hover:underline flex items-center gap-2",
-                                                activity.is_new && "text-primary font-semibold"
-                                              )}
-                                            >
-                                              Commented on topic: {activity.metadata.topic_title}
-                                              {activity.is_new && <ArrowRight className="h-4 w-4" />}
-                                            </a>
-                                          </Link>
-                                        </>
-                                      )}
-                                      {activity.type === 'song_like' && (
-                                        <>
-                                          <Heart className="h-4 w-4 text-red-500" />
-                                          <Link href={`/Songs/${activity.metadata.song_id}`} legacyBehavior>
-                                            <a
-                                              onClick={() => handleActivityClick(activity.id)}
-                                              className={cn(
-                                                "font-medium hover:underline flex items-center gap-2",
-                                                activity.is_new && "text-primary font-semibold"
-                                              )}
-                                            >
-                                              {activity.metadata.liker_username} liked your song: {activity.metadata.song_title}
-                                              {activity.is_new && <ArrowRight className="h-4 w-4" />}
-                                            </a>
-                                          </Link>
-                                        </>
-                                      )}
-                                      {activity.type === 'song_vote' && (
-                                        <>
-                                          <ThumbsUp className="h-4 w-4 text-yellow-500" />
-                                          <Link href={`/Songs/${activity.metadata.song_id}`} legacyBehavior>
-                                            <a
-                                              onClick={() => handleActivityClick(activity.id)}
-                                              className={cn(
-                                                "font-medium hover:underline flex items-center gap-2",
-                                                activity.is_new && "text-primary font-semibold"
-                                              )}
-                                            >
-                                              {activity.metadata.voter_username} voted {typeof activity.metadata.vote_value === 'number' && 
-                                                (activity.metadata.vote_value > 0 ? 'up' : 'down')} your song for {activity.metadata.vote_type}: {activity.metadata.song_title}
-                                              {activity.is_new && <ArrowRight className="h-4 w-4" />}
-                                            </a>
-                                          </Link>
-                                        </>
-                                      )}
-                                    </div>
-                                    {(activity.type === 'song_comment' || activity.type === 'forum_comment') && (
-                                      <div 
-                                        className="text-sm text-muted-foreground mt-2 prose prose-sm dark:prose-invert max-w-none"
-                                        dangerouslySetInnerHTML={createMarkup(activity.content)}
-                                      />
+                                <div className="space-y-2">
+                                  {/* Activity Header */}
+                                  <div className="flex items-center gap-2 md:gap-3">
+                                    {/* Icons */}
+                                    {activity.type === 'song_upload' && (
+                                      <Upload className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 text-blue-500" />
                                     )}
+                                    {activity.type === 'song_comment' && (
+                                      <Music className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 text-purple-500" />
+                                    )}
+                                    {activity.type === 'forum_comment' && (
+                                      <MessageCircle className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 text-green-500" />
+                                    )}
+                                    {activity.type === 'song_like' && (
+                                      <Heart className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 text-red-500" />
+                                    )}
+                                    {activity.type === 'song_vote' && (
+                                      <ThumbsUp className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 text-yellow-500" />
+                                    )}
+                                    
+                                    {/* Activity Title */}
+                                    <Link href={`/Songs/${activity.metadata.song_id}`} legacyBehavior>
+                                      <a
+                                        onClick={() => handleActivityClick(activity.id)}
+                                        className={cn(
+                                          "font-medium hover:underline flex-grow",
+                                          activity.is_new && "text-primary font-semibold"
+                                        )}
+                                      >
+                                        <span className="line-clamp-2">
+                                          {activity.type === 'song_upload' && (
+                                            <>Uploaded new song: {activity.metadata.song_title}</>
+                                          )}
+                                          {activity.type === 'song_comment' && (
+                                            <>{activity.metadata.commenter_username} commented on song: {activity.metadata.song_title}</>
+                                          )}
+                                          {activity.type === 'forum_comment' && (
+                                            <>{activity.metadata.commenter_username} commented on topic: {activity.metadata.topic_title}</>
+                                          )}
+                                          {activity.type === 'song_like' && (
+                                            <>{activity.metadata.liker_username} liked your song: {activity.metadata.song_title}</>
+                                          )}
+                                          {activity.type === 'song_vote' && (
+                                            <>{activity.metadata.voter_username} voted {typeof activity.metadata.vote_value === 'number' && 
+                                              (activity.metadata.vote_value > 0 ? 'up' : 'down')} your song for {activity.metadata.vote_type}: {activity.metadata.song_title}</>
+                                          )}
+                                        </span>
+                                      </a>
+                                    </Link>
+                                    {activity.is_new && <ArrowRight className="h-4 w-4 flex-shrink-0" />}
+                                  </div>
+
+                                  {/* Timestamp */}
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDateTime(activity.created_at)}
+                                  </p>
+
+                                  {/* Activity Content */}
+                                  {(activity.type === 'song_comment' || activity.type === 'forum_comment') && (
+                                    <div 
+                                      className="text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none break-words"
+                                      dangerouslySetInnerHTML={createMarkup(activity.content)}
+                                    />
+                                  )}
+
+                                  {/* Additional Metadata */}
+                                  <div className="flex flex-wrap gap-2 text-sm">
                                     {typeof activity.metadata.new_replies === 'number' && 
                                      activity.metadata.new_replies > 0 && (
-                                      <p className="text-sm text-primary mt-1 font-medium">
+                                      <p className="text-primary font-medium">
                                         {activity.metadata.new_replies} new {activity.metadata.new_replies === 1 ? 'reply' : 'replies'}
                                       </p>
                                     )}
+                                    {typeof activity.metadata.comment_likes === 'number' && 
+                                     activity.metadata.comment_likes > 0 && (
+                                      <p className="text-muted-foreground flex items-center gap-1">
+                                        <span className="text-red-500">♥</span>
+                                        {activity.metadata.comment_likes} {activity.metadata.comment_likes === 1 ? 'like' : 'likes'}
+                                      </p>
+                                    )}
                                   </div>
-                                  <p className="text-sm text-muted-foreground whitespace-nowrap ml-4">
-                                    {new Date(activity.created_at).toLocaleDateString()}
-                                  </p>
                                 </div>
-                                {typeof activity.metadata.comment_likes === 'number' && 
-                                 activity.metadata.comment_likes > 0 && (
-                                  <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
-                                    <span className="text-red-500">♥</span>
-                                    {activity.metadata.comment_likes} {activity.metadata.comment_likes === 1 ? 'like' : 'likes'}
-                                  </p>
-                                )}
                               </div>
                             ))}
                             

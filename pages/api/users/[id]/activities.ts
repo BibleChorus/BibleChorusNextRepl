@@ -36,7 +36,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       FROM (
         SELECT sc.id FROM song_comments sc
         JOIN songs s ON sc.song_id = s.id
-        WHERE s.uploaded_by = ?
+        WHERE s.uploaded_by = ? OR sc.parent_comment_id IN (
+          SELECT id FROM song_comments WHERE user_id = ?
+        )
 
         UNION ALL
 
@@ -57,9 +59,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         SELECT v.id FROM votes v
         JOIN songs s ON s.id = v.song_id
         WHERE s.uploaded_by = ?
+
+        UNION ALL
+
+        SELECT s.id FROM songs s
+        WHERE s.uploaded_by = ?
       ) as total
     `,
-      [id, id, id, id, id]
+      [id, id, id, id, id, id, id]
     );
 
     // Extract the count from the result
@@ -81,7 +88,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               'song_title', s.title,
               'song_id', s.id,
               'comment_likes', sc.likes,
-              'new_replies', 0
+              'new_replies', 0,
+              'commenter_username', u.username,
+              'parent_comment_id', sc.parent_comment_id
             ) as metadata
           `,
             [id]
@@ -89,7 +98,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         )
           .from('song_comments as sc')
           .join('songs as s', 's.id', 'sc.song_id')
-          .where('s.uploaded_by', id)
+          .join('users as u', 'u.id', 'sc.user_id')
+          .where(function() {
+            this.where('s.uploaded_by', id)
+              .orWhereIn('sc.parent_comment_id', function() {
+                this.select('id')
+                  .from('song_comments')
+                  .where('user_id', id);
+              });
+          })
           .as('activities')
       })
       .unionAll(function () {
@@ -104,7 +121,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             json_build_object(
               'topic_title', ft.title,
               'topic_id', ft.id,
-              'new_replies', 0
+              'new_replies', 0,
+              'commenter_username', u.username,
+              'parent_comment_id', fc.parent_comment_id
             ) as metadata
           `,
             [id]
@@ -112,12 +131,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         )
           .from('forum_comments as fc')
           .leftJoin('forum_topics as ft', 'ft.id', 'fc.topic_id')
+          .join('users as u', 'u.id', 'fc.user_id')
           .where(function () {
-            this.where('ft.user_id', id).orWhereIn('fc.parent_comment_id', function () {
-              this.select('id')
-                .from('forum_comments')
-                .where('user_id', id);
-            });
+            this.where('ft.user_id', id)
+              .orWhereIn('fc.parent_comment_id', function () {
+                this.select('id')
+                  .from('forum_comments')
+                  .where('user_id', id);
+              });
           });
       })
       .unionAll(function () {
@@ -172,6 +193,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .from('votes as v')
           .join('songs as s', 's.id', 'v.song_id')
           .join('users as u', 'u.id', 'v.user_id')
+          .where('s.uploaded_by', id);
+      })
+      .unionAll(function () {
+        this.select(
+          db.raw(
+            `
+            'song_upload' as type,
+            CONCAT('song_upload_', s.id) as id,
+            s.title as content,
+            s.created_at,
+            false as is_new,
+            json_build_object(
+              'song_title', s.title,
+              'song_id', s.id,
+              'uploader_username', u.username
+            ) as metadata
+          `
+          )
+        )
+          .from('songs as s')
+          .join('users as u', 'u.id', 's.uploaded_by')
           .where('s.uploaded_by', id);
       })
       .orderBy('created_at', 'desc')
