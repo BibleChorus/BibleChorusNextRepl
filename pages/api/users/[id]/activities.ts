@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/lib/db';
+import jwt from 'jsonwebtoken';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -12,20 +13,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
 
+    // Verify the user's authentication (assuming you have a token-based system)
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number };
+      if (decoded.userId !== Number(id)) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+    } catch (error) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
     // First, get total count
     const countResult = await db.raw(
       `
       SELECT COUNT(*) as count
       FROM (
-        SELECT id FROM song_comments WHERE user_id = ?
+        SELECT sc.id FROM song_comments sc
+        JOIN songs s ON sc.song_id = s.id
+        WHERE s.uploaded_by = ?
+
         UNION ALL
-        SELECT id FROM forum_comments WHERE user_id = ?
+
+        SELECT fc.id FROM forum_comments fc
+        LEFT JOIN forum_topics ft ON fc.topic_id = ft.id
+        WHERE ft.user_id = ? OR fc.parent_comment_id IN (
+          SELECT id FROM forum_comments WHERE user_id = ?
+        )
+
         UNION ALL
-        SELECT id FROM songs WHERE uploaded_by = ?
+
+        SELECT l.id FROM likes l
+        JOIN songs s ON s.id = l.likeable_id
+        WHERE s.uploaded_by = ? AND l.likeable_type = 'song'
+
         UNION ALL
-        SELECT l.id FROM likes l JOIN songs s ON s.id = l.likeable_id WHERE s.uploaded_by = ? AND l.likeable_type = 'song'
-        UNION ALL
-        SELECT v.id FROM votes v JOIN songs s ON s.id = v.song_id WHERE s.uploaded_by = ?
+
+        SELECT v.id FROM votes v
+        JOIN songs s ON s.id = v.song_id
+        WHERE s.uploaded_by = ?
       ) as total
     `,
       [id, id, id, id, id]
@@ -36,35 +67,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Then get paginated activities
     const activitiesQuery = db
-      .select(
-        db.raw(
-          `
-          'song_comment' as type,
-          CONCAT('song_comment_', sc.id) as id,
-          sc.comment as content,
-          sc.created_at,
-          sc.is_new,
-          json_build_object(
-            'song_title', s.title,
-            'song_id', s.id,
-            'comment_likes', sc.likes,
-            'new_replies', (
-              SELECT COUNT(*)
-              FROM song_comments replies
-              WHERE replies.parent_comment_id = sc.id
-              AND replies.created_at > COALESCE(
-                (SELECT last_login FROM users WHERE id = ?),
-                NOW() - INTERVAL '30 days'
-              )
-            )
-          ) as metadata
-        `,
-          [id]
+      .select('*')
+      .from(function () {
+        this.select(
+          db.raw(
+            `
+            'song_comment' as type,
+            CONCAT('song_comment_', sc.id) as id,
+            sc.comment as content,
+            sc.created_at,
+            CASE WHEN sc.user_id = ? THEN false ELSE sc.is_new END as is_new,
+            json_build_object(
+              'song_title', s.title,
+              'song_id', s.id,
+              'comment_likes', sc.likes,
+              'new_replies', 0
+            ) as metadata
+          `,
+            [id]
+          )
         )
-      )
-      .from('song_comments as sc')
-      .join('songs as s', 's.id', 'sc.song_id')
-      .where('sc.user_id', id)
+          .from('song_comments as sc')
+          .join('songs as s', 's.id', 'sc.song_id')
+          .where('s.uploaded_by', id)
+          .as('activities')
+      })
       .unionAll(function () {
         this.select(
           db.raw(
@@ -73,46 +100,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             CONCAT('forum_comment_', fc.id) as id,
             fc.content,
             fc.created_at,
-            fc.is_new,
+            CASE WHEN fc.user_id = ? THEN false ELSE fc.is_new END as is_new,
             json_build_object(
               'topic_title', ft.title,
               'topic_id', ft.id,
-              'new_replies', (
-                SELECT COUNT(*)
-                FROM forum_comments replies
-                WHERE replies.parent_comment_id = fc.id
-                AND replies.created_at > COALESCE(
-                  (SELECT last_login FROM users WHERE id = ?),
-                  NOW() - INTERVAL '30 days'
-                )
-              )
+              'new_replies', 0
             ) as metadata
           `,
             [id]
           )
         )
           .from('forum_comments as fc')
-          .join('forum_topics as ft', 'ft.id', 'fc.topic_id')
-          .where('fc.user_id', id);
-      })
-      .unionAll(function () {
-        this.select(
-          db.raw(
-            `
-            'song_upload' as type,
-            CONCAT('song_upload_', s.id) as id,
-            s.title as content,
-            s.created_at,
-            s.is_new,
-            json_build_object(
-              'song_title', s.title,
-              'song_id', s.id
-            ) as metadata
-          `
-          )
-        )
-          .from('songs as s')
-          .where('s.uploaded_by', id);
+          .leftJoin('forum_topics as ft', 'ft.id', 'fc.topic_id')
+          .where(function () {
+            this.where('ft.user_id', id).orWhereIn('fc.parent_comment_id', function () {
+              this.select('id')
+                .from('forum_comments')
+                .where('user_id', id);
+            });
+          });
       })
       .unionAll(function () {
         this.select(
@@ -122,13 +128,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             CONCAT('song_like_', l.id) as id,
             '' as content,
             l.created_at,
-            l.is_new,
+            CASE WHEN l.user_id = ? THEN false ELSE l.is_new END as is_new,
             json_build_object(
               'song_title', s.title,
               'song_id', s.id,
               'liker_username', u.username
             ) as metadata
-          `
+          `,
+            [id]
           )
         )
           .from('likes as l')
@@ -150,7 +157,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             CONCAT('song_vote_', v.id) as id,
             '' as content,
             v.created_at,
-            v.is_new,
+            CASE WHEN v.user_id = ? THEN false ELSE v.is_new END as is_new,
             json_build_object(
               'song_title', s.title,
               'song_id', s.id,
@@ -158,7 +165,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               'vote_type', v.vote_type,
               'vote_value', v.vote_value
             ) as metadata
-          `
+          `,
+            [id]
           )
         )
           .from('votes as v')

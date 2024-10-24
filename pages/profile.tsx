@@ -190,7 +190,11 @@ export default function Profile() {
   const fetchUserActivities = useCallback(async () => {
     if (!profileUser) return;
     try {
+      const token = await getAuthToken();
       const response = await axios.get(`/api/users/${profileUser.id}/activities`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         params: {
           page: currentPage,
           limit: ITEMS_PER_PAGE
@@ -203,7 +207,7 @@ export default function Profile() {
       console.error('Error fetching user activities:', error);
       toast.error('Failed to load user activities');
     }
-  }, [profileUser, currentPage, ITEMS_PER_PAGE, fetchUnreadActivitiesCount]);
+  }, [profileUser, currentPage, ITEMS_PER_PAGE, fetchUnreadActivitiesCount, getAuthToken]); // Add getAuthToken to dependencies
 
   // Update useEffect to handle profile loading
   useEffect(() => {
