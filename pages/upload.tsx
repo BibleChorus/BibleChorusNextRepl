@@ -1557,8 +1557,7 @@ function UploadContent() {
                             {audioUploadStatus === 'idle' ? (
                               <Input
                                 type="file"
-                                accept="audio/*,video/*"
-                                capture="user"
+                                accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.wma,.alac,.aiff,.dsd"
                                 onChange={async (e) => {
                                   const file = e.target.files?.[0];
                                   if (file) {

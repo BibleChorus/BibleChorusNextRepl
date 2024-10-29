@@ -11,6 +11,7 @@ declare module "next-auth" {
       is_admin: boolean;
       is_moderator: boolean;
       email: string;
+      profile_image_url: string | null;
     } & DefaultSession["user"]
     access_token?: string;
   }
@@ -20,6 +21,7 @@ declare module "next-auth" {
     username: string;
     is_admin: boolean;
     is_moderator: boolean;
+    profile_image_url: string | null;
   }
 }
 
@@ -39,6 +41,20 @@ interface GoogleProfile {
   name: string;
   picture: string;
   sub: string; // Google's unique identifier
+}
+
+// Add this type to better handle profile images
+interface UserProfile {
+  id: number;
+  email: string;
+  username: string;
+  profile_image_url: string | null;
+  email_verified: boolean;
+  is_admin: boolean;
+  is_moderator: boolean;
+  last_login: Date;
+  created_at: Date;
+  auth_type: string;
 }
 
 export const authOptions: NextAuthOptions = {
@@ -74,7 +90,7 @@ export const authOptions: NextAuthOptions = {
           // Check if user exists
           let dbUser = await db('users')
             .where({ email: googleProfile.email })
-            .first()
+            .first() as UserProfile | undefined
 
           if (!dbUser) {
             // Create new user if doesn't exist
@@ -84,18 +100,28 @@ export const authOptions: NextAuthOptions = {
                 username: googleProfile.name,
                 email_verified: googleProfile.email_verified,
                 profile_image_url: googleProfile.picture,
-                // Store additional profile data as needed
+                last_login: new Date(),
+                created_at: new Date(),
+                auth_type: 'google',
+                password_hash: null,
+                is_admin: false,
+                is_moderator: false
               })
               .returning('*')
           } else {
             // Update existing user's profile data
+            const updateData: Partial<UserProfile> = {
+              email_verified: googleProfile.email_verified,
+              last_login: new Date(),
+            }
+
+            if (!dbUser.profile_image_url) {
+              updateData.profile_image_url = googleProfile.picture
+            }
+
             await db('users')
               .where({ id: dbUser.id })
-              .update({
-                email_verified: googleProfile.email_verified,
-                profile_image_url: googleProfile.picture,
-                last_login: new Date(),
-              })
+              .update(updateData)
           }
 
           return true
@@ -136,13 +162,15 @@ export const authOptions: NextAuthOptions = {
       if (session.user?.email) {
         const dbUser = await db('users')
           .where({ email: session.user.email })
-          .first()
+          .first() as UserProfile | undefined
 
         if (dbUser) {
           session.user.id = dbUser.id
           session.user.username = dbUser.username
           session.user.is_admin = dbUser.is_admin
           session.user.is_moderator = dbUser.is_moderator
+          // Set profile image - prefer custom image if it exists
+          session.user.profile_image_url = dbUser.profile_image_url
         }
       }
 

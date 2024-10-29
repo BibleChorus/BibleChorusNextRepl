@@ -9,14 +9,70 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*',
+        port: '',
+        pathname: '/**',
+      }
     ],
+    // Optimize image loading performance
+    minimumCacheTTL: 60,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
   },
-  // Add this section to explicitly include environment variables
+
+  // Runtime configuration
   env: {
+    // Security-related environment variables
     JWT_SECRET: process.env.JWT_SECRET || 'fallback-secret-for-debugging',
+    
+    // AWS configuration
+    AWS_REGION: process.env.AWS_REGION,
+    CLOUDFRONT_URL: process.env.CLOUDFRONT_URL,
+    
+    // Database configuration
+    DATABASE_URL: process.env.DATABASE_URL,
   },
-  // Enable standalone output mode for optimal deployment on Replit
+
+  // Replit-specific optimizations
   output: 'standalone',
+  poweredByHeader: false, // Remove X-Powered-By header for security
+  
+  // Performance optimizations
+  compress: true,
+  reactStrictMode: true,
+  swcMinify: true,
+
+  // Handle trailing slashes consistently
+  trailingSlash: false,
+
+  // Customize webpack configuration
+  webpack: (config, { dev, isServer }) => {
+    // Optimize bundle size
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        minSize: 20000,
+        maxSize: 244000,
+        cacheGroups: {
+          commons: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
+      };
+    }
+    return config;
+  },
 };
 
-module.exports = nextConfig
+// Add helpful comment about running in standalone mode
+/**
+ * IMPORTANT: When running in standalone mode:
+ * - Use "node .next/standalone/server.js" instead of "next start"
+ * - Ensure all environment variables are properly set in Replit secrets
+ * - The standalone output creates a minimal production server
+ */
+
+module.exports = nextConfig;
