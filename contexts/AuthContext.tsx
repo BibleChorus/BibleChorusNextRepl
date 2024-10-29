@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { User } from '../types'; // Import User from types.ts
+import { useSession, signOut } from "next-auth/react";
+import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -13,22 +14,27 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const { data: session } = useSession();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-    console.log("Stored token on init:", storedToken); // Debug log
-    if (storedUser && storedToken) {
-      try {
-        setUser(JSON.parse(storedUser));
-        setToken(storedToken);
-      } catch (error) {
-        console.error("Error parsing stored user data:", error);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
+    if (session?.user) {
+      const sessionUser: User = {
+        id: session.user.id,
+        username: session.user.username,
+        email: session.user.email ?? '',
+        profile_image_url: session.user.profile_image_url ?? undefined,
+        is_admin: session.user.is_admin,
+        is_moderator: session.user.is_moderator,
+        email_verified: true,
+      };
+      
+      setUser(sessionUser);
+      if (session.access_token) {
+        setToken(session.access_token);
+        localStorage.setItem('token', session.access_token);
       }
     }
-  }, []);
+  }, [session]);
 
   const login = (userData: User, authToken: string) => {
     setUser(userData);
@@ -42,16 +48,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null);
     setToken(null);
-    try {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      console.log("Token removed on logout"); // Debug log
-    } catch (error) {
-      console.error("Error removing user data:", error);
-    }
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    await signOut();
   };
 
   const getAuthToken = async (): Promise<string | null> => {

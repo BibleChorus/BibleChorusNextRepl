@@ -108,20 +108,19 @@ export const authOptions: NextAuthOptions = {
                 is_moderator: false
               })
               .returning('*')
+          }
+
+          // Add null check before updating user object
+          if (dbUser) {
+            // Important: Update the user object with database values
+            user.id = dbUser.id;
+            user.username = dbUser.username;
+            user.is_admin = dbUser.is_admin;
+            user.is_moderator = dbUser.is_moderator;
+            user.profile_image_url = dbUser.profile_image_url;
           } else {
-            // Update existing user's profile data
-            const updateData: Partial<UserProfile> = {
-              email_verified: googleProfile.email_verified,
-              last_login: new Date(),
-            }
-
-            if (!dbUser.profile_image_url) {
-              updateData.profile_image_url = googleProfile.picture
-            }
-
-            await db('users')
-              .where({ id: dbUser.id })
-              .update(updateData)
+            console.error('Failed to create or retrieve user from database');
+            return false;
           }
 
           return true
@@ -133,52 +132,29 @@ export const authOptions: NextAuthOptions = {
       return true
     },
 
-    async jwt({ token, account, profile }) {
-      // Add auth_time to the token when it's created
-      if (account) {
-        token.auth_time = Math.floor(Date.now() / 1000)
-        
-        // Store access_token and refresh_token if available
-        if (account.access_token) {
-          token.access_token = account.access_token
-        }
-        if (account.refresh_token) {
-          token.refresh_token = account.refresh_token
-        }
+    async jwt({ token, account, user }) {
+      // Initial sign in
+      if (account && user) {
+        token.id = user.id;
+        token.username = user.username;
+        token.is_admin = user.is_admin;
+        token.is_moderator = user.is_moderator;
+        token.profile_image_url = user.profile_image_url;
+        token.access_token = account.access_token;
       }
-
-      // Check token expiration
-      const auth_time = token.auth_time as number
-      if (auth_time && Date.now() / 1000 - auth_time > 30 * 24 * 60 * 60) {
-        // Token has expired
-        return {}
-      }
-
       return token
     },
 
     async session({ session, token }) {
-      // Add user data from database to session
-      if (session.user?.email) {
-        const dbUser = await db('users')
-          .where({ email: session.user.email })
-          .first() as UserProfile | undefined
-
-        if (dbUser) {
-          session.user.id = dbUser.id
-          session.user.username = dbUser.username
-          session.user.is_admin = dbUser.is_admin
-          session.user.is_moderator = dbUser.is_moderator
-          // Set profile image - prefer custom image if it exists
-          session.user.profile_image_url = dbUser.profile_image_url
-        }
+      // Send properties to the client
+      if (session.user) {
+        session.user.id = token.id as number;
+        session.user.username = token.username as string;
+        session.user.is_admin = token.is_admin as boolean;
+        session.user.is_moderator = token.is_moderator as boolean;
+        session.user.profile_image_url = token.profile_image_url as string;
+        session.access_token = token.access_token as string;
       }
-
-      // Add access token to session if needed
-      if (token.access_token) {
-        session.access_token = token.access_token as string
-      }
-
       return session
     },
   },
