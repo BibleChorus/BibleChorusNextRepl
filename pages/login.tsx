@@ -19,7 +19,7 @@ const metadata: Metadata = {
 export default function AuthenticationPage() {
   const [isLogin, setIsLogin] = useState(true)
   const router = useRouter()
-  const { data: session } = useSession()
+  const { status } = useSession()
 
   useEffect(() => {
     const view = router.query.view as string
@@ -31,10 +31,15 @@ export default function AuthenticationPage() {
   }, [router.query.view])
 
   useEffect(() => {
-    if (session) {
-      router.push('/'); // Redirect to home page after successful login
+    if (status === 'authenticated') {
+      router.push('/');
     }
-  }, [session, router]);
+  }, [status, router]);
+
+  // Show loading state while checking session
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
 
   const toggleView = () => {
     setIsLogin(!isLogin)
@@ -111,4 +116,11 @@ export default function AuthenticationPage() {
       </div>
     </div>
   )
+}
+
+// Add getServerSideProps to force server-side rendering
+export async function getServerSideProps(context) {
+  return {
+    props: {},
+  }
 }

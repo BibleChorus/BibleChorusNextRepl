@@ -7,6 +7,7 @@ interface AuthContextType {
   login: (userData: User, token: string) => void;
   logout: () => void;
   getAuthToken: () => Promise<string | null>;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -14,9 +15,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const { data: session } = useSession();
+  const [isLoading, setIsLoading] = useState(true);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
+    if (status === 'loading') {
+      setIsLoading(true);
+    } else {
+      setIsLoading(false);
+    }
+
     if (session?.user) {
       const sessionUser: User = {
         id: session.user.id,
@@ -34,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('token', session.access_token);
       }
     }
-  }, [session]);
+  }, [session, status]);
 
   const login = (userData: User, authToken: string) => {
     setUser(userData);
@@ -63,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, getAuthToken }}>
+    <AuthContext.Provider value={{ user, login, logout, getAuthToken, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
