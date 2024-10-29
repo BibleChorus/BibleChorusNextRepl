@@ -46,14 +46,12 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      // Specify the scopes we want to access
       authorization: {
         params: {
-          scope: 'openid email profile',
-          // Enable incremental authorization
-          include_granted_scopes: true,
-          // Request offline access to get a refresh token
+          scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+          prompt: "consent",
           access_type: 'offline',
+          response_type: 'code'
         },
       },
     }),
@@ -174,6 +172,20 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
     error: '/auth/error',
   },
+
+  // Add additional security configurations
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+        domain: 'biblechorus.com'
+      }
+    }
+  }
 }
 
 export default NextAuth(authOptions)
