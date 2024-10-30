@@ -154,7 +154,7 @@ export function PrivacyDialog({ children }: { children: React.ReactNode }) {
             <h2 className="text-lg font-semibold">13. Contact Us</h2>
             <p>
               For privacy-related questions or concerns, contact us at{" "}
-              <Link href="mailto:privacy@biblechorus.com" className="text-primary hover:underline">
+              <Link href={"mailto:privacy@biblechorus.com"} className="text-primary hover:underline">
                 privacy@biblechorus.com
               </Link>
             </p>

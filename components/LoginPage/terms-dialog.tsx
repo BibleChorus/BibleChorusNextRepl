@@ -121,7 +121,7 @@ export function TermsDialog({ children }: { children: React.ReactNode }) {
             <h2 className="text-lg font-semibold">9. Contact Information</h2>
             <p>
               For questions about these terms, please contact us at{" "}
-              <Link href="mailto:admin@biblechorus.com" className="text-primary hover:underline">
+              <Link href={"mailto:admin@biblechorus.com"} className="text-primary hover:underline">
                 admin@biblechorus.com
               </Link>
             </p>
