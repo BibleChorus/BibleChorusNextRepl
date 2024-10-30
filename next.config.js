@@ -34,21 +34,21 @@ const nextConfig = {
     DATABASE_URL: process.env.DATABASE_URL,
   },
 
-  // Production optimizations
+  // Replit-specific optimizations
+  output: 'standalone',
+  poweredByHeader: false, // Remove X-Powered-By header for security
+  
+  // Performance optimizations
   compress: true,
   reactStrictMode: true,
   swcMinify: true,
-  poweredByHeader: false, // Remove X-Powered-By header for security
 
   // Handle trailing slashes consistently
   trailingSlash: false,
 
-  // Conditional output configuration based on environment
-  output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
-
   // Customize webpack configuration
   webpack: (config, { dev, isServer }) => {
-    // Production-only optimizations
+    // Optimize bundle size
     if (!dev && !isServer) {
       config.optimization.splitChunks = {
         chunks: 'all',
@@ -65,24 +65,14 @@ const nextConfig = {
     }
     return config;
   },
-
-  // Enable source maps in development
-  productionBrowserSourceMaps: process.env.NODE_ENV !== 'production',
 };
 
+// Add helpful comment about running in standalone mode
 /**
- * Environment-specific instructions:
- * 
- * Development Mode:
- * - Run with: npm run dev
- * - Uses default Next.js development server
- * - Enables hot reloading and debugging features
- * 
- * Production Mode:
- * - Build with: npm run build
- * - Run with: node .next/standalone/server.js
- * - Ensures all environment variables are set in Replit secrets
- * - Creates optimized production build with standalone server
+ * IMPORTANT: When running in standalone mode:
+ * - Use "node .next/standalone/server.js" instead of "next start"
+ * - Ensure all environment variables are properly set in Replit secrets
+ * - The standalone output creates a minimal production server
  */
 
 module.exports = nextConfig;

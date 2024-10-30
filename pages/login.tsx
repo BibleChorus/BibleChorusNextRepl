@@ -3,7 +3,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useRouter } from 'next/router'
-import { useSession } from "next-auth/react";
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -19,7 +18,6 @@ const metadata: Metadata = {
 export default function AuthenticationPage() {
   const [isLogin, setIsLogin] = useState(true)
   const router = useRouter()
-  const { data: session } = useSession()
 
   useEffect(() => {
     const view = router.query.view as string
@@ -29,12 +27,6 @@ export default function AuthenticationPage() {
       setIsLogin(true)
     }
   }, [router.query.view])
-
-  useEffect(() => {
-    if (session) {
-      router.push('/'); // Redirect to home page after successful login
-    }
-  }, [session, router]);
 
   const toggleView = () => {
     setIsLogin(!isLogin)
