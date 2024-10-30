@@ -27,18 +27,17 @@ const nextConfig = {
     CLOUDFRONT_URL: process.env.CLOUDFRONT_URL,
     DATABASE_URL: process.env.DATABASE_URL,
   },
-  // Remove or comment out the webpack aliasing to Preact
-  // webpack: (config, { dev, isServer }) => {
-  //   if (!dev && !isServer) {
-  //     Object.assign(config.resolve.alias, {
-  //       'react/jsx-runtime.js': 'preact/compat/jsx-runtime',
-  //       react: 'preact/compat',
-  //       'react-dom/test-utils': 'preact/test-utils',
-  //       'react-dom': 'preact/compat',
-  //     });
-  //   }
-  //   return config;
-  // },
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      Object.assign(config.resolve.alias, {
+        'react/jsx-runtime.js': 'preact/compat/jsx-runtime',
+        react: 'preact/compat',
+        'react-dom/test-utils': 'preact/test-utils',
+        'react-dom': 'preact/compat',
+      });
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;
