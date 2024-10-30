@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000 --hostname 0.0.0.0",
+    "dev": "next dev",
     "build": "next build",
-    "start": "next start --port 3000 --hostname 0.0.0.0",
+    "start": "HOST=0.0.0.0 PORT=$PORT node .next/standalone/server.js",
     "lint": "next lint",
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
