@@ -68,24 +68,6 @@ const nextConfig = {
 
   // Enable source maps in development
   productionBrowserSourceMaps: process.env.NODE_ENV !== 'production',
-
-  // Add runtime configuration
-  runtime: 'nodejs',
-  
-  // Disable automatic static optimization for pages that use authentication
-  experimental: {
-    // Enable runtime JS
-    runtime: 'nodejs',
-  },
-
-  // Configure which pages should be statically generated
-  exportPathMap: async function() {
-    return {
-      '/': { page: '/' },
-      '/login': { page: '/login' },
-      // Add other public pages that don't require authentication
-    }
-  },
 };
 
 /**

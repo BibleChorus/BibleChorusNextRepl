@@ -11,13 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Music, BookOpen, Upload, Map, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 
-// Add getServerSideProps to force server-side rendering
-export async function getServerSideProps(context) {
-  return {
-    props: {}, // Will be passed to the page component as props
-  }
-}
-
 export default function Home() {
   const { user } = useAuth();
   const router = useRouter();
