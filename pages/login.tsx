@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { UserAuthForm } from "@/components/LoginPage/user-auth-form"
 import { ScriptureScroll } from "@/components/LoginPage/scripture-scroll"
+import { TermsDialog } from "@/components/LoginPage/terms-dialog"
+import { PrivacyDialog } from "@/components/LoginPage/privacy-dialog"
 
 // Define metadata as a constant (not exported)
 const metadata: Metadata = {
@@ -84,19 +86,17 @@ export default function AuthenticationPage() {
           </p>
           <p className="px-8 text-center text-sm text-muted-foreground">
             By clicking continue, you agree to our{" "}
-            <Link
-              href="/terms"
-              className="underline underline-offset-4 hover:text-primary"
-            >
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="/privacy"
-              className="underline underline-offset-4 hover:text-primary"
-            >
-              Privacy Policy
-            </Link>
+            <TermsDialog>
+              <button className="underline underline-offset-4 hover:text-primary">
+                Terms of Service
+              </button>
+            </TermsDialog>
+            {" "}and{" "}
+            <PrivacyDialog>
+              <button className="underline underline-offset-4 hover:text-primary">
+                Privacy Policy
+              </button>
+            </PrivacyDialog>
             .
           </p>
         </div>
