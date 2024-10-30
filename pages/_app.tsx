@@ -13,7 +13,6 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext'
 import FloatingMusicPlayer from '@/components/MusicPlayer/FloatingMusicPlayer'
 import { SidebarProvider } from '@/contexts/SidebarContext'
-import { SessionProvider } from 'next-auth/react'
 
 const queryClient = new QueryClient()
 
@@ -47,7 +46,7 @@ const LoadingWrapper = ({ children }) => {
   )
 }
 
-function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
+function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter()
   const isHomePage = router.pathname === '/'
 
@@ -69,33 +68,26 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
       <Head>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <SessionProvider session={session}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            <MusicPlayerProvider>
-              <SidebarProvider>
-                <TooltipProvider>
-                  <LoadingWrapper>
-                    {isHomePage ? (
+      <AuthProvider>
+        <MusicPlayerProvider>
+          <SidebarProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              <TooltipProvider>
+                <LoadingWrapper>
+                  {isHomePage ? (
+                    <Component {...pageProps} />
+                  ) : (
+                    <Layout>
                       <Component {...pageProps} />
-                    ) : (
-                      <Layout>
-                        <Component {...pageProps} />
-                      </Layout>
-                    )}
-                  </LoadingWrapper>
-                  <FloatingMusicPlayer />
-                </TooltipProvider>
-              </SidebarProvider>
-            </MusicPlayerProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </SessionProvider>
+                    </Layout>
+                  )}
+                </LoadingWrapper>
+                <FloatingMusicPlayer />
+              </TooltipProvider>
+            </ThemeProvider>
+          </SidebarProvider>
+        </MusicPlayerProvider>
+      </AuthProvider>
       <Toaster />
     </QueryClientProvider>
   )

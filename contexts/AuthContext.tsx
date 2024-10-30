@@ -19,9 +19,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    setIsLoading(status === 'loading');
-    
-    if (status === 'authenticated' && session?.user) {
+    if (status === 'loading') {
+      setIsLoading(true);
+    } else {
+      setIsLoading(false);
+    }
+
+    if (session?.user) {
       const sessionUser: User = {
         id: session.user.id,
         username: session.user.username,
@@ -35,15 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(sessionUser);
       if (session.access_token) {
         setToken(session.access_token);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('token', session.access_token);
-        }
-      }
-    } else if (status === 'unauthenticated') {
-      setUser(null);
-      setToken(null);
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
+        localStorage.setItem('token', session.access_token);
       }
     }
   }, [session, status]);
