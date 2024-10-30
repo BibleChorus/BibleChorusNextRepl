@@ -25,7 +25,14 @@ export interface Song {
   is_continuous_passage?: boolean;
   bible_verses?: { book: string; chapter: number; verse: number }[];
   duration: number; // Duration of the song in seconds
-  // Add any other fields as needed
+  lyrics?: string; // Full lyrics of the song
+  lyric_ai_prompt?: string; // AI prompt used for generating lyrics (if applicable)
+  music_ai_prompt?: string; // AI prompt used for generating music (if applicable)
+  music_model_used?: string; // AI model used for music generation (if applicable)
+  ai_used_for_lyrics?: boolean; // Indicates if AI was used to generate lyrics
+  music_ai_generated?: boolean; // Indicates if AI was used to generate music
+  play_count?: number; // Number of times the song has been played
+  is_new?: boolean; // Indicates if the song is unread by relevant users
 }
 
 export interface User {

@@ -9,6 +9,9 @@ type Song = {
   audioUrl: string;
   coverArtUrl?: string;
   duration?: number;
+  lyrics?: string;
+  bible_verses?: { book: string; chapter: number; verse: number }[];
+  bible_translation_used?: string;
   // Add other song properties as needed
 };
 

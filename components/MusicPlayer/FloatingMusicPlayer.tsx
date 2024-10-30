@@ -12,10 +12,12 @@ import {
   X,
   Minimize2,
   Maximize2,
+  BookOpenText,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useSidebar } from '@/contexts/SidebarContext';
+import LyricsBibleComparisonDialog from '@/components/ListenPage/LyricsBibleComparisonDialog';
 
 export default function FloatingMusicPlayer() {
   const {
@@ -39,6 +41,7 @@ export default function FloatingMusicPlayer() {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
+  const [isLyricsBibleDialogOpen, setIsLyricsBibleDialogOpen] = useState(false);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isSmallMobile = useMediaQuery('(max-width: 400px)');
@@ -189,6 +192,12 @@ export default function FloatingMusicPlayer() {
                 >
                   <ListMusic className="w-5 h-5" />
                 </button>
+                <button
+                  onClick={() => setIsLyricsBibleDialogOpen(true)}
+                  className="p-2"
+                >
+                  <BookOpenText className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
@@ -248,6 +257,15 @@ export default function FloatingMusicPlayer() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Add the LyricsBibleComparisonDialog */}
+      {currentSong && (
+        <LyricsBibleComparisonDialog
+          isOpen={isLyricsBibleDialogOpen}
+          onClose={() => setIsLyricsBibleDialogOpen(false)}
+          song={currentSong}
+        />
       )}
     </>
   );

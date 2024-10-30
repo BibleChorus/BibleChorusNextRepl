@@ -40,6 +40,9 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
           audioUrl: song.audio_url,
           coverArtUrl: song.song_art_url,
           duration: song.duration,
+          lyrics: song.lyrics,
+          bible_verses: song.bible_verses,
+          bible_translation_used: song.bible_translation_used,
         },
         allSongs.map((s) => ({
           id: s.id,
@@ -48,6 +51,9 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
           audioUrl: s.audio_url,
           coverArtUrl: s.song_art_url,
           duration: s.duration,
+          lyrics: s.lyrics,
+          bible_verses: s.bible_verses,
+          bible_translation_used: s.bible_translation_used,
         }))
       );
     }
