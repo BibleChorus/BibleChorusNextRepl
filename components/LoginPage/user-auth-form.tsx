@@ -109,6 +109,7 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
       {error && (
         <p className="text-sm text-red-500 mt-2">{error}</p>
       )}
+      {/* Commenting out Google Sign-in functionality until implementation is ready
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
@@ -137,6 +138,7 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
         )}{" "}
         Google
       </Button>
+      */}
     </div>
   )
 }
