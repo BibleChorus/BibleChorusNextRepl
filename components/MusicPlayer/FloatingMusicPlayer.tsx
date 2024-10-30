@@ -76,6 +76,10 @@ export default function FloatingMusicPlayer() {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
+  useEffect(() => {
+    console.log('Current Song:', currentSong);
+  }, [currentSong]);
+
   if (!currentSong) return null;
 
   return (

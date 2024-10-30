@@ -443,6 +443,43 @@ const SongListItem = React.memo(function SongListItem({
     }
   }, [song]);
 
+  const handlePlayClick = () => {
+    if (currentSong?.id === song.id) {
+      if (isPlaying) {
+        pause();
+      } else {
+        resume();
+      }
+    } else {
+      playSong(
+        {
+          id: song.id,
+          title: song.title,
+          artist: song.artist || song.username,
+          audioUrl: song.audio_url,
+          coverArtUrl: song.song_art_url,
+          duration: song.duration,
+          lyrics: song.lyrics,
+          bible_verses: song.bible_verses,
+          bible_translation_used: song.bible_translation_used,
+          // ... other properties if needed ...
+        },
+        songs.map((s) => ({
+          id: s.id,
+          title: s.title,
+          artist: s.artist || s.username,
+          audioUrl: s.audio_url,
+          coverArtUrl: s.song_art_url,
+          duration: s.duration,
+          lyrics: s.lyrics,
+          bible_verses: s.bible_verses,
+          bible_translation_used: s.bible_translation_used,
+          // ... other properties if needed ...
+        }))
+      );
+    }
+  };
+
   return (
     <motion.div
       className={`flex items-center p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden group song-card ${isNarrowView ? 'h-[72px] sm:h-[88px]' : ''}`}
@@ -472,30 +509,7 @@ const SongListItem = React.memo(function SongListItem({
         >
           <button
             className="text-white p-1 sm:p-2"
-            onClick={() => {
-              if (currentSong?.id === song.id) {
-                isPlaying ? pause() : resume();
-              } else {
-                playSong(
-                  {
-                    id: song.id,
-                    title: song.title,
-                    artist: song.artist || song.username,
-                    audioUrl: song.audio_url,
-                    coverArtUrl: song.song_art_url,
-                    duration: song.duration,
-                  },
-                  songs.map((s) => ({
-                    id: s.id,
-                    title: s.title,
-                    artist: s.artist || s.username,
-                    audioUrl: s.audio_url,
-                    coverArtUrl: s.song_art_url,
-                    duration: s.duration,
-                  }))
-                );
-              }
-            }}
+            onClick={handlePlayClick}
           >
             {currentSong?.id === song.id && isPlaying ? (
               <Pause className={`${isNarrowView ? 'h-6 w-6 sm:h-8 sm:w-8' : 'h-8 w-8 sm:h-10 sm:w-10'}`} />
