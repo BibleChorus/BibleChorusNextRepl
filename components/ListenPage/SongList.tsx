@@ -31,6 +31,7 @@ import { ReportDialog } from '@/components/ReportDialog';
 import { AddToPlaylistDialog } from './AddToPlaylistDialog';
 import Image from 'next/image' // Import Next.js Image component
 import LyricsBibleComparisonDialog from './LyricsBibleComparisonDialog';
+import { BookOpenText } from 'lucide-react';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -528,7 +529,7 @@ const SongListItem = React.memo(function SongListItem({
             onClick={() => setIsLyricsBibleDialogOpen(true)}
             className="text-gray-500 hover:text-primary-500 transition-colors duration-200 ml-2"
           >
-            <BookOpen className="h-5 w-5" />
+            <BookOpenText className="h-5 w-5" />
           </button>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">

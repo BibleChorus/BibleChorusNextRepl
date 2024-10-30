@@ -20,7 +20,12 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
   const [viewOption, setViewOption] = useState<'both' | 'lyrics' | 'verses'>('both');
   const [verses, setVerses] = useState<any[]>([]);
   const [isLoadingVerses, setIsLoadingVerses] = useState(false);
-  const [translation, setTranslation] = useState('KJV'); // Default translation
+  const [translation, setTranslation] = useState(() => {
+    const validTranslations = BOLLS_LIFE_API_BIBLE_TRANSLATIONS.map(t => t.shortName);
+    return validTranslations.includes(song.bible_translation_used)
+      ? song.bible_translation_used
+      : 'NASB';
+  });
   const [translationSearch, setTranslationSearch] = useState('');
   const [openTranslation, setOpenTranslation] = useState(false);
 
