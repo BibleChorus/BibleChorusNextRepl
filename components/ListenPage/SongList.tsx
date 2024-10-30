@@ -30,6 +30,7 @@ import { SongComment } from '@/types';
 import { ReportDialog } from '@/components/ReportDialog';
 import { AddToPlaylistDialog } from './AddToPlaylistDialog';
 import Image from 'next/image' // Import Next.js Image component
+import LyricsBibleComparisonDialog from './LyricsBibleComparisonDialog';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -50,6 +51,7 @@ export type Song = {
   play_count?: number;
   duration?: number;
   comments_count?: number;
+  lyrics: string;
 };
 
 interface SongListProps {
@@ -265,6 +267,7 @@ const SongListItem = React.memo(function SongListItem({
   const [localCommentsCount, setLocalCommentsCount] = useState(commentsCount);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [isAddToPlaylistDialogOpen, setIsAddToPlaylistDialogOpen] = useState(false);
+  const [isLyricsBibleDialogOpen, setIsLyricsBibleDialogOpen] = useState(false);
 
   const fetchComments = useCallback(async () => {
     try {
@@ -515,53 +518,59 @@ const SongListItem = React.memo(function SongListItem({
 
       {/* Song Details */}
       <div className="flex-1 min-w-0 flex flex-col justify-center">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between">
           <Link href={`/Songs/${song.id}`} className="mb-1 sm:mb-0">
             <h2 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-100 hover:underline truncate">
               {song.title}
             </h2>
           </Link>
-          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-            <button
-              onClick={() => handleLike(song)}
-              className="flex items-center text-gray-500 hover:text-red-500 transition-colors duration-200"
-            >
-              <Heart
-                className={`h-4 w-4 mr-1 ${
-                  likeStates[song.id] ? 'fill-current text-red-500' : ''
-                }`}
-              />
-              <span>{likeCounts[song.id] || 0}</span>
-            </button>
-            <button
-              onClick={() => handleLocalVoteClick('Best Musically')}
-              className="flex items-center text-gray-500 hover:text-blue-500 transition-colors duration-200"
-            >
-              {getVoteIcon('Best Musically')}
-              <span>{localVoteCounts['Best Musically'] || 0}</span>
-            </button>
-            <button
-              onClick={() => handleLocalVoteClick('Best Lyrically')}
-              className="flex items-center text-gray-500 hover:text-green-500 transition-colors duration-200"
-            >
-              {getVoteIcon('Best Lyrically')}
-              <span>{localVoteCounts['Best Lyrically'] || 0}</span>
-            </button>
-            <button
-              onClick={() => handleLocalVoteClick('Best Overall')}
-              className="flex items-center text-gray-500 hover:text-yellow-500 transition-colors duration-200"
-            >
-              {getVoteIcon('Best Overall')}
-              <span>{localVoteCounts['Best Overall'] || 0}</span>
-            </button>
-            <button
-              onClick={() => setIsCommentsDialogOpen(true)}
-              className="flex items-center text-gray-500 hover:text-purple-500 transition-colors duration-200 ml-2"
-            >
-              <MessageCircle className="h-4 w-4 mr-1" />
-              <span>{localCommentsCount}</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setIsLyricsBibleDialogOpen(true)}
+            className="text-gray-500 hover:text-primary-500 transition-colors duration-200 ml-2"
+          >
+            <BookOpen className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+          <button
+            onClick={() => handleLike(song)}
+            className="flex items-center text-gray-500 hover:text-red-500 transition-colors duration-200"
+          >
+            <Heart
+              className={`h-4 w-4 mr-1 ${
+                likeStates[song.id] ? 'fill-current text-red-500' : ''
+              }`}
+            />
+            <span>{likeCounts[song.id] || 0}</span>
+          </button>
+          <button
+            onClick={() => handleLocalVoteClick('Best Musically')}
+            className="flex items-center text-gray-500 hover:text-blue-500 transition-colors duration-200"
+          >
+            {getVoteIcon('Best Musically')}
+            <span>{localVoteCounts['Best Musically'] || 0}</span>
+          </button>
+          <button
+            onClick={() => handleLocalVoteClick('Best Lyrically')}
+            className="flex items-center text-gray-500 hover:text-green-500 transition-colors duration-200"
+          >
+            {getVoteIcon('Best Lyrically')}
+            <span>{localVoteCounts['Best Lyrically'] || 0}</span>
+          </button>
+          <button
+            onClick={() => handleLocalVoteClick('Best Overall')}
+            className="flex items-center text-gray-500 hover:text-yellow-500 transition-colors duration-200"
+          >
+            {getVoteIcon('Best Overall')}
+            <span>{localVoteCounts['Best Overall'] || 0}</span>
+          </button>
+          <button
+            onClick={() => setIsCommentsDialogOpen(true)}
+            className="flex items-center text-gray-500 hover:text-purple-500 transition-colors duration-200 ml-2"
+          >
+            <MessageCircle className="h-4 w-4 mr-1" />
+            <span>{localCommentsCount}</span>
+          </button>
         </div>
         <div className="flex items-center text-xs sm:text-sm mt-1">
           <button
@@ -736,6 +745,12 @@ const SongListItem = React.memo(function SongListItem({
         isOpen={isAddToPlaylistDialogOpen}
         onClose={() => setIsAddToPlaylistDialogOpen(false)}
         songId={song.id}
+      />
+
+      <LyricsBibleComparisonDialog
+        isOpen={isLyricsBibleDialogOpen}
+        onClose={() => setIsLyricsBibleDialogOpen(false)}
+        song={song}
       />
     </motion.div>
   )

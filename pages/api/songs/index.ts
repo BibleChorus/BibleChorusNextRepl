@@ -87,6 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'songs.music_model_used',
           'songs.duration',
           'songs.play_count',
+          'songs.lyrics',
           // Include these columns conditionally
           ...(sortBy === 'firstBibleVerse'
             ? [
