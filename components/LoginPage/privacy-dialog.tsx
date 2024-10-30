@@ -26,7 +26,7 @@ export function PrivacyDialog({ children }: { children: React.ReactNode }) {
           <div className="space-y-4 text-sm">
             <h2 className="text-lg font-semibold">1. Introduction</h2>
             <p>
-              BibleChorus ("we", "our", or "us") is a not-for-profit service dedicated to sharing scripture through music. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.
+              BibleChorus (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is a not-for-profit service dedicated to sharing scripture through music. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.
             </p>
 
             <h2 className="text-lg font-semibold">2. Information We Collect</h2>
@@ -100,7 +100,7 @@ export function PrivacyDialog({ children }: { children: React.ReactNode }) {
               <li>Opt-out of analytics and tracking</li>
             </ul>
 
-            <h2 className="text-lg font-semibold">7. Children's Privacy</h2>
+            <h2 className="text-lg font-semibold">7. Children&apos;s Privacy</h2>
             <p>
               Our service is not intended for children under 13. We do not knowingly collect information from children under 13. If you believe we have collected information from a child under 13, please contact us immediately.
             </p>

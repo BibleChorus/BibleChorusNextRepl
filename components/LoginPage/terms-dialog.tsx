@@ -46,7 +46,7 @@ export function TermsDialog({ children }: { children: React.ReactNode }) {
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>When uploading AI-generated music, you must have the appropriate rights and licenses from the AI platform used to create the content.</li>
-              <li>You must verify that your use of AI-generated content complies with the AI platform's terms of service and commercial use policies.</li>
+              <li>You must verify that your use of AI-generated content complies with the AI platform&apos;s terms of service and commercial use policies.</li>
               <li>BibleChorus reserves the right to remove any AI-generated content that violates the terms of service of the AI platforms used to create it.</li>
               <li>Users must maintain transparency about AI involvement in content creation, including which elements were AI-generated (music, lyrics, artwork, etc.).</li>
             </ul>
@@ -110,7 +110,7 @@ export function TermsDialog({ children }: { children: React.ReactNode }) {
 
             <h2 className="text-lg font-semibold">7. Limitation of Liability</h2>
             <p>
-              BibleChorus is provided "as is" without warranties of any kind. We are not liable for any damages arising from the use of our services or user-generated content, including AI-generated content.
+              BibleChorus is provided &quot;as is&quot; without warranties of any kind. We are not liable for any damages arising from the use of our services or user-generated content, including AI-generated content.
             </p>
 
             <h2 className="text-lg font-semibold">8. Changes to Terms</h2>
