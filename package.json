@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "HOST=0.0.0.0 PORT=$PORT node .next/standalone/server.js",
+    "start": "PORT=$PORT node .next/standalone/server.js",
     "lint": "next lint",
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
