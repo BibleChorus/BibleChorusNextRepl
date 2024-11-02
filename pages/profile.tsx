@@ -205,8 +205,17 @@ export default function Profile() {
   // Then declare fetchUserActivities after fetchUnreadActivitiesCount
   const fetchUserActivities = useCallback(async () => {
     if (!profileUser) return;
+    
     try {
       const token = await getAuthToken();
+      
+      if (!token) {
+        console.error('No auth token available');
+        toast.error('Authentication required');
+        router.push('/login');
+        return;
+      }
+
       const response = await axios.get(`/api/users/${profileUser.id}/activities`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -216,14 +225,21 @@ export default function Profile() {
           limit: ITEMS_PER_PAGE
         }
       });
+
       setActivities(response.data.activities);
       setTotalActivities(response.data.total);
-      fetchUnreadActivitiesCount(); // Now this is fine since it's declared above
-    } catch (error) {
+      await fetchUnreadActivitiesCount();
+    } catch (error: any) {
       console.error('Error fetching user activities:', error);
-      toast.error('Failed to load user activities');
+      
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        router.push('/login');
+      } else {
+        toast.error('Failed to load activities');
+      }
     }
-  }, [profileUser, currentPage, ITEMS_PER_PAGE, fetchUnreadActivitiesCount, getAuthToken]); // Add getAuthToken to dependencies
+  }, [profileUser, currentPage, ITEMS_PER_PAGE, fetchUnreadActivitiesCount, getAuthToken, router]);
 
   // Update useEffect to handle profile loading
   useEffect(() => {
@@ -236,12 +252,22 @@ export default function Profile() {
 
   // Update useEffect to include activities fetch
   useEffect(() => {
-    if (profileUser) {
-      fetchUserSongs();
-      fetchUserPlaylists();
-      fetchUserActivities();
-    }
-  }, [profileUser, fetchUserSongs, fetchUserPlaylists, fetchUserActivities]);
+    const checkAuthAndFetchData = async () => {
+      const token = await getAuthToken();
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      if (profileUser) {
+        fetchUserSongs();
+        fetchUserPlaylists();
+        fetchUserActivities();
+      }
+    };
+
+    checkAuthAndFetchData();
+  }, [profileUser, fetchUserSongs, fetchUserPlaylists, fetchUserActivities, getAuthToken, router]);
 
   // Add useEffect for initial unread count fetch
   useEffect(() => {

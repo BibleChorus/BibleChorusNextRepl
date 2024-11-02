@@ -10,6 +10,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Add this function to validate token expiration
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const decoded = JSON.parse(atob(token.split('.')[1]));
+    return decoded.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -30,7 +40,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  // Update login function to validate token before storing
   const login = (userData: User, authToken: string) => {
+    if (!authToken || isTokenExpired(authToken)) {
+      console.error('Invalid or expired token');
+      return;
+    }
+
     setUser(userData);
     setToken(authToken);
     try {
@@ -56,7 +72,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getAuthToken = async (): Promise<string | null> => {
     const currentToken = token || localStorage.getItem('token');
-    console.log("getAuthToken called, returning:", currentToken); // Debug log
+    
+    if (!currentToken) {
+      return null;
+    }
+
+    // Check if token is expired
+    if (isTokenExpired(currentToken)) {
+      // Clear expired token
+      logout();
+      return null;
+    }
+
     return currentToken;
   };
 

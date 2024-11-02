@@ -13,20 +13,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
 
-    // Verify the user's authentication (assuming you have a token-based system)
+    // Verify the user's authentication
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'Unauthorized' });
+    if (!authHeader) {
+      return res.status(401).json({ message: 'No authorization header' });
+    }
+
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Invalid authorization format' });
     }
 
     const token = authHeader.split(' ')[1];
+    let decoded;
+    
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number };
-      if (decoded.userId !== Number(id)) {
-        return res.status(403).json({ message: 'Forbidden' });
-      }
+      decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number };
     } catch (error) {
-      return res.status(401).json({ message: 'Invalid token' });
+      console.error('Token verification failed:', error);
+      return res.status(401).json({ 
+        message: 'Invalid token',
+        error: process.env.NODE_ENV === 'development' ? error : undefined 
+      });
+    }
+
+    // Only allow users to view their own activities
+    if (decoded.userId !== Number(id)) {
+      return res.status(403).json({ message: 'Forbidden: Cannot view other users activities' });
     }
 
     // First, get total count
