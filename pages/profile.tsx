@@ -192,9 +192,12 @@ export default function Profile() {
 
   // Move fetchUnreadActivitiesCount declaration before it's used
   const fetchUnreadActivitiesCount = useCallback(async () => {
+    // Only fetch unread count if it's the user's own profile
+    if (!profileUser || !currentUser || profileUser.id !== currentUser.id) return;
+    
     try {
       const token = await getAuthToken();
-      const response = await axios.get(`/api/users/${profileUser?.id}/unread-activities-count`, {
+      const response = await axios.get(`/api/users/${profileUser.id}/unread-activities-count`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -203,11 +206,12 @@ export default function Profile() {
     } catch (error) {
       console.error('Error fetching unread activities count:', error);
     }
-  }, [profileUser?.id, getAuthToken]);
+  }, [profileUser, currentUser, getAuthToken]);
 
   // Then declare fetchUserActivities after fetchUnreadActivitiesCount
   const fetchUserActivities = useCallback(async () => {
-    if (!profileUser) return;
+    // Only fetch activities if it's the user's own profile
+    if (!profileUser || !currentUser || profileUser.id !== currentUser.id) return;
     
     try {
       const token = await getAuthToken();
@@ -233,16 +237,19 @@ export default function Profile() {
       setTotalActivities(response.data.total);
       await fetchUnreadActivitiesCount();
     } catch (error: any) {
-      console.error('Error fetching user activities:', error);
-      
-      if (error.response?.status === 401) {
-        toast.error('Session expired. Please login again');
-        router.push('/login');
-      } else {
-        toast.error('Failed to load activities');
+      // Only show error toast if it's the user's own profile
+      if (profileUser.id === currentUser?.id) {
+        console.error('Error fetching user activities:', error);
+        
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please login again');
+          router.push('/login');
+        } else {
+          toast.error('Failed to load activities');
+        }
       }
     }
-  }, [profileUser, currentPage, ITEMS_PER_PAGE, fetchUnreadActivitiesCount, getAuthToken, router]);
+  }, [profileUser, currentUser, currentPage, ITEMS_PER_PAGE, fetchUnreadActivitiesCount, getAuthToken, router]);
 
   // Update useEffect to handle profile loading
   useEffect(() => {
@@ -263,21 +270,27 @@ export default function Profile() {
       }
 
       if (profileUser) {
+        // Always fetch songs and playlists
         fetchUserSongs();
         fetchUserPlaylists();
-        fetchUserActivities();
+        
+        // Only fetch activities if it's the user's own profile
+        if (currentUser && profileUser.id === currentUser.id) {
+          fetchUserActivities();
+        }
       }
     };
 
     checkAuthAndFetchData();
-  }, [profileUser, fetchUserSongs, fetchUserPlaylists, fetchUserActivities, getAuthToken, router]);
+  }, [profileUser, currentUser, fetchUserSongs, fetchUserPlaylists, fetchUserActivities, getAuthToken, router]);
 
   // Add useEffect for initial unread count fetch
   useEffect(() => {
-    if (profileUser) {
+    // Only fetch unread count if it's the user's own profile
+    if (profileUser && currentUser && profileUser.id === currentUser.id) {
       fetchUnreadActivitiesCount();
     }
-  }, [profileUser, fetchUnreadActivitiesCount]);
+  }, [profileUser, currentUser, fetchUnreadActivitiesCount]);
 
   // Calculate total pages
   const totalPages = Math.ceil(totalActivities / ITEMS_PER_PAGE);
@@ -536,7 +549,7 @@ export default function Profile() {
           {/* Playlists Card */}
           <Card className="lg:col-span-4">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Your Playlists</CardTitle>
+              <CardTitle className="text-2xl font-bold">Playlists</CardTitle>
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible>
@@ -579,7 +592,7 @@ export default function Profile() {
           {/* Uploaded Songs Card */}
           <Card className="lg:col-span-6">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Your Uploaded Songs</CardTitle>
+              <CardTitle className="text-2xl font-bold">Uploaded Songs</CardTitle>
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible>
