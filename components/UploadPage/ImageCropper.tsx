@@ -2,13 +2,12 @@ import React, { useState, useCallback, useRef, useEffect } from 'react'
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { Button } from "@/components/ui/button"
-import Image from 'next/image' // Importing Next.js Image component
 
 interface ImageCropperProps {
   imageUrl: string
   onCropComplete: (croppedImageBlob: Blob) => void
   onCancel: () => void
-  maxHeight: number // Change this to be required
+  maxHeight: number
 }
 
 export function ImageCropper({ imageUrl, onCropComplete, onCancel, maxHeight }: ImageCropperProps) {
@@ -74,12 +73,16 @@ export function ImageCropper({ imageUrl, onCropComplete, onCancel, maxHeight }: 
         maxWidth={1260}
         maxHeight={1260}
       >
-        <Image 
-          src={imageUrl} 
-          alt="Crop me" 
-          onLoadingComplete={(img) => onLoad(img)} 
-          style={{ maxHeight: `${maxHeight - 100}px`, width: 'auto' }} 
-          layout="responsive" // Ensures responsive sizing
+        <img
+          src={imageUrl}
+          alt="Crop me"
+          onLoad={(e) => onLoad(e.currentTarget)}
+          style={{ 
+            maxHeight: `${maxHeight - 100}px`,
+            width: 'auto',
+            maxWidth: '100%',
+            display: 'block'
+          }}
         />
       </ReactCrop>
       <div className="mt-4 flex justify-end space-x-2">

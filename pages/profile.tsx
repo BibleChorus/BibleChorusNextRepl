@@ -83,6 +83,9 @@ interface Activity {
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
+// Add this constant near the top of the file
+const DEFAULT_PROFILE_IMAGE = '/biblechorus-icon.png'; // Make sure this file exists in your public directory
+
 // Add this function to safely render HTML content
 const createMarkup = (content: string) => {
   return { __html: DOMPurify.sanitize(content) };
@@ -482,11 +485,12 @@ export default function Profile() {
         {/* Image banner at the top */}
         <div className="relative h-64 sm:h-80 w-full mb-8">
           <Image
-            src={profileUser?.profile_image_url ? `${CDN_URL}${profileUser.profile_image_url}` : '/default-profile-banner.jpg'}
+            src={profileUser?.profile_image_url ? `${CDN_URL}${profileUser.profile_image_url}` : DEFAULT_PROFILE_IMAGE}
             alt={`${profileUser?.username} profile banner`}
             layout="fill"
             objectFit="cover"
             className="object-cover"
+            priority
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
             <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-white">{profileUser?.username}</h1>
@@ -794,7 +798,7 @@ export default function Profile() {
                 </DialogHeader>
                 <div className="flex flex-col items-center">
                   <Image
-                    src={profileUser?.profile_image_url ? `${CDN_URL}${profileUser.profile_image_url}` : '/default-profile-image.jpg'}
+                    src={profileUser?.profile_image_url ? `${CDN_URL}${profileUser.profile_image_url}` : DEFAULT_PROFILE_IMAGE}
                     alt="Current Profile Image"
                     width={200}
                     height={200}
