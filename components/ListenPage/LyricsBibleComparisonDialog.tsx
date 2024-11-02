@@ -9,12 +9,27 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@
 import { BookOpen } from 'lucide-react';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface LyricsBibleComparisonDialogProps {
   isOpen: boolean;
   onClose: () => void;
   song: any; // Replace with appropriate Song type
 }
+
+const BibleVersesSkeleton = () => (
+  <div className="space-y-4">
+    {[1, 2, 3].map((i) => (
+      <div key={i} className="space-y-2">
+        {/* Reference skeleton */}
+        <Skeleton className="h-4 w-24" />
+        {/* Verse text skeleton - two lines */}
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+    ))}
+  </div>
+);
 
 const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = ({ isOpen, onClose, song }) => {
   const [viewOption, setViewOption] = useState<'both' | 'lyrics' | 'verses'>('both');
@@ -65,25 +80,38 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
     translationOption.fullName.toLowerCase().includes(translationSearch.toLowerCase())
   );
 
+  const renderVerseContent = () => {
+    if (isLoadingVerses) {
+      return <BibleVersesSkeleton />;
+    }
+
+    return verses.map((verse, index) => (
+      <div key={index} className="mb-4">
+        <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
+        <div dangerouslySetInnerHTML={{ __html: verse.text }} />
+      </div>
+    ));
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl w-full">
+      <DialogContent className="sm:max-w-3xl w-[95vw] min-w-[280px]">
         <DialogHeader>
           <DialogTitle>{song.title}</DialogTitle>
         </DialogHeader>
-        <div className="flex items-center space-x-2 my-4">
+        <div className="flex flex-wrap gap-2 my-4">
           <ToggleGroup
             type="single"
             value={viewOption}
             onValueChange={(value) => setViewOption(value as 'both' | 'lyrics' | 'verses')}
-            className="flex"
+            className="flex flex-wrap gap-1"
           >
-            <ToggleGroupItem value="lyrics">Lyrics</ToggleGroupItem>
-            <ToggleGroupItem value="verses">Bible Verses</ToggleGroupItem>
-            <ToggleGroupItem value="both">Both</ToggleGroupItem>
+            <ToggleGroupItem value="lyrics" className="text-sm">Lyrics</ToggleGroupItem>
+            <ToggleGroupItem value="verses" className="text-sm">Bible Verses</ToggleGroupItem>
+            <ToggleGroupItem value="both" className="text-sm">Both</ToggleGroupItem>
           </ToggleGroup>
           {viewOption !== 'lyrics' && (
-            <div className="ml-auto w-48">
+            <div className="w-full sm:w-48 sm:ml-auto">
               <Select
                 value={translation}
                 onValueChange={setTranslation}
@@ -129,16 +157,7 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
             <div className="flex-1 border">
               <ScrollArea className="h-[400px] p-4">
                 <h3 className="text-lg font-bold mb-2">Bible Verses</h3>
-                {isLoadingVerses ? (
-                  <p>Loading verses...</p>
-                ) : (
-                  verses.map((verse, index) => (
-                    <div key={index} className="mb-4">
-                      <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
-                      <div dangerouslySetInnerHTML={{ __html: verse.text }} />
-                    </div>
-                  ))
-                )}
+                {renderVerseContent()}
               </ScrollArea>
             </div>
           </div>
@@ -150,16 +169,7 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
         ) : (
           <ScrollArea className="h-[400px] p-4 border">
             <h3 className="text-lg font-bold mb-2">Bible Verses</h3>
-            {isLoadingVerses ? (
-              <p>Loading verses...</p>
-            ) : (
-              verses.map((verse, index) => (
-                <div key={index} className="mb-4">
-                  <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
-                  <div dangerouslySetInnerHTML={{ __html: verse.text }} />
-                </div>
-              ))
-            )}
+            {renderVerseContent()}
           </ScrollArea>
         )}
       </DialogContent>
