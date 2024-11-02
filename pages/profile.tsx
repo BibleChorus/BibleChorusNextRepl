@@ -25,6 +25,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { LoginPromptDialog } from '@/components/LoginPromptDialog'
 
 interface Song {
   id: number;
@@ -126,29 +127,9 @@ export default function Profile() {
   const [unreadActivitiesCount, setUnreadActivitiesCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
-  // Add a function to fetch profile user data
-  const fetchProfileUser = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (profileUserId) {
-        const response = await axios.get(`/api/users/${profileUserId}`);
-        setProfileUser(response.data);
-      } else if (currentUser) {
-        // If no ID in query, show current user's profile
-        setProfileUser(currentUser);
-      }
-    } catch (error) {
-      console.error('Error fetching profile user:', error);
-      setError('Failed to load user profile. Please try again later.');
-      toast.error('Failed to load user profile');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [profileUserId, currentUser]);
-
-  // Update fetch functions to use profileUser instead of user
+  // Move all fetch functions before the useEffects that use them
   const fetchUserSongs = useCallback(async () => {
     if (!profileUser) return;
     try {
@@ -159,7 +140,6 @@ export default function Profile() {
     }
   }, [profileUser]);
 
-  // Update other fetch functions similarly...
   const fetchUserPlaylists = useCallback(async () => {
     if (!profileUser) return;
     try {
@@ -170,29 +150,7 @@ export default function Profile() {
     }
   }, [profileUser]);
 
-  const fetchUserForumComments = useCallback(async () => {
-    if (!profileUser) return;
-    try {
-      const response = await axios.get(`/api/users/${profileUser.id}/forum-comments`);
-      setForumComments(response.data);
-    } catch (error) {
-      console.error('Error fetching user forum comments:', error);
-    }
-  }, [profileUser]);
-
-  const fetchUserSongComments = useCallback(async () => {
-    if (!profileUser) return;
-    try {
-      const response = await axios.get(`/api/users/${profileUser.id}/song-comments`);
-      setSongComments(response.data);
-    } catch (error) {
-      console.error('Error fetching user song comments:', error);
-    }
-  }, [profileUser]);
-
-  // Move fetchUnreadActivitiesCount declaration before it's used
   const fetchUnreadActivitiesCount = useCallback(async () => {
-    // Only fetch unread count if it's the user's own profile
     if (!profileUser || !currentUser || profileUser.id !== currentUser.id) return;
     
     try {
@@ -208,9 +166,7 @@ export default function Profile() {
     }
   }, [profileUser, currentUser, getAuthToken]);
 
-  // Then declare fetchUserActivities after fetchUnreadActivitiesCount
   const fetchUserActivities = useCallback(async () => {
-    // Only fetch activities if it's the user's own profile
     if (!profileUser || !currentUser || profileUser.id !== currentUser.id) return;
     
     try {
@@ -237,7 +193,6 @@ export default function Profile() {
       setTotalActivities(response.data.total);
       await fetchUnreadActivitiesCount();
     } catch (error: any) {
-      // Only show error toast if it's the user's own profile
       if (profileUser.id === currentUser?.id) {
         console.error('Error fetching user activities:', error);
         
@@ -251,46 +206,72 @@ export default function Profile() {
     }
   }, [profileUser, currentUser, currentPage, ITEMS_PER_PAGE, fetchUnreadActivitiesCount, getAuthToken, router]);
 
-  // Update useEffect to handle profile loading
-  useEffect(() => {
-    if (!currentUser && !profileUserId) {
-      router.push('/login');
-    } else {
-      fetchProfileUser();
-    }
-  }, [currentUser, profileUserId, router, fetchProfileUser]);
+  // Now add the useEffects that use these functions
+  const handleUnauthorizedAccess = useCallback(() => {
+    setIsLoading(false);
+    setShowLoginPrompt(true);
+  }, []);
 
-  // Update useEffect to include activities fetch
-  useEffect(() => {
-    const checkAuthAndFetchData = async () => {
-      const token = await getAuthToken();
-      if (!token) {
-        router.push('/login');
+  const fetchProfileUser = useCallback(async () => {
+    try {
+      if (profileUserId) {
+        const response = await axios.get(`/api/users/${profileUserId}`);
+        setProfileUser(response.data);
+      } else if (currentUser) {
+        setProfileUser(currentUser);
+      } else {
+        handleUnauthorizedAccess();
         return;
       }
+    } catch (error) {
+      console.error('Error fetching profile user:', error);
+      setError('Failed to load user profile. Please try again later.');
+      toast.error('Failed to load user profile');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [profileUserId, currentUser, handleUnauthorizedAccess]);
 
-      if (profileUser) {
-        // Always fetch songs and playlists
-        fetchUserSongs();
-        fetchUserPlaylists();
-        
-        // Only fetch activities if it's the user's own profile
-        if (currentUser && profileUser.id === currentUser.id) {
-          fetchUserActivities();
-        }
+  // Authentication check useEffect
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!currentUser && !profileUserId) {
+        handleUnauthorizedAccess();
+      } else {
+        setIsLoading(true);
+        await fetchProfileUser();
       }
     };
 
-    checkAuthAndFetchData();
-  }, [profileUser, currentUser, fetchUserSongs, fetchUserPlaylists, fetchUserActivities, getAuthToken, router]);
+    checkAuth();
+  }, [currentUser, profileUserId, fetchProfileUser, handleUnauthorizedAccess]);
 
-  // Add useEffect for initial unread count fetch
+  // Data fetching useEffect
   useEffect(() => {
-    // Only fetch unread count if it's the user's own profile
-    if (profileUser && currentUser && profileUser.id === currentUser.id) {
-      fetchUnreadActivitiesCount();
-    }
-  }, [profileUser, currentUser, fetchUnreadActivitiesCount]);
+    const fetchData = async () => {
+      if (!profileUser) return;
+
+      try {
+        const token = await getAuthToken();
+        
+        if (!token && !profileUserId) {
+          handleUnauthorizedAccess();
+          return;
+        }
+
+        await Promise.all([
+          fetchUserSongs(),
+          fetchUserPlaylists(),
+          currentUser && profileUser.id === currentUser.id && token ? fetchUserActivities() : Promise.resolve(),
+        ]);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        toast.error('Failed to load user data');
+      }
+    };
+
+    fetchData();
+  }, [profileUser, currentUser, fetchUserSongs, fetchUserPlaylists, fetchUserActivities, getAuthToken, profileUserId, handleUnauthorizedAccess]);
 
   // Calculate total pages
   const totalPages = Math.ceil(totalActivities / ITEMS_PER_PAGE);
@@ -447,6 +428,21 @@ export default function Profile() {
     }
   };
 
+  // Add this early return for the login prompt
+  if (showLoginPrompt) {
+    return (
+      <div className="min-h-screen bg-background">
+        <LoginPromptDialog
+          isOpen={showLoginPrompt}
+          onClose={() => setShowLoginPrompt(false)}
+          title="Login Required"
+          description="Please login to view and manage your profile."
+        />
+      </div>
+    );
+  }
+
+  // Keep the loading state check
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">

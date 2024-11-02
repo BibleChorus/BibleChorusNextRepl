@@ -20,6 +20,7 @@ const metadata: Metadata = {
 export default function AuthenticationPage() {
   const [isLogin, setIsLogin] = useState(true)
   const router = useRouter()
+  const [redirectPath, setRedirectPath] = useState<string | null>(null)
 
   useEffect(() => {
     const view = router.query.view as string
@@ -30,9 +31,28 @@ export default function AuthenticationPage() {
     }
   }, [router.query.view])
 
+  useEffect(() => {
+    // Check if there's a redirect path stored
+    const redirectPath = localStorage.getItem('loginRedirectPath')
+    if (redirectPath) {
+      // Remove it from storage
+      localStorage.removeItem('loginRedirectPath')
+      // Store it in state or ref to use after successful login
+      setRedirectPath(redirectPath)
+    }
+  }, [])
+
   const toggleView = () => {
     setIsLogin(!isLogin)
     router.push(`/login?view=${isLogin ? 'signup' : 'login'}`, undefined, { shallow: true })
+  }
+
+  const handleLoginSuccess = () => {
+    if (redirectPath) {
+      router.push(redirectPath)
+    } else {
+      router.push('/')
+    }
   }
 
   return (
@@ -74,7 +94,7 @@ export default function AuthenticationPage() {
                 : "Enter your details below to create your account"}
             </p>
           </div>
-          <UserAuthForm isLogin={isLogin} />
+          <UserAuthForm isLogin={isLogin} onLoginSuccess={handleLoginSuccess} />
           <p className="px-8 text-center text-sm text-muted-foreground">
             {isLogin ? "Don't have an account? " : "Already have an account? "}
             <button

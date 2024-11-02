@@ -12,9 +12,10 @@ import { signIn } from 'next-auth/react';
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
   isLogin: boolean
+  onLoginSuccess?: () => void
 }
 
-export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps) {
+export function UserAuthForm({ className, isLogin, onLoginSuccess, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const router = useRouter()
@@ -50,6 +51,10 @@ export function UserAuthForm({ className, isLogin, ...props }: UserAuthFormProps
 
       login(data.user, data.token)
       router.push('/')
+
+      if (isLogin && onLoginSuccess) {
+        onLoginSuccess()
+      }
     } catch (error) {
       console.error('Authentication error:', error)
       setError(error.message || 'An unexpected error occurred')
