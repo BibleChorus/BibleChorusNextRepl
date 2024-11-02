@@ -18,6 +18,7 @@ import Image from 'next/image';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useSidebar } from '@/contexts/SidebarContext';
 import LyricsBibleComparisonDialog from '@/components/ListenPage/LyricsBibleComparisonDialog';
+import Link from 'next/link';
 
 export default function FloatingMusicPlayer() {
   const {
@@ -150,10 +151,18 @@ export default function FloatingMusicPlayer() {
                   />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold">{currentSong.title}</div>
-                  <div className="text-xs text-muted-foreground">
+                  <Link 
+                    href={`/Songs/${currentSong.id}`}
+                    className="text-sm font-semibold hover:underline"
+                  >
+                    {currentSong.title}
+                  </Link>
+                  <Link
+                    href={`/profile?id=${currentSong.uploaded_by}`}
+                    className="text-xs text-muted-foreground hover:underline block"
+                  >
                     {currentSong.artist}
-                  </div>
+                  </Link>
                 </div>
               </div>
               {/* Playback Controls */}

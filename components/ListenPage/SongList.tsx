@@ -462,7 +462,7 @@ const SongListItem = React.memo(function SongListItem({
           lyrics: song.lyrics,
           bible_verses: song.bible_verses,
           bible_translation_used: song.bible_translation_used,
-          // ... other properties if needed ...
+          uploaded_by: song.uploaded_by,
         },
         songs.map((s) => ({
           id: s.id,
@@ -474,6 +474,7 @@ const SongListItem = React.memo(function SongListItem({
           lyrics: s.lyrics,
           bible_verses: s.bible_verses,
           bible_translation_used: s.bible_translation_used,
+          uploaded_by: s.uploaded_by,
           // ... other properties if needed ...
         }))
       );

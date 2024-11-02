@@ -12,6 +12,7 @@ type Song = {
   lyrics?: string;
   bible_verses?: { book: string; chapter: number; verse: number }[];
   bible_translation_used?: string;
+  uploaded_by?: number;
   // Add other song properties as needed
 };
 
