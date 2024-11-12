@@ -55,8 +55,10 @@ export default function TopicPage() {
           title: topic.song.title,
           artist: topic.song.artist || topic.song.username,
           audioUrl: topic.song.audio_url,
+          audio_url: topic.song.audio_url,
           coverArtUrl: topic.song.song_art_url,
           duration: topic.song.duration,
+          uploaded_by: topic.song.uploaded_by,
         });
       }
     }

@@ -231,24 +231,20 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
   };
 
   // Fetch comments when the comments dialog is opened
-  useEffect(() => {
-    if (isCommentsDialogOpen) {
-      fetchComments();
-    }
-  }, [isCommentsDialogOpen, song.id]);
-
-  const fetchComments = async () => {
-    setIsCommentsFetching(true);
+  const fetchComments = useCallback(async () => {
     try {
       const response = await axios.get(`/api/songs/${song.id}/comments`);
       setComments(response.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
-      toast.error('Failed to fetch comments');
-    } finally {
-      setIsCommentsFetching(false);
     }
-  };
+  }, [song.id]);
+
+  useEffect(() => {
+    if (isCommentsDialogOpen) {
+      fetchComments();
+    }
+  }, [isCommentsDialogOpen, fetchComments]);
 
   return (
     <>
@@ -354,7 +350,11 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
             {isCommentsFetching ? (
               <p>Loading comments...</p>
             ) : (
-              <CommentList comments={comments} songId={song.id} />
+              <CommentList 
+                comments={comments} 
+                songId={song.id} 
+                onCommentAdded={handleCommentAdded}
+              />
             )}
           </div>
         </DialogContent>
