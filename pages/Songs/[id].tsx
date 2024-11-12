@@ -472,16 +472,20 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           title: song.title,
           artist: song.artist || song.username,
           audioUrl: song.audio_url,
+          audio_url: song.audio_url,
           coverArtUrl: song.song_art_url,
           duration: song.duration,
+          uploaded_by: song.uploaded_by,
         },
         [{ // Create a queue with just this song
           id: song.id,
           title: song.title,
           artist: song.artist || song.username,
           audioUrl: song.audio_url,
+          audio_url: song.audio_url,
           coverArtUrl: song.song_art_url,
           duration: song.duration,
+          uploaded_by: song.uploaded_by,
         }]
       );
     }
@@ -1905,13 +1909,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         'bible_verses.chapter',
         'bible_verses.verse'
       )
-      .orderBy(['bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse'])
+      .orderBy(['bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse']);
 
-    song.bible_verses = verses
+    song.bible_verses = verses;
 
     return {
       props: { song: JSON.parse(JSON.stringify(song)) }
-    }
+    };
   } catch (error) {
     console.error('Error fetching song:', error);
     return {

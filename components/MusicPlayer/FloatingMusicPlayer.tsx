@@ -21,6 +21,17 @@ import { useSidebar } from '@/contexts/SidebarContext';
 import LyricsBibleComparisonDialog from '@/components/ListenPage/LyricsBibleComparisonDialog';
 import Link from 'next/link';
 import { SongOptionsMenu } from '@/components/SongOptionsMenu';
+import { Song } from '@/types';
+
+// Add a type for the music player song that includes optional properties
+interface MusicPlayerSong extends Partial<Song> {
+  id: number;
+  title: string;
+  artist?: string;
+  coverArtUrl?: string; // Note: this matches the property name used in the component
+  audio_url: string;
+  uploaded_by: number;
+}
 
 export default function FloatingMusicPlayer() {
   const {
@@ -82,6 +93,25 @@ export default function FloatingMusicPlayer() {
   useEffect(() => {
     console.log('Current Song:', currentSong);
   }, [currentSong]);
+
+  // Transform currentSong to match the Song interface
+  const getSongForOptions = (song: MusicPlayerSong): Song => {
+    return {
+      id: song.id,
+      title: song.title,
+      artist: song.artist || '',
+      audio_url: song.audio_url,
+      uploaded_by: song.uploaded_by,
+      username: '', // Add default values for required Song properties
+      genres: [],
+      created_at: '',
+      duration: 0,
+      song_art_url: song.coverArtUrl,
+      // Add other required properties with default values
+      ai_used_for_lyrics: false,
+      music_ai_generated: false,
+    };
+  };
 
   if (!currentSong) return null;
 
@@ -214,7 +244,7 @@ export default function FloatingMusicPlayer() {
                   <BookOpenText className="w-5 h-5" />
                 </button>
                 <div className="relative">
-                  <SongOptionsMenu song={currentSong} />
+                  <SongOptionsMenu song={getSongForOptions(currentSong)} />
                 </div>
               </div>
             </div>

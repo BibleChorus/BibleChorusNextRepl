@@ -1,27 +1,28 @@
 import React, { createContext, useState, useContext, useRef, useEffect } from 'react';
 import axios from 'axios'; // Import axios for API calls
 
-// Define the Song type
-type Song = {
+// Define the MusicPlayerSong type
+interface MusicPlayerSong {
   id: number;
   title: string;
-  artist: string;
+  artist?: string;
   audioUrl: string;
   coverArtUrl?: string;
   duration?: number;
   lyrics?: string;
   bible_verses?: { book: string; chapter: number; verse: number }[];
   bible_translation_used?: string;
-  uploaded_by?: number;
-  // Add other song properties as needed
-};
+  uploaded_by: number;
+  audio_url: string; // Added to match the usage in FloatingMusicPlayer
+}
 
 type RepeatMode = 'none' | 'one' | 'all';
 
-type MusicPlayerContextType = {
-  currentSong: Song | null;
+// Add this to your MusicPlayerContext file
+interface MusicPlayerContextType {
+  currentSong: MusicPlayerSong | null;
   isPlaying: boolean;
-  playSong: (song: Song, queue?: Song[]) => void;
+  playSong: (song: MusicPlayerSong, queue?: MusicPlayerSong[]) => void;
   pause: () => void;
   resume: () => void;
   next: () => void;
@@ -30,20 +31,20 @@ type MusicPlayerContextType = {
   toggleRepeat: () => void;
   isShuffling: boolean;
   repeatMode: RepeatMode;
-  queue: Song[];
+  queue: MusicPlayerSong[];
   audioElement: HTMLAudioElement | null;
   isMinimized: boolean;
   setIsMinimized: React.Dispatch<React.SetStateAction<boolean>>;
   // ... additional controls
-};
+}
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
 
 export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // State for the playlist (queue) and playback controls
-  const [queue, setQueue] = useState<Song[]>([]);
+  const [queue, setQueue] = useState<MusicPlayerSong[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const [currentSong, setCurrentSong] = useState<MusicPlayerSong | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isShuffling, setIsShuffling] = useState<boolean>(false);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
@@ -92,7 +93,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [currentSong]);
 
   // Play a new song (optionally with a new queue)
-  const playSong = (song: Song, newQueue?: Song[]) => {
+  const playSong = (song: MusicPlayerSong, newQueue?: MusicPlayerSong[]) => {
     if (newQueue) {
       setQueue(newQueue);
       setCurrentIndex(newQueue.findIndex((s) => s.id === song.id));
