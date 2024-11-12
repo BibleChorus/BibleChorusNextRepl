@@ -32,6 +32,7 @@ import { AddToPlaylistDialog } from './AddToPlaylistDialog';
 import Image from 'next/image' // Import Next.js Image component
 import LyricsBibleComparisonDialog from './LyricsBibleComparisonDialog';
 import { BookOpenText } from 'lucide-react';
+import { SongOptionsMenu } from '@/components/SongOptionsMenu';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -632,60 +633,9 @@ const SongListItem = React.memo(function SongListItem({
         )}
       </div>
 
-      {/* Dropdown Menu */}
+      {/* Use the updated SongOptionsMenu */}
       <div className="flex-shrink-0 ml-2 flex items-center">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleLike(song)}>
-              <Heart className={`mr-2 h-4 w-4 ${likeStates[song.id] ? 'fill-current text-red-500' : ''}`} />
-              <span>{likeStates[song.id] ? 'Unlike' : 'Like'}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleShare}>
-              <Share2 className="mr-2 h-4 w-4" />
-              <span>Share</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setIsAddToPlaylistDialogOpen(true)}>
-              <ListPlus className="mr-2 h-4 w-4" />
-              <span>Add to Playlist</span>
-            </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Vote className="mr-2 h-4 w-4" />
-                <span>Vote</span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem onClick={() => handleLocalVoteClick('Best Musically')}>
-                  <Music className="mr-2 h-4 w-4" />
-                  <span>Best Musically</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleLocalVoteClick('Best Lyrically')}>
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  <span>Best Lyrically</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleLocalVoteClick('Best Overall')}>
-                  <Star className="mr-2 h-4 w-4" />
-                  <span>Best Overall</span>
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuItem onClick={() => setIsCommentsDialogOpen(true)}>
-              <MessageCircle className="mr-2 h-4 w-4" />
-              <span>Comment</span>
-            </DropdownMenuItem>
-            {user && (
-              <DropdownMenuItem onClick={() => setIsReportDialogOpen(true)}>
-                <Flag className="mr-2 h-4 w-4" />
-                <span>Report</span>
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <SongOptionsMenu song={song} />
       </div>
 
       {/* Vote Dialog */}

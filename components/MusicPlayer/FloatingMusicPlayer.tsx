@@ -13,12 +13,14 @@ import {
   Minimize2,
   Maximize2,
   BookOpenText,
+  MoreVertical,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useSidebar } from '@/contexts/SidebarContext';
 import LyricsBibleComparisonDialog from '@/components/ListenPage/LyricsBibleComparisonDialog';
 import Link from 'next/link';
+import { SongOptionsMenu } from '@/components/SongOptionsMenu';
 
 export default function FloatingMusicPlayer() {
   const {
@@ -211,6 +213,9 @@ export default function FloatingMusicPlayer() {
                 >
                   <BookOpenText className="w-5 h-5" />
                 </button>
+                <div className="relative">
+                  <SongOptionsMenu song={currentSong} />
+                </div>
               </div>
             </div>
 
