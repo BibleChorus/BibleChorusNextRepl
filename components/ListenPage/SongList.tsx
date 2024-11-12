@@ -26,7 +26,7 @@ import { MusicFilled, BookOpenFilled, StarFilled } from '@/components/ui/custom-
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext'
 import { CommentList } from '@/components/SongComments/CommentList';
 import { NewCommentForm } from '@/components/SongComments/NewCommentForm';
-import { SongComment } from '@/types';
+import { SongComment, Song } from '@/types';
 import { ReportDialog } from '@/components/ReportDialog';
 import { AddToPlaylistDialog } from './AddToPlaylistDialog';
 import Image from 'next/image' // Import Next.js Image component
@@ -35,26 +35,6 @@ import { BookOpenText } from 'lucide-react';
 import { SongOptionsMenu } from '@/components/SongOptionsMenu';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
-
-export type Song = {
-  id: number;
-  title: string;
-  username: string;
-  uploaded_by: number;
-  artist?: string; // Make artist optional
-  genres?: string[];
-  created_at: string;
-  audio_url: string;
-  song_art_url?: string;
-  bible_translation_used?: string;
-  lyrics_scripture_adherence?: string;
-  is_continuous_passage?: boolean;
-  bible_verses?: { book: string; chapter: number; verse: number }[];
-  play_count?: number;
-  duration?: number;
-  comments_count?: number;
-  lyrics: string;
-};
 
 interface SongListProps {
   songs: Song[];

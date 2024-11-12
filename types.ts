@@ -13,7 +13,7 @@ export interface Playlist {
 export interface Song {
   id: number;
   title: string;
-  artist: string;
+  artist?: string;
   audio_url: string;
   uploaded_by: number;
   username: string;
@@ -33,6 +33,7 @@ export interface Song {
   music_ai_generated?: boolean; // Indicates if AI was used to generate music
   play_count?: number; // Number of times the song has been played
   is_new?: boolean; // Indicates if the song is unread by relevant users
+  comments_count?: number;
 }
 
 export interface User {

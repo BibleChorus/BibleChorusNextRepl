@@ -28,7 +28,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
-import { Song } from '@/types';
+import { Song, SongComment } from '@/types';
 import { ReportDialog } from '@/components/ReportDialog';
 import { AddToPlaylistDialog } from '@/components/ListenPage/AddToPlaylistDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -43,12 +43,13 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
   const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false);
   const [selectedVoteType, setSelectedVoteType] = useState('');
   const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
-  const [comments, setComments] = useState([]);
+  const [comments, setComments] = useState<SongComment[]>([]);
   const [localCommentsCount, setLocalCommentsCount] = useState(song.comments_count || 0);
   const [voteStates, setVoteStates] = useState({});
   const [voteCounts, setVoteCounts] = useState({});
   const [likeStates, setLikeStates] = useState({});
   const [likeCounts, setLikeCounts] = useState({});
+  const [isCommentsFetching, setIsCommentsFetching] = useState(false);
 
   // Fetch initial data (votes, likes, comments)
   useEffect(() => {
@@ -198,9 +199,8 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
     setIsCommentsDialogOpen(true);
   };
 
-  const handleCommentAdded = (newComment: any) => {
-    setComments((prevComments) => [...prevComments, newComment]);
-    setLocalCommentsCount((prevCount) => prevCount + 1);
+  const handleCommentAdded = (newComment: SongComment) => {
+    setComments((prevComments) => [newComment, ...prevComments]);
   };
 
   const handleShare = async () => {
@@ -227,6 +227,26 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
         console.error('Error copying song link:', error);
         toast.error('Failed to copy song link');
       }
+    }
+  };
+
+  // Fetch comments when the comments dialog is opened
+  useEffect(() => {
+    if (isCommentsDialogOpen) {
+      fetchComments();
+    }
+  }, [isCommentsDialogOpen, song.id]);
+
+  const fetchComments = async () => {
+    setIsCommentsFetching(true);
+    try {
+      const response = await axios.get(`/api/songs/${song.id}/comments`);
+      setComments(response.data);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      toast.error('Failed to fetch comments');
+    } finally {
+      setIsCommentsFetching(false);
     }
   };
 
@@ -326,10 +346,16 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex-grow overflow-y-auto pr-4">
-            {user && (
+            {user ? (
               <NewCommentForm songId={song.id} onCommentAdded={handleCommentAdded} />
+            ) : (
+              <p>Please log in to add a comment.</p>
             )}
-            <CommentList comments={comments} songId={song.id} />
+            {isCommentsFetching ? (
+              <p>Loading comments...</p>
+            ) : (
+              <CommentList comments={comments} songId={song.id} />
+            )}
           </div>
         </DialogContent>
       </Dialog>
