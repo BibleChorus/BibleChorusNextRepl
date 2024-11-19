@@ -937,14 +937,14 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   return (
     <div className="min-h-screen bg-background">
       <Head>
-        <title>{`${song.title} by ${song.artist} - BibleChorus`}</title>
-        <meta property="og:title" content={`${song.title} by ${song.artist}`} />
-        <meta property="og:description" content={`Listen to "${song.title}" by ${song.artist} on BibleChorus.`} />
+        <title>{`${song.title} by ${song.username} - BibleChorus`}</title>
+        <meta property="og:title" content={`${song.title} by ${song.username}`} />
+        <meta property="og:description" content={`Listen to "${song.title}" by ${song.username} on BibleChorus.`} />
         <meta property="og:image" content={`${process.env.NEXT_PUBLIC_CDN_URL}${song.song_art_url || '/default-cover.jpg'}`} />
         <meta property="og:url" content={`${process.env.NEXT_PUBLIC_BASE_URL}/Songs/${song.id}`} />
         <meta property="og:type" content="music.song" />
         <meta property="music:duration" content={`${song.duration}`} />
-        <meta property="music:musician" content={song.artist} />
+        <meta property="music:musician" content={song.username} />
         {/* Add other Open Graph music tags as needed */}
       </Head>
 
