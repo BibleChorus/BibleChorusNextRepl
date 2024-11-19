@@ -139,11 +139,13 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
   };
 
   const handleShare = useCallback(async () => {
-    // Create share data with playlist details
     const playlistUrl = `${window.location.origin}/playlists/${playlist.id}`;
+    const shareTitle = `${playlist.name}`;
+    const shareText = `Check out Playlist:"${playlist.name}" on BibleChorus`;
+    
     const shareData = {
-      title: `${playlist.name} by ${creatorUsername}`,
-      text: `Check out Playlist:"${playlist.name}" by ${creatorUsername} on BibleChorus`,
+      title: shareTitle,
+      text: shareText,
       url: playlistUrl,
     };
 
@@ -167,7 +169,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
         toast.error('Failed to copy playlist link');
       }
     }
-  }, [playlist.id, playlist.name, creatorUsername]);
+  }, [playlist.id, playlist.name]);
 
   return (
     <div className="min-h-screen bg-background">

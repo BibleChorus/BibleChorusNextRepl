@@ -903,7 +903,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
   const handleShare = useCallback(async () => {
     // Get the correct artist attribution
-    const artistAttribution = song.artist || song.username;
+    const artistAttribution = song.username;
     
     const songUrl = `${window.location.origin}/Songs/${song.id}`;
     const shareData = {

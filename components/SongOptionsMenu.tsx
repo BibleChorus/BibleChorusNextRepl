@@ -203,13 +203,17 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
     setComments((prevComments) => [newComment, ...prevComments]);
   };
 
-  const handleShare = async () => {
-    const artistAttribution = song.artist || song.username;
+  const handleShare = useCallback(async () => {
+    // Get the correct artist attribution, with fallbacks
+    const artistAttribution = song.username;
     
     const songUrl = `${window.location.origin}/Songs/${song.id}`;
+    const shareTitle = `${song.title} by ${artistAttribution}`;
+    const shareText = `Check out "${song.title}" by ${artistAttribution} on BibleChorus`;
+    
     const shareData = {
-      title: `${song.title} by ${artistAttribution}`,
-      text: `Check out "${song.title}" by ${artistAttribution} on BibleChorus`,
+      title: shareTitle,
+      text: shareText,
       url: songUrl,
     };
 
@@ -225,14 +229,14 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
       }
     } else {
       try {
-        await navigator.clipboard.writeText(songUrl);
+        await navigator.clipboard.writeText(`${shareText}\n${songUrl}`);
         toast.success('Song link copied to clipboard');
       } catch (error) {
         console.error('Error copying song link:', error);
         toast.error('Failed to copy song link');
       }
     }
-  };
+  }, [song.id, song.title, song.username]);
 
   // Fetch comments when the comments dialog is opened
   const fetchComments = useCallback(async () => {
