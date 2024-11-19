@@ -204,10 +204,12 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
   };
 
   const handleShare = async () => {
+    const artistAttribution = song.artist || song.username;
+    
     const songUrl = `${window.location.origin}/Songs/${song.id}`;
     const shareData = {
-      title: song.title,
-      text: `Check out this song: ${song.title} by ${song.artist || song.username}`,
+      title: `${song.title} by ${artistAttribution}`,
+      text: `Check out "${song.title}" by ${artistAttribution} on BibleChorus`,
       url: songUrl,
     };
 
@@ -216,8 +218,10 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
         await navigator.share(shareData);
         toast.success('Song shared successfully');
       } catch (error) {
-        console.error('Error sharing song:', error);
-        toast.error('Failed to share song');
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error('Error sharing song:', error);
+          toast.error('Failed to share song');
+        }
       }
     } else {
       try {

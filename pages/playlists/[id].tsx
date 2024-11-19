@@ -5,12 +5,12 @@ import db from '@/db'; // Database connection
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Play, Edit, Pencil } from 'lucide-react';
+import { Play, Edit, Pencil, Share2 } from 'lucide-react';
 import { formatBibleVerses, parsePostgresArray } from '@/lib/utils'; // Add parsePostgresArray import
 import { Playlist, Song } from '@/types'; // Define these types as needed
 import SongList from '@/components/PlaylistPage/SongList'; // New SongList component for the playlist page
 import EditPlaylistDialog from '@/components/PlaylistPage/EditPlaylistDialog';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth hook
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ImageCropper } from '@/components/UploadPage/ImageCropper';
@@ -138,6 +138,37 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
     setCropImageUrl(null);
   };
 
+  const handleShare = useCallback(async () => {
+    // Create share data with playlist details
+    const playlistUrl = `${window.location.origin}/playlists/${playlist.id}`;
+    const shareData = {
+      title: `${playlist.name} by ${creatorUsername}`,
+      text: `Check out Playlist:"${playlist.name}" by ${creatorUsername} on BibleChorus`,
+      url: playlistUrl,
+    };
+
+    if (navigator.share && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        toast.success('Playlist shared successfully');
+      } catch (error) {
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error('Error sharing playlist:', error);
+          toast.error('Failed to share playlist');
+        }
+      }
+    } else {
+      // Fallback to copying the link
+      try {
+        await navigator.clipboard.writeText(playlistUrl);
+        toast.success('Playlist link copied to clipboard');
+      } catch (error) {
+        console.error('Error copying playlist link:', error);
+        toast.error('Failed to copy playlist link');
+      }
+    }
+  }, [playlist.id, playlist.name, creatorUsername]);
+
   return (
     <div className="min-h-screen bg-background">
       <Head>
@@ -169,7 +200,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
               <Badge key={tag} variant="secondary" className="mr-2">{tag}</Badge>
             ))}
           </div>
-          <div className="flex space-x-4 mt-4">
+          <div className="flex flex-wrap space-x-2 sm:space-x-4 mt-4">
             <Button 
               onClick={handlePlayPlaylist} 
               className="flex items-center"
@@ -188,6 +219,15 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
                 Edit Playlist
               </Button>
             )}
+            <Button
+              onClick={handleShare}
+              className="flex items-center"
+              variant="outline"
+              aria-label="Share playlist"
+            >
+              <Share2 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Share</span>
+            </Button>
           </div>
         </div>
         {!playlist.is_auto && isCreator && (
