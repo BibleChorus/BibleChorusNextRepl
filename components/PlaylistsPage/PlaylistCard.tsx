@@ -1,5 +1,5 @@
 import React from 'react';
-import { Playlist } from '../types';
+import { Playlist } from '../../types';
 import Image from 'next/image';
 
 interface PlaylistCardProps {

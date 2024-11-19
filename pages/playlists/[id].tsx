@@ -69,7 +69,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
   };
 
   // Change this line to compare string values
-  const isCreator = user && user.id.toString() === playlist.user_id.toString();
+  const isCreator = playlist.is_auto ? false : (user && user.id.toString() === playlist.user_id?.toString());
 
   const handleEditArtClick = () => {
     setIsEditArtDialogOpen(true);
@@ -178,7 +178,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
               <Play className="mr-2 h-4 w-4" />
               Play Playlist
             </Button>
-            {isCreator && (
+            {!playlist.is_auto && isCreator && (
               <Button
                 onClick={handleEditClick}
                 className="flex items-center"
@@ -190,7 +190,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
             )}
           </div>
         </div>
-        {isCreator && (
+        {!playlist.is_auto && isCreator && (
           <Button
             variant="ghost"
             size="icon"
@@ -292,12 +292,16 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       )
       .orderBy('playlist_songs.position');
 
-    // Fetch creator's username
-    const creator = await db('users')
-      .where('id', playlist.user_id)
-      .first('username');
-
-    const creatorUsername = creator ? creator.username : 'Unknown';
+    // For auto playlists, set a system creator name
+    let creatorUsername = 'BibleChorus';
+    
+    // Only fetch creator username for non-auto playlists
+    if (!playlist.is_auto && playlist.user_id) {
+      const creator = await db('users')
+        .where('id', playlist.user_id)
+        .first('username');
+      creatorUsername = creator ? creator.username : 'Unknown';
+    }
 
     // Parse genres for each song
     songs.forEach((song: any) => {

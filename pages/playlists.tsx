@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import PlaylistSection from '../components/PlaylistSection';
+import PlaylistSection from '../components/PlaylistsPage/PlaylistSection';
 import { fetchPlaylists } from './api/playlists/api';
 import { Playlist } from '../types';
 import { BIBLE_BOOKS } from '@/lib/constants';
@@ -62,7 +62,7 @@ export default function PlaylistsPage() {
   }, []);
 
   const handlePlaylistClick = (playlistId: number) => {
-    router.push(`/listen?playlistId=${playlistId}`);
+    router.push(`/playlists/${playlistId}`);
   };
 
   return (

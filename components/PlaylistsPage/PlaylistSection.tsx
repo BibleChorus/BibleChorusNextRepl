@@ -1,6 +1,6 @@
 import React from 'react';
 import PlaylistCard from './PlaylistCard';
-import { Playlist } from '../types';
+import { Playlist } from '../../types';
 import {
   Carousel,
   CarouselContent,
