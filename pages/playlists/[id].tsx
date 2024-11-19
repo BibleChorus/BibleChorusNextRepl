@@ -140,8 +140,8 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
 
   const handleShare = useCallback(async () => {
     const playlistUrl = `${window.location.origin}/playlists/${playlist.id}`;
-    const shareTitle = `${playlist.name}`;
-    const shareText = `Check out Playlist:"${playlist.name}" on BibleChorus`;
+    const shareTitle = `${playlist.name} by ${creatorUsername}`;
+    const shareText = `Check out the Playlist: "${playlist.name}" by ${creatorUsername} on BibleChorus`;
     
     const shareData = {
       title: shareTitle,
@@ -160,22 +160,26 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
         }
       }
     } else {
-      // Fallback to copying the link
       try {
-        await navigator.clipboard.writeText(playlistUrl);
+        await navigator.clipboard.writeText(`${shareText}\n${playlistUrl}`);
         toast.success('Playlist link copied to clipboard');
       } catch (error) {
         console.error('Error copying playlist link:', error);
         toast.error('Failed to copy playlist link');
       }
     }
-  }, [playlist.id, playlist.name]);
+  }, [playlist.id, playlist.name, creatorUsername]);
 
   return (
     <div className="min-h-screen bg-background">
       <Head>
-        <title>{playlist.name} - BibleChorus</title>
-        <link rel="icon" href="/favicon.ico" />
+        <title>{`${playlist.name} by ${creatorUsername} - BibleChorus`}</title>
+        <meta property="og:title" content={`${playlist.name} by ${creatorUsername}`} />
+        <meta property="og:description" content={`Listen to "${playlist.name}" by ${creatorUsername} on BibleChorus`} />
+        <meta property="og:image" content={`${process.env.NEXT_PUBLIC_CDN_URL}${playlist.cover_art_url || '/default-cover.jpg'}`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_BASE_URL}/playlists/${playlist.id}`} />
+        <meta property="og:type" content="music.playlist" />
+        <meta property="music:creator" content={creatorUsername} />
       </Head>
 
       {/* Playlist Banner */}
