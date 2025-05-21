@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext'
+import { FilterProvider } from '@/contexts/FilterContext'; // Import FilterProvider
 import FloatingMusicPlayer from '@/components/MusicPlayer/FloatingMusicPlayer'
 import { SidebarProvider } from '@/contexts/SidebarContext'
 
@@ -69,10 +70,11 @@ function MyApp({ Component, pageProps }: AppProps) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <AuthProvider>
-        <MusicPlayerProvider>
-          <SidebarProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              <TooltipProvider>
+        <FilterProvider> {/* Wrap MusicPlayerProvider with FilterProvider */}
+          <MusicPlayerProvider>
+            <SidebarProvider>
+              <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                <TooltipProvider>
                 <LoadingWrapper>
                   {isHomePage ? (
                     <Component {...pageProps} />
@@ -82,11 +84,12 @@ function MyApp({ Component, pageProps }: AppProps) {
                     </Layout>
                   )}
                 </LoadingWrapper>
-                <FloatingMusicPlayer />
-              </TooltipProvider>
-            </ThemeProvider>
-          </SidebarProvider>
-        </MusicPlayerProvider>
+                  <FloatingMusicPlayer />
+                </TooltipProvider>
+              </ThemeProvider>
+            </SidebarProvider>
+          </MusicPlayerProvider>
+        </FilterProvider>
       </AuthProvider>
       <Toaster />
     </QueryClientProvider>

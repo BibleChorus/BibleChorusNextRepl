@@ -18,11 +18,13 @@ interface MusicPlayerSong {
 
 type RepeatMode = 'none' | 'one' | 'all';
 
+import { useFilters } from './FilterContext'; // Import useFilters
+
 // Add this to your MusicPlayerContext file
 interface MusicPlayerContextType {
   currentSong: MusicPlayerSong | null;
   isPlaying: boolean;
-  playSong: (song: MusicPlayerSong, queue?: MusicPlayerSong[]) => void;
+  playSong: (song: MusicPlayerSong, queue?: MusicPlayerSong[], playlistIdContext?: string | null) => void; // Updated signature
   pause: () => void;
   resume: () => void;
   next: () => void;
@@ -41,6 +43,8 @@ interface MusicPlayerContextType {
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
 
 export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { filters: globalFilters, activePlaylistId: globalActivePlaylistId, setActivePlaylistId: setGlobalActivePlaylistId } = useFilters();
+
   // State for the playlist (queue) and playback controls
   const [queue, setQueue] = useState<MusicPlayerSong[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -49,6 +53,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isShuffling, setIsShuffling] = useState<boolean>(false);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
+  // Removed local activePlaylistId and activeFilters states (they are now consumed from FilterContext)
 
   // Ref for the audio element
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -92,11 +97,38 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setHasIncrementedPlayCount(false);
   }, [currentSong]);
 
-  // Play a new song (optionally with a new queue)
-  const playSong = (song: MusicPlayerSong, newQueue?: MusicPlayerSong[]) => {
+  // Helper function to fetch all songs for shuffle
+  const fetchAllSongsForShuffle = async (params: { playlistId?: string | null; filters?: Record<string, string> | null }): Promise<MusicPlayerSong[]> => {
+    let apiUrl = '/api/songs?limit=10000'; // Default to fetching all songs with a large limit
+
+    if (params.playlistId) {
+      apiUrl = `/api/songs?playlist_id=${params.playlistId}&limit=10000`;
+    } else if (params.filters) {
+      // Assuming filters is an object like { genre: 'Rock', artist: 'ArtistName' }
+      const queryParams = new URLSearchParams(params.filters).toString();
+      apiUrl = `/api/songs?${queryParams}&limit=10000`;
+    }
+
+    try {
+      const response = await axios.get(apiUrl);
+      // Assuming the API returns an object with a 'songs' array or the array directly
+      return response.data.songs || response.data || [];
+    } catch (error) {
+      console.error('Error fetching songs for shuffle:', error);
+      return [];
+    }
+  };
+
+  // Play a new song (optionally with a new queue and playlist context)
+  const playSong = (song: MusicPlayerSong, newQueue?: MusicPlayerSong[], playlistIdContext?: string | null) => {
+    if (playlistIdContext !== undefined) { // Can be null to clear playlist context, undefined means not specified
+      setGlobalActivePlaylistId(playlistIdContext);
+    }
+
     if (newQueue) {
       setQueue(newQueue);
-      setCurrentIndex(newQueue.findIndex((s) => s.id === song.id));
+      const newIndex = newQueue.findIndex((s) => s.id === song.id);
+      setCurrentIndex(newIndex !== -1 ? newIndex : 0); 
     } else {
       setCurrentIndex((prevIndex) => {
         const index = queue.findIndex((s) => s.id === song.id);
@@ -191,8 +223,72 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Toggle shuffle mode
-  const toggleShuffle = () => {
-    setIsShuffling(!isShuffling);
+  const toggleShuffle = async () => {
+    const newShuffleState = !isShuffling;
+    setIsShuffling(newShuffleState);
+
+    if (newShuffleState) {
+      let songsForShuffle: MusicPlayerSong[] = [];
+      // Use globalActivePlaylistId from FilterContext first
+      if (globalActivePlaylistId) {
+        songsForShuffle = await fetchAllSongsForShuffle({ playlistId: globalActivePlaylistId });
+      } else if (globalFilters && Object.keys(globalFilters).length > 0) {
+        // Then use globalFilters from FilterContext
+        // Ensure globalFilters is compatible with fetchAllSongsForShuffle's expected type.
+        // FilterCriteria might need to align or cast here.
+        songsForShuffle = await fetchAllSongsForShuffle({ filters: globalFilters as Record<string, string> });
+      } else {
+        // Fallback: If no specific context, shuffle all songs from the library
+        // This assumes the default fetchAllSongsForShuffle (no params) gets all songs.
+        // Alternatively, could shuffle the existing queue if that's preferred when no context.
+        songsForShuffle = await fetchAllSongsForShuffle({});
+      }
+
+      if (songsForShuffle.length > 0) {
+        const currentSongId = currentSong?.id;
+        setQueue(songsForShuffle);
+
+        let newCurrentIndex = -1;
+        if (currentSongId !== undefined) {
+          newCurrentIndex = songsForShuffle.findIndex(song => song.id === currentSongId);
+        }
+
+        if (newCurrentIndex !== -1) {
+          setCurrentIndex(newCurrentIndex);
+          // If current song is in the new queue, ensure it's loaded if not playing
+          // or if audio source needs update. playSong handles this.
+          // However, calling playSong directly might restart it if already playing.
+          // For now, setting currentSong and letting useEffects handle it.
+          setCurrentSong(songsForShuffle[newCurrentIndex]);
+          if (audioRef.current && audioRef.current.src !== songsForShuffle[newCurrentIndex].audioUrl) {
+             audioRef.current.src = songsForShuffle[newCurrentIndex].audioUrl;
+             if(isPlaying) audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+          }
+
+        } else {
+          // Current song is not in the new queue, or no current song. Play the first song.
+          setCurrentIndex(0);
+          setCurrentSong(songsForShuffle[0]); // Set current song to the first in new queue
+          // Call playSong to correctly initialize playback with the new song and queue
+          // playSong will also set the audio source and play if isPlaying is true.
+          // Pass the new queue to playSong to ensure its internal queue state is also updated.
+          playSong(songsForShuffle[0], songsForShuffle);
+        }
+      } else {
+        // No songs returned for shuffle (e.g., empty playlist, or API error handled by fetchAllSongsForShuffle)
+        // Optionally, revert isShuffling state or keep current queue.
+        // For now, if shuffle is enabled but no songs, it will just be an empty queue.
+        setQueue([]);
+        setCurrentSong(null);
+        setCurrentIndex(0);
+        if (isPlaying) {
+          pause(); // Pause if playing and queue becomes empty
+        }
+      }
+    }
+    // If turning shuffle off (newShuffleState is false), the queue remains as the full shuffled list.
+    // The user can navigate or select a new playlist/filters to get a different queue.
+    // Or, one could implement logic here to revert to a "pre-shuffle" queue if needed.
   };
 
   // Toggle repeat mode

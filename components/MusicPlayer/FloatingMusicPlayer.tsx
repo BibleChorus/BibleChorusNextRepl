@@ -16,6 +16,11 @@ import {
   MoreVertical,
 } from 'lucide-react';
 import Image from 'next/image';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"; // Import Tooltip components
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useSidebar } from '@/contexts/SidebarContext';
 import LyricsBibleComparisonDialog from '@/components/ListenPage/LyricsBibleComparisonDialog';
@@ -199,12 +204,19 @@ export default function FloatingMusicPlayer() {
               </div>
               {/* Playback Controls */}
               <div className="flex items-center space-x-2">
-                <button
-                  onClick={toggleShuffle}
-                  className={`p-2 relative ${isShuffling ? 'text-purple-500 glow' : ''}`}
-                >
-                  <Shuffle className="w-5 h-5" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={toggleShuffle}
+                      className={`p-2 relative ${isShuffling ? 'text-purple-500 glow' : ''}`}
+                    >
+                      <Shuffle className="w-5 h-5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Shuffle plays all songs from the current playlist or active filters.</p>
+                  </TooltipContent>
+                </Tooltip>
                 <button onClick={previous} className="p-2">
                   <SkipBack className="w-6 h-6" />
                 </button>

@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
+import { useFilters } from '@/contexts/FilterContext'; // Import useFilters
 import {
   Tooltip,
   TooltipContent,
@@ -49,6 +50,8 @@ interface FiltersProps {
 }
 
 export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }: FiltersProps) {
+  const { setFilters: setGlobalFilters } = useFilters(); // Get setFilters from FilterContext
+
   const [openLyricsAdherence, setOpenLyricsAdherence] = useState(false)
   const [openGenres, setOpenGenres] = useState(false)
   const [genreSearch, setGenreSearch] = useState('')
@@ -81,10 +84,15 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
 
   // Function to handle Like and Vote Type filters
   const toggleUserFilter = (key: keyof FilterOptions) => {
-    setFilterOptions((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+    const newFilterOptions = {
+      ...filterOptions,
+      [key]: !filterOptions[key],
+    };
+    setFilterOptions(newFilterOptions);
+    // Update global context
+    // Ensure the structure matches FilterCriteria
+    const { sortBy, sortOrder, showLikedSongs, showBestMusically, showBestLyrically, showBestOverall, showMySongs, ...relevantFilters } = newFilterOptions;
+    setGlobalFilters(relevantFilters);
   };
 
   // Synchronize selectedChapters with filterOptions.bibleChapters
@@ -101,22 +109,27 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
     const actualValue = value === '_empty_' ? '' : value;
 
     setFilterOptions((prev) => {
-      const updatedFilters = { ...prev, [key]: actualValue };
+      const updatedLocalFilters = { ...prev, [key]: actualValue };
 
       // If bibleBooks is cleared, reset bibleChapters and bibleVerses
       if (key === 'bibleBooks' && (value === '' || (Array.isArray(value) && value.length === 0))) {
-        updatedFilters.bibleChapters = {};
-        updatedFilters.bibleVerses = [];
+        updatedLocalFilters.bibleChapters = {};
+        updatedLocalFilters.bibleVerses = [];
         setSelectedChapters({});
         setSelectedBibleVerses([]);
       }
 
-      // Synchronize the search term
-      if (key === 'search') {
-        setFilterOptions((prev) => ({ ...prev, search: value }))
-      }
+      // Synchronize the search term (this seems redundant if updatedLocalFilters already has it)
+      // if (key === 'search') {
+      //   updatedLocalFilters.search = value;
+      // }
+      
+      // Update global context
+      // Exclude sorting and view options from what's sent to global filter context if they are not part of FilterCriteria
+      const { sortBy, sortOrder, showLikedSongs, showBestMusically, showBestLyrically, showBestOverall, showMySongs, ...relevantFilters } = updatedLocalFilters;
+      setGlobalFilters(relevantFilters);
 
-      return updatedFilters;
+      return updatedLocalFilters;
     });
   }
 
@@ -189,10 +202,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       showBestMusically: false,
       showBestLyrically: false,
       showBestOverall: false,
-      sortBy: 'mostRecent',
-      sortOrder: 'desc',
+      sortBy: 'mostRecent', // This is part of local state for Listen page UI
+      sortOrder: 'desc',   // This is part of local state for Listen page UI
       showMySongs: false,
-    })
+    };
+    setFilterOptions(clearedOptions);
+    // Update global context with cleared filters (excluding sort/view options)
+    const { sortBy, sortOrder, showLikedSongs, showBestMusically, showBestLyrically, showBestOverall, showMySongs, ...relevantFilters } = clearedOptions;
+    setGlobalFilters(relevantFilters);
   }
 
   const { data: availableChapters, isLoading: isLoadingChapters } = useQuery({
@@ -223,15 +240,19 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
 
       // Update filterOptions
       setFilterOptions((prevFilters) => {
-        const updatedFilters = { ...prevFilters, bibleChapters: updatedChapters };
+        const updatedLocalFilters = { ...prevFilters, bibleChapters: updatedChapters };
 
         // If no chapters are selected, clear verses
         if (Object.keys(updatedChapters).length === 0) {
           setSelectedBibleVerses([]);
-          updatedFilters.bibleVerses = [];
+          updatedLocalFilters.bibleVerses = [];
         }
-
-        return updatedFilters;
+        
+        // Update global context
+        const { sortBy, sortOrder, showLikedSongs, showBestMusically, showBestLyrically, showBestOverall, showMySongs, ...relevantFilters } = updatedLocalFilters;
+        setGlobalFilters(relevantFilters);
+        
+        return updatedLocalFilters;
       });
 
       return updatedChapters;
@@ -267,8 +288,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
     const updatedVerses = selectedBibleVerses.includes(verse)
       ? selectedBibleVerses.filter(v => v !== verse)
       : [...selectedBibleVerses, verse]
-    setSelectedBibleVerses(updatedVerses)
-    setFilterOptions(prev => ({ ...prev, bibleVerses: updatedVerses }))
+    setSelectedBibleVerses(updatedVerses);
+    setFilterOptions(prev => {
+      const updatedLocalFilters = { ...prev, bibleVerses: updatedVerses };
+      // Update global context
+      const { sortBy, sortOrder, showLikedSongs, showBestMusically, showBestLyrically, showBestOverall, showMySongs, ...relevantFilters } = updatedLocalFilters;
+      setGlobalFilters(relevantFilters);
+      return updatedLocalFilters;
+    });
   }
 
   return (
