@@ -1,0 +1,28 @@
+{
+  "title": "The Eternal Danger of Habitual Sin",
+  "chapters": [
+    {
+      "title": "Preface",
+      "slug": "preface",
+      "order": 0,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Romans 6:23",
+        "1 John 1:9"
+      ],
+      "estimatedReadingTime": 5
+    },
+    {
+      "title": "The Progressive Nature of Sin",
+      "slug": "the-progressive-nature-of-sin",
+      "order": 1,
+      "chapterNumber": 1,
+      "keyVerses": [
+        "James 1:14-15",
+        "Hebrews 3:13",
+        "Romans 1:24-28"
+      ],
+      "estimatedReadingTime": 12
+    }
+  ]
+} 

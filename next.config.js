@@ -1,5 +1,15 @@
+const withMDX = require('@next/mdx')({
+  extension: /\.mdx?$/,
+  options: {
+    remarkPlugins: [],
+    rehypePlugins: [],
+  },
+});
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig = withMDX({
+  // Configure page extensions to include MDX
+  pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   // Configure image optimization and remote patterns
   images: {
     remotePatterns: [
@@ -65,7 +75,7 @@ const nextConfig = {
     }
     return config;
   },
-};
+});
 
 // Add helpful comment about running in standalone mode
 /**
