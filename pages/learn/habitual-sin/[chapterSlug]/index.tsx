@@ -480,7 +480,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     const mdxFiles = files.filter(file => file.endsWith('.mdx'));
     
     const paths = mdxFiles.map(file => ({
-      params: { chapterSlug: file.replace('.mdx', '').replace(/^\d+-/, '') }
+      params: { chapterSlug: file.replace('.mdx', '').replace(/^\d+[a-z]?-/, '') }
     }));
 
     return { paths, fallback: false };
