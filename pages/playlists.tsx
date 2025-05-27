@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import PlaylistSection from '../components/PlaylistsPage/PlaylistSection';
+import LearnPromoBanner from '../components/LearnPromoBanner';
 import { fetchPlaylists } from './api/playlists/api';
 import { Playlist } from '../types';
 import { BIBLE_BOOKS } from '@/lib/constants';
@@ -67,6 +68,9 @@ export default function PlaylistsPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-12 animate-fadeIn">
+      {/* Learn Promo Banner */}
+      <LearnPromoBanner variant="minimal" className="mb-8" />
+      
       {playlistGroups.map((group, index) => (
         <PlaylistSection
           key={index}

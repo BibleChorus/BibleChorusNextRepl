@@ -68,7 +68,7 @@ interface JournalProps {
 
 export default function Journal({ chapterSlug, allChapters, onClose }: JournalProps) {
   const { user } = useUser();
-  const { getUserNotes, saveNote, deleteNote } = useProgress();
+  const { getChapterNotes, saveNote, deleteNote } = useProgress();
   
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -104,15 +104,33 @@ export default function Journal({ chapterSlug, allChapters, onClose }: JournalPr
     { value: 'struggling', label: 'Struggling', emoji: '😔' },
   ];
 
+  // Helper function to convert UserNote to JournalEntry
+  const convertNoteToEntry = (note: any): JournalEntry => {
+    return {
+      id: note.id.toString(),
+      chapterSlug: note.chapter_slug,
+      title: note.note_type === 'reflection' ? 'Reflection' : note.note_type,
+      content: note.note,
+      tags: note.tags || [],
+      mood: undefined, // Will need to derive from sentiment if needed
+      isPrivate: note.is_private,
+      createdAt: note.created_at,
+      updatedAt: note.updated_at,
+      wordCount: note.word_count || 0,
+      sentiment: note.sentiment,
+    };
+  };
+
   // Load journal entries
   useEffect(() => {
-    const loadEntries = async () => {
+    const loadEntries = () => {
       if (!user) return;
       
       setIsLoading(true);
       try {
-        const notes = await getUserNotes(chapterSlug);
-        setEntries(notes || []);
+        const notes = getChapterNotes(chapterSlug || 'all');
+        const journalEntries = (notes || []).map(convertNoteToEntry);
+        setEntries(journalEntries);
       } catch (error) {
         console.error('Error loading journal entries:', error);
       } finally {
@@ -121,7 +139,7 @@ export default function Journal({ chapterSlug, allChapters, onClose }: JournalPr
     };
 
     loadEntries();
-  }, [user, chapterSlug]);
+  }, [user, chapterSlug, getChapterNotes]);
 
   // Filter and sort entries
   const filteredEntries = React.useMemo(() => {
@@ -180,23 +198,22 @@ export default function Journal({ chapterSlug, allChapters, onClose }: JournalPr
     if (!user || !newEntry.title.trim() || !newEntry.content.trim()) return;
 
     try {
-      const entry: Omit<JournalEntry, 'id'> = {
-        chapterSlug: chapterSlug || 'general',
-        title: newEntry.title.trim(),
-        content: newEntry.content.trim(),
+      const noteData = {
+        note: newEntry.content.trim(),
+        note_type: newEntry.title.trim(),
+        is_private: newEntry.isPrivate,
+        is_favorite: false,
+        verse_reference: null,
         tags: newEntry.tags,
-        mood: newEntry.mood,
-        isPrivate: newEntry.isPrivate,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        wordCount: newEntry.content.trim().split(/\s+/).length,
+        sentiment: newEntry.mood || null,
       };
 
-      await saveNote(entry.chapterSlug, entry);
+      await saveNote(chapterSlug || 'general', noteData);
       
       // Refresh entries
-      const notes = await getUserNotes(chapterSlug);
-      setEntries(notes || []);
+      const notes = getChapterNotes(chapterSlug || 'general');
+      const journalEntries = (notes || []).map(convertNoteToEntry);
+      setEntries(journalEntries);
       
       // Reset form
       setIsCreating(false);
@@ -231,8 +248,11 @@ export default function Journal({ chapterSlug, allChapters, onClose }: JournalPr
     if (!user) return;
 
     try {
-      await deleteNote(entryId);
-      setEntries(prev => prev.filter(entry => entry.id !== entryId));
+      await deleteNote(parseInt(entryId));
+      // Refresh entries after deletion
+      const notes = getChapterNotes(chapterSlug || 'general');
+      const journalEntries = (notes || []).map(convertNoteToEntry);
+      setEntries(journalEntries);
     } catch (error) {
       console.error('Error deleting journal entry:', error);
     }

@@ -13,6 +13,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext'
 import FloatingMusicPlayer from '@/components/MusicPlayer/FloatingMusicPlayer'
 import { SidebarProvider } from '@/contexts/SidebarContext'
+import { ProgressProvider } from '@/hooks/useProgress'
 
 const queryClient = new QueryClient()
 
@@ -69,24 +70,26 @@ function MyApp({ Component, pageProps }: AppProps) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <AuthProvider>
-        <MusicPlayerProvider>
-          <SidebarProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              <TooltipProvider>
-                <LoadingWrapper>
-                  {isHomePage ? (
-                    <Component {...pageProps} />
-                  ) : (
-                    <Layout>
+        <ProgressProvider>
+          <MusicPlayerProvider>
+            <SidebarProvider>
+              <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                <TooltipProvider>
+                  <LoadingWrapper>
+                    {isHomePage ? (
                       <Component {...pageProps} />
-                    </Layout>
-                  )}
-                </LoadingWrapper>
-                <FloatingMusicPlayer />
-              </TooltipProvider>
-            </ThemeProvider>
-          </SidebarProvider>
-        </MusicPlayerProvider>
+                    ) : (
+                      <Layout>
+                        <Component {...pageProps} />
+                      </Layout>
+                    )}
+                  </LoadingWrapper>
+                  <FloatingMusicPlayer />
+                </TooltipProvider>
+              </ThemeProvider>
+            </SidebarProvider>
+          </MusicPlayerProvider>
+        </ProgressProvider>
       </AuthProvider>
       <Toaster />
     </QueryClientProvider>

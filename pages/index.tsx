@@ -21,6 +21,7 @@ export default function Home() {
   };
 
   const features = [
+    { title: 'Learn Scripture', description: 'Study "The Eternal Danger of Habitual Sin" with interactive lessons and quizzes.', icon: BookOpen, link: '/learn/habitual-sin' },
     { title: 'Listen to Bible Songs', description: 'Explore a growing collection of Bible-inspired music.', icon: Music, link: '/listen' },
     { title: 'Upload Your Songs', description: 'Share your own Bible-inspired compositions.', icon: Upload, link: '/upload' },
     { title: 'Track Progress', description: 'See which parts of the Bible have been put to music.', icon: Map, link: '/progress' },

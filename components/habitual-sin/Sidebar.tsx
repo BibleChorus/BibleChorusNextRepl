@@ -65,36 +65,36 @@ export default function Sidebar({
 }: SidebarProps) {
   const router = useRouter();
   const { user } = useUser();
-  const { getProgress, getAllProgress } = useProgress();
+  const { progress, getChapterProgress, getOverallProgress } = useProgress();
   
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['chapters', 'progress'])
   );
 
-  // Get progress data for all chapters
-  const allProgress = getAllProgress();
+  // Get overall progress using the hook
+  const overallProgressData = getOverallProgress();
   
-  // Calculate overall progress statistics
+  // Calculate progress statistics
   const progressStats: ProgressStats = React.useMemo(() => {
     const totalChapters = chapters.length;
-    const completedChapters = chapters.filter(ch => 
-      allProgress[ch.slug]?.reading?.completed
-    ).length;
+    const completedChapters = chapters.filter(ch => {
+      const chapterProgress = getChapterProgress(ch.slug);
+      return chapterProgress?.completed_at;
+    }).length;
     
-    const totalReadingTime = Object.values(allProgress).reduce(
-      (sum, progress) => sum + (progress.reading?.timeSpent || 0), 0
+    const totalReadingTime = Object.values(progress).reduce(
+      (sum, chapterProgress) => sum + (chapterProgress.reading_time_seconds || 0), 0
     );
     
-    const quizProgresses = Object.values(allProgress).filter(p => p.quiz);
     const totalQuizzes = chapters.length; // Assuming each chapter has a quiz
-    const completedQuizzes = quizProgresses.filter(p => p.quiz?.completed).length;
+    const completedQuizzes = Object.values(progress).filter(p => p.quiz_completed_at).length;
     
-    const averageScore = quizProgresses.length > 0 
-      ? quizProgresses.reduce((sum, p) => sum + (p.quiz?.score || 0), 0) / quizProgresses.length
-      : 0;
+    const averageScore = Object.values(progress)
+      .filter(p => p.quiz_score !== null)
+      .reduce((sum, p, _, arr) => sum + (p.quiz_score || 0) / arr.length, 0);
 
     // Calculate current streak (consecutive days with activity)
-    const currentStreak = calculateStreak(allProgress);
+    const currentStreak = calculateStreak(progress);
 
     return {
       totalChapters,
@@ -105,7 +105,7 @@ export default function Sidebar({
       averageScore,
       currentStreak,
     };
-  }, [chapters, allProgress]);
+  }, [chapters, progress, getChapterProgress]);
 
   // Calculate reading streak
   function calculateStreak(progressData: any): number {
@@ -117,8 +117,8 @@ export default function Sidebar({
     while (streak < 365) { // Max 365 days to prevent infinite loop
       const dateStr = currentDate.toISOString().split('T')[0];
       const hasActivity = Object.values(progressData).some((progress: any) => {
-        const readingDate = progress.reading?.lastRead?.split('T')[0];
-        const quizDate = progress.quiz?.completedAt?.split('T')[0];
+        const readingDate = progress.last_visited_at?.split('T')[0];
+        const quizDate = progress.quiz_completed_at?.split('T')[0];
         return readingDate === dateStr || quizDate === dateStr;
       });
       
@@ -148,14 +148,14 @@ export default function Sidebar({
 
   // Get chapter progress status
   const getChapterStatus = (chapterSlug: string) => {
-    const progress = allProgress[chapterSlug];
-    if (!progress) return 'not-started';
+    const chapterProgress = getChapterProgress(chapterSlug);
+    if (!chapterProgress) return 'not-started';
     
-    if (progress.reading?.completed && progress.quiz?.completed) {
+    if (chapterProgress.completed_at && chapterProgress.quiz_completed_at) {
       return 'completed';
-    } else if (progress.reading?.completed || progress.quiz?.completed) {
+    } else if (chapterProgress.completed_at || chapterProgress.quiz_completed_at) {
       return 'in-progress';
-    } else if (progress.reading?.lastRead || progress.quiz?.attempts > 0) {
+    } else if (chapterProgress.started_at || (chapterProgress.quiz_attempts && chapterProgress.quiz_attempts > 0)) {
       return 'started';
     }
     
@@ -321,7 +321,7 @@ export default function Sidebar({
                     {chapters.map((chapter) => {
                       const status = getChapterStatus(chapter.slug);
                       const isActive = currentChapter === chapter.slug;
-                      const progress = allProgress[chapter.slug];
+                      const chapterProgress = getChapterProgress(chapter.slug);
                       
                       return (
                         <div key={chapter.slug}>
@@ -346,10 +346,10 @@ export default function Sidebar({
                                     ~{chapter.estimatedReadTime} min read
                                   </div>
                                 )}
-                                {progress?.reading?.progressPercentage && (
+                                {chapterProgress?.scroll_progress_percent && (
                                   <div className="mt-1">
                                     <Progress 
-                                      value={progress.reading.progressPercentage} 
+                                      value={chapterProgress.scroll_progress_percent} 
                                       className="h-1"
                                     />
                                   </div>
@@ -358,9 +358,9 @@ export default function Sidebar({
 
                               {/* Chapter actions */}
                               <div className="flex items-center gap-1">
-                                {progress?.quiz?.completed && (
+                                {chapterProgress?.quiz_score && (
                                   <Badge variant="outline" className="text-xs">
-                                    {progress.quiz.score}%
+                                    {chapterProgress.quiz_score}%
                                   </Badge>
                                 )}
                                 {status === 'completed' && (

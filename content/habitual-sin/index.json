@@ -8,19 +8,24 @@
       "chapterNumber": null,
       "keyVerses": [
         "Romans 6:23",
-        "1 John 1:9"
+        "1 John 1:9",
+        "Hebrews 3:15",
+        "2 Corinthians 6:2"
       ],
-      "estimatedReadingTime": 5
+      "estimatedReadingTime": 8
     },
     {
-      "title": "The Progressive Nature of Sin",
-      "slug": "the-progressive-nature-of-sin",
+      "title": "Introduction",
+      "slug": "introduction",
       "order": 1,
       "chapterNumber": 1,
       "keyVerses": [
-        "James 1:14-15",
-        "Hebrews 3:13",
-        "Romans 1:24-28"
+        "Hebrews 3:15",
+        "2 Corinthians 6:2",
+        "Hebrews 10:26",
+        "Galatians 5:25",
+        "1 Corinthians 6:9-10",
+        "Hebrews 12:14"
       ],
       "estimatedReadingTime": 12
     }

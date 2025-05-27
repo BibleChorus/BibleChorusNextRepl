@@ -45,6 +45,9 @@ import { useProgress, useChapterProgress } from '../../../../hooks/useProgress';
 import { useUser } from '../../../../hooks/useUser';
 import { useIntersectionObserver } from '../../../../hooks/useIntersectionObserver';
 
+// Components
+import BibleVerse from '../../../../components/BibleVerse';
+
 // Types
 interface ChapterData {
   title: string;
@@ -55,8 +58,8 @@ interface ChapterData {
   estimatedReadingTime: number;
   audioUrl: string | null;
   content: MDXRemoteSerializeResult;
-  nextChapter?: { title: string; slug: string };
-  prevChapter?: { title: string; slug: string };
+  nextChapter: { title: string; slug: string } | null;
+  prevChapter: { title: string; slug: string } | null;
 }
 
 interface Props {
@@ -110,6 +113,7 @@ const mdxComponents = {
       {children}
     </em>
   ),
+  BibleVerse: BibleVerse,
 };
 
 export default function ChapterPage({ chapterData }: Props) {
@@ -409,7 +413,7 @@ export default function ChapterPage({ chapterData }: Props) {
 
             {/* Navigation */}
             <div className="flex justify-between items-center">
-              {chapterData.prevChapter ? (
+              {chapterData.prevChapter !== null ? (
                 <Button asChild variant="outline">
                   <Link href={`/learn/habitual-sin/${chapterData.prevChapter.slug}`}>
                     <ChevronLeft className="h-4 w-4 mr-2" />
@@ -429,7 +433,7 @@ export default function ChapterPage({ chapterData }: Props) {
                 </Button>
               </div>
 
-              {chapterData.nextChapter ? (
+              {chapterData.nextChapter !== null ? (
                 <Button asChild>
                   <Link href={`/learn/habitual-sin/${chapterData.nextChapter.slug}`}>
                     {chapterData.nextChapter.title}
@@ -527,16 +531,16 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     const nextChapter = currentIndex < allChapters.length - 1 ? allChapters[currentIndex + 1] : null;
 
     const chapterData: ChapterData = {
-      title: frontmatter.title,
-      slug: frontmatter.slug,
-      order: frontmatter.order,
-      chapterNumber: frontmatter.chapterNumber,
+      title: frontmatter.title || 'Untitled Chapter',
+      slug: frontmatter.slug || chapterSlug,
+      order: frontmatter.order || 0,
+      chapterNumber: frontmatter.chapterNumber || null,
       keyVerses: frontmatter.keyVerses || [],
       estimatedReadingTime: frontmatter.estimatedReadingTime || 5,
-      audioUrl: frontmatter.audioUrl,
+      audioUrl: frontmatter.audioUrl || null,
       content: mdxSource,
-      prevChapter: prevChapter ? { title: prevChapter.title, slug: prevChapter.slug } : undefined,
-      nextChapter: nextChapter ? { title: nextChapter.title, slug: nextChapter.slug } : undefined,
+      prevChapter: prevChapter ? { title: prevChapter.title, slug: prevChapter.slug } : null,
+      nextChapter: nextChapter ? { title: nextChapter.title, slug: nextChapter.slug } : null,
     };
 
     return {
