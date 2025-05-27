@@ -192,8 +192,8 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       sortBy: 'mostRecent',
       sortOrder: 'desc',
       showMySongs: false,
-    })
-  }
+    },
+  )}
 
   const { data: availableChapters, isLoading: isLoadingChapters } = useQuery({
     queryKey: ['chapters', filterOptions.bibleBooks],
@@ -424,7 +424,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           </Button>
         </div>
       </div>
-      
+
       <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 h-8">
           <TabsTrigger value="AI Info" className="text-xs py-1 px-2">
