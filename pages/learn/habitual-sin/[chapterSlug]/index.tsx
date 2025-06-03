@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { GetStaticProps, GetStaticPaths } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -44,6 +44,7 @@ import {
 import { useProgress, useChapterProgress } from '../../../../hooks/useProgress';
 import { useUser } from '../../../../hooks/useUser';
 import { useIntersectionObserver } from '../../../../hooks/useIntersectionObserver';
+import throttle from 'lodash.throttle';
 
 // Components
 import BibleVerse from '../../../../components/BibleVerse';
@@ -134,6 +135,16 @@ export default function ChapterPage({ chapterData }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const startTimeRef = useRef<number>(Date.now());
 
+  const updateProgressThrottled = useCallback(
+    throttle((progressValue: number, time: number) => {
+      chapterProgress.updateProgress({
+        scroll_progress_percent: Math.round(progressValue),
+        reading_time_seconds: time,
+      });
+    }, 60000),
+    [chapterProgress]
+  );
+
   // Track reading time
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -159,16 +170,20 @@ export default function ChapterPage({ chapterData }: Props) {
       
       // Update progress in database (throttled)
       if (isAuthenticated && progress > chapterProgress.scrollProgress) {
-        chapterProgress.updateProgress({
-          scroll_progress_percent: Math.round(progress),
-          reading_time_seconds: readingTime,
-        });
+        updateProgressThrottled(progress, readingTime);
+
+        if (Math.round(progress) === 100) {
+          updateProgressThrottled.flush();
+        }
       }
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isAuthenticated, readingTime, chapterProgress]);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      updateProgressThrottled.cancel();
+    };
+  }, [isAuthenticated, readingTime, chapterProgress, updateProgressThrottled]);
 
   // Start reading when component mounts
   useEffect(() => {
