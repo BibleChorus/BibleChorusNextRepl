@@ -74,7 +74,7 @@ export default function HabitualSinIndexPage({ bookData }: Props) {
   }, []);
 
   // Calculate progress statistics
-  const overallProgress = getOverallProgress();
+  const overallProgress = getOverallProgress(bookData.chapters.length);
   const totalReadingTime = bookData.chapters.reduce((sum, chapter) => sum + chapter.estimatedReadingTime, 0);
   
   // Get chapter progress details

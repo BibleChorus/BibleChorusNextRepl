@@ -314,14 +314,13 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   };
 
   // Calculate overall progress
-  const getOverallProgress = () => {
-    const allChapters = Object.keys(progress);
-    const completedChapters = allChapters.filter(slug => progress[slug]?.completed_at);
-    
+  const getOverallProgress = (totalChapters?: number) => {
+    const completed = Object.values(progress).filter(p => p?.completed_at).length;
+    const total = typeof totalChapters === 'number' ? totalChapters : Object.keys(progress).length;
     return {
-      completed: completedChapters.length,
-      total: allChapters.length,
-      percentage: allChapters.length > 0 ? (completedChapters.length / allChapters.length) * 100 : 0,
+      completed,
+      total,
+      percentage: total > 0 ? (completed / total) * 100 : 0,
     };
   };
 
