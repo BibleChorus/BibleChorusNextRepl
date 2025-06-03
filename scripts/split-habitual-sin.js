@@ -1,7 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { extractBibleVerses, generateSlug } = require('./convert-habitual-sin');
-
 const INPUT_FILE = path.join(__dirname, '..', 'content', 'habitual-sin', '2025-05-11 The Eternal Danger of Habitual Sin.md');
 const OUTPUT_DIR = path.join(__dirname, '..', 'content', 'habitual-sin');
 
