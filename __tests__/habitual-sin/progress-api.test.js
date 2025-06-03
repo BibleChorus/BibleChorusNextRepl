@@ -34,7 +34,7 @@ const mockUser = {
 const mockReadingProgress = {
   id: 1,
   user_id: 1,
-  chapter_slug: 'test-chapter',
+  chapter_slug: 'test-chapter-a',
   reading_started_at: new Date(),
   last_read_at: new Date(),
   progress_percentage: 75,
@@ -51,7 +51,7 @@ const mockReadingProgress = {
 const mockUserNote = {
   id: 1,
   user_id: 1,
-  chapter_slug: 'test-chapter',
+  chapter_slug: 'test-chapter-a',
   note_title: 'Test Reflection',
   note_content: 'This is a test reflection on the chapter content.',
   note_type: 'reflection',
@@ -96,7 +96,7 @@ describe('/api/learn/progress', () => {
   describe('GET /api/learn/progress', () => {
     test('should return progress for authenticated user', async () => {
       const token = createJwtToken();
-      const { req, res } = createMockReqRes('GET', {}, { chapterSlug: 'test-chapter' }, {
+      const { req, res } = createMockReqRes('GET', {}, { chapterSlug: 'test-chapter-a' }, {
         authorization: `Bearer ${token}`
       });
 
@@ -106,12 +106,12 @@ describe('/api/learn/progress', () => {
 
       expect(mockDb.select).toHaveBeenCalled();
       expect(mockDb.where).toHaveBeenCalledWith('user_id', mockUser.id);
-      expect(mockDb.where).toHaveBeenCalledWith('chapter_slug', 'test-chapter');
+      expect(mockDb.where).toHaveBeenCalledWith('chapter_slug', 'test-chapter-a');
       expect(res.json).toHaveBeenCalledWith(mockReadingProgress);
     });
 
     test('should return 401 for unauthenticated request', async () => {
-      const { req, res } = createMockReqRes('GET', {}, { chapterSlug: 'test-chapter' });
+      const { req, res } = createMockReqRes('GET', {}, { chapterSlug: 'test-chapter-a' });
 
       await progressHandler(req, res);
 
@@ -134,7 +134,7 @@ describe('/api/learn/progress', () => {
 
     test('should handle database errors gracefully', async () => {
       const token = createJwtToken();
-      const { req, res } = createMockReqRes('GET', {}, { chapterSlug: 'test-chapter' }, {
+      const { req, res } = createMockReqRes('GET', {}, { chapterSlug: 'test-chapter-a' }, {
         authorization: `Bearer ${token}`
       });
 
@@ -193,7 +193,7 @@ describe('/api/learn/progress', () => {
     test('should validate progress percentage range', async () => {
       const token = createJwtToken();
       const { req, res } = createMockReqRes('POST', {
-        chapterSlug: 'test-chapter',
+        chapterSlug: 'test-chapter-a',
         reading: {
           progressPercentage: 150 // Invalid - over 100
         }
@@ -222,7 +222,7 @@ describe('/api/learn/progress', () => {
     test('should update existing progress record', async () => {
       const token = createJwtToken();
       const { req, res } = createMockReqRes('PUT', {
-        chapterSlug: 'test-chapter',
+        chapterSlug: 'test-chapter-a',
         ...updateData
       }, {}, {
         authorization: `Bearer ${token}`
@@ -269,7 +269,7 @@ describe('/api/learn/progress', () => {
     test('should update quiz progress', async () => {
       const token = createJwtToken();
       const { req, res } = createMockReqRes('PUT', {
-        chapterSlug: 'test-chapter',
+        chapterSlug: 'test-chapter-a',
         ...quizData
       }, {}, {
         authorization: `Bearer ${token}`
@@ -290,7 +290,7 @@ describe('/api/learn/progress', () => {
     test('should validate quiz score range', async () => {
       const token = createJwtToken();
       const { req, res } = createMockReqRes('PUT', {
-        chapterSlug: 'test-chapter',
+        chapterSlug: 'test-chapter-a',
         quiz: {
           score: 150 // Invalid - over 100
         }
@@ -316,7 +316,7 @@ describe('/api/learn/notes', () => {
   describe('GET /api/learn/notes', () => {
     test('should return notes for authenticated user', async () => {
       const token = createJwtToken();
-      const { req, res } = createMockReqRes('GET', {}, { chapterSlug: 'test-chapter' }, {
+      const { req, res } = createMockReqRes('GET', {}, { chapterSlug: 'test-chapter-a' }, {
         authorization: `Bearer ${token}`
       });
 
@@ -347,7 +347,7 @@ describe('/api/learn/notes', () => {
 
   describe('POST /api/learn/notes', () => {
     const noteData = {
-      chapterSlug: 'test-chapter',
+      chapterSlug: 'test-chapter-a',
       title: 'New Reflection',
       content: 'This is my reflection on the chapter.',
       tags: ['reflection', 'growth'],
@@ -367,7 +367,7 @@ describe('/api/learn/notes', () => {
 
       expect(mockDb.insert).toHaveBeenCalledWith(expect.objectContaining({
         user_id: mockUser.id,
-        chapter_slug: 'test-chapter',
+        chapter_slug: 'test-chapter-a',
         note_title: 'New Reflection',
         note_content: 'This is my reflection on the chapter.',
         tags: JSON.stringify(['reflection', 'growth'])
@@ -379,7 +379,7 @@ describe('/api/learn/notes', () => {
       const token = createJwtToken();
       const { req, res } = createMockReqRes('POST', {
         // Missing title and content
-        chapterSlug: 'test-chapter'
+        chapterSlug: 'test-chapter-a'
       }, {}, {
         authorization: `Bearer ${token}`
       });
@@ -395,7 +395,7 @@ describe('/api/learn/notes', () => {
     test('should validate content length', async () => {
       const token = createJwtToken();
       const { req, res } = createMockReqRes('POST', {
-        chapterSlug: 'test-chapter',
+        chapterSlug: 'test-chapter-a',
         title: 'Test',
         content: 'x'.repeat(10001) // Too long
       }, {}, {
@@ -525,7 +525,7 @@ describe('/api/learn/notes', () => {
     test('should sanitize user input', async () => {
       const token = createJwtToken();
       const { req, res } = createMockReqRes('POST', {
-        chapterSlug: 'test-chapter',
+        chapterSlug: 'test-chapter-a',
         title: '<script>alert("xss")</script>Safe Title',
         content: 'Safe content with <b>allowed</b> HTML',
         tags: ['<script>', 'safe-tag']
@@ -547,7 +547,7 @@ describe('/api/learn/notes', () => {
     test('should validate tag format', async () => {
       const token = createJwtToken();
       const { req, res } = createMockReqRes('POST', {
-        chapterSlug: 'test-chapter',
+        chapterSlug: 'test-chapter-a',
         title: 'Test',
         content: 'Test content',
         tags: 'not-an-array' // Should be array
