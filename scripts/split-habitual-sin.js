@@ -1,35 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-// Inline minimal helpers from convert-habitual-sin.js so we don't require
-// optional dependencies like `mammoth` when running this script.
-function extractBibleVerses(text) {
-  const versePatterns = [
-    /\b(\d?\s?[A-Za-z]+)\s+(\d+):(\d+(?:-\d+)?)\b/g,
-    /\b(\d?\s?[A-Za-z]+)\s+(\d+)\.(\d+(?:-\d+)?)\b/g,
-    /\b(Genesis|Exodus|Leviticus|Numbers|Deuteronomy|Joshua|Judges|Ruth|Samuel|Kings|Chronicles|Ezra|Nehemiah|Esther|Job|Psalms?|Proverbs?|Ecclesiastes|Song|Isaiah|Jeremiah|Lamentations|Ezekiel|Daniel|Hosea|Joel|Amos|Obadiah|Jonah|Micah|Nahum|Habakkuk|Zephaniah|Haggai|Zechariah|Malachi|Matthew|Mark|Luke|John|Acts|Romans|Corinthians|Galatians|Ephesians|Philippians|Colossians|Thessalonians|Timothy|Titus|Philemon|Hebrews|James|Peter|Jude|Revelation)\s+(\d+):(\d+(?:-\d+)?)\b/gi
-  ];
-  const verses = new Set();
-  versePatterns.forEach(pattern => {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      const book = match[1].trim();
-      const chapter = match[2];
-      const verse = match[3];
-      verses.add(`${book} ${chapter}:${verse}`);
-    }
-  });
-  return Array.from(verses);
-}
-
-function generateSlug(title) {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim('-');
-}
-
 const INPUT_FILE = path.join(__dirname, '..', 'content', 'habitual-sin', '2025-05-11 The Eternal Danger of Habitual Sin.md');
 const OUTPUT_DIR = path.join(__dirname, '..', 'content', 'habitual-sin');
 
