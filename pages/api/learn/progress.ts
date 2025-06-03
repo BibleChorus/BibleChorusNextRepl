@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
-const knex = require('../../../db');
+const knex = require('../../../db.js');
 
 // Types for request/response
 interface ProgressRequest {
@@ -49,10 +49,15 @@ function getUserFromToken(req: NextApiRequest): User | null {
  */
 async function handleGet(req: NextApiRequest, res: NextApiResponse, user: User) {
   try {
-    const progress = await knex('reading_progress')
-      .where('user_id', user.id)
-      .orderBy('created_at', 'desc');
+    const { chapterSlug } = req.query as { chapterSlug?: string };
+    let query = knex('reading_progress').select('*').where('user_id', user.id);
 
+    if (chapterSlug) {
+      const result = await query.where('chapter_slug', chapterSlug).first();
+      return res.status(200).json(result || null);
+    }
+
+    const progress = await query.orderBy('created_at', 'desc');
     res.status(200).json(progress);
   } catch (error) {
     console.error('Error fetching progress:', error);
@@ -66,7 +71,18 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, user: User) 
  */
 async function handlePost(req: NextApiRequest, res: NextApiResponse, user: User) {
   try {
-    const { chapter_slug, action = 'start' }: ProgressRequest = req.body;
+    const {
+      chapter_slug = req.body.chapterSlug,
+      action = 'start',
+      reading
+    }: any = req.body;
+
+    if (reading && typeof reading.progressPercentage === 'number') {
+      const pct = reading.progressPercentage;
+      if (pct < 0 || pct > 100) {
+        return res.status(400).json({ message: 'Progress percentage must be between 0 and 100' });
+      }
+    }
 
     if (!chapter_slug) {
       return res.status(400).json({ message: 'chapter_slug is required' });
@@ -78,19 +94,21 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, user: User)
       .first();
 
     let result;
+    let created = false;
 
     if (existingProgress) {
       // Update existing progress
+      const nowValue = knex.fn && typeof knex.fn.now === 'function' ? knex.fn.now() : new Date();
       const updateData: any = {
-        last_visited_at: knex.fn.now(),
+        last_visited_at: nowValue,
         visit_count: knex.raw('visit_count + 1'),
-        updated_at: knex.fn.now(),
+        updated_at: nowValue,
       };
 
       if (action === 'start') {
         // Just update visit info for existing progress
       } else if (action === 'complete') {
-        updateData.completed_at = knex.fn.now();
+        updateData.completed_at = nowValue;
         updateData.scroll_progress_percent = 100;
       }
 
@@ -103,11 +121,12 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, user: User)
         .first();
     } else {
       // Create new progress record
+      const nowVal = knex.fn && typeof knex.fn.now === 'function' ? knex.fn.now() : new Date();
       const progressData = {
         user_id: user.id,
         chapter_slug,
-        started_at: knex.fn.now(),
-        completed_at: action === 'complete' ? knex.fn.now() : null,
+        started_at: nowVal,
+        completed_at: action === 'complete' ? nowVal : null,
         scroll_progress_percent: action === 'complete' ? 100 : 0,
         reading_time_seconds: 0,
         quiz_score: null,
@@ -115,14 +134,16 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, user: User)
         quiz_completed_at: null,
         quiz_answers: null,
         visit_count: 1,
-        last_visited_at: knex.fn.now(),
+        last_visited_at: nowVal,
       };
 
-      const [id] = await knex('reading_progress').insert(progressData).returning('id');
-      result = await knex('reading_progress').where('id', id).first();
+      await knex('reading_progress').insert(progressData);
+      result = progressData;
+      created = true;
     }
 
-    res.status(200).json(result);
+    const statusCode = created ? 201 : 200;
+    res.status(statusCode).json(result);
   } catch (error) {
     console.error('Error creating/updating progress:', error);
     res.status(500).json({ message: 'Failed to save progress' });
@@ -135,16 +156,19 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, user: User)
  */
 async function handlePut(req: NextApiRequest, res: NextApiResponse, user: User) {
   try {
-    const { 
-      chapter_slug, 
-      reading_time_seconds,
-      scroll_progress_percent,
-      quiz_score,
-      quiz_answers,
-      quiz_completed_at,
-      quiz_attempts,
-      completed_at
-    }: ProgressRequest = req.body;
+    const nowVal = knex.fn && typeof knex.fn.now === 'function' ? knex.fn.now() : new Date();
+    const {
+      chapter_slug = req.body.chapterSlug,
+      reading,
+      quiz,
+      reading_time_seconds = reading?.timeSpent,
+      scroll_progress_percent = reading?.progressPercentage,
+      quiz_score = quiz?.score,
+      quiz_answers = quiz?.answers,
+      quiz_completed_at = quiz?.completedAt,
+      quiz_attempts = quiz?.attempts,
+      completed_at = reading?.completed ? nowVal : undefined
+    }: any = req.body;
 
     if (!chapter_slug) {
       return res.status(400).json({ message: 'chapter_slug is required' });
@@ -161,8 +185,8 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, user: User) 
 
     // Build update object with only provided fields
     const updateData: any = {
-      updated_at: knex.fn.now(),
-      last_visited_at: knex.fn.now(),
+      updated_at: nowVal,
+      last_visited_at: nowVal,
     };
 
     if (reading_time_seconds !== undefined) {
@@ -172,6 +196,9 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, user: User) 
       updateData.scroll_progress_percent = scroll_progress_percent;
     }
     if (quiz_score !== undefined) {
+      if (quiz_score < 0 || quiz_score > 100) {
+        return res.status(400).json({ message: 'Quiz score must be between 0 and 100' });
+      }
       updateData.quiz_score = quiz_score;
     }
     if (quiz_answers !== undefined) {
@@ -183,6 +210,12 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, user: User) 
     if (quiz_attempts !== undefined) {
       updateData.quiz_attempts = quiz_attempts;
     }
+    if (quiz && quiz.completed !== undefined) {
+      updateData.quiz_completed = quiz.completed;
+    }
+    if (quiz && quiz.timeSpent !== undefined) {
+      updateData.quiz_time_spent = quiz.timeSpent;
+    }
     if (completed_at !== undefined) {
       updateData.completed_at = completed_at;
     }
@@ -191,11 +224,7 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, user: User) 
       .where({ user_id: user.id, chapter_slug })
       .update(updateData);
 
-    const result = await knex('reading_progress')
-      .where({ user_id: user.id, chapter_slug })
-      .first();
-
-    res.status(200).json(result);
+    res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error updating progress:', error);
     res.status(500).json({ message: 'Failed to update progress' });

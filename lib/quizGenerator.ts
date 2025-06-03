@@ -1,5 +1,3 @@
-import { remark } from 'remark';
-import remarkMdx from 'remark-mdx';
 
 // Types for quiz questions
 export interface QuizQuestion {
@@ -150,7 +148,7 @@ function generateMultipleChoiceQuestions(
     return {
       id: `mc-verse-${index}`,
       type: 'multiple-choice' as const,
-      question: `Which book of the Bible contains the verse referenced as ${reference}?`,
+      question: `Which book of the Bible contains the verse ${book} ${reference}?`,
       options,
       correctAnswer,
       difficulty: 'easy' as const,
@@ -208,6 +206,8 @@ function generateFillBlankQuestions(
   count: number
 ): QuizQuestion[] {
   const questions: QuizQuestion[] = [];
+
+  const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   
   // Extract sentences with key terms
   const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
@@ -224,7 +224,8 @@ function generateFillBlankQuestions(
     
     if (candidateWords.length > 0) {
       const targetWord = candidateWords[Math.floor(Math.random() * candidateWords.length)];
-      const blankedSentence = sentence.replace(new RegExp(`\\b${targetWord}\\b`, 'i'), '______');
+      const regex = new RegExp(`\\b${escapeRegExp(targetWord)}\\b`, 'i');
+      const blankedSentence = sentence.replace(regex, '______');
       
       questions.push({
         id: `fb-${i}`,
@@ -302,10 +303,6 @@ export async function generateQuiz(
 ): Promise<QuizQuestion[]> {
   const finalConfig = { ...DEFAULT_QUIZ_CONFIG, ...config };
   
-  // Parse MDX content to extract text
-  const processor = remark().use(remarkMdx);
-  const tree = processor.parse(mdxContent);
-  
   // Extract plain text content (simplified - would need proper MDX parsing)
   const textContent = mdxContent.replace(/^---[\s\S]*?---/, '') // Remove frontmatter
     .replace(/<[^>]*>/g, '') // Remove HTML tags
@@ -350,8 +347,14 @@ export async function generateQuiz(
     questions.push(...generateShortAnswerQuestions(concepts, verses, textContent, questionCounts['short-answer']));
   }
 
-  // Shuffle final questions
-  return shuffleArray(questions);
+  let finalQuestions = questions;
+
+  if (finalConfig.difficultyDistribution.hard === 0) {
+    finalQuestions = finalQuestions.filter(q => q.difficulty !== 'hard');
+  }
+
+  // Shuffle final questions and limit to requested total
+  return shuffleArray(finalQuestions).slice(0, finalConfig.totalQuestions);
 }
 
 /**
@@ -381,7 +384,7 @@ export function calculateQuizScore(questions: QuizQuestion[], answers: (string |
     }
   });
   
-  return Math.round((correctCount / questions.length) * 100);
+  return parseFloat(((correctCount / questions.length) * 100).toFixed(2));
 }
 
 /**

@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
-const knex = require('../../../db');
+const knex = require('../../../db.js');
 
 // Types for request/response
 interface NoteRequest {
   chapter_slug?: string;
-  note: string;
+  note_content: string;
   note_type?: string;
   is_private?: boolean;
   is_favorite?: boolean;
@@ -62,15 +62,20 @@ function analyzeSentiment(text: string): string {
   return 'neutral';
 }
 
+function sanitize(text: string): string {
+  return text.replace(/<script.*?>.*?<\/script>/gi, '');
+}
+
 /**
  * GET /api/learn/notes
  * Retrieves all notes for the authenticated user
  */
 async function handleGet(req: NextApiRequest, res: NextApiResponse, user: User) {
   try {
-    const { chapter_slug } = req.query;
+    const chapter_slug = (req.query as any).chapter_slug || (req.query as any).chapterSlug;
     
     let query = knex('user_notes')
+      .select('*')
       .where('user_id', user.id)
       .orderBy('created_at', 'desc');
     
@@ -79,14 +84,8 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, user: User) 
     }
     
     const notes = await query;
-    
-    // Parse JSON fields
-    const parsedNotes = notes.map(note => ({
-      ...note,
-      tags: note.tags ? JSON.parse(note.tags) : null,
-    }));
 
-    res.status(200).json(parsedNotes);
+    res.status(200).json(notes);
   } catch (error) {
     console.error('Error fetching notes:', error);
     res.status(500).json({ message: 'Failed to fetch notes' });
@@ -99,17 +98,25 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, user: User) 
  */
 async function handlePost(req: NextApiRequest, res: NextApiResponse, user: User) {
   try {
-    const { 
-      chapter_slug, 
-      note, 
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ message: 'Invalid request body' });
+    }
+
+    const {
+      chapter_slug = req.body.chapterSlug,
+      note_content = req.body.content,
       note_type = 'reflection',
       is_private = true,
       is_favorite = false,
       verse_reference,
-      tags
-    }: NoteRequest = req.body;
+      tags,
+      title
+    }: any = req.body;
 
-    if (!chapter_slug || !note) {
+    const note_title = req.body.note_title || title;
+    const note = req.body.note || note_content;
+
+    if (!chapter_slug || !note_title || !note) {
       return res.status(400).json({ message: 'chapter_slug and note are required' });
     }
 
@@ -117,14 +124,26 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, user: User)
       return res.status(400).json({ message: 'Note must be at least 3 characters long' });
     }
 
+    if (note.trim().length > 10000) {
+      return res.status(400).json({ message: 'Content must be less than 10000 characters' });
+    }
+
+    if (tags && !Array.isArray(tags)) {
+      return res.status(400).json({ message: 'Tags must be an array' });
+    }
+
     // Calculate word count and analyze sentiment
     const wordCount = note.trim().split(/\s+/).length;
     const sentiment = analyzeSentiment(note);
 
+    const cleanTitle = sanitize(note_title.trim());
+    const cleanNote = sanitize(note.trim());
+
     const noteData = {
       user_id: user.id,
       chapter_slug,
-      note: note.trim(),
+      note_title: cleanTitle,
+      note_content: cleanNote,
       note_type,
       is_private,
       is_favorite,
@@ -134,8 +153,8 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, user: User)
       word_count: wordCount,
     };
 
-    const [id] = await knex('user_notes').insert(noteData).returning('id');
-    const result = await knex('user_notes').where('id', id).first();
+    await knex('user_notes').insert(noteData);
+    const result = noteData;
     
     // Parse JSON fields for response
     const parsedResult = {
@@ -156,7 +175,8 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, user: User)
  */
 async function handlePut(req: NextApiRequest, res: NextApiResponse, user: User) {
   try {
-    const noteId = parseInt(req.query.id as string);
+    const noteIdStr = (req.query.id as string) || req.body.id;
+    const noteId = parseInt(noteIdStr);
     
     if (!noteId || isNaN(noteId)) {
       return res.status(400).json({ message: 'Valid note ID is required' });
@@ -164,55 +184,65 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, user: User) 
 
     // Check if note exists and belongs to user
     const existingNote = await knex('user_notes')
-      .where({ id: noteId, user_id: user.id })
+      .where('id', noteIdStr)
+      .where('user_id', user.id)
       .first();
 
     if (!existingNote) {
       return res.status(404).json({ message: 'Note not found' });
     }
 
-    const { 
-      note, 
+    const {
+      note = req.body.content,
       note_type,
       is_private,
       is_favorite,
       verse_reference,
-      tags
-    }: Partial<NoteRequest> = req.body;
+      tags,
+      title
+    }: any = req.body;
+    const note_title_update = req.body.note_title ?? title;
 
     // Build update object with only provided fields
+    const nowVal = knex.fn && typeof knex.fn.now === 'function' ? knex.fn.now() : new Date();
     const updateData: any = {
-      updated_at: knex.fn.now(),
+      updated_at: nowVal,
     };
 
     if (note !== undefined) {
       if (note.trim().length < 3) {
         return res.status(400).json({ message: 'Note must be at least 3 characters long' });
       }
-      updateData.note = note.trim();
-      updateData.word_count = note.trim().split(/\s+/).length;
-      updateData.sentiment = analyzeSentiment(note);
+      if (note.trim().length > 10000) {
+        return res.status(400).json({ message: 'Content must be less than 10000 characters' });
+      }
+      const cleaned = sanitize(note.trim());
+      updateData.note_content = cleaned;
+      updateData.word_count = cleaned.split(/\s+/).length;
+      updateData.sentiment = analyzeSentiment(cleaned);
+    }
+
+    if (note_title_update !== undefined) {
+      updateData.note_title = sanitize(String(note_title_update).trim());
     }
     
     if (note_type !== undefined) updateData.note_type = note_type;
     if (is_private !== undefined) updateData.is_private = is_private;
     if (is_favorite !== undefined) updateData.is_favorite = is_favorite;
     if (verse_reference !== undefined) updateData.verse_reference = verse_reference;
-    if (tags !== undefined) updateData.tags = tags ? JSON.stringify(tags) : null;
+    if (tags !== undefined) {
+      if (tags && !Array.isArray(tags)) {
+        return res.status(400).json({ message: 'Tags must be an array' });
+      }
+      updateData.tags = tags ? JSON.stringify(tags) : null;
+    }
 
     await knex('user_notes')
-      .where({ id: noteId, user_id: user.id })
+      .where('id', noteIdStr)
+      .where('user_id', user.id)
       .update(updateData);
 
-    const result = await knex('user_notes').where('id', noteId).first();
-    
-    // Parse JSON fields for response
-    const parsedResult = {
-      ...result,
-      tags: result.tags ? JSON.parse(result.tags) : null,
-    };
-
-    res.status(200).json(parsedResult);
+    res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error updating note:', error);
     res.status(500).json({ message: 'Failed to update note' });
@@ -232,8 +262,9 @@ async function handleDelete(req: NextApiRequest, res: NextApiResponse, user: Use
     }
 
     // Check if note exists and belongs to user
+    const noteIdStr = req.query.id as string;
     const existingNote = await knex('user_notes')
-      .where({ id: noteId, user_id: user.id })
+      .where({ id: noteIdStr, user_id: user.id })
       .first();
 
     if (!existingNote) {
@@ -241,10 +272,11 @@ async function handleDelete(req: NextApiRequest, res: NextApiResponse, user: Use
     }
 
     await knex('user_notes')
-      .where({ id: noteId, user_id: user.id })
-      .delete();
+      .where('id', noteIdStr)
+      .where('user_id', user.id)
+      .del();
 
-    res.status(200).json({ message: 'Note deleted successfully' });
+    res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error deleting note:', error);
     res.status(500).json({ message: 'Failed to delete note' });

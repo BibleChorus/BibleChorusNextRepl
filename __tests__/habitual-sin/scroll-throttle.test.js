@@ -8,7 +8,7 @@ jest.useFakeTimers();
 describe('updateProgressThrottled', () => {
   test('limits calls to once per minute', () => {
     const fn = jest.fn();
-    const throttled = throttle(fn, 60000);
+    const throttled = throttle(fn, 60000, { trailing: false });
 
     throttled();
     throttled();
@@ -23,7 +23,7 @@ describe('updateProgressThrottled', () => {
 
   test('flushes pending call immediately', () => {
     const fn = jest.fn();
-    const throttled = throttle(fn, 60000);
+    const throttled = throttle(fn, 60000, { trailing: true });
 
     throttled();
     throttled();

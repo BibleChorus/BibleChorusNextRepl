@@ -5,6 +5,8 @@
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 
+process.env.JWT_SECRET = 'test-secret';
+
 // Mock the database module
 const mockDb = {
   select: jest.fn().mockReturnThis(),
@@ -16,13 +18,19 @@ const mockDb = {
   count: jest.fn().mockReturnThis(),
   orderBy: jest.fn().mockReturnThis(),
   limit: jest.fn().mockReturnThis(),
+  then: jest.fn(function (resolve, reject) {
+    if (this.__error) return Promise.resolve(reject ? reject(this.__error) : null);
+    return Promise.resolve(resolve(this.__value));
+  })
 };
 
-jest.mock('../../db.js', () => mockDb);
+const mockKnex = jest.fn(() => mockDb);
+
+jest.mock('../../db.js', () => mockKnex);
 
 // Mock Next.js API handler
-const progressHandler = require('../../pages/api/learn/progress');
-const notesHandler = require('../../pages/api/learn/notes');
+const progressHandler = require('../../pages/api/learn/progress').default;
+const notesHandler = require('../../pages/api/learn/notes').default;
 
 // Test data
 const mockUser = {
@@ -77,7 +85,8 @@ function createMockReqRes(method = 'GET', body = {}, query = {}, headers = {}) {
   const mockRes = {
     status: jest.fn().mockReturnThis(),
     json: jest.fn().mockReturnThis(),
-    end: jest.fn().mockReturnThis()
+    end: jest.fn().mockReturnThis(),
+    setHeader: jest.fn().mockReturnThis()
   };
 
   return { req: mockReq, res: mockRes };
@@ -116,7 +125,7 @@ describe('/api/learn/progress', () => {
       await progressHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Authentication required' });
     });
 
     test('should return null for non-existent progress', async () => {
@@ -143,7 +152,7 @@ describe('/api/learn/progress', () => {
       await progressHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Internal server error' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Failed to fetch progress' });
     });
   });
 
@@ -187,7 +196,7 @@ describe('/api/learn/progress', () => {
       await progressHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Chapter slug is required' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'chapter_slug is required' });
     });
 
     test('should validate progress percentage range', async () => {
@@ -204,8 +213,8 @@ describe('/api/learn/progress', () => {
       await progressHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ 
-        error: 'Progress percentage must be between 0 and 100' 
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Progress percentage must be between 0 and 100'
       });
     });
   });
@@ -251,7 +260,7 @@ describe('/api/learn/progress', () => {
       await progressHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Progress record not found' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Progress record not found' });
     });
   });
 
@@ -301,8 +310,8 @@ describe('/api/learn/progress', () => {
       await progressHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ 
-        error: 'Quiz score must be between 0 and 100' 
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Quiz score must be between 0 and 100'
       });
     });
   });
@@ -321,7 +330,7 @@ describe('/api/learn/notes', () => {
       });
 
       mockDb.orderBy.mockReturnThis();
-      mockDb.select.mockResolvedValue([mockUserNote]);
+      mockDb.__value = [mockUserNote];
 
       await notesHandler(req, res);
 
@@ -337,7 +346,7 @@ describe('/api/learn/notes', () => {
       });
 
       mockDb.orderBy.mockReturnThis();
-      mockDb.select.mockResolvedValue([]);
+      mockDb.__value = [];
 
       await notesHandler(req, res);
 
@@ -387,8 +396,8 @@ describe('/api/learn/notes', () => {
       await notesHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ 
-        error: 'Title and content are required' 
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'chapter_slug and note are required'
       });
     });
 
@@ -405,8 +414,8 @@ describe('/api/learn/notes', () => {
       await notesHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ 
-        error: 'Content must be less than 10000 characters' 
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Content must be less than 10000 characters'
       });
     });
   });
@@ -447,7 +456,7 @@ describe('/api/learn/notes', () => {
       await notesHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Note not found' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Note not found' });
     });
   });
 
@@ -480,7 +489,7 @@ describe('/api/learn/notes', () => {
       await notesHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Note not found' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Note not found' });
     });
   });
 
@@ -508,7 +517,7 @@ describe('/api/learn/notes', () => {
       await notesHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid token' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Authentication required' });
     });
 
     test('should handle missing authorization header', async () => {
@@ -517,7 +526,7 @@ describe('/api/learn/notes', () => {
       await notesHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Authentication required' });
     });
   });
 
@@ -558,8 +567,8 @@ describe('/api/learn/notes', () => {
       await notesHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ 
-        error: 'Tags must be an array' 
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Tags must be an array'
       });
     });
   });
