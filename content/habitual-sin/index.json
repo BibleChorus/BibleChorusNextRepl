@@ -49,9 +49,48 @@
       "estimatedReadingTime": 12
     },
     {
+      "title": "Complacent Believer",
+      "slug": "introduction-scenarios",
+      "order": 2,
+      "chapterNumber": "1",
+      "keyVerses": [
+        "Hebrews 3:15",
+        "Galatians 5:25",
+        "Ephesians 2:8",
+        "Matthew 5:30",
+        "2 Corinthians 6:1",
+        "Romans 8:13",
+        "Matthew 7:21",
+        "2 Timothy 4:7",
+        "Psalm 103:14",
+        "Luke 3:8",
+        "Matthew 7:23",
+        "Hebrews 3:13",
+        "Galatians 6:7",
+        "2 Peter 2:20",
+        "Hebrews 12:15",
+        "Matthew 7:13",
+        "Hebrews 4:13",
+        "Matthew 4:17",
+        "Luke 12:46",
+        "Hebrews 12:14",
+        "Hebrews 4:7",
+        "Romans 2:4",
+        "Romans 2:5",
+        "1 Corinthians 10:12",
+        "Isaiah 55:6",
+        "Hebrews 10:31",
+        "Corinthians 6:1",
+        "Timothy 4:7",
+        "Peter 2:20",
+        "Corinthians 10:12"
+      ],
+      "estimatedReadingTime": 6
+    },
+    {
       "title": "“Be Not Deceived”: The Bible’s Warnings to Believers",
       "slug": "be-not-deceived-the-bibles-warnings-to-believers",
-      "order": 2,
+      "order": 3,
       "chapterNumber": "2",
       "keyVerses": [],
       "estimatedReadingTime": 1
@@ -59,7 +98,7 @@
     {
       "title": "“No Inheritance in the Kingdom” – Warnings from Paul’s Epistles",
       "slug": "no-inheritance-in-the-kingdom-warnings-from-pauls-epistles",
-      "order": 3,
+      "order": 4,
       "chapterNumber": null,
       "keyVerses": [
         "1 Cor 6:11",
@@ -80,7 +119,7 @@
     {
       "title": "Warnings to Continue: “If We Deny Him…” – Perseverance in the Pastoral Epistles",
       "slug": "warnings-to-continue-if-we-deny-him-perseverance-in-the-pastoral-epistles",
-      "order": 4,
+      "order": 5,
       "chapterNumber": null,
       "keyVerses": [
         "2 Timothy 2:11",
@@ -98,7 +137,7 @@
     {
       "title": "“Today, If You Hear His Voice…” – Exhortations from Hebrews",
       "slug": "today-if-you-hear-his-voice-exhortations-from-hebrews",
-      "order": 5,
+      "order": 6,
       "chapterNumber": null,
       "keyVerses": [
         "Heb 10:38",
@@ -115,7 +154,7 @@
     {
       "title": "“No One Born of God Sins” – The Test of 1 John",
       "slug": "no-one-born-of-god-sins-the-test-of-1-john",
-      "order": 6,
+      "order": 7,
       "chapterNumber": null,
       "keyVerses": [
         "1 John 3:6",
@@ -135,7 +174,7 @@
     {
       "title": "“He Who Overcomes… ” – Only the Victorious Inherit the Promises",
       "slug": "he-who-overcomes-only-the-victorious-inherit-the-promises",
-      "order": 7,
+      "order": 8,
       "chapterNumber": null,
       "keyVerses": [
         "Rev 2:26",
@@ -164,7 +203,7 @@
     {
       "title": "Voices of the Early Church (1st–4th Century) on Sin and Apostasy",
       "slug": "voices-of-the-early-church-1st4th-century-on-sin-and-apostasy",
-      "order": 8,
+      "order": 9,
       "chapterNumber": "3",
       "keyVerses": [],
       "estimatedReadingTime": 2
@@ -172,7 +211,7 @@
     {
       "title": "The Didache – Two Ways: Life or Death, Holiness or Destruction",
       "slug": "the-didache-two-ways-life-or-death-holiness-or-destruction",
-      "order": 9,
+      "order": 10,
       "chapterNumber": null,
       "keyVerses": [],
       "estimatedReadingTime": 3
@@ -180,7 +219,7 @@
     {
       "title": "Clement of Rome – “Abandon Evil Desires that We May Be Sheltered from Judgments”",
       "slug": "clement-of-rome-abandon-evil-desires-that-we-may-be-sheltered-from-judgments",
-      "order": 10,
+      "order": 11,
       "chapterNumber": null,
       "keyVerses": [
         "2 Cor 7:1",
@@ -191,7 +230,7 @@
     {
       "title": "Ignatius of Antioch – “Do Not Be Deceived”: No Room for Persisting in Sin or Heresy",
       "slug": "ignatius-of-antioch-do-not-be-deceived-no-room-for-persisting-in-sin-or-heresy",
-      "order": 11,
+      "order": 12,
       "chapterNumber": null,
       "keyVerses": [
         "1 Cor 6:9"
@@ -201,7 +240,7 @@
     {
       "title": "The Shepherd of Hermas – Limited Second Repentance and the Peril of Post-Baptismal Sin",
       "slug": "the-shepherd-of-hermas-limited-second-repentance-and-the-peril-of-post-baptismal-sin",
-      "order": 12,
+      "order": 13,
       "chapterNumber": null,
       "keyVerses": [],
       "estimatedReadingTime": 5
@@ -209,7 +248,7 @@
     {
       "title": "Cyprian of Carthage – The Lapsed, Presumption, and the Need for Penitence",
       "slug": "cyprian-of-carthage-the-lapsed-presumption-and-the-need-for-penitence",
-      "order": 13,
+      "order": 14,
       "chapterNumber": null,
       "keyVerses": [
         "Joel 2:12",
@@ -221,7 +260,7 @@
     {
       "title": "John Chrysostom – “Unless You Continue, You Will Be Cut Off”",
       "slug": "john-chrysostom-unless-you-continue-you-will-be-cut-off",
-      "order": 14,
+      "order": 15,
       "chapterNumber": null,
       "keyVerses": [
         "Romans 11:22",
@@ -236,7 +275,7 @@
     {
       "title": "Augustine of Hippo – Enduring to the End and Admonishing the Flock",
       "slug": "augustine-of-hippo-enduring-to-the-end-and-admonishing-the-flock",
-      "order": 15,
+      "order": 16,
       "chapterNumber": null,
       "keyVerses": [
         "1 John 3:10",
@@ -253,7 +292,7 @@
     {
       "title": "The Puritan Call to Holiness and Conditional Security (Richard Baxter & Co.)",
       "slug": "the-puritan-call-to-holiness-and-conditional-security-richard-baxter-co",
-      "order": 16,
+      "order": 17,
       "chapterNumber": "4",
       "keyVerses": [
         "2 Pet 1:10"
@@ -263,7 +302,7 @@
     {
       "title": "Richard Baxter: “No Holiness, No Heaven” – Perseverance as the Path to Rest",
       "slug": "richard-baxter-no-holiness-no-heaven-perseverance-as-the-path-to-rest",
-      "order": 17,
+      "order": 18,
       "chapterNumber": null,
       "keyVerses": [
         "Luke 14:33",
@@ -274,7 +313,7 @@
     {
       "title": "John Owen, Thomas Watson, John Flavel: Warnings from Fellow Puritans",
       "slug": "john-owen-thomas-watson-john-flavel-warnings-from-fellow-puritans",
-      "order": 18,
+      "order": 19,
       "chapterNumber": null,
       "keyVerses": [
         "Romans 8:13",
@@ -304,7 +343,7 @@
     {
       "title": "Modern Diminution",
       "slug": "modern-diminution",
-      "order": 19,
+      "order": 20,
       "chapterNumber": "5",
       "keyVerses": [],
       "estimatedReadingTime": 1
@@ -312,7 +351,7 @@
     {
       "title": "The Vanishing Warnings in Today’s Churches",
       "slug": "the-vanishing-warnings-in-todays-churches",
-      "order": 20,
+      "order": 21,
       "chapterNumber": null,
       "keyVerses": [],
       "estimatedReadingTime": 2
@@ -320,7 +359,7 @@
     {
       "title": "Softening the Message to Avoid Offense",
       "slug": "softening-the-message-to-avoid-offense",
-      "order": 21,
+      "order": 22,
       "chapterNumber": null,
       "keyVerses": [],
       "estimatedReadingTime": 2
@@ -328,7 +367,7 @@
     {
       "title": "The Influence of “Once Saved, Always Saved”",
       "slug": "the-influence-of-once-saved-always-saved",
-      "order": 22,
+      "order": 23,
       "chapterNumber": null,
       "keyVerses": [],
       "estimatedReadingTime": 5
@@ -336,7 +375,7 @@
     {
       "title": "Respected Voices with Softened Warnings",
       "slug": "respected-voices-with-softened-warnings",
-      "order": 23,
+      "order": 24,
       "chapterNumber": null,
       "keyVerses": [],
       "estimatedReadingTime": 6
@@ -344,7 +383,7 @@
     {
       "title": "Contrast with the Early Church’s Frank Admonitions",
       "slug": "contrast-with-the-early-churchs-frank-admonitions",
-      "order": 24,
+      "order": 25,
       "chapterNumber": null,
       "keyVerses": [],
       "estimatedReadingTime": 6
@@ -352,7 +391,7 @@
     {
       "title": "The Cost of Diminished Warnings",
       "slug": "the-cost-of-diminished-warnings",
-      "order": 25,
+      "order": 26,
       "chapterNumber": null,
       "keyVerses": [
         "1 John 2:3",
@@ -363,7 +402,7 @@
     {
       "title": "Recovering the Early Church’s Balance",
       "slug": "recovering-the-early-churchs-balance",
-      "order": 26,
+      "order": 27,
       "chapterNumber": null,
       "keyVerses": [
         "Acts 20:31",
@@ -374,7 +413,7 @@
     {
       "title": "Call to Repentance and Hope",
       "slug": "call-to-repentance-and-hope",
-      "order": 27,
+      "order": 28,
       "chapterNumber": "6",
       "keyVerses": [
         "Titus 2:11"
@@ -384,7 +423,7 @@
     {
       "title": "Grace and Judgment Hand in Hand",
       "slug": "grace-and-judgment-hand-in-hand",
-      "order": 28,
+      "order": 29,
       "chapterNumber": null,
       "keyVerses": [
         "Titus 2:11",
@@ -396,7 +435,7 @@
     {
       "title": "Dying to Sin: Lessons from Romans 6",
       "slug": "dying-to-sin-lessons-from-romans-6",
-      "order": 29,
+      "order": 30,
       "chapterNumber": null,
       "keyVerses": [
         "Colossians 3:5",
@@ -407,7 +446,7 @@
     {
       "title": "The Grace That Disciplines: Titus 2:11–14",
       "slug": "the-grace-that-disciplines-titus-21114",
-      "order": 30,
+      "order": 31,
       "chapterNumber": null,
       "keyVerses": [
         "Titus 2:11",
@@ -419,7 +458,7 @@
     {
       "title": "If You Continue, You Shall Perish: The Stakes of Unrepentant Sin",
       "slug": "if-you-continue-you-shall-perish-the-stakes-of-unrepentant-sin",
-      "order": 31,
+      "order": 32,
       "chapterNumber": null,
       "keyVerses": [
         "John 15:2",
@@ -432,7 +471,7 @@
     {
       "title": "True Repentance: Immediate, Complete, Reliant on God",
       "slug": "true-repentance-immediate-complete-reliant-on-god",
-      "order": 32,
+      "order": 33,
       "chapterNumber": null,
       "keyVerses": [
         "Acts 19:18",
@@ -453,7 +492,7 @@
     {
       "title": "Renunciation and Restoration: Following the Early Church Model",
       "slug": "renunciation-and-restoration-following-the-early-church-model",
-      "order": 33,
+      "order": 34,
       "chapterNumber": null,
       "keyVerses": [
         "Mark 9:29",
@@ -465,7 +504,7 @@
     {
       "title": "A Liturgy of Repentance and Restoration",
       "slug": "a-liturgy-of-repentance-and-restoration",
-      "order": 34,
+      "order": 35,
       "chapterNumber": null,
       "keyVerses": [
         "Joel 2:12",
@@ -480,7 +519,7 @@
     {
       "title": "Reflection and Self-Examination Questions",
       "slug": "reflection-and-self-examination-questions",
-      "order": 35,
+      "order": 36,
       "chapterNumber": null,
       "keyVerses": [
         "Acts 3:19",
@@ -492,7 +531,7 @@
     {
       "title": "Doxology",
       "slug": "doxology",
-      "order": 36,
+      "order": 37,
       "chapterNumber": "7",
       "keyVerses": [
         "Habakkuk 1:13",
