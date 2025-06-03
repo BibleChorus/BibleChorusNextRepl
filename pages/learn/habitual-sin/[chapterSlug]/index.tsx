@@ -55,6 +55,7 @@ interface ChapterData {
   slug: string;
   order: number;
   chapterNumber: number | null;
+  numbering: string | null;
   keyVerses: string[];
   estimatedReadingTime: number;
   audioUrl: string | null;
@@ -304,7 +305,11 @@ export default function ChapterPage({ chapterData }: Props) {
               <span>The Eternal Danger of Habitual Sin</span>
               <span>•</span>
               <span>
-                {chapterData.chapterNumber ? `Chapter ${chapterData.chapterNumber}` : chapterData.title}
+                {chapterData.numbering
+                  ? `Chapter ${chapterData.numbering}`
+                  : chapterData.chapterNumber
+                  ? `Chapter ${chapterData.chapterNumber}`
+                  : chapterData.title}
               </span>
             </div>
 
@@ -512,9 +517,12 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     
     // Find the MDX file that matches the slug
     const files = fs.readdirSync(contentDir);
-    const mdxFile = files.find(file => 
+    const mdxFile = files.find(file =>
       file.endsWith('.mdx') && file.includes(chapterSlug)
     );
+
+    const numberingMatch = mdxFile ? mdxFile.match(/^(\d+[a-z]?)-/) : null;
+    const numbering = numberingMatch ? numberingMatch[1] : null;
 
     if (!mdxFile) {
       return { notFound: true };
@@ -550,6 +558,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       slug: frontmatter.slug || chapterSlug,
       order: frontmatter.order || 0,
       chapterNumber: frontmatter.chapterNumber || null,
+      numbering,
       keyVerses: frontmatter.keyVerses || [],
       estimatedReadingTime: frontmatter.estimatedReadingTime || 5,
       audioUrl: frontmatter.audioUrl || null,
