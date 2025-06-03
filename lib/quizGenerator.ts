@@ -118,15 +118,18 @@ function generateMultipleChoiceQuestions(
   
   // Content-based questions
   const conceptQuestions = concepts.slice(0, Math.ceil(count * 0.6)).map((concept, index) => {
-    const correctAnswer = concept;
+    const correctValue = concept;
     const distractors = generateDistractors(concept, concepts);
-    
+
+    const options = shuffleArray([correctValue, ...distractors]).slice(0, 4);
+    const correctAnswer = options.indexOf(correctValue);
+
     return {
       id: `mc-concept-${index}`,
       type: 'multiple-choice' as const,
       question: `What is a key concept discussed in this chapter related to habitual sin?`,
-      options: shuffleArray([correctAnswer, ...distractors]).slice(0, 4),
-      correctAnswer: 0, // Will be updated after shuffling
+      options,
+      correctAnswer,
       difficulty: 'medium' as const,
       category: 'content' as const,
     };
