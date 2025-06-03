@@ -6,133 +6,581 @@
       "slug": "preface",
       "order": 0,
       "chapterNumber": null,
-      "keyVerses": [
-        "Romans 6:23",
-        "1 John 1:9",
-        "Hebrews 3:15",
-        "2 Corinthians 6:2"
-      ],
-      "estimatedReadingTime": 8
+      "keyVerses": [],
+      "estimatedReadingTime": 2
     },
     {
       "title": "Introduction",
       "slug": "introduction",
       "order": 1,
-      "chapterNumber": 1,
+      "chapterNumber": "1",
       "keyVerses": [
         "Hebrews 3:15",
-        "2 Corinthians 6:2",
-        "Hebrews 10:26",
         "Galatians 5:25",
-        "1 Corinthians 6:9-10",
-        "Hebrews 12:14"
+        "Ephesians 2:8",
+        "Matthew 5:30",
+        "2 Corinthians 6:1",
+        "Romans 8:13",
+        "Matthew 7:21",
+        "2 Timothy 4:7",
+        "Psalm 103:14",
+        "Luke 3:8",
+        "Matthew 7:23",
+        "Hebrews 3:13",
+        "Galatians 6:7",
+        "2 Peter 2:20",
+        "Hebrews 12:15",
+        "Matthew 7:13",
+        "Hebrews 4:13",
+        "Matthew 4:17",
+        "Luke 12:46",
+        "Hebrews 12:14",
+        "Hebrews 4:7",
+        "Romans 2:4",
+        "Romans 2:5",
+        "1 Corinthians 10:12",
+        "Isaiah 55:6",
+        "Hebrews 10:31",
+        "Corinthians 6:1",
+        "Timothy 4:7",
+        "Peter 2:20",
+        "Corinthians 10:12"
       ],
       "estimatedReadingTime": 12
     },
     {
-      "title": "Biblical Foundation",
-      "slug": "biblical-foundation",
+      "title": "“Be Not Deceived”: The Bible’s Warnings to Believers",
+      "slug": "be-not-deceived-the-bibles-warnings-to-believers",
       "order": 2,
-      "chapterNumber": 2,
-      "keyVerses": [
-        "1 Corinthians 6:9-10",
-        "Galatians 5:19-21",
-        "Ephesians 5:5-6",
-        "Hebrews 6:4-8",
-        "Hebrews 10:26-31",
-        "1 John 3:6-10",
-        "Revelation 21:7-8"
-      ],
-      "estimatedReadingTime": 25
+      "chapterNumber": "2",
+      "keyVerses": [],
+      "estimatedReadingTime": 1
     },
     {
-      "title": "Early Church Witness: 1st Century Voices",
-      "slug": "early-church-witness-1st-century",
+      "title": "“No Inheritance in the Kingdom” – Warnings from Paul’s Epistles",
+      "slug": "no-inheritance-in-the-kingdom-warnings-from-pauls-epistles",
       "order": 3,
-      "chapterNumber": "3A",
+      "chapterNumber": null,
       "keyVerses": [
-        "Hebrews 6:4-6",
-        "2 Peter 2:20-21",
-        "1 John 3:6-9"
+        "1 Cor 6:11",
+        "Gal 5:17",
+        "Galatians 5:19",
+        "Gal 5:25",
+        "Gal 5:22",
+        "James 2:17",
+        "Ephesians 5:5",
+        "Eph 5:7",
+        "Eph 5:8",
+        "Rev 21:27",
+        "Gal 6:7",
+        "Rom 8:13"
+      ],
+      "estimatedReadingTime": 6
+    },
+    {
+      "title": "Warnings to Continue: “If We Deny Him…” – Perseverance in the Pastoral Epistles",
+      "slug": "warnings-to-continue-if-we-deny-him-perseverance-in-the-pastoral-epistles",
+      "order": 4,
+      "chapterNumber": null,
+      "keyVerses": [
+        "2 Timothy 2:11",
+        "Matt 10:33",
+        "2 Timothy 2:13",
+        "Titus 1:16",
+        "1 John 1:6",
+        "2 Tim 2:19",
+        "Timothy 2:11",
+        "Timothy 2:13",
+        "John 1:6"
+      ],
+      "estimatedReadingTime": 2
+    },
+    {
+      "title": "“Today, If You Hear His Voice…” – Exhortations from Hebrews",
+      "slug": "today-if-you-hear-his-voice-exhortations-from-hebrews",
+      "order": 5,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Heb 10:38",
+        "Hebrews 6:4",
+        "Heb 6:4",
+        "Hebrews 10:26",
+        "Heb 3:7",
+        "Heb 3:13",
+        "Heb 3:12",
+        "Heb 3:18"
+      ],
+      "estimatedReadingTime": 7
+    },
+    {
+      "title": "“No One Born of God Sins” – The Test of 1 John",
+      "slug": "no-one-born-of-god-sins-the-test-of-1-john",
+      "order": 6,
+      "chapterNumber": null,
+      "keyVerses": [
+        "1 John 3:6",
+        "1 John 1:8",
+        "1 John 2:3",
+        "1 John 3:23",
+        "Revelation 21:8",
+        "Matt 5:27",
+        "1 Thess 4:3",
+        "John 3:6",
+        "John 1:8",
+        "John 2:3",
+        "John 3:23"
+      ],
+      "estimatedReadingTime": 5
+    },
+    {
+      "title": "“He Who Overcomes… ” – Only the Victorious Inherit the Promises",
+      "slug": "he-who-overcomes-only-the-victorious-inherit-the-promises",
+      "order": 7,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Rev 2:26",
+        "Rev 2:10",
+        "Rev 3:5",
+        "Rev 3:21",
+        "Rev 21:7",
+        "Rev 21:8",
+        "Luke 21:19",
+        "Matt 24:13",
+        "Luke 8:13",
+        "1 Cor 9:27",
+        "Eph 2:8",
+        "Eph 2:10",
+        "Rom 8:13",
+        "Gal 5:16",
+        "Rom 8:9",
+        "1 John 1:9",
+        "Luke 6:46",
+        "Matt 6:24",
+        "Hebrews 12:14",
+        "John 1:9"
+      ],
+      "estimatedReadingTime": 7
+    },
+    {
+      "title": "Voices of the Early Church (1st–4th Century) on Sin and Apostasy",
+      "slug": "voices-of-the-early-church-1st4th-century-on-sin-and-apostasy",
+      "order": 8,
+      "chapterNumber": "3",
+      "keyVerses": [],
+      "estimatedReadingTime": 2
+    },
+    {
+      "title": "The Didache – Two Ways: Life or Death, Holiness or Destruction",
+      "slug": "the-didache-two-ways-life-or-death-holiness-or-destruction",
+      "order": 9,
+      "chapterNumber": null,
+      "keyVerses": [],
+      "estimatedReadingTime": 3
+    },
+    {
+      "title": "Clement of Rome – “Abandon Evil Desires that We May Be Sheltered from Judgments”",
+      "slug": "clement-of-rome-abandon-evil-desires-that-we-may-be-sheltered-from-judgments",
+      "order": 10,
+      "chapterNumber": null,
+      "keyVerses": [
+        "2 Cor 7:1",
+        "James 2:18"
+      ],
+      "estimatedReadingTime": 4
+    },
+    {
+      "title": "Ignatius of Antioch – “Do Not Be Deceived”: No Room for Persisting in Sin or Heresy",
+      "slug": "ignatius-of-antioch-do-not-be-deceived-no-room-for-persisting-in-sin-or-heresy",
+      "order": 11,
+      "chapterNumber": null,
+      "keyVerses": [
+        "1 Cor 6:9"
+      ],
+      "estimatedReadingTime": 4
+    },
+    {
+      "title": "The Shepherd of Hermas – Limited Second Repentance and the Peril of Post-Baptismal Sin",
+      "slug": "the-shepherd-of-hermas-limited-second-repentance-and-the-peril-of-post-baptismal-sin",
+      "order": 12,
+      "chapterNumber": null,
+      "keyVerses": [],
+      "estimatedReadingTime": 5
+    },
+    {
+      "title": "Cyprian of Carthage – The Lapsed, Presumption, and the Need for Penitence",
+      "slug": "cyprian-of-carthage-the-lapsed-presumption-and-the-need-for-penitence",
+      "order": 13,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Joel 2:12",
+        "1 John 2:4",
+        "John 2:4"
       ],
       "estimatedReadingTime": 8
     },
     {
-      "title": "Early Church Witness: 2nd Century Voices",
-      "slug": "early-church-witness-2nd-century",
-      "order": 4,
-      "chapterNumber": "3B",
-      "keyVerses": [
-        "1 Corinthians 6:9-10",
-        "Hebrews 6:4-6",
-        "Matthew 7:21-23"
-      ],
-      "estimatedReadingTime": 10
-    },
-    {
-      "title": "Early Church Witness: 3rd-4th Century Voices",
-      "slug": "early-church-witness-3rd-4th-century",
-      "order": 5,
-      "chapterNumber": "3C",
+      "title": "John Chrysostom – “Unless You Continue, You Will Be Cut Off”",
+      "slug": "john-chrysostom-unless-you-continue-you-will-be-cut-off",
+      "order": 14,
+      "chapterNumber": null,
       "keyVerses": [
         "Romans 11:22",
+        "Hebrews 10:26",
+        "Romans 8:13",
+        "Heb 3:14",
+        "Hebrews 3:12",
+        "Rom 11:20"
+      ],
+      "estimatedReadingTime": 6
+    },
+    {
+      "title": "Augustine of Hippo – Enduring to the End and Admonishing the Flock",
+      "slug": "augustine-of-hippo-enduring-to-the-end-and-admonishing-the-flock",
+      "order": 15,
+      "chapterNumber": null,
+      "keyVerses": [
         "1 John 3:10",
-        "Joel 2:12-13"
+        "1 John 3:15",
+        "1 Cor 5:5",
+        "1 Cor 6:9",
+        "Gal 5:21",
+        "Heb 10:27",
+        "John 3:10",
+        "John 3:15"
+      ],
+      "estimatedReadingTime": 7
+    },
+    {
+      "title": "The Puritan Call to Holiness and Conditional Security (Richard Baxter & Co.)",
+      "slug": "the-puritan-call-to-holiness-and-conditional-security-richard-baxter-co",
+      "order": 16,
+      "chapterNumber": "4",
+      "keyVerses": [
+        "2 Pet 1:10"
+      ],
+      "estimatedReadingTime": 3
+    },
+    {
+      "title": "Richard Baxter: “No Holiness, No Heaven” – Perseverance as the Path to Rest",
+      "slug": "richard-baxter-no-holiness-no-heaven-perseverance-as-the-path-to-rest",
+      "order": 17,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Luke 14:33",
+        "Hebrews 10:26"
+      ],
+      "estimatedReadingTime": 9
+    },
+    {
+      "title": "John Owen, Thomas Watson, John Flavel: Warnings from Fellow Puritans",
+      "slug": "john-owen-thomas-watson-john-flavel-warnings-from-fellow-puritans",
+      "order": 18,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Romans 8:13",
+        "Gal 6:8",
+        "Phil 3:19",
+        "Titus 2:11",
+        "Acts 3:26",
+        "Heb 7:25",
+        "2 Cor 13:5",
+        "2 Cor 6:17",
+        "Heb 10:26",
+        "Prov 9:10",
+        "Ps 85:9",
+        "John 8:36",
+        "1 Corinthians 6:9",
+        "Galatians 5:19",
+        "Hebrews 6:4",
+        "Hebrews 10:26",
+        "1 John 3:6",
+        "1 Cor 6:9",
+        "Hebrews 12:14",
+        "Corinthians 6:9",
+        "John 3:6"
       ],
       "estimatedReadingTime": 12
     },
     {
-      "title": "Puritan Voices",
-      "slug": "puritan-voices",
-      "order": 6,
-      "chapterNumber": 4,
-      "keyVerses": [
-        "Romans 8:13",
-        "Colossians 3:5",
-        "1 Corinthians 9:27",
-        "Philippians 2:12-13"
-      ],
-      "estimatedReadingTime": 22
-    },
-    {
       "title": "Modern Diminution",
       "slug": "modern-diminution",
-      "order": 7,
-      "chapterNumber": 5,
-      "keyVerses": [
-        "2 Timothy 4:3-4",
-        "Jude 1:4",
-        "2 Peter 2:1-3",
-        "Isaiah 5:20"
-      ],
-      "estimatedReadingTime": 18
+      "order": 19,
+      "chapterNumber": "5",
+      "keyVerses": [],
+      "estimatedReadingTime": 1
     },
     {
-      "title": "Call to Repentance & Hope",
-      "slug": "call-to-repentance-and-hope",
-      "order": 8,
-      "chapterNumber": 6,
+      "title": "The Vanishing Warnings in Today’s Churches",
+      "slug": "the-vanishing-warnings-in-todays-churches",
+      "order": 20,
+      "chapterNumber": null,
+      "keyVerses": [],
+      "estimatedReadingTime": 2
+    },
+    {
+      "title": "Softening the Message to Avoid Offense",
+      "slug": "softening-the-message-to-avoid-offense",
+      "order": 21,
+      "chapterNumber": null,
+      "keyVerses": [],
+      "estimatedReadingTime": 2
+    },
+    {
+      "title": "The Influence of “Once Saved, Always Saved”",
+      "slug": "the-influence-of-once-saved-always-saved",
+      "order": 22,
+      "chapterNumber": null,
+      "keyVerses": [],
+      "estimatedReadingTime": 5
+    },
+    {
+      "title": "Respected Voices with Softened Warnings",
+      "slug": "respected-voices-with-softened-warnings",
+      "order": 23,
+      "chapterNumber": null,
+      "keyVerses": [],
+      "estimatedReadingTime": 6
+    },
+    {
+      "title": "Contrast with the Early Church’s Frank Admonitions",
+      "slug": "contrast-with-the-early-churchs-frank-admonitions",
+      "order": 24,
+      "chapterNumber": null,
+      "keyVerses": [],
+      "estimatedReadingTime": 6
+    },
+    {
+      "title": "The Cost of Diminished Warnings",
+      "slug": "the-cost-of-diminished-warnings",
+      "order": 25,
+      "chapterNumber": null,
       "keyVerses": [
-        "1 John 1:9",
-        "2 Chronicles 7:14",
-        "Joel 2:12-13",
-        "Acts 3:19",
-        "Isaiah 55:6-7"
+        "1 John 2:3",
+        "John 2:3"
       ],
-      "estimatedReadingTime": 30
+      "estimatedReadingTime": 4
+    },
+    {
+      "title": "Recovering the Early Church’s Balance",
+      "slug": "recovering-the-early-churchs-balance",
+      "order": 26,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Acts 20:31",
+        "Titus 2:11"
+      ],
+      "estimatedReadingTime": 5
+    },
+    {
+      "title": "Call to Repentance and Hope",
+      "slug": "call-to-repentance-and-hope",
+      "order": 27,
+      "chapterNumber": "6",
+      "keyVerses": [
+        "Titus 2:11"
+      ],
+      "estimatedReadingTime": 2
+    },
+    {
+      "title": "Grace and Judgment Hand in Hand",
+      "slug": "grace-and-judgment-hand-in-hand",
+      "order": 28,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Titus 2:11",
+        "Titus 2:13",
+        "Revelation 21:8"
+      ],
+      "estimatedReadingTime": 8
+    },
+    {
+      "title": "Dying to Sin: Lessons from Romans 6",
+      "slug": "dying-to-sin-lessons-from-romans-6",
+      "order": 29,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Colossians 3:5",
+        "Romans 6:16"
+      ],
+      "estimatedReadingTime": 7
+    },
+    {
+      "title": "The Grace That Disciplines: Titus 2:11–14",
+      "slug": "the-grace-that-disciplines-titus-21114",
+      "order": 30,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Titus 2:11",
+        "Titus 2:12",
+        "Hebrews 11:25"
+      ],
+      "estimatedReadingTime": 6
+    },
+    {
+      "title": "If You Continue, You Shall Perish: The Stakes of Unrepentant Sin",
+      "slug": "if-you-continue-you-shall-perish-the-stakes-of-unrepentant-sin",
+      "order": 31,
+      "chapterNumber": null,
+      "keyVerses": [
+        "John 15:2",
+        "Titus 1:16",
+        "John 3:36",
+        "Luke 1:50"
+      ],
+      "estimatedReadingTime": 6
+    },
+    {
+      "title": "True Repentance: Immediate, Complete, Reliant on God",
+      "slug": "true-repentance-immediate-complete-reliant-on-god",
+      "order": 32,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Acts 19:18",
+        "1 John 1:9",
+        "James 5:16",
+        "James 4:6",
+        "Luke 19:8",
+        "Luke 3:8",
+        "Job 31:1",
+        "Luke 15:20",
+        "Luke 9:62",
+        "Matthew 24:13",
+        "Hebrews 12:4",
+        "John 1:9"
+      ],
+      "estimatedReadingTime": 11
+    },
+    {
+      "title": "Renunciation and Restoration: Following the Early Church Model",
+      "slug": "renunciation-and-restoration-following-the-early-church-model",
+      "order": 33,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Mark 9:29",
+        "Acts 4:31",
+        "James 5:16"
+      ],
+      "estimatedReadingTime": 5
+    },
+    {
+      "title": "A Liturgy of Repentance and Restoration",
+      "slug": "a-liturgy-of-repentance-and-restoration",
+      "order": 34,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Joel 2:12",
+        "1 John 1:9",
+        "1 Corinthians 6:11",
+        "Isaiah 1:18",
+        "John 1:9",
+        "Corinthians 6:11"
+      ],
+      "estimatedReadingTime": 5
+    },
+    {
+      "title": "Reflection and Self-Examination Questions",
+      "slug": "reflection-and-self-examination-questions",
+      "order": 35,
+      "chapterNumber": null,
+      "keyVerses": [
+        "Acts 3:19",
+        "1 Thessalonians 5:23",
+        "Thessalonians 5:23"
+      ],
+      "estimatedReadingTime": 7
     },
     {
       "title": "Doxology",
       "slug": "doxology",
-      "order": 9,
-      "chapterNumber": 7,
+      "order": 36,
+      "chapterNumber": "7",
       "keyVerses": [
-        "Romans 11:33-36",
-        "Ephesians 3:20-21",
-        "Jude 1:24-25",
-        "Revelation 5:13"
+        "Habakkuk 1:13",
+        "Genesis 18:25",
+        "1 John 1:5",
+        "Numbers 23:19",
+        "Revelation 15:3",
+        "Psalm 86:5",
+        "John 3:16",
+        "Psalm 85:10",
+        "Romans 3:26",
+        "1 John 3:1",
+        "Lamentations 3:22",
+        "Micah 7:18",
+        "Ezekiel 33:11",
+        "Nahum 1:3",
+        "Psalm 103:8",
+        "Romans 1:18",
+        "Psalm 90:11",
+        "Romans 11:22",
+        "Psalm 2:11",
+        "Psalm 19:9",
+        "2 Timothy 4:8",
+        "Psalm 97:2",
+        "Revelation 19:1",
+        "John 1:1",
+        "John 1:3",
+        "John 1:14",
+        "Philippians 2:6",
+        "Revelation 5:12",
+        "Ephesians 1:7",
+        "Colossians 2:3",
+        "Colossians 2:9",
+        "Hebrews 1:3",
+        "Philippians 2:10",
+        "Revelation 1:18",
+        "Romans 6:9",
+        "Colossians 2:15",
+        "Revelation 5:9",
+        "Matthew 28:18",
+        "Revelation 1:7",
+        "Revelation 19:15",
+        "Revelation 19:16",
+        "John 5:22",
+        "Malachi 3:2",
+        "1 Corinthians 1:30",
+        "Revelation 22:20",
+        "Genesis 1:2",
+        "Job 26:13",
+        "Psalm 104:30",
+        "2 Peter 1:21",
+        "2 Timothy 3:16",
+        "John 16:13",
+        "John 3:6",
+        "2 Corinthians 3:6",
+        "John 3:5",
+        "Romans 5:5",
+        "Romans 8:16",
+        "John 16:8",
+        "2 Corinthians 3:18",
+        "1 Corinthians 6:19",
+        "Romans 8:26",
+        "Galatians 5:22",
+        "Romans 8:13",
+        "Romans 8:14",
+        "Ephesians 4:30",
+        "Ephesians 1:13",
+        "1 Corinthians 12:11",
+        "2 Corinthians 3:17",
+        "2 Thessalonians 3:3",
+        "Philippians 1:6",
+        "1 Chronicles 29:11",
+        "Romans 11:36",
+        "John 1:5",
+        "John 3:1",
+        "Timothy 4:8",
+        "Corinthians 1:30",
+        "Peter 1:21",
+        "Timothy 3:16",
+        "Corinthians 3:6",
+        "Corinthians 3:18",
+        "Corinthians 6:19",
+        "Corinthians 12:11",
+        "Corinthians 3:17",
+        "Thessalonians 3:3",
+        "Chronicles 29:11"
       ],
-      "estimatedReadingTime": 15
+      "estimatedReadingTime": 16
     }
   ]
-} 
+}
