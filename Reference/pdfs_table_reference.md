@@ -21,6 +21,8 @@ Stores metadata for uploaded PDF documents containing scriptural or thematic con
 ## Relationships
 
 - `uploaded_by` references the `id` column in the `users` table.
+- A PDF can have many entries in `pdf_comments`, `pdf_notes`, and `pdf_ratings`.
+- Linked verses are stored in the `pdf_verses` join table.
 
 ## Indexes
 
