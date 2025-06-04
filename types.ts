@@ -94,3 +94,51 @@ export interface ForumCategory {
   description?: string;
   parent_category_id?: number;
 }
+
+export interface Pdf {
+  id: number;
+  title: string;
+  author?: string;
+  file_url: string;
+  uploaded_by: number;
+  ai_assisted: boolean;
+  themes: string[];
+  description?: string;
+  is_public: boolean;
+  created_at: string;
+}
+
+export interface PdfComment {
+  id: number;
+  pdf_id: number;
+  user_id: number;
+  username?: string;
+  comment: string;
+  page_number?: number;
+  parent_comment_id?: number;
+  created_at: string;
+  updated_at: string;
+  is_pinned: boolean;
+  is_approved: boolean;
+  is_edited: boolean;
+}
+
+export interface PdfNote {
+  id: number;
+  pdf_id: number;
+  user_id: number;
+  note: string;
+  page_number?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PdfRating {
+  id: number;
+  pdf_id: number;
+  user_id: number;
+  quality: number;
+  theology: number;
+  helpfulness: number;
+}
+
