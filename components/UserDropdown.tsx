@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { LogOut, User, Bell, BookOpen } from 'lucide-react';
+import { LogOut, User, Bell } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 
@@ -104,10 +104,6 @@ export function UserDropdown({ user }: UserDropdownProps) {
         <DropdownMenuItem onClick={() => router.push('/profile')}>
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push('/learn')}>
-          <BookOpen className="mr-2 h-4 w-4" />
-          <span>Learn Scripture</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleNotificationsClick}>
           <Bell className="mr-2 h-4 w-4" />
