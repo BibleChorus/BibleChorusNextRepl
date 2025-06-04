@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { Upload, Map, List, MessageSquare, Headphones, User, HelpCircle, X } from 'lucide-react';
+import { Upload, Map, List, MessageSquare, Headphones, User, HelpCircle, FileText, X } from 'lucide-react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -12,6 +12,7 @@ const menuItems = [
   { name: 'Playlists', icon: List, href: '/playlists' },
   { name: 'Forum', icon: MessageSquare, href: '/forum' },
   { name: 'Listen', icon: Headphones, href: '/listen' },
+  { name: 'PDFs', icon: FileText, href: '/pdfs' },
   { name: 'Profile', icon: User, href: '/profile' },
   { name: 'How To', icon: HelpCircle, href: '/how-to' },
 ];
