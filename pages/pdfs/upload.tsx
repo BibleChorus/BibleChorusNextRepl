@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import axios from 'axios';
@@ -150,7 +150,8 @@ export default function UploadPdf() {
       </Head>
       <div className="container mx-auto max-w-2xl py-8">
         <h1 className="text-2xl font-bold mb-4">Upload PDF</h1>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <PdfUploadProgressBar onProgressChange={() => {}} />
 
           <FormField
@@ -279,6 +280,7 @@ export default function UploadPdf() {
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </Button>
         </form>
+        </FormProvider>
       </div>
     </>
   );
