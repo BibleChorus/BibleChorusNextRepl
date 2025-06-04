@@ -314,7 +314,11 @@ export default function ChapterPage({ chapterData }: Props) {
             </div>
 
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              {chapterData.title}
+              {chapterData.numbering
+                ? `Chapter ${chapterData.numbering}: ${chapterData.title}`
+                : chapterData.chapterNumber
+                ? `Chapter ${chapterData.chapterNumber}: ${chapterData.title}`
+                : chapterData.title}
             </h1>
 
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
