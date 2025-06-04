@@ -44,3 +44,13 @@ This document provides guidelines for AI agents (e.g., OpenAI Codex) when makin
 - **Code Style and Linting:** Keep the code style consistent. Run `npm run lint` before committing changes to catch formatting or code‑quality issues. Similarly, run TypeScript’s compiler to catch type errors (`npm run build` will do a type check).  
 - **Stay Informed:** If the project upgrades major dependencies (Next.js, React, ShadCN UI, etc.), update these guidelines to reflect new best practices.  
 - **Collaboration Etiquette:** When committing changes, write clear commit messages. If using Pull Requests, follow any existing template or conventions for PR descriptions. Maintain a human‑readable commit history, and ensure you work with the latest code and resolve merge conflicts properly.
+
+## 7. PDF Upload and Reader Module
+
+- We added a new PDF upload and reading feature. Users can upload study guides or other scripture based PDFs and read them online.
+- Follow the same S3 presigned URL workflow used for song uploads. Validate file type and size on both client and server.
+- OCR may be required when PDFs lack an embedded text layer. Use `pdf-parse` first and fall back to an OCR tool like Tesseract or AWS Textract. Large files may need background jobs.
+- When text is extracted, detect and link scripture references just like songs. Update the `bible_verses` table so `all_pdf_ids`, `ai_content_pdf_ids`, `human_content_pdf_ids`, and `theme_pdf_ids` stay in sync.
+- Database tables for this feature include `pdfs`, `pdf_comments`, `pdf_notes`, `pdf_ratings`, and `pdf_verses`. Any schema updates must be made via Knex migrations and documented in the Reference directory.
+- Keep Zod schemas for any new forms and validate API input accordingly.
+- Consider performance implications: rendering very large PDFs may require pagination or streaming.

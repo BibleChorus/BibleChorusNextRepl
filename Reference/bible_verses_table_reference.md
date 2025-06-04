@@ -1,7 +1,7 @@
 # Bible Verses Table
 
 ## Purpose
-This table stores individual Bible verses and maintains relationships with songs that reference these verses.
+This table stores individual Bible verses and maintains relationships with songs and PDFs that reference these verses.
 
 ## Columns and Types
 
@@ -36,6 +36,7 @@ This table stores individual Bible verses and maintains relationships with songs
 ## Relationships
 
 - Has a many-to-many relationship with `songs` through the `song_verses` junction table
+- Has a many-to-many relationship with `pdfs` through the `pdf_verses` junction table
 
 ## Indexes
 
