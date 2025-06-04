@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Router from 'next/router';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function UploadTeaching() {
   const [title, setTitle] = useState('');
@@ -13,6 +14,7 @@ export default function UploadTeaching() {
   const [aiModelUsed, setAiModelUsed] = useState('');
   const [tags, setTags] = useState('');
   const [language, setLanguage] = useState('en');
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +30,7 @@ export default function UploadTeaching() {
     if (aiModelUsed) form.append('ai_model_used', aiModelUsed);
     if (tags) form.append('tags', tags);
     form.append('language', language);
+    if (user?.id) form.append('user_id', String(user.id));
     const res = await fetch('/api/teachings', { method: 'POST', body: form });
     if (res.ok) {
       Router.push('/learn');
