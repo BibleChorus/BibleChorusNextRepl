@@ -1,21 +1,21 @@
 # Navigation Updates for Learn Page Access
 
 ## Overview
-Added multiple navigation entry points to make the Habitual Sin learning module easily accessible throughout the BibleChorus application.
+Added multiple navigation entry points to make the Learn module easily accessible throughout the BibleChorus application.
 
 ## Changes Made
 
 ### 1. Main Sidebar Navigation
 **File**: `components/Sidebar.tsx`
 - Added "Learn" menu item as the first item in the sidebar
-- Links to `/learn/habitual-sin`
+- Links to `/learn`
 - Uses BookOpen icon for visual consistency
 - Available on all pages that use the main layout
 
 ### 2. Homepage Features Section
-**File**: `pages/index.tsx`  
+**File**: `pages/index.tsx`
 - Added "Learn Scripture" as the first feature card
-- Descriptive text: "Study 'The Eternal Danger of Habitual Sin' with interactive lessons and quizzes"
+- Descriptive text updated to highlight the new Learn module
 - Prominently displayed on the homepage
 - Uses BookOpen icon for visual consistency
 
@@ -45,7 +45,7 @@ Added multiple navigation entry points to make the Habitual Sin learning module 
 2. **Homepage** - Featured as the first feature card  
 3. **User Dropdown** - Quick access for authenticated users
 4. **Promotional Banners** - Can be added to any page
-5. **Direct URL** - `/learn/habitual-sin` for direct access
+5. **Direct URL** - `/learn` for direct access
 
 ## Benefits
 

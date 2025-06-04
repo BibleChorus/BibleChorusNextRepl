@@ -10,9 +10,6 @@
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
     "knex": "knex",
-    "seed:habitual-sin": "node scripts/seed-habitual-sin.js",
-    "convert:habitual-sin": "node scripts/convert-habitual-sin.js",
-    "test:habitual-sin": "node scripts/test-habitual-sin.js",
     "test": "jest",
     "test:watch": "jest --watch"
   },

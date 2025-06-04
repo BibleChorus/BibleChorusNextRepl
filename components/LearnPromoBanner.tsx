@@ -32,11 +32,11 @@ export default function LearnPromoBanner({
                 Study Scripture
               </h3>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                Learn about habitual sin with interactive lessons
+                Explore teachings with interactive lessons
               </p>
             </div>
           </div>
-          <Link href="/learn/habitual-sin">
+          <Link href="/learn">
             <Button size="sm" variant="outline">
               Start Learning
               <ArrowRight className="h-3 w-3 ml-2" />
@@ -66,7 +66,7 @@ export default function LearnPromoBanner({
                   <div>
                     <h2 className="text-2xl font-bold mb-1">Deepen Your Faith</h2>
                     <p className="text-blue-100 text-lg">
-                      Study "The Eternal Danger of Habitual Sin"
+                      Study uploaded teachings at your own pace
                     </p>
                   </div>
                 </div>
@@ -86,7 +86,7 @@ export default function LearnPromoBanner({
                   </div>
                 </div>
 
-                <Link href="/learn/habitual-sin">
+                <Link href="/learn">
                   <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50">
                     Begin Study
                     <ArrowRight className="h-5 w-5 ml-2" />
@@ -125,7 +125,7 @@ export default function LearnPromoBanner({
                   Strengthen Your Spiritual Foundation
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  Dive deep into "The Eternal Danger of Habitual Sin" with our interactive learning experience. 
+                  Dive deep into powerful Bible teachings with our interactive learning experience.
                   Track your progress, take quizzes, and reflect on key spiritual insights.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -139,7 +139,7 @@ export default function LearnPromoBanner({
                     📝 Reflection Journal
                   </span>
                 </div>
-                <Link href="/learn/habitual-sin">
+                <Link href="/learn">
                   <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                     Start Learning
                     <ArrowRight className="h-4 w-4 ml-2" />

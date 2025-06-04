@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useSidebar } from '@/contexts/SidebarContext';
 
 const menuItems = [
-  { name: 'Learn', icon: BookOpen, href: '/learn/habitual-sin' },
+  { name: 'Learn', icon: BookOpen, href: '/learn' },
   { name: 'Upload Songs', icon: Upload, href: '/upload' },
   { name: 'Progress Map', icon: Map, href: '/progress' },
   { name: 'Playlists', icon: List, href: '/playlists' },
