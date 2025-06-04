@@ -3,8 +3,10 @@ import db from '@/db';
 import { pdfToText, extractBibleVerses } from '@/lib/pdfUtils';
 import { getVerseIds } from '@/pages/api/utils';
 import { promises as fs } from 'fs';
-import path from 'path';
 import formidable from 'formidable';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import s3Client from '@/lib/s3';
+import { v4 as uuidv4 } from 'uuid';
 
 function slugify(title: string): string {
   return title
@@ -34,12 +36,31 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   const text = await pdfToText(buffer);
   const verses = extractBibleVerses(text);
 
+  // Determine user folder or fallback
+  const userId = fields.user_id ? String(fields.user_id) : 'anonymous';
+
+  const fileExtension = file.originalFilename?.split('.').pop() || 'pdf';
+  const fileName = `${uuidv4()}.${fileExtension}`;
+  const fileKey = `uploads/${userId}/teaching_pdfs/${fileName}`;
+
+  const command = new PutObjectCommand({
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: fileKey,
+    Body: buffer,
+    ContentType: file.mimetype || 'application/pdf',
+  });
+
+  await s3Client.send(command);
+
+  const CDN_URL = process.env.CDN_URL || '';
+  const fullPdfUrl = `${CDN_URL}${fileKey}`;
+
   const [id] = await db('teachings')
     .insert({
       title: fields.title as string,
       slug: slugify(fields.title as string),
       description: fields.description as string,
-      pdf_url: `/uploads/${file.newFilename}`,
+      pdf_url: fullPdfUrl,
       pdf_text: text,
       based_on_type: fields.based_on_type as string,
       reference: fields.reference as string,
@@ -58,8 +79,10 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     await db('teaching_verses').insert(rows);
   }
 
-  const uploadPath = path.join(process.cwd(), 'public/uploads', file.newFilename!);
-  await fs.rename(file.filepath, uploadPath);
+  // Remove temporary file
+  if (file.filepath) {
+    await fs.unlink(file.filepath);
+  }
 
   res.status(201).json({ id });
 }
