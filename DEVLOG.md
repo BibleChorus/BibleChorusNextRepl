@@ -10,3 +10,6 @@
 
 ## 2025-06-05
 - Created a dashboard at `/pdfs` listing all uploaded PDFs with search and links to individual documents.
+
+## 2025-06-06
+- Fixed runtime error on the PDF upload page by wrapping the form in `FormProvider` so `PdfUploadProgressBar` can access form context.
