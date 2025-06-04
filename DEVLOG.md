@@ -7,3 +7,6 @@
 
 ## 2025-06-04
 - Linked the new PDFs page from the homepage and sidebar navigation.
+
+## 2025-06-05
+- Created a dashboard at `/pdfs` listing all uploaded PDFs with search and links to individual documents.
