@@ -24,6 +24,10 @@ This table stores individual Bible verses and maintains relationships with songs
 | creative_inspiration_song_ids | integer[] | | '{}' | Array of song IDs creatively inspired by this verse |
 | genre_song_ids | jsonb | | '{}' | JSON object mapping genres to arrays of song IDs |
 | translation_song_ids | jsonb | | '{}' | JSON object mapping translations to arrays of song IDs |
+| all_pdf_ids | integer[] | | '{}' | Array of PDF IDs referencing this verse |
+| ai_content_pdf_ids | integer[] | | '{}' | PDF IDs with AI-assisted content |
+| human_content_pdf_ids | integer[] | | '{}' | PDF IDs with human-authored content |
+| theme_pdf_ids | jsonb | | '{}' | JSON object mapping themes to arrays of PDF IDs |
 
 ## Constraints
 
@@ -49,10 +53,14 @@ This table stores individual Bible verses and maintains relationships with songs
 | bible_verses_creative_inspiration_idx | creative_inspiration_song_ids | GIN |
 | bible_verses_genre_idx | genre_song_ids | GIN |
 | bible_verses_translation_idx | translation_song_ids | GIN |
+| bible_verses_all_pdfs_idx | all_pdf_ids | GIN |
+| bible_verses_ai_content_pdfs_idx | ai_content_pdf_ids | GIN |
+| bible_verses_human_content_pdfs_idx | human_content_pdf_ids | GIN |
+| bible_verses_theme_pdfs_idx | theme_pdf_ids | GIN |
 
 ## Notes
 
-- The table uses array columns to efficiently store relationships between verses and songs.
+- The table uses array columns to efficiently store relationships between verses, songs, and PDFs.
 - GIN indexes are used for efficient querying of array and JSON columns.
 - The `genre_song_ids` and `translation_song_ids` columns use JSONB type for flexible storage of genre and translation data.
 - Consider adding a B-tree index on (`book`, `chapter`, `verse`) for faster lookups.
