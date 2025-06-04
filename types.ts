@@ -88,6 +88,45 @@ export interface SongComment {
   // Add any other fields as needed
 }
 
+export interface Teaching {
+  id: number;
+  title: string;
+  slug: string;
+  description?: string;
+  pdf_url: string;
+  pdf_text?: string;
+  based_on_type: 'theme' | 'passage';
+  reference?: string;
+  ai_generated: boolean;
+  ai_prompt?: string;
+  ai_model_used?: string;
+  tags?: string[];
+  language?: string;
+  uploaded_by?: number;
+  view_count?: number;
+  rating_total?: number;
+  rating_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TeachingComment {
+  id: number;
+  teaching_id: number;
+  user_id: number;
+  username: string;
+  comment: string;
+  likes?: number;
+  parent_comment_id?: number;
+  is_edited?: boolean;
+  sentiment?: string;
+  contains_scripture_reference?: boolean;
+  is_approved?: boolean;
+  is_pinned?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ForumCategory {
   id: number;
   name: string;
