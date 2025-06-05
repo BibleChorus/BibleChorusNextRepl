@@ -34,4 +34,6 @@ Developers should ensure OCR tools are available if PDFs lack embedded text. The
 - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` – credentials for S3.
 - `CDN_URL` – optional base URL used when serving uploaded files.
 
+- PDF uploads are limited to 10MB. The client requests a presigned URL from `/api/upload-url` with `uploadType: "pdf"` before uploading directly to S3.
+
 Run `npm run migrate` to apply the database migrations that create the `pdfs` and related tables.

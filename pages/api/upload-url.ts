@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Add these constants at the top of the file
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+const MAX_PDF_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -17,15 +18,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { fileType, fileExtension, title, userId, fileSize, uploadType } = req.body;
 
   // Define allowed upload types
-  const allowedUploadTypes = ['song_art', 'playlist_cover', 'profile_image'];
+  const allowedUploadTypes = ['song_art', 'playlist_cover', 'profile_image', 'pdf'];
   const finalUploadType = uploadType && allowedUploadTypes.includes(uploadType) ? uploadType : 'song_art';
 
   if (!fileType || !fileExtension || !userId || !fileSize) {
     return res.status(400).json({ message: 'File type, extension, user ID, and file size are required' });
   }
 
-  // Check file size
-  const maxSize = fileType.startsWith('audio/') ? MAX_AUDIO_FILE_SIZE : MAX_IMAGE_FILE_SIZE;
+  // Determine max file size based on type
+  let maxSize;
+  if (fileType.startsWith('audio/')) {
+    maxSize = MAX_AUDIO_FILE_SIZE;
+  } else if (fileType.startsWith('image/')) {
+    maxSize = MAX_IMAGE_FILE_SIZE;
+  } else if (fileType === 'application/pdf') {
+    maxSize = MAX_PDF_FILE_SIZE;
+  } else {
+    return res.status(400).json({ message: 'Unsupported file type' });
+  }
+
   if (parseInt(fileSize) > maxSize) {
     const sizeInMB = maxSize / (1024 * 1024);
     return res.status(400).json({ message: `File size exceeds the limit of ${sizeInMB}MB` });
@@ -50,9 +61,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } else if (fileType.startsWith('image/')) {
     // Construct the file name
     fileName = `${formattedDate}.${sanitizedTitle}.${fileExtension}`;
-    
+
     // Set the file key based on uploadType
     fileKey = `uploads/${userId}/${finalUploadType}/${fileName}`;
+  } else if (fileType === 'application/pdf') {
+    // PDF files
+    fileName = `${formattedDate}.${sanitizedTitle}.pdf`;
+    fileKey = `uploads/${userId}/pdfs/${fileName}`;
   } else {
     return res.status(400).json({ message: 'Unsupported file type' });
   }
