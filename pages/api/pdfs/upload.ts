@@ -94,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .insert({
           title,
           author: author || null,
-          pdf_url: fullUrl,
+          file_url: fullUrl,
           ai_assisted: ai_assisted || false,
           themes,
           uploaded_by,
