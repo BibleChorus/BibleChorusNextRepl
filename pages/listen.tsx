@@ -152,7 +152,7 @@ function ListenContent({
   const router = useRouter()
   const querySearch = router.query.search as string || ''
   const { user } = useAuth(); // useAuth already provides User | null with correct type
-  const { currentSong, isMinimized, isShuffling, queue, updateQueue } = useMusicPlayer();
+  const { currentSong, isMinimized, isShuffling, queue, updateQueue, registerShuffleLoader } = useMusicPlayer();
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
   const { isOpen: isSidebarOpen } = useSidebar(); // Get sidebar state
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -389,6 +389,7 @@ function ListenContent({
     return result.songs
   }, [debouncedFilters, user, selectedPlaylist, totalSongs])
 
+
   const toPlayerSong = (s: Song) => ({
     id: s.id,
     title: s.title,
@@ -402,6 +403,13 @@ function ListenContent({
     bible_translation_used: s.bible_translation_used,
     uploaded_by: s.uploaded_by,
   })
+
+  useEffect(() => {
+    registerShuffleLoader(async () => {
+      const all = await fetchAllSongs()
+      return all.map(toPlayerSong)
+    })
+  }, [fetchAllSongs, registerShuffleLoader])
 
   useEffect(() => {
     if (isShuffling && queue.length < totalSongs && totalSongs > songs.length) {

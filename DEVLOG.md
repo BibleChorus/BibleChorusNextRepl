@@ -15,4 +15,9 @@
 - Fixed runtime error on the PDF upload page by wrapping the form in `FormProvider` so `PdfUploadProgressBar` can access form context.
 ## 2025-06-07
 - Fixed form submission for PDF uploads by inserting the URL into the `file_url` column instead of a nonexistent `pdf_url` field.
-\n## 2025-06-08\n- Updated shuffle mode to load all songs for the current filters so shuffle picks from the full list.
+
+## 2025-06-08
+- Updated shuffle mode to load all songs for the current filters so shuffle picks from the full list.
+
+## 2025-06-09
+- Shuffle button now preloads and shuffles every song that matches the current filters when enabled.
