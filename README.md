@@ -31,7 +31,7 @@ Developers should ensure OCR tools are available if PDFs lack embedded text. The
 
 - `AWS_S3_BUCKET_NAME` – S3 bucket where files are stored.
 - `AWS_REGION` – region for S3 operations.
-- `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` – credentials for S3.
+- `AWS_ACCESS_KEY` and `AWS_SECRET_KEY` – credentials for S3.
 - `CDN_URL` – optional base URL used when serving uploaded files.
 
 - PDF uploads are limited to 10MB. The client requests a presigned URL from `/api/upload-url` with `uploadType: "pdf"` before uploading directly to S3.

@@ -30,3 +30,12 @@ Stores metadata for uploaded PDF documents containing scriptural or thematic con
 |------------|---------|------|-------------|
 | pdfs_uploaded_by_idx | uploaded_by | B-tree | For efficient queries on a user's uploads |
 | pdfs_created_at_idx | created_at | B-tree | For sorting or filtering by creation time |
+
+## Environment Configuration
+
+These environment variables control PDF storage in AWS S3:
+
+- `AWS_S3_BUCKET_NAME` – target bucket for PDF uploads.
+- `AWS_REGION` – AWS region of the bucket.
+- `AWS_ACCESS_KEY` and `AWS_SECRET_KEY` – credentials used by the server.
+- `CDN_URL` – optional base URL when serving uploaded PDFs.
