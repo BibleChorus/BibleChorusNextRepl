@@ -36,7 +36,7 @@ import { useSidebar } from '@/contexts/SidebarContext';  // Import useSidebar
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 // Import User from types.ts
-import { User } from '@/types'; // Ensure correct path based on your project structure
+import { User, Song } from '@/types'; // Ensure correct path based on your project structure
 
 const fetcher = (url: string) =>
   fetch(url)
@@ -54,23 +54,6 @@ const fetcher = (url: string) =>
     });
 
 // Updated Song type definition
-export type Song = {
-  id: number;
-  title: string;
-  username: string;
-  uploaded_by: number;
-  artist: string;
-  genres: string[]; // Ensure genres is typed as an array of strings
-  created_at: string;
-  audio_url: string;
-  song_art_url?: string;
-  bible_translation_used?: string;
-  lyrics_scripture_adherence?: string;
-  is_continuous_passage?: boolean;
-  bible_verses?: { book: string; chapter: number; verse: number }[];
-  play_count?: number;
-  duration?: number;
-};
 
 export type FilterOptions = {
   lyricsAdherence: string[];
@@ -169,7 +152,7 @@ function ListenContent({
   const router = useRouter()
   const querySearch = router.query.search as string || ''
   const { user } = useAuth(); // useAuth already provides User | null with correct type
-  const { currentSong, isMinimized } = useMusicPlayer();
+  const { currentSong, isMinimized, isShuffling, queue, updateQueue } = useMusicPlayer();
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
   const { isOpen: isSidebarOpen } = useSidebar(); // Get sidebar state
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -398,6 +381,35 @@ function ListenContent({
 
   // Songs are derived from the data fetched by SWRInfinite
   const songs = data ? data.flatMap((page) => page.songs) : []
+  const totalSongs = data?.[0]?.total || 0
+
+  const fetchAllSongs = useCallback(async (): Promise<Song[]> => {
+    const query = buildQueryString(debouncedFilters, 1, user, selectedPlaylist)
+    const result = await fetcher(`/api/songs?${query}&limit=${totalSongs}`)
+    return result.songs
+  }, [debouncedFilters, user, selectedPlaylist, totalSongs])
+
+  const toPlayerSong = (s: Song) => ({
+    id: s.id,
+    title: s.title,
+    artist: s.artist || s.username,
+    audioUrl: s.audio_url,
+    audio_url: s.audio_url,
+    coverArtUrl: s.song_art_url,
+    duration: s.duration,
+    lyrics: s.lyrics,
+    bible_verses: s.bible_verses,
+    bible_translation_used: s.bible_translation_used,
+    uploaded_by: s.uploaded_by,
+  })
+
+  useEffect(() => {
+    if (isShuffling && queue.length < totalSongs && totalSongs > songs.length) {
+      fetchAllSongs()
+        .then((all) => updateQueue(all.map(toPlayerSong)))
+        .catch((err) => console.error('Error fetching all songs for shuffle:', err))
+    }
+  }, [isShuffling, totalSongs, songs.length, fetchAllSongs, updateQueue, queue.length])
 
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0,
@@ -886,7 +898,12 @@ function ListenContent({
 
           {songs.length > 0 ? (
             <>
-              <SongList songs={songs} isNarrowView={isNarrowView} />
+              <SongList
+                songs={songs}
+                isNarrowView={isNarrowView}
+                totalSongs={totalSongs}
+                fetchAllSongs={fetchAllSongs}
+              />
               {hasMore && (
                 <>
                   {isValidating && <SongListSkeleton />}

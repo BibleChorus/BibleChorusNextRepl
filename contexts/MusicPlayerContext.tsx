@@ -35,6 +35,7 @@ interface MusicPlayerContextType {
   audioElement: HTMLAudioElement | null;
   isMinimized: boolean;
   setIsMinimized: React.Dispatch<React.SetStateAction<boolean>>;
+  updateQueue: (newQueue: MusicPlayerSong[]) => void;
   // ... additional controls
 }
 
@@ -63,6 +64,16 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setHasIncrementedPlayCount(true);
     } catch (error) {
       console.error('Error incrementing play count:', error);
+    }
+  };
+
+  const updateQueue = (newQueue: MusicPlayerSong[]) => {
+    setQueue(newQueue);
+    if (currentSong) {
+      const newIndex = newQueue.findIndex((s) => s.id === currentSong.id);
+      if (newIndex !== -1) {
+        setCurrentIndex(newIndex);
+      }
     }
   };
 
@@ -260,6 +271,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         isShuffling,
         repeatMode,
         queue,
+        updateQueue,
         audioElement: audioRef.current, // Expose audio element
         isMinimized,
         setIsMinimized,
