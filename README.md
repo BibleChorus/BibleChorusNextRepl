@@ -25,7 +25,7 @@ You can also produce a production build by running `npm run build` and [changing
 
 ## PDF Upload and Reader
 
-Users can upload PDF documents containing scripture or Bible study material. Uploaded files are processed to extract text, detect verse references, and link them to the existing verse database. Each PDF has its own page where readers can navigate pages, leave comments, track personal notes, and rate the document.
+Users can upload PDF documents containing scripture or Bible study material. Uploaded files are processed to extract text, detect verse references, and link them to the existing verse database. Each PDF has its own page where readers can view the document through an integrated PDF.js viewer, navigate pages, leave comments, track personal notes, and rate the document.
 
 Developers should ensure OCR tools are available if PDFs lack embedded text. The default implementation tries `pdf-parse` first and can fall back to Tesseract or AWS Textract. Configure the following environment variables for uploads:
 
