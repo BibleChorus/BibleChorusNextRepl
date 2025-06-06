@@ -23,6 +23,10 @@ To make your next App run smoothly in production make sure to deploy your projec
 
 You can also produce a production build by running `npm run build` and [changing the run command](https://docs.replit.com/programming-ide/configuring-repl#run) to `npm run start`.
 
+## Environment Variables
+
+- `JWT_SECRET` – required for JWT authentication. The build process will fail if this variable is not set.
+
 ## PDF Upload and Reader
 
 Users can upload PDF documents containing scripture or Bible study material. Uploaded files are processed to extract text, detect verse references, and link them to the existing verse database. Each PDF has its own page where readers can navigate pages, leave comments, track personal notes, and rate the document.

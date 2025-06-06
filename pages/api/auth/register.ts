@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import db from '../../../db'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { getJwtSecret } from '@/lib/jwt'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -19,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }).returning('*')
 
     // Generate JWT token
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '1d' })
+    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: '1d' })
 
     res.status(201).json({ 
       user: { id: user.id, username: user.username, email: user.email },

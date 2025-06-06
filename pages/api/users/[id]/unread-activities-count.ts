@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/lib/db';
 import jwt from 'jsonwebtoken';
+import { getJwtSecret } from '@/lib/jwt';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -18,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const token = authHeader.split(' ')[1];
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number };
+      const decoded = jwt.verify(token, getJwtSecret()) as { userId: number };
       if (decoded.userId !== Number(id)) {
         return res.status(403).json({ message: 'Forbidden' });
       }

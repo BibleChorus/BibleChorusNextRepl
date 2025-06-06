@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/lib/db';
 import jwt from 'jsonwebtoken';
+import { getJwtSecret } from '@/lib/jwt';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -27,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let decoded;
     
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number };
+      decoded = jwt.verify(token, getJwtSecret()) as { userId: number };
     } catch (error) {
       console.error('Token verification failed:', error);
       return res.status(401).json({ 

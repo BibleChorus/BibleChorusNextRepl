@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required for JWT authentication.')
+}
+
 const nextConfig = {
   // Configure image optimization and remote patterns
   images: {
@@ -24,7 +28,7 @@ const nextConfig = {
   // Runtime configuration
   env: {
     // Security-related environment variables
-    JWT_SECRET: process.env.JWT_SECRET || 'fallback-secret-for-debugging',
+    JWT_SECRET: process.env.JWT_SECRET,
     
     // AWS configuration
     AWS_REGION: process.env.AWS_REGION,

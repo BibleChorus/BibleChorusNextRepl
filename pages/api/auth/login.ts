@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import db from '../../../db'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { getJwtSecret } from '@/lib/jwt'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -31,13 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { password_hash, ...userWithoutPassword } = user
     
     // Generate JWT token
-    console.log('JWT_SECRET status:', process.env.JWT_SECRET ? 'Defined' : 'Undefined')
-    if (!process.env.JWT_SECRET) {
-      console.error('JWT_SECRET is not defined')
-      return res.status(500).json({ message: 'Server configuration error: JWT_SECRET is missing' })
-    }
-    
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' })
+    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: '1d' })
 
     console.log('Login successful, returning user data and token')
     res.status(200).json({ user: userWithoutPassword, token })
