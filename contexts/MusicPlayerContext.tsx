@@ -1,6 +1,15 @@
 import React, { createContext, useState, useContext, useRef, useEffect } from 'react';
 import axios from 'axios'; // Import axios for API calls
 
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 // Define the MusicPlayerSong type
 interface MusicPlayerSong {
   id: number;
@@ -36,6 +45,7 @@ interface MusicPlayerContextType {
   isMinimized: boolean;
   setIsMinimized: React.Dispatch<React.SetStateAction<boolean>>;
   updateQueue: (newQueue: MusicPlayerSong[]) => void;
+  registerShuffleLoader: (loader: () => Promise<MusicPlayerSong[]>) => void;
   // ... additional controls
 }
 
@@ -48,6 +58,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [currentSong, setCurrentSong] = useState<MusicPlayerSong | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isShuffling, setIsShuffling] = useState<boolean>(false);
+  const shuffleLoaderRef = useRef<null | (() => Promise<MusicPlayerSong[]>)>(null);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
 
@@ -75,6 +86,10 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setCurrentIndex(newIndex);
       }
     }
+  };
+
+  const registerShuffleLoader = (loader: () => Promise<MusicPlayerSong[]>) => {
+    shuffleLoaderRef.current = loader;
   };
 
   // Watch for playback progress to increment play count after a certain duration
@@ -202,7 +217,20 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Toggle shuffle mode
-  const toggleShuffle = () => {
+  const toggleShuffle = async () => {
+    if (!isShuffling && shuffleLoaderRef.current) {
+      try {
+        const allSongs = await shuffleLoaderRef.current();
+        const shuffled = shuffleArray(allSongs);
+        setQueue(shuffled);
+        if (currentSong) {
+          const idx = shuffled.findIndex((s) => s.id === currentSong.id);
+          if (idx !== -1) setCurrentIndex(idx);
+        }
+      } catch (err) {
+        console.error('Error loading songs for shuffle:', err);
+      }
+    }
     setIsShuffling(!isShuffling);
   };
 
@@ -272,6 +300,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         repeatMode,
         queue,
         updateQueue,
+        registerShuffleLoader,
         audioElement: audioRef.current, // Expose audio element
         isMinimized,
         setIsMinimized,
