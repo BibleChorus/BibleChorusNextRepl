@@ -39,6 +39,8 @@ const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 interface SongListProps {
   songs: Song[];
   isNarrowView: boolean;
+  totalSongs: number;
+  fetchAllSongs: () => Promise<Song[]>;
 }
 
 interface VoteState {
@@ -66,7 +68,7 @@ const formatDuration = (seconds: number): string => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
-export const SongList = React.memo(function SongList({ songs, isNarrowView }: SongListProps) {
+export const SongList = React.memo(function SongList({ songs, isNarrowView, totalSongs, fetchAllSongs }: SongListProps) {
   const [voteStates, setVoteStates] = useState<VoteState>({})
   const [likeStates, setLikeStates] = useState<LikeState>({})
   const [likeCounts, setLikeCounts] = useState<Record<number, number>>({})
@@ -199,6 +201,8 @@ export const SongList = React.memo(function SongList({ songs, isNarrowView }: So
           key={song.id}
           song={song}
           songs={songs}
+          totalSongs={totalSongs}
+          fetchAllSongs={fetchAllSongs}
           likeCounts={likeCounts}
           voteCounts={voteCounts}
           likeStates={likeStates}
@@ -213,25 +217,29 @@ export const SongList = React.memo(function SongList({ songs, isNarrowView }: So
   )
 })
 
-const SongListItem = React.memo(function SongListItem({ 
-  song, 
-  songs, 
-  likeCounts, 
-  voteCounts, 
-  likeStates, 
-  voteStates, 
-  handleLike, 
+const SongListItem = React.memo(function SongListItem({
+  song,
+  songs,
+  totalSongs,
+  fetchAllSongs,
+  likeCounts,
+  voteCounts,
+  likeStates,
+  voteStates,
+  handleLike,
   handleVoteClick,
   isNarrowView,
   commentsCount
-}: { 
-  song: Song, 
-  songs: Song[], 
-  likeCounts: Record<number, number>, 
-  voteCounts: VoteCounts, 
-  likeStates: LikeState, 
-  voteStates: VoteState, 
-  handleLike: (song: Song) => Promise<void>, 
+}: {
+  song: Song,
+  songs: Song[],
+  totalSongs: number,
+  fetchAllSongs: () => Promise<Song[]>,
+  likeCounts: Record<number, number>,
+  voteCounts: VoteCounts,
+  likeStates: LikeState,
+  voteStates: VoteState,
+  handleLike: (song: Song) => Promise<void>,
   handleVoteClick: (song: Song, voteType: string, voteValue: number) => Promise<void>,
   isNarrowView: boolean,
   commentsCount: number
@@ -424,7 +432,7 @@ const SongListItem = React.memo(function SongListItem({
     }
   }, [song]);
 
-  const handlePlayClick = () => {
+  const handlePlayClick = async () => {
     if (currentSong?.id === song.id) {
       if (isPlaying) {
         pause();
@@ -432,6 +440,15 @@ const SongListItem = React.memo(function SongListItem({
         resume();
       }
     } else {
+      let queueSongs = songs;
+      if (fetchAllSongs && totalSongs > songs.length) {
+        try {
+          queueSongs = await fetchAllSongs();
+        } catch (error) {
+          console.error('Error fetching all songs:', error);
+        }
+      }
+
       playSong(
         {
           id: song.id,
@@ -446,7 +463,7 @@ const SongListItem = React.memo(function SongListItem({
           bible_translation_used: song.bible_translation_used,
           uploaded_by: song.uploaded_by,
         },
-        songs.map((s) => ({
+        queueSongs.map((s) => ({
           id: s.id,
           title: s.title,
           artist: s.artist || s.username,
@@ -458,7 +475,6 @@ const SongListItem = React.memo(function SongListItem({
           bible_verses: s.bible_verses,
           bible_translation_used: s.bible_translation_used,
           uploaded_by: s.uploaded_by,
-          // ... other properties if needed ...
         }))
       );
     }
