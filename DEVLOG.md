@@ -26,3 +26,7 @@
 - Replaced the old react-pdf viewer with the Doqment PDF.js viewer.
 - PDFs now open in an iframe at `/pdf-viewer` with smart zoom and the ability to hide the toolbar.
 - The viewer also respects the site's light and dark themes.
+
+## 2025-06-11
+- Fixed cross-origin errors preventing PDFs from loading in the viewer.
+- `/pdf-viewer` now renders without the main layout and includes a fullscreen toggle.
