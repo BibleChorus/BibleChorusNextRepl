@@ -30,3 +30,7 @@ Stores public comments on PDFs, allowing for discussion and feedback. Supports n
 | pdf_comments_pdf_id_idx | pdf_id | B-tree | Quickly fetch comments for a PDF |
 | pdf_comments_parent_comment_id_idx | parent_comment_id | B-tree | Retrieve replies for a comment |
 | pdf_comments_user_id_idx | user_id | B-tree | Lookup comments by user |
+
+## API Endpoints
+- `GET /api/pdfs/[id]/comments` – list comments for a PDF including commenter info.
+- `POST /api/pdfs/[id]/comments` – create a new comment. Requires `user_id` and `comment`; accepts optional `parent_comment_id`.
