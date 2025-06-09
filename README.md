@@ -2,7 +2,24 @@ Welcome to the NextJS base template bootstrapped using the `create-next-app`. Th
 
 ## Getting Started
 
-Hit the run button to start the development server.
+Install dependencies and apply the database schema:
+
+```bash
+npm install
+npm run migrate
+```
+
+Create a `.env` file with the environment variables listed below. Once configured, start the development server:
+
+```bash
+npm run dev
+```
+
+The site runs on `http://localhost:3000` by default. Major features can be found at:
+
+- **Songs** – `/listen` lists uploaded songs, `/Songs/[id]` shows a song page.
+- **PDFs** – `/pdfs` lists study guides and `/pdfs/upload` allows uploads.
+- **Forum** – `/forum` hosts community discussions.
 
 You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
 
@@ -25,7 +42,19 @@ You can also produce a production build by running `npm run build` and [changing
 
 ## Environment Variables
 
-- `JWT_SECRET` – required for JWT authentication. The build process will fail if this variable is not set.
+The application uses PostgreSQL and AWS S3. Create a `.env` file with at least the following variables:
+
+- `JWT_SECRET` – required for JWT authentication.
+- `NEXTAUTH_SECRET` – secret used by NextAuth.
+- `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` – database connection values used by `knexfile.js`. Alternatively set `DATABASE_URL`.
+- `AWS_REGION`, `AWS_ACCESS_KEY`, `AWS_SECRET_KEY`, `AWS_S3_BUCKET_NAME` – S3 configuration in `lib/s3.ts` and API routes.
+- `CDN_URL` and `NEXT_PUBLIC_CDN_URL` – base URL for uploaded files on the server and client.
+- `NEXT_PUBLIC_BASE_URL` – full site URL used when generating links in emails.
+- `SENDGRID_API_KEY` – required to send email reports.
+
+## Database Schema
+
+Database tables and indexes are created using Knex migrations found in `db/migrations`. Documentation for each table lives under the `Reference/` directory.
 
 ## PDF Upload and Reader
 
