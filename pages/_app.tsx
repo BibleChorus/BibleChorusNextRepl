@@ -47,9 +47,12 @@ const LoadingWrapper = ({ children }) => {
   )
 }
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({ Component, pageProps }: AppProps & { Component: any }) {
   const router = useRouter()
-  const isHomePage = router.pathname === '/'
+  const isBarePage =
+    router.pathname === '/' ||
+    router.pathname === '/pdf-viewer' ||
+    Component.disableLayout
 
   useEffect(() => {
     // Disable the default loading indicator
@@ -75,7 +78,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <TooltipProvider>
                 <LoadingWrapper>
-                  {isHomePage ? (
+                  {isBarePage ? (
                     <Component {...pageProps} />
                   ) : (
                     <Layout>
