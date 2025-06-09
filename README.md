@@ -58,7 +58,9 @@ Database tables and indexes are created using Knex migrations found in `db/migra
 
 ## PDF Upload and Reader
 
-Users can upload PDF documents containing scripture or Bible study material. Uploaded files are processed to extract text, detect verse references, and link them to the existing verse database. Each PDF has its own page where readers can view the document through an integrated PDF.js viewer, navigate pages, leave comments, track personal notes, and rate the document.
+Users can upload PDF documents containing scripture or Bible study material. Uploaded files are processed to extract text, detect verse references, and link them to the existing verse database. Each PDF has its own page where readers can view the document through an integrated PDF.js viewer, leave comments, track personal notes, and rate the document.
+
+The new viewer is powered by **Doqment** which adds smart zoom and allows hiding the toolbar. It also respects the app's light and dark themes so PDFs match the surrounding UI.
 
 Developers should ensure OCR tools are available if PDFs lack embedded text. The default implementation tries `pdf-parse` first and can fall back to Tesseract or AWS Textract. Configure the following environment variables for uploads:
 
