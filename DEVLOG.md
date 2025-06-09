@@ -21,3 +21,8 @@
 
 ## 2025-06-09
 - Shuffle button now preloads and shuffles every song that matches the current filters when enabled.
+
+## 2025-06-10
+- Replaced the old react-pdf viewer with the Doqment PDF.js viewer.
+- PDFs now open in an iframe at `/pdf-viewer` with smart zoom and the ability to hide the toolbar.
+- The viewer also respects the site's light and dark themes.

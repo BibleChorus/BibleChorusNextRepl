@@ -10,7 +10,6 @@ import { Separator } from '@/components/ui/separator';
 import { CommentList } from '@/components/PdfComments/CommentList';
 import { NewCommentForm } from '@/components/PdfComments/NewCommentForm';
 import { NotesSection } from '@/components/PdfNotes/NotesSection';
-import PdfViewer from '@/components/PdfViewer';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import axios from 'axios';
@@ -24,8 +23,6 @@ interface PdfPageProps {
 export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<PdfComment[]>(initialComments);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState<number | null>(null);
   const [ratingCounts, setRatingCounts] = useState({ quality: 0, theology: 0, helpfulness: 0 });
 
   const handleCommentAdded = (comment: PdfComment) => {
@@ -41,9 +38,6 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
     }
   };
 
-  const nextPage = () =>
-    setCurrentPage((p) => (totalPages ? Math.min(totalPages, p + 1) : p + 1));
-  const prevPage = () => setCurrentPage((p) => Math.max(1, p - 1));
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -61,14 +55,7 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Button onClick={prevPage} variant="outline">Previous Page</Button>
-          <span>Page {currentPage}{totalPages ? ` of ${totalPages}` : ''}</span>
-          <Button onClick={nextPage} variant="outline">Next Page</Button>
-        </div>
-        <div className="border rounded-md overflow-hidden h-[70vh]">
-          <PdfViewer fileUrl={pdf.file_url} page={currentPage} onDocumentLoad={setTotalPages} />
-        </div>
+        <iframe src={`/pdf-viewer?file=${encodeURIComponent(pdf.file_url)}`} className="w-full h-[70vh] border rounded-md" />
       </div>
 
       <Separator />
