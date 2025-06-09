@@ -1,9 +1,14 @@
-/** @type {import('next').NextConfig} */
-if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required for JWT authentication.')
-}
+import { PHASE_PRODUCTION_BUILD } from 'next/constants.js'
 
-const nextConfig = {
+/** @type {import('next').NextConfig} */
+export default (phase, defaultConfig) => {
+  const isProd = phase === PHASE_PRODUCTION_BUILD
+
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required for JWT authentication.')
+  }
+
+  return {
   // Configure image optimization and remote patterns
   images: {
     remotePatterns: [
@@ -39,13 +44,13 @@ const nextConfig = {
   },
 
   // Replit-specific optimizations
-  output: 'standalone',
+  output: isProd ? 'standalone' : undefined,
   poweredByHeader: false, // Remove X-Powered-By header for security
   
   // Performance optimizations
   compress: true,
   reactStrictMode: true,
-  swcMinify: true,
+  swcMinify: isProd,
 
   // Handle trailing slashes consistently
   trailingSlash: false,
@@ -69,6 +74,7 @@ const nextConfig = {
     }
     return config;
   },
+  };
 };
 
 // Add helpful comment about running in standalone mode
@@ -78,5 +84,3 @@ const nextConfig = {
  * - Ensure all environment variables are properly set in Replit secrets
  * - The standalone output creates a minimal production server
  */
-
-module.exports = nextConfig;
