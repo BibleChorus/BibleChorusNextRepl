@@ -36,7 +36,12 @@ export const PdfViewerPage: PdfViewerPageType = () => {
         <title>PDF Viewer</title>
       </Head>
       <div className="relative w-full h-screen">
-        <iframe ref={iframeRef} src={src} className="w-full h-full border-none" />
+        <iframe
+          ref={iframeRef}
+          src={src}
+          className="w-full h-full border-none"
+          allow="fullscreen"
+        />
         <button
           aria-label="Toggle fullscreen"
           onClick={toggleFullscreen}

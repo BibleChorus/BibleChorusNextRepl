@@ -55,7 +55,11 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
       </div>
 
       <div className="space-y-2">
-        <iframe src={`/pdf-viewer?file=${encodeURIComponent(pdf.file_url)}`} className="w-full h-[70vh] border rounded-md" />
+        <iframe
+          src={`/pdf-viewer?file=${encodeURIComponent(pdf.file_url)}`}
+          className="w-full h-[70vh] border rounded-md"
+          allow="fullscreen"
+        />
       </div>
 
       <Separator />
