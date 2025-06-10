@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Maximize, Minimize } from 'lucide-react';
 
 interface PdfViewerPageType extends React.FC {
@@ -11,6 +11,16 @@ export const PdfViewerPage: PdfViewerPageType = () => {
   const router = useRouter();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   const { file } = router.query;
   const fileParam = Array.isArray(file) ? file[0] : file;
