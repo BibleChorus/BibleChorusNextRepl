@@ -14,14 +14,12 @@ export const PdfViewerPage: PdfViewerPageType = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
+    if (isFullscreen) {
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
+    }
+  }, [isFullscreen]);
 
   const { file } = router.query;
   const fileParam = Array.isArray(file) ? file[0] : file;
@@ -29,31 +27,12 @@ export const PdfViewerPage: PdfViewerPageType = () => {
     ? `/pdfreader/doqment-main/src/pdfjs/web/viewer.html?file=${encodeURIComponent(fileParam)}`
     : '/pdfreader/doqment-main/src/pdfjs/web/viewer.html';
 
-  const toggleFullscreen = async () => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-    if (!document.fullscreenElement) {
-      try {
-        const promise = iframe.requestFullscreen?.();
-        if (promise) {
-          await promise;
-        }
-        setIsFullscreen(true);
-      } catch (error) {
-        console.warn('Failed to enter fullscreen', error);
-        toast.error('Failed to enter fullscreen');
-      }
-    } else {
-      try {
-        const promise = document.exitFullscreen?.();
-        if (promise) {
-          await promise;
-        }
-        setIsFullscreen(false);
-      } catch (error) {
-        console.warn('Failed to exit fullscreen', error);
-        toast.error('Failed to exit fullscreen');
-      }
+  const toggleFullscreen = () => {
+    try {
+      setIsFullscreen((prev) => !prev);
+    } catch (error) {
+      console.warn('Failed to toggle fullscreen', error);
+      toast.error('Failed to toggle fullscreen');
     }
   };
 
@@ -62,7 +41,13 @@ export const PdfViewerPage: PdfViewerPageType = () => {
       <Head>
         <title>PDF Viewer</title>
       </Head>
-      <div className="relative w-full h-screen">
+      <div
+        className={
+          isFullscreen
+            ? 'fixed inset-0 z-50 w-screen h-screen bg-background'
+            : 'relative w-full h-screen'
+        }
+      >
         <iframe
           ref={iframeRef}
           src={src}
