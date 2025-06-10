@@ -14,6 +14,15 @@ export const PdfViewerPage: PdfViewerPageType = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
+    const onChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
+  useEffect(() => {
     if (isFullscreen) {
       document.body.classList.add('overflow-hidden');
     } else {
@@ -27,9 +36,17 @@ export const PdfViewerPage: PdfViewerPageType = () => {
     ? `/pdfreader/doqment-main/src/pdfjs/web/viewer.html?file=${encodeURIComponent(fileParam)}`
     : '/pdfreader/doqment-main/src/pdfjs/web/viewer.html';
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
     try {
-      setIsFullscreen((prev) => !prev);
+      if (!document.fullscreenElement) {
+        await iframe.requestFullscreen();
+        toast.success('Entered fullscreen');
+      } else {
+        await document.exitFullscreen();
+        toast.success('Exited fullscreen');
+      }
     } catch (error) {
       console.warn('Failed to toggle fullscreen', error);
       toast.error('Failed to toggle fullscreen');

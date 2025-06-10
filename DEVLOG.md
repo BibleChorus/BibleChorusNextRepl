@@ -33,3 +33,6 @@
 
 ## 2025-06-12
 - Added `allow="fullscreen"` to PDF iframes so the viewer can request fullscreen mode.
+
+## 2025-06-13
+- The fullscreen toggle now uses the browser Fullscreen API and shows a toast when entering or exiting fullscreen.
