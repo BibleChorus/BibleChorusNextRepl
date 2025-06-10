@@ -30,3 +30,6 @@
 ## 2025-06-11
 - Fixed cross-origin errors preventing PDFs from loading in the viewer.
 - `/pdf-viewer` now renders without the main layout and includes a fullscreen toggle.
+
+## 2025-06-12
+- Added `allow="fullscreen"` to PDF iframes so the viewer can request fullscreen mode.
