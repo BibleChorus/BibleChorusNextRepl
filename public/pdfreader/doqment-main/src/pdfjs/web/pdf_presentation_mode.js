@@ -108,7 +108,8 @@ class PDFPresentationMode {
       await promise;
       pdfViewer.focus(); // Fixes bug 1787456.
       return true;
-    } catch {
+    } catch (reason) {
+      console.warn('Failed to enter fullscreen', reason);
       this.#removeFullscreenChangeListeners();
       this.#notifyStateChange(PresentationModeState.NORMAL);
     }

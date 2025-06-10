@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useRef, useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Maximize, Minimize } from 'lucide-react';
 
 interface PdfViewerPageType extends React.FC {
@@ -28,15 +29,31 @@ export const PdfViewerPage: PdfViewerPageType = () => {
     ? `/pdfreader/doqment-main/src/pdfjs/web/viewer.html?file=${encodeURIComponent(fileParam)}`
     : '/pdfreader/doqment-main/src/pdfjs/web/viewer.html';
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
     const iframe = iframeRef.current;
     if (!iframe) return;
     if (!document.fullscreenElement) {
-      iframe.requestFullscreen?.();
-      setIsFullscreen(true);
+      try {
+        const promise = iframe.requestFullscreen?.();
+        if (promise) {
+          await promise;
+        }
+        setIsFullscreen(true);
+      } catch (error) {
+        console.warn('Failed to enter fullscreen', error);
+        toast.error('Failed to enter fullscreen');
+      }
     } else {
-      document.exitFullscreen?.();
-      setIsFullscreen(false);
+      try {
+        const promise = document.exitFullscreen?.();
+        if (promise) {
+          await promise;
+        }
+        setIsFullscreen(false);
+      } catch (error) {
+        console.warn('Failed to exit fullscreen', error);
+        toast.error('Failed to exit fullscreen');
+      }
     }
   };
 
