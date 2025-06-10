@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
-import pdfParse from 'pdf-parse';
 import s3Client from '@/lib/s3';
 import db from '@/db';
 import { Knex } from 'knex';
@@ -50,6 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Attempt text extraction
     let extractedText = '';
     try {
+      const pdfParse = (await import('pdf-parse')).default;
       const data = await pdfParse(fileBuffer);
       extractedText = data.text.trim();
     } catch (err) {
