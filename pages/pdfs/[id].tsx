@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import db from '@/db';
 import { parsePostgresArray } from '@/lib/utils';
 import { Pdf, PdfComment, PdfNote } from '@/types';
@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { NewCommentForm } from '@/components/PdfComments/NewCommentForm';
 import { NotesSection } from '@/components/PdfNotes/NotesSection';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Headphones } from 'lucide-react';
 import axios from 'axios';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,19 +23,31 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip';
+import DOMPurify from 'isomorphic-dompurify';
+import { BIBLE_BOOKS } from '@/lib/constants';
+
+interface BibleVerse {
+  book: string;
+  chapter: number;
+  verse: number;
+  text: string;
+}
 
 interface PdfPageProps {
   pdf: Pdf & { username: string };
+  bibleVerses: { book: string; chapter: number; verse: number }[];
   initialComments: PdfComment[];
   initialNotes: PdfNote[];
 }
 
-export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageProps) {
+export default function PdfPage({ pdf, bibleVerses, initialComments, initialNotes }: PdfPageProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<PdfComment[]>(initialComments);
   const [ratingCounts, setRatingCounts] = useState({ quality: 0, theology: 0, helpfulness: 0 });
   const [notebookLmUrl, setNotebookLmUrl] = useState(pdf.notebook_lm_url || '');
   const [summary, setSummary] = useState(pdf.summary || '');
+  const [verses, setVerses] = useState<BibleVerse[]>([]);
+  const [isLoadingVerses, setIsLoadingVerses] = useState(false);
 
   const handleCommentAdded = (comment: PdfComment) => {
     setComments((prev) => [comment, ...prev]);
@@ -62,6 +74,34 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
       toast.error('Failed to update details');
     }
   };
+
+  useEffect(() => {
+    const fetchVerses = async () => {
+      if (!bibleVerses || bibleVerses.length === 0) return;
+      setIsLoadingVerses(true);
+      try {
+        const versesToFetch = bibleVerses.map((v) => ({
+          translation: 'NASB',
+          book: BIBLE_BOOKS.indexOf(v.book) + 1,
+          chapter: v.chapter,
+          verses: [v.verse],
+        }));
+        const response = await axios.post('/api/fetch-verses', versesToFetch);
+        const fetched = response.data.flat().map((verse: any) => ({
+          book: BIBLE_BOOKS[verse.book - 1],
+          chapter: verse.chapter,
+          verse: verse.verse,
+          text: verse.text,
+        }));
+        setVerses(fetched);
+      } catch (error) {
+        console.error('Error fetching verses:', error);
+      } finally {
+        setIsLoadingVerses(false);
+      }
+    };
+    fetchVerses();
+  }, [bibleVerses]);
 
 
   return (
@@ -156,6 +196,35 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
       <Separator />
 
       <section>
+        <h2 className="text-xl font-semibold mb-2">Bible Verses</h2>
+        {isLoadingVerses ? (
+          <p>Loading verses...</p>
+        ) : verses.length === 0 ? (
+          <p>No verses linked.</p>
+        ) : (
+          <div className="space-y-4">
+            {verses.map((v, i) => (
+              <div key={i}>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold">{`${v.book} ${v.chapter}:${v.verse}`}</p>
+                  <Link
+                    href={`/listen?bibleVerses=${encodeURIComponent(`${v.book} ${v.chapter}:${v.verse}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Headphones className="w-4 h-4" />
+                  </Link>
+                </div>
+                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(v.text) }} />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <Separator />
+
+      <section>
         <h2 className="text-xl font-semibold mb-2">Ratings</h2>
         <div className="space-y-2">
           {(['quality', 'theology', 'helpfulness'] as const).map((cat) => (
@@ -219,6 +288,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       pdf.themes = [];
     }
 
+    const verses = await db('pdf_verses')
+      .join('bible_verses', 'pdf_verses.verse_id', 'bible_verses.id')
+      .where('pdf_verses.pdf_id', id)
+      .select('bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse')
+      .orderBy(['bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse']);
+
     const comments = await db('pdf_comments')
       .join('users', 'pdf_comments.user_id', 'users.id')
       .where('pdf_comments.pdf_id', id)
@@ -232,6 +307,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return {
       props: {
         pdf: JSON.parse(JSON.stringify(pdf)),
+        bibleVerses: JSON.parse(JSON.stringify(verses)),
         initialComments: JSON.parse(JSON.stringify(comments)),
         initialNotes: JSON.parse(JSON.stringify(notes)),
       },
