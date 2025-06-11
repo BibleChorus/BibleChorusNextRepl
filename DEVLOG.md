@@ -58,3 +58,7 @@
 - Removed in-app PDF viewer and replaced it with a simple "Open PDF" button.
 - The PDF detail page now highlights the NotebookLM link with an icon and tooltip.
 - Deleted the obsolete `/pdf-viewer` route.
+
+## 2025-06-26
+- Fixed PDF cover images showing a broken URL when `NEXT_PUBLIC_CDN_URL` was unset.
+- The PDF list and detail pages now check if `image_url` already includes a protocol before prefixing the CDN URL.

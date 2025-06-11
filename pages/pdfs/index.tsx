@@ -52,7 +52,11 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
           <Card key={pdf.id}>
             {pdf.image_url && (
               <Image
-                src={`${process.env.NEXT_PUBLIC_CDN_URL}${pdf.image_url}`}
+                src={
+                  pdf.image_url.startsWith('http')
+                    ? pdf.image_url
+                    : `${process.env.NEXT_PUBLIC_CDN_URL ?? ''}${pdf.image_url}`
+                }
                 alt={pdf.title}
                 width={320}
                 height={240}
