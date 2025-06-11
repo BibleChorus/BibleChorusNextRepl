@@ -8,6 +8,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 import { Input } from '@/components/ui/input';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -18,6 +19,10 @@ import { Check, ChevronsUpDown, X } from 'lucide-react';
 import { THEMES } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
+import { Modal } from '@/components/Modal';
+import { ImageCropper } from '@/components/UploadPage/ImageCropper';
+import { uploadFile } from '@/lib/uploadUtils';
 
 const MAX_PDF_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -27,6 +32,7 @@ const formSchema = z.object({
   ai_assisted: z.boolean().default(false),
   themes: z.array(z.string()).min(1, 'Select at least one theme'),
   pdf_url: z.string().min(1, 'PDF upload required'),
+  image_url: z.string().optional(),
   notebook_lm_url: z
     .string()
     .url('Invalid URL')
@@ -36,7 +42,7 @@ const formSchema = z.object({
   source_url: z.string().url('Invalid URL').optional(),
 });
 
-type FormValues = z.infer<typeof formSchema> & { pdf_file?: File | null };
+type FormValues = z.infer<typeof formSchema> & { pdf_file?: File | null; image_file?: File | null };
 
 export default function UploadPdf() {
   const router = useRouter();
@@ -50,6 +56,7 @@ export default function UploadPdf() {
       ai_assisted: false,
       themes: [],
       pdf_url: '',
+      image_url: '',
       notebook_lm_url: '',
       summary: '',
       source_url: '',
@@ -62,6 +69,10 @@ export default function UploadPdf() {
 
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
+  const [imageUploadStatus, setImageUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!user) {
@@ -127,6 +138,40 @@ export default function UploadPdf() {
       setUploadStatus('error');
       toast.error('Upload failed');
     }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Only image files are allowed');
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setCropImageUrl(url);
+    setIsCropperOpen(true);
+  };
+
+  const handleCropComplete = async (blob: Blob) => {
+    const croppedFile = new File([blob], 'pdf_image.jpg', { type: 'image/jpeg' });
+    form.setValue('image_file', croppedFile);
+    setIsCropperOpen(false);
+    setImageUploadStatus('uploading');
+    try {
+      const result = await uploadFile(croppedFile, 'image', user.id, 'pdf_image');
+      if (typeof result === 'string') throw new Error(result);
+      form.setValue('image_url', result.fileKey, { shouldValidate: true });
+      setImageUploadStatus('success');
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      setImageUploadStatus('error');
+      toast.error('Failed to upload image');
+    }
+  };
+
+  const handleCropCancel = () => {
+    setCropImageUrl(null);
+    setIsCropperOpen(false);
   };
 
   const onSubmit = async (values: FormValues) => {
@@ -286,6 +331,36 @@ export default function UploadPdf() {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="image_url"
+            render={() => (
+              <FormItem>
+                <FormLabel>Cover Image</FormLabel>
+                <FormControl>
+                  <Input type="file" accept="image/*" onChange={handleImageChange} />
+                </FormControl>
+                {imageUploadStatus !== 'idle' && (
+                  <div className="mt-2">
+                    <Progress value={imageUploadProgress} className="w-full" />
+                    <p className="text-sm mt-1">
+                      {imageUploadStatus === 'uploading' && `Uploading: ${imageUploadProgress}%`}
+                      {imageUploadStatus === 'success' && 'Upload successful!'}
+                      {imageUploadStatus === 'error' && 'Upload failed. Please try again.'}
+                    </p>
+                  </div>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Modal isOpen={isCropperOpen} onClose={handleCropCancel}>
+            {cropImageUrl && (
+              <ImageCropper imageUrl={cropImageUrl} onCropComplete={handleCropComplete} onCancel={handleCropCancel} maxHeight={300} />
+            )}
+          </Modal>
 
           <FormField
             control={form.control}

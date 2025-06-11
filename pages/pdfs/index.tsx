@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import Image from 'next/image';
 import { Pdf } from '@/types';
 
 interface PdfWithUser extends Pdf {
@@ -49,13 +50,22 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((pdf) => (
           <Card key={pdf.id}>
+            {pdf.image_url && (
+              <Image
+                src={`${process.env.NEXT_PUBLIC_CDN_URL}${pdf.image_url}`}
+                alt={pdf.title}
+                width={320}
+                height={240}
+                className="w-full h-40 object-cover rounded-t"
+              />
+            )}
             <CardHeader>
               <CardTitle>{pdf.title}</CardTitle>
               {pdf.author && <CardDescription>By {pdf.author}</CardDescription>}
             </CardHeader>
             <CardContent className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Uploaded by {pdf.username} on {new Date(pdf.created_at).toLocaleDateString()}
+                Uploaded by {pdf.username} on {new Date(pdf.uploaded_at ?? pdf.created_at).toLocaleDateString()}
               </p>
               <div className="flex flex-wrap gap-1">
                 {pdf.themes.map((t) => (
@@ -81,7 +91,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
     const pdfs = await db('pdfs')
       .join('users', 'pdfs.uploaded_by', 'users.id')
       .select('pdfs.*', 'users.username')
-      .orderBy('pdfs.created_at', 'desc');
+      .orderBy('pdfs.uploaded_at', 'desc');
     const parsed = pdfs.map((p) => ({
       ...p,
       themes: Array.isArray(p.themes) ? p.themes : typeof p.themes === 'string' ? p.themes.replace(/^{|}$/g, '').split(',').map((t) => t.trim()) : [],

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CommentList } from '@/components/PdfComments/CommentList';
+import Image from 'next/image';
 import { NewCommentForm } from '@/components/PdfComments/NewCommentForm';
 import { NotesSection } from '@/components/PdfNotes/NotesSection';
 import { useAuth } from '@/contexts/AuthContext';
@@ -66,7 +67,19 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
       </Head>
       <div>
         <h1 className="text-2xl font-bold mb-1">{pdf.title}</h1>
+        {pdf.image_url && (
+          <Image
+            src={`${process.env.NEXT_PUBLIC_CDN_URL}${pdf.image_url}`}
+            alt={pdf.title}
+            width={600}
+            height={400}
+            className="my-4 w-full max-h-60 object-cover rounded"
+          />
+        )}
         {pdf.author && <p className="text-muted-foreground">By {pdf.author}</p>}
+        <p className="text-sm text-muted-foreground">
+          Uploaded on {new Date(pdf.uploaded_at ?? pdf.created_at).toLocaleDateString()}
+        </p>
         <div className="flex flex-wrap gap-2 mt-2">
           {pdf.themes.map((t) => (
             <Badge key={t}>{t}</Badge>

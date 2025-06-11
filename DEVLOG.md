@@ -46,3 +46,10 @@
 ## 2025-06-16
 - Extended PDF metadata to include a NotebookLM link, summary, and source URL.
 - Updated upload and edit forms to handle these fields.
+
+## 2025-06-17
+- Added image upload support for PDFs.
+- Increased quality setting for image uploads.
+
+## 2025-06-18
+- Added `uploaded_at` column to PDFs table.

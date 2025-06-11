@@ -8,7 +8,7 @@ interface Props {
 }
 
 const steps = [
-  { name: 'Info', fields: ['title', 'themes', 'pdf_url'] },
+  { name: 'Info', fields: ['title', 'themes', 'pdf_url', 'image_url'] },
 ];
 
 const PdfUploadProgressBar: React.FC<Props> = ({ onProgressChange }) => {
