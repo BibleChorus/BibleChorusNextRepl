@@ -63,7 +63,7 @@ export const PdfViewerPage: PdfViewerPageType = () => {
       if (!getFullscreenElement()) {
         await requestFullscreen(iframe);
         toast.success('Entered fullscreen');
-      } else {
+        } else {
         await exitFullscreen();
         toast.success('Exited fullscreen');
       }
