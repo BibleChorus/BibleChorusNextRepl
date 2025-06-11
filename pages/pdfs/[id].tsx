@@ -17,6 +17,12 @@ import axios from 'axios';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import Link from 'next/link';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
 
 interface PdfPageProps {
   pdf: Pdf & { username: string };
@@ -94,16 +100,36 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
           </p>
         )}
         {pdf.notebook_lm_url && (
-          <p className="mt-2">
-            <a
+          <div className="mt-4 flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={pdf.notebook_lm_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    src="/icons/notebooklm.svg"
+                    alt="NotebookLM"
+                    width={32}
+                    height={32}
+                    className="w-8 h-8"
+                  />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                Google NotebookLM lets you ask questions and explore your PDFs.
+              </TooltipContent>
+            </Tooltip>
+            <Link
               href={pdf.notebook_lm_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="underline text-primary"
+              className="underline text-primary text-lg"
             >
-              Open NotebookLM
-            </a>
-          </p>
+              Open in NotebookLM
+            </Link>
+          </div>
         )}
         {user && user.id === pdf.uploaded_by && (
           <div className="mt-2 space-y-1">
@@ -127,12 +153,14 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
         )}
       </div>
 
-      <div className="space-y-2">
-        <iframe
-          src={`/pdf-viewer?file=${encodeURIComponent(pdf.file_url)}`}
-          className="w-full h-[70vh] border rounded-md"
-          allow="fullscreen"
-        />
+      <div className="flex justify-center">
+        <Link
+          href={pdf.file_url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Button className="text-lg px-8">Open PDF in New Tab</Button>
+        </Link>
       </div>
 
       <Separator />
