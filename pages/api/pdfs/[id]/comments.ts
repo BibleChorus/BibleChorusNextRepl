@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(500).json({ message: 'Error fetching comments' });
     }
   } else if (method === 'POST') {
-    const { comment, parent_comment_id, user_id } = req.body;
+    const { comment, parent_comment_id, user_id, page_number } = req.body;
 
     if (!user_id || !comment) {
       return res.status(400).json({ message: 'Missing required fields' });
@@ -42,6 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           user_id,
           comment: sanitizedComment,
           parent_comment_id: parent_comment_id || null,
+          page_number: page_number || null,
           created_at: new Date(),
         })
         .returning('*');

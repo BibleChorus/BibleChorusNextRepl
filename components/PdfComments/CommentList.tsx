@@ -8,10 +8,11 @@ import { cn } from '@/lib/utils';
 interface CommentListProps {
   comments: PdfComment[];
   pdfId: number;
+  fileUrl: string;
   onCommentAdded: (comment: PdfComment) => void;
 }
 
-export const CommentList: React.FC<CommentListProps> = ({ comments, pdfId, onCommentAdded }) => {
+export const CommentList: React.FC<CommentListProps> = ({ comments, pdfId, fileUrl, onCommentAdded }) => {
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
 
   const renderComments = (
@@ -28,6 +29,19 @@ export const CommentList: React.FC<CommentListProps> = ({ comments, pdfId, onCom
         >
           <p className="text-sm text-muted-foreground mb-2">
             {comment.username} • {new Date(comment.created_at).toLocaleString()}
+            {comment.page_number && (
+              <>
+                {' '}•{' '}
+                <a
+                  href={`${fileUrl}#page=${comment.page_number}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  Page {comment.page_number}
+                </a>
+              </>
+            )}
           </p>
           <div className={richTextStyles.prose}>{ReactHtmlParser(comment.comment)}</div>
           <Button
