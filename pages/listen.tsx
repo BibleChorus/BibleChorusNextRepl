@@ -160,6 +160,37 @@ function ListenContent({
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(initialSelectedPlaylist)
   const [filterOptions, setFilterOptions] = useState<FilterOptions>(initialFilterOptions)
 
+  // Apply filters from query parameters on initial load
+  useEffect(() => {
+    if (!router.isReady) return;
+    const parseArray = (val: string | string[] | undefined) =>
+      Array.isArray(val) ? val : val ? [val] : [];
+
+    const books = parseArray(router.query.bibleBooks);
+    const chaptersArr = parseArray(router.query.bibleChapters);
+    const verses = parseArray(router.query.bibleVerses);
+
+    const chapterObj: { [book: string]: number[] } = {};
+    chaptersArr.forEach((c) => {
+      const [book, chapter] = c.split(':');
+      const ch = Number(chapter);
+      if (book && !Number.isNaN(ch)) {
+        if (!chapterObj[book]) chapterObj[book] = [];
+        if (!chapterObj[book].includes(ch)) chapterObj[book].push(ch);
+      }
+    });
+
+    if (books.length || chaptersArr.length || verses.length) {
+      setFilterOptions((prev) => ({
+        ...prev,
+        bibleBooks: books.length ? (books as string[]) : prev.bibleBooks,
+        bibleChapters:
+          Object.keys(chapterObj).length > 0 ? chapterObj : prev.bibleChapters,
+        bibleVerses: verses.length ? (verses as string[]) : prev.bibleVerses,
+      }));
+    }
+  }, [router.isReady, router.query.bibleBooks, router.query.bibleChapters, router.query.bibleVerses]);
+
   // Adjust bottom offset for filter button
   const filterButtonBottomClass = useMemo(() => {
     // Adjusted values to ensure both buttons align correctly

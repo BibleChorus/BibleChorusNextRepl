@@ -24,6 +24,7 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import DOMPurify from 'isomorphic-dompurify';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { BIBLE_BOOKS } from '@/lib/constants';
 
 interface BibleVerse {
@@ -202,23 +203,32 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
         ) : verses.length === 0 ? (
           <p>No verses linked.</p>
         ) : (
-          <div className="space-y-4">
-            {verses.map((v, i) => (
-              <div key={i}>
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold">{`${v.book} ${v.chapter}:${v.verse}`}</p>
-                  <Link
-                    href={`/listen?bibleVerses=${encodeURIComponent(`${v.book} ${v.chapter}:${v.verse}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Headphones className="w-4 h-4" />
-                  </Link>
+          <ScrollArea className="max-h-[400px] pr-4">
+            <div className="space-y-4">
+              {verses.map((v, i) => (
+                <div key={i}>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold">{`${v.book} ${v.chapter}:${v.verse}`}</p>
+                    <Link
+                      href={{
+                        pathname: '/listen',
+                        query: {
+                          bibleBooks: v.book,
+                          bibleChapters: `${v.book}:${v.chapter}`,
+                          bibleVerses: `${v.book} ${v.chapter}:${v.verse}`,
+                        },
+                      }}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Headphones className="w-4 h-4" />
+                    </Link>
+                  </div>
+                  <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(v.text) }} />
                 </div>
-                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(v.text) }} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </ScrollArea>
         )}
       </section>
 
