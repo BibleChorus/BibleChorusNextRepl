@@ -62,3 +62,7 @@
 ## 2025-06-26
 - Fixed PDF cover images showing a broken URL when `NEXT_PUBLIC_CDN_URL` was unset.
 - The PDF list and detail pages now check if `image_url` already includes a protocol before prefixing the CDN URL.
+
+## 2025-06-30
+- Removed `source_url` and `uploaded_at` columns from PDFs.
+- Updated NotebookLM icon with a white background and blue fill to improve dark mode visibility.

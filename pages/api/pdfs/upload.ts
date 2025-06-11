@@ -32,7 +32,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     uploaded_by,
     notebook_lm_url,
     summary,
-    source_url,
   } = body;
 
   const missingFields: string[] = [];
@@ -50,9 +49,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .json({ message: 'Invalid NotebookLM URL' });
   }
 
-  if (source_url && !/^https?:\/\//.test(source_url)) {
-    return res.status(400).json({ message: 'Invalid source URL' });
-  }
 
   console.log('Validation results - missing fields:', missingFields);
 
@@ -122,11 +118,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           image_url: image_url ? `${cdnUrl}${image_url.replace(/^\/+/, '')}` : null,
           notebook_lm_url: notebook_lm_url || null,
           summary: summary || null,
-          source_url: source_url || null,
           ai_assisted: ai_assisted || false,
           themes,
           uploaded_by,
-          uploaded_at: new Date(),
           created_at: new Date(),
         })
         .returning('id');
