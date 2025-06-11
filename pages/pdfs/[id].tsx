@@ -13,6 +13,9 @@ import { NotesSection } from '@/components/PdfNotes/NotesSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import axios from 'axios';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 interface PdfPageProps {
   pdf: Pdf & { username: string };
@@ -24,6 +27,9 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
   const { user } = useAuth();
   const [comments, setComments] = useState<PdfComment[]>(initialComments);
   const [ratingCounts, setRatingCounts] = useState({ quality: 0, theology: 0, helpfulness: 0 });
+  const [notebookLmUrl, setNotebookLmUrl] = useState(pdf.notebook_lm_url || '');
+  const [summary, setSummary] = useState(pdf.summary || '');
+  const [sourceUrl, setSourceUrl] = useState(pdf.source_url || '');
 
   const handleCommentAdded = (comment: PdfComment) => {
     setComments((prev) => [comment, ...prev]);
@@ -35,6 +41,20 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
       setRatingCounts((prev) => ({ ...prev, [category]: prev[category] + value }));
     } catch (err) {
       console.error('Error submitting vote', err);
+    }
+  };
+
+  const handleDetailsSave = async () => {
+    try {
+      await axios.put(`/api/pdfs/${pdf.id}/edit`, {
+        notebook_lm_url: notebookLmUrl || null,
+        summary: summary || null,
+        source_url: sourceUrl || null,
+      });
+      toast.success('Details updated');
+    } catch (err) {
+      console.error('Error updating link', err);
+      toast.error('Failed to update details');
     }
   };
 
@@ -52,6 +72,46 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
             <Badge key={t}>{t}</Badge>
           ))}
         </div>
+        {pdf.summary && <p className="mt-2 whitespace-pre-wrap">{pdf.summary}</p>}
+        {pdf.source_url && (
+          <p className="mt-2">
+            <a href={pdf.source_url} target="_blank" rel="noopener noreferrer" className="underline">
+              View Source
+            </a>
+          </p>
+        )}
+        {pdf.notebook_lm_url && (
+          <p className="mt-2">
+            <a
+              href={pdf.notebook_lm_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-primary"
+            >
+              Open NotebookLM
+            </a>
+          </p>
+        )}
+        {user && user.id === pdf.uploaded_by && (
+          <div className="mt-2 space-y-1">
+            <Input
+              value={notebookLmUrl}
+              onChange={(e) => setNotebookLmUrl(e.target.value)}
+              placeholder="https://notebooklm.google.com/..."
+            />
+            <Textarea
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              placeholder="One paragraph summary"
+            />
+            <Input
+              value={sourceUrl}
+              onChange={(e) => setSourceUrl(e.target.value)}
+              placeholder="Source URL"
+            />
+            <Button size="sm" onClick={handleDetailsSave}>Save Details</Button>
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">

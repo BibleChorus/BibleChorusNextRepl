@@ -22,13 +22,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  const { title, author, ai_assisted, themes, pdf_url, uploaded_by } = body;
+  const {
+    title,
+    author,
+    ai_assisted,
+    themes,
+    pdf_url,
+    uploaded_by,
+    notebook_lm_url,
+    summary,
+    source_url,
+  } = body;
 
   const missingFields: string[] = [];
   if (!title) missingFields.push('title');
   if (!pdf_url) missingFields.push('pdf_url');
   if (!uploaded_by) missingFields.push('uploaded_by');
   if (!Array.isArray(themes) || themes.length === 0) missingFields.push('themes');
+
+  if (
+    notebook_lm_url &&
+    !/^https?:\/\/notebooklm\.google\.com\//.test(notebook_lm_url)
+  ) {
+    return res
+      .status(400)
+      .json({ message: 'Invalid NotebookLM URL' });
+  }
+
+  if (source_url && !/^https?:\/\//.test(source_url)) {
+    return res.status(400).json({ message: 'Invalid source URL' });
+  }
 
   console.log('Validation results - missing fields:', missingFields);
 
@@ -95,6 +118,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           title,
           author: author || null,
           file_url: fullUrl,
+          notebook_lm_url: notebook_lm_url || null,
+          summary: summary || null,
+          source_url: source_url || null,
           ai_assisted: ai_assisted || false,
           themes,
           uploaded_by,
@@ -115,7 +141,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       await trx.commit();
-      return res.status(200).json({ message: 'PDF uploaded successfully', pdfId });
+      return res.status(200).json({ message: 'PDF uploaded successfully', id: pdfId });
     } catch (err) {
       await trx.rollback();
       console.error('Error saving PDF data:', err);

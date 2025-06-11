@@ -11,6 +11,9 @@ Stores metadata for uploaded PDF documents containing scriptural or thematic con
 | title | string(255) | NOT NULL | | Title of the document |
 | author | string(255) | | | Author or source of the document |
 | file_url | string(255) | NOT NULL | | Location of the PDF in S3 or CDN |
+| notebook_lm_url | string(255) | | | Link to a related NotebookLM notebook |
+| summary | text | | | One-paragraph summary of the PDF |
+| source_url | string(255) | | | Original source or external link |
 | ai_assisted | boolean | NOT NULL | false | Indicates if AI assisted in creation |
 | themes | text[] | NOT NULL | '{}' | Array of themes/tags associated with the PDF |
 | uploaded_by | integer | NOT NULL, FOREIGN KEY (users.id) | | ID of the user who uploaded |

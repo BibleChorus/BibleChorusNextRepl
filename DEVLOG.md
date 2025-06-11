@@ -42,3 +42,7 @@
 
 ## 2025-06-15
 - Refined fullscreen logic with vendor-prefixed fallbacks so PDF viewer can reliably enter fullscreen.
+
+## 2025-06-16
+- Extended PDF metadata to include a NotebookLM link, summary, and source URL.
+- Updated upload and edit forms to handle these fields.

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -26,6 +27,13 @@ const formSchema = z.object({
   ai_assisted: z.boolean().default(false),
   themes: z.array(z.string()).min(1, 'Select at least one theme'),
   pdf_url: z.string().min(1, 'PDF upload required'),
+  notebook_lm_url: z
+    .string()
+    .url('Invalid URL')
+    .regex(/^https?:\/\/notebooklm\.google\.com\//, 'Must be a notebooklm.google.com link')
+    .optional(),
+  summary: z.string().max(500, 'Summary too long').optional(),
+  source_url: z.string().url('Invalid URL').optional(),
 });
 
 type FormValues = z.infer<typeof formSchema> & { pdf_file?: File | null };
@@ -42,6 +50,9 @@ export default function UploadPdf() {
       ai_assisted: false,
       themes: [],
       pdf_url: '',
+      notebook_lm_url: '',
+      summary: '',
+      source_url: '',
     },
   });
 
@@ -271,6 +282,48 @@ export default function UploadPdf() {
                     </p>
                   </div>
                 )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="summary"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Summary</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Brief summary" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="source_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Source URL</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://example.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notebook_lm_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>NotebookLM Link</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://notebooklm.google.com/..." {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
