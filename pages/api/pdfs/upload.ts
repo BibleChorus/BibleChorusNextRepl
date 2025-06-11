@@ -28,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ai_assisted,
     themes,
     pdf_url,
+    image_url,
     uploaded_by,
     notebook_lm_url,
     summary,
@@ -118,12 +119,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           title,
           author: author || null,
           file_url: fullUrl,
+          image_url: image_url ? `${cdnUrl}${image_url.replace(/^\/+/, '')}` : null,
           notebook_lm_url: notebook_lm_url || null,
           summary: summary || null,
           source_url: source_url || null,
           ai_assisted: ai_assisted || false,
           themes,
           uploaded_by,
+          uploaded_at: new Date(),
           created_at: new Date(),
         })
         .returning('id');

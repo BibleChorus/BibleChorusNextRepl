@@ -59,7 +59,7 @@ export function ImageCropper({ imageUrl, onCropComplete, onCancel, maxHeight }: 
 
       canvas.toBlob((blob) => {
         if (blob) onCropComplete(blob)
-      }, 'image/jpeg', 1)
+      }, 'image/jpeg', 0.9)
     }
   }, [completedCrop, imageRef, onCropComplete])
 

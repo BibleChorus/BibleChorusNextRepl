@@ -100,6 +100,7 @@ export interface Pdf {
   title: string;
   author?: string;
   file_url: string;
+  image_url?: string;
   notebook_lm_url?: string;
   summary?: string;
   source_url?: string;
@@ -108,6 +109,7 @@ export interface Pdf {
   themes: string[];
   description?: string;
   is_public: boolean;
+  uploaded_at?: string;
   created_at: string;
 }
 

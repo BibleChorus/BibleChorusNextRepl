@@ -5,7 +5,7 @@ export async function uploadFile(
   file: File, 
   type: 'image' | 'audio', 
   userId: number, 
-  uploadType: 'song_art' | 'playlist_cover' = 'song_art' // Default to 'song_art'
+  uploadType: 'song_art' | 'playlist_cover' | 'pdf_image' = 'song_art' // Default to 'song_art'
 ) {
   const response = await axios.post('/api/upload-url', { 
     fileType: file.type, 
