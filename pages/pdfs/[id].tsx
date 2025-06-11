@@ -196,7 +196,12 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
         ) : (
           <p>Please log in to add a comment.</p>
         )}
-        <CommentList comments={comments} pdfId={pdf.id} onCommentAdded={handleCommentAdded} />
+        <CommentList
+          comments={comments}
+          pdfId={pdf.id}
+          fileUrl={pdf.file_url}
+          onCommentAdded={handleCommentAdded}
+        />
       </section>
 
       <Separator />
