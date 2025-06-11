@@ -80,8 +80,8 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
             }
             alt={pdf.title}
             width={600}
-            height={400}
-            className="my-4 w-full max-h-60 object-cover rounded"
+            height={800}
+            className="my-4 w-full max-h-[700px] object-cover rounded"
           />
         )}
         {pdf.author && <p className="text-muted-foreground">By {pdf.author}</p>}
