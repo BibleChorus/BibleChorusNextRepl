@@ -51,7 +51,6 @@ function MyApp({ Component, pageProps }: AppProps & { Component: any }) {
   const router = useRouter()
   const isBarePage =
     router.pathname === '/' ||
-    router.pathname === '/pdf-viewer' ||
     Component.disableLayout
 
   useEffect(() => {

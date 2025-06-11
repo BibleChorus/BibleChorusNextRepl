@@ -53,3 +53,8 @@
 
 ## 2025-06-18
 - Added `uploaded_at` column to PDFs table.
+
+## 2025-06-20
+- Removed in-app PDF viewer and replaced it with a simple "Open PDF" button.
+- The PDF detail page now highlights the NotebookLM link with an icon and tooltip.
+- Deleted the obsolete `/pdf-viewer` route.
