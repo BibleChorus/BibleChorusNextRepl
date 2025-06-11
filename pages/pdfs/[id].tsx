@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { NewCommentForm } from '@/components/PdfComments/NewCommentForm';
 import { NotesSection } from '@/components/PdfNotes/NotesSection';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThumbsUp, ThumbsDown, Headphones } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Headphones, FileText } from 'lucide-react';
 import axios from 'axios';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,6 +47,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
   const [ratingCounts, setRatingCounts] = useState({ quality: 0, theology: 0, helpfulness: 0 });
   const [notebookLmUrl, setNotebookLmUrl] = useState(pdf.notebook_lm_url || '');
   const [summary, setSummary] = useState(pdf.summary || '');
+  const [editingDetails, setEditingDetails] = useState(false);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [isLoadingVerses, setIsLoadingVerses] = useState(false);
 
@@ -140,64 +141,82 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
           ))}
         </div>
         {pdf.summary && <p className="mt-2 whitespace-pre-wrap">{pdf.summary}</p>}
-        {pdf.notebook_lm_url && (
-          <div className="mt-4 flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
+        {(pdf.notebook_lm_url || pdf.file_url) && (
+          <div className="mt-4 flex items-center gap-4">
+            {pdf.notebook_lm_url && (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={pdf.notebook_lm_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Image
+                        src="/icons/notebooklm.svg"
+                        alt="NotebookLM"
+                        width={32}
+                        height={32}
+                        className="w-8 h-8"
+                      />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Google NotebookLM lets you ask questions and explore your PDFs.
+                  </TooltipContent>
+                </Tooltip>
                 <Link
                   href={pdf.notebook_lm_url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="underline text-primary text-lg"
                 >
-                  <Image
-                    src="/icons/notebooklm.svg"
-                    alt="NotebookLM"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8"
-                  />
+                  Open in NotebookLM
                 </Link>
-              </TooltipTrigger>
-              <TooltipContent>
-                Google NotebookLM lets you ask questions and explore your PDFs.
-              </TooltipContent>
-            </Tooltip>
-            <Link
-              href={pdf.notebook_lm_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline text-primary text-lg"
-            >
-              Open in NotebookLM
-            </Link>
+              </>
+            )}
+            {pdf.file_url && (
+              <Link
+                href={pdf.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 underline text-primary text-lg"
+              >
+                <FileText className="w-5 h-5" />
+                Open PDF
+              </Link>
+            )}
           </div>
         )}
         {user && user.id === pdf.uploaded_by && (
           <div className="mt-2 space-y-1">
-            <Input
-              value={notebookLmUrl}
-              onChange={(e) => setNotebookLmUrl(e.target.value)}
-              placeholder="https://notebooklm.google.com/..."
-            />
-            <Textarea
-              value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-              placeholder="One paragraph summary"
-            />
-            <Button size="sm" onClick={handleDetailsSave}>Save Details</Button>
+            {!editingDetails ? (
+              <Button size="sm" onClick={() => setEditingDetails(true)}>
+                Edit Details
+              </Button>
+            ) : (
+              <div className="space-y-1">
+                <Input
+                  value={notebookLmUrl}
+                  onChange={(e) => setNotebookLmUrl(e.target.value)}
+                  placeholder="https://notebooklm.google.com/..."
+                />
+                <Textarea
+                  value={summary}
+                  onChange={(e) => setSummary(e.target.value)}
+                  placeholder="One paragraph summary"
+                />
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={handleDetailsSave}>Save Details</Button>
+                  <Button size="sm" variant="secondary" onClick={() => setEditingDetails(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
         </div>
-      </div>
-
-      <div className="flex justify-center">
-        <Link
-          href={pdf.file_url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Button className="text-lg px-8">Open PDF in New Tab</Button>
-        </Link>
       </div>
 
       <Separator />
