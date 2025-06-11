@@ -39,3 +39,6 @@
 
 ## 2025-06-14
 - Fixed PDF viewer fullscreen toggle to work across browsers by requesting fullscreen on the iframe's document and adding `allowFullScreen`.
+
+## 2025-06-15
+- Refined fullscreen logic with vendor-prefixed fallbacks so PDF viewer can reliably enter fullscreen.

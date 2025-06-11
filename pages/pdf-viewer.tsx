@@ -13,9 +13,14 @@ export const PdfViewerPage: PdfViewerPageType = () => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  const getFullscreenElement = () =>
+    document.fullscreenElement ||
+    (document as any).webkitFullscreenElement ||
+    (document as any).msFullscreenElement;
+
   useEffect(() => {
     const onChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      setIsFullscreen(!!getFullscreenElement());
     };
 
     document.addEventListener('fullscreenchange', onChange);
@@ -36,23 +41,30 @@ export const PdfViewerPage: PdfViewerPageType = () => {
     ? `/pdfreader/doqment-main/src/pdfjs/web/viewer.html?file=${encodeURIComponent(fileParam)}`
     : '/pdfreader/doqment-main/src/pdfjs/web/viewer.html';
 
+  const requestFullscreen = (el: any) => {
+    if (el.requestFullscreen) return el.requestFullscreen();
+    if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+    if (el.msRequestFullscreen) return el.msRequestFullscreen();
+    throw new Error('Fullscreen not supported');
+  };
+
+  const exitFullscreen = () => {
+    if (document.exitFullscreen) return document.exitFullscreen();
+    const doc: any = document;
+    if (doc.webkitExitFullscreen) return doc.webkitExitFullscreen();
+    if (doc.msExitFullscreen) return doc.msExitFullscreen();
+    return Promise.resolve();
+  };
+
   const toggleFullscreen = async () => {
     const iframe = iframeRef.current;
     if (!iframe) return;
     try {
-      if (!document.fullscreenElement) {
-        const target =
-          typeof (iframe as any).requestFullscreen === 'function'
-            ? iframe
-            : iframe.contentDocument?.documentElement;
-        if (target && target.requestFullscreen) {
-          await target.requestFullscreen();
-          toast.success('Entered fullscreen');
+      if (!getFullscreenElement()) {
+        await requestFullscreen(iframe);
+        toast.success('Entered fullscreen');
         } else {
-          throw new Error('Fullscreen not supported');
-        }
-      } else {
-        await document.exitFullscreen();
+        await exitFullscreen();
         toast.success('Exited fullscreen');
       }
     } catch (error) {
