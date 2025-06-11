@@ -8,27 +8,41 @@ interface ImageCropperProps {
   onCropComplete: (croppedImageBlob: Blob) => void
   onCancel: () => void
   maxHeight: number
+  aspectRatio?: number
+  quality?: number
 }
 
-export function ImageCropper({ imageUrl, onCropComplete, onCancel, maxHeight }: ImageCropperProps) {
+export function ImageCropper({
+  imageUrl,
+  onCropComplete,
+  onCancel,
+  maxHeight,
+  aspectRatio = 1,
+  quality = 0.95,
+}: ImageCropperProps) {
   const [crop, setCrop] = useState<Crop>({ unit: '%', width: 100, height: 100, x: 0, y: 0 })
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null)
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null)
-  const aspectRatio = useRef(1)
+  const aspectRatioRef = useRef(aspectRatio)
 
   const onLoad = useCallback((img: HTMLImageElement) => {
     setImageRef(img)
     
-    // Calculate the maximum crop size while maintaining aspect ratio
-    const maxSize = Math.min(img.width, img.height, 1920)
-    const cropPercentage = (maxSize / Math.max(img.width, img.height)) * 100
-    const newCrop = { unit: '%', width: cropPercentage, height: cropPercentage, x: 0, y: 0 } as Crop
+    const ratio = aspectRatioRef.current || 1
+    let widthPercent = 100
+    let heightPercent = 100
+    if (ratio >= 1) {
+      // landscape or square
+      heightPercent = 100 / ratio
+    } else {
+      widthPercent = 100 * ratio
+    }
+    const newCrop = { unit: '%', width: widthPercent, height: heightPercent, x: 0, y: 0 } as Crop
     setCrop(newCrop)
-    // Set initial completedCrop
     setCompletedCrop({
       unit: 'px',
-      width: (img.width * cropPercentage) / 100,
-      height: (img.height * cropPercentage) / 100,
+      width: (img.naturalWidth * widthPercent) / 100,
+      height: (img.naturalHeight * heightPercent) / 100,
       x: 0,
       y: 0,
     })
@@ -57,11 +71,15 @@ export function ImageCropper({ imageUrl, onCropComplete, onCancel, maxHeight }: 
         completedCrop.height
       )
 
-      canvas.toBlob((blob) => {
-        if (blob) onCropComplete(blob)
-      }, 'image/jpeg', 0.9)
+      canvas.toBlob(
+        (blob) => {
+          if (blob) onCropComplete(blob)
+        },
+        'image/jpeg',
+        quality
+      )
     }
-  }, [completedCrop, imageRef, onCropComplete])
+  }, [completedCrop, imageRef, onCropComplete, quality])
 
   return (
     <div className="p-4" style={{ maxHeight: `${maxHeight}px`, overflowY: 'auto' }}>
@@ -69,7 +87,7 @@ export function ImageCropper({ imageUrl, onCropComplete, onCancel, maxHeight }: 
         crop={crop}
         onChange={(c, percentCrop) => setCrop(percentCrop)}
         onComplete={(c) => setCompletedCrop(c)}
-        aspect={aspectRatio.current}
+        aspect={aspectRatioRef.current}
         maxWidth={1260}
         maxHeight={1260}
       >

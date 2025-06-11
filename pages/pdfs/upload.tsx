@@ -356,7 +356,14 @@ export default function UploadPdf() {
 
           <Modal isOpen={isCropperOpen} onClose={handleCropCancel}>
             {cropImageUrl && (
-              <ImageCropper imageUrl={cropImageUrl} onCropComplete={handleCropComplete} onCancel={handleCropCancel} maxHeight={300} />
+              <ImageCropper
+                imageUrl={cropImageUrl}
+                onCropComplete={handleCropComplete}
+                onCancel={handleCropCancel}
+                maxHeight={400}
+                aspectRatio={0.75}
+                quality={1}
+              />
             )}
           </Modal>
 

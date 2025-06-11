@@ -59,8 +59,8 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
                 }
                 alt={pdf.title}
                 width={320}
-                height={240}
-                className="w-full h-40 object-cover rounded-t"
+                height={480}
+                className="w-full h-60 object-cover rounded-t"
               />
             )}
             <CardHeader>
