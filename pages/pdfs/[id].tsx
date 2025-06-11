@@ -75,7 +75,11 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
         <h1 className="text-2xl font-bold mb-1">{pdf.title}</h1>
         {pdf.image_url && (
           <Image
-            src={`${process.env.NEXT_PUBLIC_CDN_URL}${pdf.image_url}`}
+            src={
+              pdf.image_url.startsWith('http')
+                ? pdf.image_url
+                : `${process.env.NEXT_PUBLIC_CDN_URL ?? ''}${pdf.image_url}`
+            }
             alt={pdf.title}
             width={600}
             height={400}
