@@ -54,8 +54,9 @@ export function ImageCropper({
     const canvas = document.createElement('canvas')
     const scaleX = imageRef.naturalWidth / imageRef.width
     const scaleY = imageRef.naturalHeight / imageRef.height
-    canvas.width = completedCrop.width
-    canvas.height = completedCrop.height
+    // Preserve the original image resolution when generating the crop
+    canvas.width = completedCrop.width * scaleX
+    canvas.height = completedCrop.height * scaleY
     const ctx = canvas.getContext('2d')
 
     if (ctx) {
@@ -67,8 +68,8 @@ export function ImageCropper({
         completedCrop.height * scaleY,
         0,
         0,
-        completedCrop.width,
-        completedCrop.height
+        completedCrop.width * scaleX,
+        completedCrop.height * scaleY
       )
 
       canvas.toBlob(

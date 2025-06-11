@@ -109,22 +109,27 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
       <Head>
         <title>{pdf.title}</title>
       </Head>
-      <div>
-        <h1 className="text-2xl font-bold mb-1">{pdf.title}</h1>
+      <div className="flex flex-col md:flex-row md:items-start md:space-x-6">
         {pdf.image_url && (
-          <Image
-            src={
-              pdf.image_url.startsWith('http')
-                ? pdf.image_url
-                : `${process.env.NEXT_PUBLIC_CDN_URL ?? ''}${pdf.image_url}`
-            }
-            alt={pdf.title}
-            width={600}
-            height={800}
-            className="my-4 w-full max-h-[700px] object-cover rounded"
-          />
+          <div className="w-full md:w-1/3 mb-4 md:mb-0">
+            <Image
+              src={
+                pdf.image_url.startsWith('http')
+                  ? pdf.image_url
+                  : `${process.env.NEXT_PUBLIC_CDN_URL ?? ''}${pdf.image_url}`
+              }
+              alt={pdf.title}
+              width={400}
+              height={500}
+              className="w-full h-auto object-contain rounded"
+            />
+          </div>
         )}
-        {pdf.author && <p className="text-muted-foreground">By {pdf.author}</p>}
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold mb-1">{pdf.title}</h1>
+          {pdf.author && (
+            <p className="text-muted-foreground">By {pdf.author}</p>
+          )}
         <p className="text-sm text-muted-foreground">
           Uploaded on {new Date(pdf.created_at).toLocaleDateString()}
         </p>
@@ -181,6 +186,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
             <Button size="sm" onClick={handleDetailsSave}>Save Details</Button>
           </div>
         )}
+        </div>
       </div>
 
       <div className="flex justify-center">
