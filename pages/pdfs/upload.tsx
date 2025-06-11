@@ -39,7 +39,6 @@ const formSchema = z.object({
     .regex(/^https?:\/\/notebooklm\.google\.com\//, 'Must be a notebooklm.google.com link')
     .optional(),
   summary: z.string().max(500, 'Summary too long').optional(),
-  source_url: z.string().url('Invalid URL').optional(),
 });
 
 type FormValues = z.infer<typeof formSchema> & { pdf_file?: File | null; image_file?: File | null };
@@ -59,7 +58,6 @@ export default function UploadPdf() {
       image_url: '',
       notebook_lm_url: '',
       summary: '',
-      source_url: '',
     },
   });
 
@@ -370,20 +368,6 @@ export default function UploadPdf() {
                 <FormLabel>Summary</FormLabel>
                 <FormControl>
                   <Textarea placeholder="Brief summary" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="source_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Source URL</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://example.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

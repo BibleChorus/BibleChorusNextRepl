@@ -69,7 +69,7 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
             </CardHeader>
             <CardContent className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Uploaded by {pdf.username} on {new Date(pdf.uploaded_at ?? pdf.created_at).toLocaleDateString()}
+                Uploaded by {pdf.username} on {new Date(pdf.created_at).toLocaleDateString()}
               </p>
               <div className="flex flex-wrap gap-1">
                 {pdf.themes.map((t) => (
@@ -95,7 +95,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
     const pdfs = await db('pdfs')
       .join('users', 'pdfs.uploaded_by', 'users.id')
       .select('pdfs.*', 'users.username')
-      .orderBy('pdfs.uploaded_at', 'desc');
+      .orderBy('pdfs.created_at', 'desc');
     const parsed = pdfs.map((p) => ({
       ...p,
       themes: Array.isArray(p.themes) ? p.themes : typeof p.themes === 'string' ? p.themes.replace(/^{|}$/g, '').split(',').map((t) => t.trim()) : [],

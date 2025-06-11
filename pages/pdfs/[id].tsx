@@ -36,7 +36,6 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
   const [ratingCounts, setRatingCounts] = useState({ quality: 0, theology: 0, helpfulness: 0 });
   const [notebookLmUrl, setNotebookLmUrl] = useState(pdf.notebook_lm_url || '');
   const [summary, setSummary] = useState(pdf.summary || '');
-  const [sourceUrl, setSourceUrl] = useState(pdf.source_url || '');
 
   const handleCommentAdded = (comment: PdfComment) => {
     setComments((prev) => [comment, ...prev]);
@@ -56,7 +55,6 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
       await axios.put(`/api/pdfs/${pdf.id}/edit`, {
         notebook_lm_url: notebookLmUrl || null,
         summary: summary || null,
-        source_url: sourceUrl || null,
       });
       toast.success('Details updated');
     } catch (err) {
@@ -88,7 +86,7 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
         )}
         {pdf.author && <p className="text-muted-foreground">By {pdf.author}</p>}
         <p className="text-sm text-muted-foreground">
-          Uploaded on {new Date(pdf.uploaded_at ?? pdf.created_at).toLocaleDateString()}
+          Uploaded on {new Date(pdf.created_at).toLocaleDateString()}
         </p>
         <div className="flex flex-wrap gap-2 mt-2">
           {pdf.themes.map((t) => (
@@ -96,13 +94,6 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
           ))}
         </div>
         {pdf.summary && <p className="mt-2 whitespace-pre-wrap">{pdf.summary}</p>}
-        {pdf.source_url && (
-          <p className="mt-2">
-            <a href={pdf.source_url} target="_blank" rel="noopener noreferrer" className="underline">
-              View Source
-            </a>
-          </p>
-        )}
         {pdf.notebook_lm_url && (
           <div className="mt-4 flex items-center gap-2">
             <Tooltip>
@@ -146,11 +137,6 @@ export default function PdfPage({ pdf, initialComments, initialNotes }: PdfPageP
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               placeholder="One paragraph summary"
-            />
-            <Input
-              value={sourceUrl}
-              onChange={(e) => setSourceUrl(e.target.value)}
-              placeholder="Source URL"
             />
             <Button size="sm" onClick={handleDetailsSave}>Save Details</Button>
           </div>

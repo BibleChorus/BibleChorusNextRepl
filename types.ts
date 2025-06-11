@@ -103,13 +103,11 @@ export interface Pdf {
   image_url?: string;
   notebook_lm_url?: string;
   summary?: string;
-  source_url?: string;
   uploaded_by: number;
   ai_assisted: boolean;
   themes: string[];
   description?: string;
   is_public: boolean;
-  uploaded_at?: string;
   created_at: string;
 }
 
