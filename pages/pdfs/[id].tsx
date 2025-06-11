@@ -209,7 +209,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
         ) : verses.length === 0 ? (
           <p>No verses linked.</p>
         ) : (
-          <ScrollArea className="max-h-[400px] pr-4">
+          <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-4">
               {verses.map((v, i) => (
                 <div key={i}>
@@ -307,8 +307,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const verses = await db('pdf_verses')
       .join('bible_verses', 'pdf_verses.verse_id', 'bible_verses.id')
       .where('pdf_verses.pdf_id', id)
-      .select('bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse')
-      .orderBy(['bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse']);
+      .select('bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse');
+
+    verses.sort((a, b) => {
+      const bookDiff =
+        BIBLE_BOOKS.indexOf(a.book) - BIBLE_BOOKS.indexOf(b.book);
+      if (bookDiff !== 0) return bookDiff;
+      if (a.chapter !== b.chapter) return a.chapter - b.chapter;
+      return a.verse - b.verse;
+    });
 
     const comments = await db('pdf_comments')
       .join('users', 'pdf_comments.user_id', 'users.id')
