@@ -41,8 +41,16 @@ export const PdfViewerPage: PdfViewerPageType = () => {
     if (!iframe) return;
     try {
       if (!document.fullscreenElement) {
-        await iframe.requestFullscreen();
-        toast.success('Entered fullscreen');
+        const target =
+          typeof (iframe as any).requestFullscreen === 'function'
+            ? iframe
+            : iframe.contentDocument?.documentElement;
+        if (target && target.requestFullscreen) {
+          await target.requestFullscreen();
+          toast.success('Entered fullscreen');
+        } else {
+          throw new Error('Fullscreen not supported');
+        }
       } else {
         await document.exitFullscreen();
         toast.success('Exited fullscreen');
@@ -70,6 +78,7 @@ export const PdfViewerPage: PdfViewerPageType = () => {
           src={src}
           className="w-full h-full border-none"
           allow="fullscreen"
+          allowFullScreen
         />
         <button
           aria-label="Toggle fullscreen"

@@ -36,3 +36,6 @@
 
 ## 2025-06-13
 - The fullscreen toggle now uses the browser Fullscreen API and shows a toast when entering or exiting fullscreen.
+
+## 2025-06-14
+- Fixed PDF viewer fullscreen toggle to work across browsers by requesting fullscreen on the iframe's document and adding `allowFullScreen`.
