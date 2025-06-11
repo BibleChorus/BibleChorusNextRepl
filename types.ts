@@ -100,6 +100,9 @@ export interface Pdf {
   title: string;
   author?: string;
   file_url: string;
+  notebook_lm_url?: string;
+  summary?: string;
+  source_url?: string;
   uploaded_by: number;
   ai_assisted: boolean;
   themes: string[];
