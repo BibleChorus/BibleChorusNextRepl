@@ -37,7 +37,7 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
         <title>Bible Study (books of the Bible, sermons, and books)</title>
       </Head>
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Study PDFs</h1>
+        <h1 className="text-3xl font-bold">Bible Study (books of the Bible, sermons, and books)</h1>
         <Link href="/pdfs/upload">
           <Button>Upload New PDF</Button>
         </Link>
