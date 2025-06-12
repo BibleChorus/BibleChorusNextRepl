@@ -253,19 +253,6 @@ export default function UploadPdf() {
 
           <FormField
             control={form.control}
-            name="is_bible_book"
-            render={({ field }) => (
-              <FormItem className="flex items-center space-x-2">
-                <FormLabel>Official Bible Book</FormLabel>
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
             name="themes"
             render={() => (
               <FormItem className="flex flex-col">

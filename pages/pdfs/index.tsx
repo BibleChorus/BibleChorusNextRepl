@@ -34,7 +34,7 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <Head>
-        <title>Study PDFs</title>
+        <title>Bible Study (books of the Bible, sermons, and books)</title>
       </Head>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Study PDFs</h1>
