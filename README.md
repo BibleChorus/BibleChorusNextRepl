@@ -18,7 +18,7 @@ npm run dev
 The site runs on `http://localhost:3000` by default. Major features can be found at:
 
 - **Songs** – `/listen` lists uploaded songs, `/Songs/[id]` shows a song page.
-- **PDFs** – `/pdfs` lists study guides and `/pdfs/upload` allows uploads.
+- **Bible Study** – `/pdfs` lists study guides and `/pdfs/upload` allows uploads.
 - **Forum** – `/forum` hosts community discussions.
 
 You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.

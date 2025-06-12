@@ -12,7 +12,7 @@ const menuItems = [
   { name: 'Playlists', icon: List, href: '/playlists' },
   { name: 'Forum', icon: MessageSquare, href: '/forum' },
   { name: 'Listen', icon: Headphones, href: '/listen' },
-  { name: 'PDFs', icon: FileText, href: '/pdfs' },
+  { name: 'Bible Study', icon: FileText, href: '/pdfs' },
   { name: 'Profile', icon: User, href: '/profile' },
   { name: 'How To', icon: HelpCircle, href: '/how-to' },
 ];

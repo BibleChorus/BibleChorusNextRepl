@@ -30,6 +30,7 @@ const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   author: z.string().optional(),
   ai_assisted: z.boolean().default(false),
+  is_bible_book: z.boolean().default(false),
   themes: z.array(z.string()).min(1, 'Select at least one theme'),
   pdf_url: z.string().min(1, 'PDF upload required'),
   image_url: z.string().optional(),
@@ -53,6 +54,7 @@ export default function UploadPdf() {
       title: '',
       author: '',
       ai_assisted: false,
+      is_bible_book: false,
       themes: [],
       pdf_url: '',
       image_url: '',
@@ -242,6 +244,19 @@ export default function UploadPdf() {
             render={({ field }) => (
               <FormItem className="flex items-center space-x-2">
                 <FormLabel>AI Assistance</FormLabel>
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="is_bible_book"
+            render={({ field }) => (
+              <FormItem className="flex items-center space-x-2">
+                <FormLabel>Official Bible Book</FormLabel>
                 <FormControl>
                   <Switch checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>

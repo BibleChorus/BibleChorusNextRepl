@@ -105,6 +105,7 @@ export interface Pdf {
   summary?: string;
   uploaded_by: number;
   ai_assisted: boolean;
+  is_bible_book: boolean;
   themes: string[];
   description?: string;
   is_public: boolean;

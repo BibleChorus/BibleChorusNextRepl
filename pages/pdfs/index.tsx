@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { BookCheck } from 'lucide-react';
 import Image from 'next/image';
 import { Pdf } from '@/types';
 
@@ -64,7 +65,12 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
               />
             )}
             <CardHeader>
-              <CardTitle>{pdf.title}</CardTitle>
+              <CardTitle className="flex items-center gap-1">
+                {pdf.title}
+                {pdf.is_bible_book && (
+                  <BookCheck className="w-5 h-5 text-yellow-500" />
+                )}
+              </CardTitle>
               {pdf.author && <CardDescription>By {pdf.author}</CardDescription>}
             </CardHeader>
             <CardContent className="space-y-2">

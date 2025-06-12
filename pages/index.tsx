@@ -25,7 +25,13 @@ export default function Home() {
     { title: 'Upload Your Songs', description: 'Share your own Bible-inspired compositions.', icon: Upload, link: '/upload' },
     { title: 'Track Progress', description: 'See which parts of the Bible have been put to music.', icon: Map, link: '/progress' },
     { title: 'Join Discussions', description: 'Engage with the community in our forum.', icon: MessageSquare, link: '/forum' },
-    { title: 'Study PDFs', description: 'Browse uploaded study guides in PDF format.', icon: BookOpen, link: '/pdfs' },
+    {
+      title: 'Study PDFs',
+      description:
+        'Find PDFs for sermons, Christian books, and official Bible books. Each has a NotebookLM link so you can chat with the text, ask questions, and hear AI podcasts about the material.',
+      icon: BookOpen,
+      link: '/pdfs',
+    },
   ];
 
   return (
