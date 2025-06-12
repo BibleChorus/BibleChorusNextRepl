@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import db from '@/db';
 import { parsePostgresArray } from '@/lib/utils';
 import { Pdf, PdfComment, PdfNote } from '@/types';
@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { NewCommentForm } from '@/components/PdfComments/NewCommentForm';
 import { NotesSection } from '@/components/PdfNotes/NotesSection';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThumbsUp, ThumbsDown, Headphones, FileText } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Headphones, FileText, Share2 } from 'lucide-react';
 import axios from 'axios';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -76,6 +76,40 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
       toast.error('Failed to update details');
     }
   };
+
+  const handleShare = useCallback(async () => {
+    const pdfUrl = `${window.location.origin}/pdfs/${pdf.id}`;
+    const shareTitle = pdf.author ? `${pdf.title} by ${pdf.author}` : pdf.title;
+    const shareText = pdf.author
+      ? `Check out "${pdf.title}" by ${pdf.author} on BibleChorus`
+      : `Check out "${pdf.title}" on BibleChorus`;
+
+    const shareData = {
+      title: shareTitle,
+      text: shareText,
+      url: pdfUrl,
+    };
+
+    if (navigator.share && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        toast.success('PDF shared successfully');
+      } catch (error) {
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error('Error sharing PDF:', error);
+          toast.error('Failed to share PDF');
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${pdfUrl}`);
+        toast.success('PDF link copied to clipboard');
+      } catch (error) {
+        console.error('Error copying PDF link:', error);
+        toast.error('Failed to copy PDF link');
+      }
+    }
+  }, [pdf.id, pdf.title, pdf.author]);
 
   useEffect(() => {
     const fetchVerses = async () => {
@@ -186,6 +220,14 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                 Open PDF
               </Link>
             )}
+            <Button
+              variant="outline"
+              onClick={handleShare}
+              className="flex items-center gap-1"
+            >
+              <Share2 className="w-5 h-5" />
+              Share
+            </Button>
           </div>
         )}
         {user && user.id === pdf.uploaded_by && (
