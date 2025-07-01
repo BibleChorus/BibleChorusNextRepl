@@ -23,7 +23,7 @@ export const TopicList: React.FC<TopicListProps> = ({ topics }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.05 }}
-            className="group relative bg-card hover:bg-accent/5 rounded-xl border border-border/50 hover:border-border transition-all duration-300 overflow-hidden"
+            className="group relative bg-card hover:bg-accent/5 rounded-2xl border border-border/40 hover:border-border transition-all duration-300 overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             

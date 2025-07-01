@@ -97,7 +97,7 @@ export default function PlaylistsPage() {
         <meta name="description" content="Explore Bible-inspired music collections" />
       </Head>
       
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -107,10 +107,11 @@ export default function PlaylistsPage() {
         >
           {/* Animated Mesh Gradient Background */}
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 via-fuchsia-600/20 to-indigo-600/20 dark:from-violet-600/30 dark:via-fuchsia-600/30 dark:to-indigo-600/30"></div>
-            <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-            <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+            {/* Subtle hero gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-indigo-500/10 dark:from-violet-500/15 dark:via-fuchsia-500/15 dark:to-indigo-500/15"></div>
+            <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-[0.15] animate-blob"></div>
+            <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl opacity-[0.15] animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-[0.15] animate-blob animation-delay-4000"></div>
             <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]"></div>
           </div>
           
@@ -200,7 +201,7 @@ export default function PlaylistsPage() {
               transition={{ duration: 0.6, delay: 0.3 }}
             >
               <Tabs defaultValue="auto" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-8 p-1 bg-white/5 dark:bg-black/20 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-2xl shadow-xl">
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-8 p-1 bg-white/5 dark:bg-black/20 backdrop-blur-2xl border border-white/10 dark:border-white/5 rounded-[2rem] shadow-xl">
                   {playlistGroups.map((group) => (
                     <TabsTrigger 
                       key={group.tabValue} 

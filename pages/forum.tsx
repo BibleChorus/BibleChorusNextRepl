@@ -82,10 +82,11 @@ export default function Forum() {
         >
           {/* Animated Mesh Gradient Background */}
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/20 to-pink-600/20 dark:from-indigo-600/30 dark:via-purple-600/30 dark:to-pink-600/30"></div>
-            <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-            <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+            {/* Subtly-toned mesh gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-500/15 dark:via-purple-500/15 dark:to-pink-500/15"></div>
+            <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-[0.15] animate-blob"></div>
+            <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-[0.15] animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-[0.15] animate-blob animation-delay-4000"></div>
             <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]"></div>
           </div>
           
@@ -144,7 +145,7 @@ export default function Forum() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto"
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
             >
               <div className="group relative bg-white/5 dark:bg-black/20 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-2xl p-6 text-center hover:bg-white/10 dark:hover:bg-black/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -192,7 +193,7 @@ export default function Forum() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="bg-white/5 dark:bg-black/20 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-3xl shadow-2xl p-6 md:p-8"
+            className="bg-white/5 dark:bg-black/20 backdrop-blur-2xl border border-white/10 dark:border-white/5 rounded-[2rem] shadow-2xl p-6 md:p-10"
           >
             {/* Action Bar */}
             <div className="flex flex-col lg:flex-row gap-4 mb-8">

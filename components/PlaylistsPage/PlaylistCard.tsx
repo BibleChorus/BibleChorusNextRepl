@@ -28,7 +28,7 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onClick, gradient
   return (
     <Card
       onClick={onClick}
-      className="group relative aspect-square overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-xl"
+      className="group relative aspect-square overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-2xl rounded-3xl"
     >
       {/* Background Image or Gradient */}
       {hasCoverArt ? (
