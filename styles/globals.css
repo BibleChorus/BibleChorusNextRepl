@@ -199,3 +199,12 @@ a {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
+/* Animation delays for queue ellipsis */
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
