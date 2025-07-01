@@ -4,8 +4,10 @@ import { PHASE_PRODUCTION_BUILD } from 'next/constants.js'
 export default (phase, defaultConfig) => {
   const isProd = phase === PHASE_PRODUCTION_BUILD
 
-  if (isProd && !process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET environment variable is required for JWT authentication.')
+  // Enforce JWT_SECRET only for actual builds/starts, not during `next lint`
+  const isLint = process.env.npm_lifecycle_event === 'lint';
+  if (isProd && !isLint && !process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required for JWT authentication.');
   }
 
   return {
