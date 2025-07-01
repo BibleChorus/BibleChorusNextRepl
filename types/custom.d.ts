@@ -1,6 +1,9 @@
 declare module 'lucide-react' {
   import { FC, SVGProps } from 'react';
-  type Icon = FC<SVGProps<SVGSVGElement>>;
+  interface IconProps extends SVGProps<SVGSVGElement> {
+    size?: number | string;
+  }
+  type Icon = FC<IconProps>;
   export const Play: Icon;
   export const Pause: Icon;
   export const Edit: Icon;
@@ -57,7 +60,7 @@ declare module 'lucide-react' {
   export const Save: Icon;
   const defaultExport: Icon;
   export default defaultExport;
-  export type LucideProps = SVGProps<SVGSVGElement>;
+  export type LucideProps = IconProps;
   export function createLucideIcon(name: string, iconNode: any[]): Icon;
   export const SkipBack: Icon;
   export const SkipForward: Icon;
