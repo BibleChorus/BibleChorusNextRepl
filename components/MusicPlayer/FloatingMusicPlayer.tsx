@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import {
   Play,
@@ -56,6 +56,10 @@ export default function FloatingMusicPlayer() {
   const [duration, setDuration] = useState<number>(0);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
   const [isLyricsBibleDialogOpen, setIsLyricsBibleDialogOpen] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  // Ref for the scroll container that holds the queue list
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isSmallMobile = useMediaQuery('(max-width: 400px)');
@@ -112,6 +116,36 @@ export default function FloatingMusicPlayer() {
       music_ai_generated: false,
     };
   };
+
+  // Detect if the queue list overflows its container
+  useEffect(() => {
+    // Helper to check overflow
+    const checkOverflow = () => {
+      const el = scrollContainerRef.current;
+      if (el) {
+        setHasOverflow(el.scrollHeight > el.clientHeight);
+      }
+    };
+
+    // Initial check
+    checkOverflow();
+
+    // Re-check on window resize as the container height can change
+    window.addEventListener('resize', checkOverflow);
+
+    // Re-check whenever the queue changes or the list is toggled
+    // (useLayoutEffect isn't strictly necessary here)
+    if (isQueueVisible) {
+      // Slight timeout to wait for rendering
+      const id = setTimeout(checkOverflow, 50);
+      return () => {
+        clearTimeout(id);
+        window.removeEventListener('resize', checkOverflow);
+      };
+    }
+
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [queue, isQueueVisible]);
 
   if (!currentSong) return null;
 
@@ -283,7 +317,7 @@ export default function FloatingMusicPlayer() {
             </button>
           </div>
           {/* Queue List - Scrollable */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
             <div className="p-4">
               {queue.map((song, index) => (
                 <div
@@ -304,7 +338,7 @@ export default function FloatingMusicPlayer() {
                 </div>
               ))}
               {/* Ellipsis indicator */}
-              {queue.length > 0 && (
+              {hasOverflow && queue.length > 0 && (
                 <div className="text-center py-4 text-muted-foreground">
                   <div className="flex items-center justify-center space-x-1">
                     <div className="w-1 h-1 bg-current rounded-full animate-pulse"></div>
