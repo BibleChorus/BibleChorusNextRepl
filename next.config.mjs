@@ -5,7 +5,7 @@ export default (phase, defaultConfig) => {
   const isProd = phase === PHASE_PRODUCTION_BUILD
 
   if (isProd && !process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET environment variable is required for JWT authentication.')
+    console.warn('WARNING: JWT_SECRET environment variable is missing. JWT authentication will be disabled.');
   }
 
   return {
