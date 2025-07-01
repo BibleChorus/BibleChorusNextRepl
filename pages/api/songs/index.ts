@@ -65,11 +65,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Adjust limit and offset for infinite scroll
       const limitNum = parseInt(limit as string, 10) || 20;
-      // Add a safety limit to prevent extremely large queries
-      const maxLimit = 10000; // Set a reasonable maximum
-      const safeLimitNum = Math.min(limitNum, maxLimit);
       const pageNum = parseInt(page as string, 10) || 1;
-      const offset = (pageNum - 1) * safeLimitNum;
+      
+      // Calculate offset using the original limitNum for correct pagination
+      const offset = (pageNum - 1) * limitNum;
+      
+      // Add a safety limit to prevent extremely large queries, but allow special cases
+      const maxSafeLimit = 10000;
+      
+      // For very large limits (like fetchAllSongs for shuffle), we need to handle differently
+      // If the limit is extremely large and page is 1, it's likely a "fetch all" request
+      const isFetchAllRequest = limitNum > maxSafeLimit && pageNum === 1;
+      
+      let actualLimit: number;
+      let actualOffset: number;
+      
+      if (isFetchAllRequest) {
+        // For fetch-all requests, we'll return all available records up to a reasonable maximum
+        // This is primarily for shuffle functionality
+        actualLimit = Math.min(limitNum, 50000); // Higher limit for fetch-all
+        actualOffset = 0; // Always start from beginning for fetch-all
+      } else {
+        // For normal pagination, enforce the safety limit
+        actualLimit = Math.min(limitNum, maxSafeLimit);
+        actualOffset = offset;
+      }
 
       // Start building the query with optimized aggregations
       let query = db('songs')
@@ -316,7 +336,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Apply pagination
-      const songsQuery = query.clone().offset(offset).limit(safeLimitNum);
+      const songsQuery = query.clone().offset(actualOffset).limit(actualLimit);
       const songs = await songsQuery;
 
       // Clone the existing query for total count
