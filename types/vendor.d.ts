@@ -69,13 +69,3 @@ declare module 'axios' {
   const axios: any
   export default axios
 }
-
-// Fallback for React types in case they are missing in the environment.
-// These are very minimal and should be replaced by @types/react once installed.
-// The declarations merge with the real React typings if they exist, so they
-// are safe to keep.
-declare module 'react' {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const React: any
-  export default React
-}
