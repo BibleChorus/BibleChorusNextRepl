@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const pageNum = parseInt(page as string, 10) || 1;
       const offset = (pageNum - 1) * limitNum;
 
-      // Start building the query
+      // Start building the query with optimized aggregations
       let query = db('songs')
         .select(
           'songs.id',
@@ -96,26 +96,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 'first_verse.first_verse_number',
               ]
             : []),
-          // Subqueries for vote counts
-          db.raw(`COALESCE((
-            SELECT SUM(vote_value) FROM votes
-            WHERE song_id = songs.id AND vote_type = 'Best Musically'
-          ), 0) AS best_musically_votes`),
-          db.raw(`COALESCE((
-            SELECT SUM(vote_value) FROM votes
-            WHERE song_id = songs.id AND vote_type = 'Best Lyrically'
-          ), 0) AS best_lyrically_votes`),
-          db.raw(`COALESCE((
-            SELECT SUM(vote_value) FROM votes
-            WHERE song_id = songs.id AND vote_type = 'Best Overall'
-          ), 0) AS best_overall_votes`),
-          // Subquery for like count
-          db.raw(`COALESCE((
-            SELECT COUNT(*) FROM likes
-            WHERE likeable_id = songs.id AND likeable_type = 'song'
-          ), 0) AS like_count`),
+          // Optimized aggregations using LEFT JOINs
+          db.raw('COALESCE(vote_counts.best_musically_votes, 0) AS best_musically_votes'),
+          db.raw('COALESCE(vote_counts.best_lyrically_votes, 0) AS best_lyrically_votes'),
+          db.raw('COALESCE(vote_counts.best_overall_votes, 0) AS best_overall_votes'),
+          db.raw('COALESCE(like_counts.like_count, 0) AS like_count'),
         )
-        .join('users', 'songs.uploaded_by', 'users.id');
+        .join('users', 'songs.uploaded_by', 'users.id')
+        // LEFT JOIN for vote counts aggregation
+        .leftJoin(
+          db('votes')
+            .select('song_id')
+            .sum(db.raw(`CASE WHEN vote_type = 'Best Musically' THEN vote_value ELSE 0 END AS best_musically_votes`))
+            .sum(db.raw(`CASE WHEN vote_type = 'Best Lyrically' THEN vote_value ELSE 0 END AS best_lyrically_votes`))
+            .sum(db.raw(`CASE WHEN vote_type = 'Best Overall' THEN vote_value ELSE 0 END AS best_overall_votes`))
+            .groupBy('song_id')
+            .as('vote_counts'),
+          'songs.id',
+          'vote_counts.song_id'
+        )
+        // LEFT JOIN for like counts aggregation
+        .leftJoin(
+          db('likes')
+            .select('likeable_id')
+            .count('* as like_count')
+            .where('likeable_type', 'song')
+            .groupBy('likeable_id')
+            .as('like_counts'),
+          'songs.id',
+          'like_counts.likeable_id'
+        );
 
       // Handle user-specific filters
       if (userId) {

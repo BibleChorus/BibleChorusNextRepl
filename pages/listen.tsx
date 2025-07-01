@@ -471,25 +471,30 @@ function ListenContent({
   useEffect(() => {
     if (!isShuffling) return
     
-    // Use a flag to prevent multiple simultaneous fetches
-    let isFetching = false
+    // Use AbortController for proper cleanup
+    const abortController = new AbortController()
     let timeoutId: NodeJS.Timeout
     
     const updateShuffleQueue = async () => {
-      if (isFetching) return
-      isFetching = true
+      // Check if already aborted
+      if (abortController.signal.aborted) return
       
       try {
         const all = await fetchAllSongsRef.current()
+        
+        // Check again after async operation
+        if (abortController.signal.aborted) return
+        
         const shuffledSongs = all.map(toPlayerSongRef.current)
         // Only update if we actually have songs that match the current criteria
         if (shuffledSongs.length > 0) {
           updateQueueRef.current(shuffledSongs)
         }
       } catch (err) {
-        console.error('Error updating shuffle queue after filter/playlist change:', err)
-      } finally {
-        isFetching = false
+        // Don't log if it's an abort error
+        if (!abortController.signal.aborted) {
+          console.error('Error updating shuffle queue after filter/playlist change:', err)
+        }
       }
     }
     
@@ -498,6 +503,7 @@ function ListenContent({
     
     return () => {
       clearTimeout(timeoutId)
+      abortController.abort()
     }
   }, [isShuffling, debouncedFilters, selectedPlaylist])
 
