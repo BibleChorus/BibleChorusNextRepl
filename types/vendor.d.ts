@@ -44,8 +44,3 @@ declare module 're-resizable' {
 
 // Axios already ships its own typings, but in case the environment cannot
 // resolve them we add a minimal fallback.
-declare module 'axios' {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const axios: any
-  export default axios
-}
