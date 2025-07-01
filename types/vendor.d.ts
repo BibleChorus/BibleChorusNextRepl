@@ -42,26 +42,6 @@ declare module 're-resizable' {
   export default Resizable
 }
 
-declare module 'lucide-react' {
-  import * as React from 'react'
-  export interface LucideProps extends React.SVGProps<SVGSVGElement> {
-    size?: string | number
-    color?: string
-    strokeWidth?: string | number
-  }
-  // The actual package exports many named icon components.  We model them
-  // generically here so that any icon import is treated as a valid React
-  // component.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const IconComponent: React.FC<LucideProps & { [key: string]: any }>
-  export const BookOpen: React.FC<LucideProps>
-  export const X: React.FC<LucideProps>
-  export const Check: React.FC<LucideProps>
-  export const Play: React.FC<LucideProps>
-  export const Pause: React.FC<LucideProps>
-  export default IconComponent
-}
-
 // Axios already ships its own typings, but in case the environment cannot
 // resolve them we add a minimal fallback.
 declare module 'axios' {
