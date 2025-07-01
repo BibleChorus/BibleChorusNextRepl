@@ -375,7 +375,7 @@ function UploadContent() {
 
   useEffect(() => {
     if (!watchAiUsedForLyrics) {
-      form.setValue("lyric_ai_prompt", undefined ?? "");
+      form.setValue("lyric_ai_prompt", "");
     }
     form.trigger("lyric_ai_prompt");
   }, [watchAiUsedForLyrics, form]);
@@ -646,7 +646,7 @@ function UploadContent() {
     } else {
       form.setValue("ai_used_for_lyrics", checked);
       if (!checked) {
-        form.setValue("lyric_ai_prompt", undefined ?? "", { shouldValidate: true });
+        form.setValue("lyric_ai_prompt", "", { shouldValidate: true });
       } else {
         form.trigger("lyric_ai_prompt");
       }
