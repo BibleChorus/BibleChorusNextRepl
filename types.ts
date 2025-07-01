@@ -58,6 +58,7 @@ export interface Topic {
   id: number;
   title: string;
   content: string;
+  preview?: string; // Short preview of the content
   user_id: number;
   username: string;
   created_at: string;
@@ -70,6 +71,7 @@ export interface Topic {
   downvotes: number;
   score: number;
   userVote?: number; // -1, 0, or 1 for the current user's vote
+  replies_count?: number; // Number of replies/comments
 }
 
 export interface Comment {

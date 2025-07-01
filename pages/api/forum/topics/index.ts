@@ -30,6 +30,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         )
         .orderBy('forum_topics.created_at', 'desc');
 
+      // Get replies count for each topic
+      const topicIds = topics.map(topic => topic.id);
+      const repliesCounts = await db('forum_comments')
+        .whereIn('topic_id', topicIds)
+        .groupBy('topic_id')
+        .select('topic_id', db.raw('COUNT(*) as replies_count'));
+
+      const repliesCountMap = new Map(repliesCounts.map(r => [r.topic_id, parseInt(r.replies_count)]));
+
       // If user is logged in, get their votes
       if (userId) {
         const userVotes = await db('forum_votes')
@@ -39,9 +48,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const voteMap = new Map(userVotes.map(v => [v.topic_id, v.vote_value]));
         
-        // Add user vote to each topic
+        // Add user vote and other calculated fields to each topic
         topics.forEach(topic => {
           topic.userVote = voteMap.get(topic.id) || 0;
+          topic.replies_count = repliesCountMap.get(topic.id) || 0;
+          topic.preview = topic.content ? topic.content.substring(0, 150) + (topic.content.length > 150 ? '...' : '') : '';
+        });
+      } else {
+        // Add calculated fields without user votes
+        topics.forEach(topic => {
+          topic.replies_count = repliesCountMap.get(topic.id) || 0;
+          topic.preview = topic.content ? topic.content.substring(0, 150) + (topic.content.length > 150 ? '...' : '') : '';
         });
       }
 
@@ -77,7 +94,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const user = await db('users').where('id', user_id).first();
 
-      res.status(201).json({ ...topic, username: user.username });
+      // Add calculated fields to the new topic
+      const topicWithFields = {
+        ...topic,
+        username: user.username,
+        replies_count: 0,
+        preview: topic.content ? topic.content.substring(0, 150) + (topic.content.length > 150 ? '...' : '') : ''
+      };
+
+      res.status(201).json(topicWithFields);
     } catch (error) {
       console.error('Error creating topic:', error);
       res.status(500).json({ message: 'Error creating topic' });

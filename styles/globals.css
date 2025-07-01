@@ -345,3 +345,18 @@ a {
 * {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Scale X Animation for Underline Effect */
+@keyframes scale-x {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+.animate-scale-x {
+  animation: scale-x 1.2s ease-out forwards;
+  transform-origin: left;
+}
