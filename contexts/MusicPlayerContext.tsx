@@ -222,29 +222,65 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   // Toggle shuffle mode
   const toggleShuffle = async () => {
-    if (!isShuffling && shuffleLoaderRef.current) {
-      try {
-        const allSongs = await shuffleLoaderRef.current();
-        const shuffled = shuffleArray(allSongs);
+    if (!isShuffling) {
+      // Turning shuffle ON
+      if (shuffleLoaderRef.current) {
+        try {
+          // Load ALL songs from the shuffle loader (not just current queue)
+          const allSongs = await shuffleLoaderRef.current();
+          const shuffled = shuffleArray(allSongs);
+          setQueue(shuffled);
+          if (currentSong) {
+            const idx = shuffled.findIndex((s: MusicPlayerSong) => s.id === currentSong.id);
+            if (idx !== -1) {
+              setCurrentIndex(idx);
+            } else if (shuffled.length > 0) {
+              // If current song is not in the shuffled list, keep playing it but add it
+              const shuffledWithCurrent = [currentSong, ...shuffled];
+              setQueue(shuffledWithCurrent);
+              setCurrentIndex(0);
+            }
+          }
+        } catch (err) {
+          console.error('Error loading songs for shuffle:', err);
+          // Fallback to shuffling current queue
+          const shuffled = shuffleArray(queue);
+          setQueue(shuffled);
+          if (currentSong) {
+            const idx = shuffled.findIndex((s: MusicPlayerSong) => s.id === currentSong.id);
+            if (idx !== -1) setCurrentIndex(idx);
+          }
+        }
+      } else {
+        // No shuffle loader, just shuffle current queue
+        const shuffled = shuffleArray(queue);
         setQueue(shuffled);
         if (currentSong) {
-          const idx = shuffled.findIndex((s) => s.id === currentSong.id);
+          const idx = shuffled.findIndex((s: MusicPlayerSong) => s.id === currentSong.id);
           if (idx !== -1) setCurrentIndex(idx);
         }
-      } catch (err) {
-        console.error('Error loading songs for shuffle:', err);
       }
-    } else if (isShuffling && shuffleLoaderRef.current) {
-      // When turning shuffle off, restore the original order
-      try {
-        const allSongs = await shuffleLoaderRef.current();
-        setQueue(allSongs); // Set unshuffled queue
-        if (currentSong) {
-          const idx = allSongs.findIndex((s) => s.id === currentSong.id);
-          if (idx !== -1) setCurrentIndex(idx);
+    } else {
+      // Turning shuffle OFF
+      if (shuffleLoaderRef.current) {
+        try {
+          const allSongs = await shuffleLoaderRef.current();
+          setQueue(allSongs); // Set unshuffled queue
+          if (currentSong) {
+            const idx = allSongs.findIndex((s: MusicPlayerSong) => s.id === currentSong.id);
+            if (idx !== -1) {
+              setCurrentIndex(idx);
+            } else if (allSongs.length > 0) {
+              // If current song is not in the list, keep playing it but add it
+              const songsWithCurrent = [currentSong, ...allSongs];
+              setQueue(songsWithCurrent);
+              setCurrentIndex(0);
+            }
+          }
+        } catch (err) {
+          console.error('Error loading songs for unshuffle:', err);
+          // Can't restore original order, keep current queue
         }
-      } catch (err) {
-        console.error('Error loading songs for unshuffle:', err);
       }
     }
     setIsShuffling(!isShuffling);

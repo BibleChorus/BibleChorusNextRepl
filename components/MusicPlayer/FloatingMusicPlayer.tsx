@@ -273,36 +273,48 @@ export default function FloatingMusicPlayer() {
       {/* Queue Display */}
       {isQueueVisible && (
         <div
-          className={`fixed bottom-[60px] ${leftOffset} right-0 max-h-[50vh] overflow-y-auto bg-background border border-border z-50 transition-all duration-300`}
+          className={`fixed bottom-[60px] ${leftOffset} right-0 max-h-[50vh] bg-background border border-border z-50 transition-all duration-300 flex flex-col`}
         >
-          {/* Queue Header */}
-          <div className="p-4 border-b border-border flex items-center justify-between">
+          {/* Queue Header - Sticky */}
+          <div className="sticky top-0 z-10 p-4 border-b border-border flex items-center justify-between bg-background">
             <h3 className="text-lg font-semibold">Up Next</h3>
-            <button onClick={() => setIsQueueVisible(false)} className="p-1">
+            <button onClick={() => setIsQueueVisible(false)} className="p-1 hover:bg-accent rounded">
               <X className="w-5 h-5" />
             </button>
           </div>
-          {/* Queue List */}
-          <div className="p-4">
-            {queue.map((song, index) => (
-              <div
-                key={song.id}
-                className={`flex items-center py-2 ${
-                  currentSong?.id === song.id ? 'text-primary font-semibold' : ''
-                }`}
-              >
-                <div className="mr-3">{index + 1}.</div>
-                <div className="flex-1">
-                  <div>{song.title}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {song.artist}
+          {/* Queue List - Scrollable */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4">
+              {queue.map((song, index) => (
+                <div
+                  key={song.id}
+                  className={`flex items-center py-2 hover:bg-accent/50 rounded px-2 -mx-2 cursor-pointer ${
+                    currentSong?.id === song.id ? 'text-primary font-semibold bg-accent' : ''
+                  }`}
+                  onClick={() => playSong(song)}
+                >
+                  <div className="mr-3 text-sm">{index + 1}.</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate">{song.title}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {song.artist}
+                    </div>
                   </div>
+                  <Play className="w-4 h-4 flex-shrink-0 ml-2" />
                 </div>
-                <button onClick={() => playSong(song)} className="p-1">
-                  <Play className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+              ))}
+              {/* Ellipsis indicator */}
+              {queue.length > 0 && (
+                <div className="text-center py-4 text-muted-foreground">
+                  <div className="flex items-center justify-center space-x-1">
+                    <div className="w-1 h-1 bg-current rounded-full animate-pulse"></div>
+                    <div className="w-1 h-1 bg-current rounded-full animate-pulse animation-delay-200"></div>
+                    <div className="w-1 h-1 bg-current rounded-full animate-pulse animation-delay-400"></div>
+                  </div>
+                  <p className="text-xs mt-2">Scroll for more tracks</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
