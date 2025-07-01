@@ -1,5 +1,5 @@
 import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
+import { cva } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
@@ -23,9 +23,21 @@ const badgeVariants = cva(
   }
 )
 
-export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  /**
+   * Visual style variant to apply.
+   * Matches the keys of `badgeVariants.variant`.
+   */
+  variant?: "default" | "secondary" | "destructive" | "outline";
+  /**
+   * Optional React key – useful when rendering in lists.
+   */
+  key?: React.Key;
+  /**
+   * Additional class names to merge with the component styles.
+   */
+  className?: string;
+}
 
 function Badge({ className, variant, ...props }: BadgeProps) {
   return (
