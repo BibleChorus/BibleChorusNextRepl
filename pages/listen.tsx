@@ -416,9 +416,17 @@ function ListenContent({
 
   const fetchAllSongs = useCallback(async (): Promise<Song[]> => {
     const query = buildQueryString(debouncedFilters, 1, user, selectedPlaylist)
-    const result = await fetcher(`/api/songs?${query}&limit=${totalSongs}`)
-    return result.songs
-  }, [debouncedFilters, user, selectedPlaylist, totalSongs])
+    // First fetch to get the total count
+    const countResult = await fetcher(`/api/songs?${query}&limit=1`)
+    const total = countResult.total || 0
+    
+    // If there are songs, fetch all of them
+    if (total > 0) {
+      const result = await fetcher(`/api/songs?${query}&limit=${total}`)
+      return result.songs
+    }
+    return []
+  }, [debouncedFilters, user, selectedPlaylist])
 
 
   const toPlayerSong = useCallback((s: Song) => ({
@@ -435,35 +443,63 @@ function ListenContent({
     uploaded_by: s.uploaded_by,
   }), [])
 
+  // Use refs to avoid dependency issues
+  const fetchAllSongsRef = useRef(fetchAllSongs)
+  const toPlayerSongRef = useRef(toPlayerSong)
+  const updateQueueRef = useRef(updateQueue)
+  
+  useEffect(() => {
+    fetchAllSongsRef.current = fetchAllSongs
+  }, [fetchAllSongs])
+  
+  useEffect(() => {
+    toPlayerSongRef.current = toPlayerSong
+  }, [toPlayerSong])
+  
+  useEffect(() => {
+    updateQueueRef.current = updateQueue
+  }, [updateQueue])
+
   useEffect(() => {
     registerShuffleLoader(async () => {
-      const all = await fetchAllSongs()
-      return all.map(toPlayerSong)
+      const all = await fetchAllSongsRef.current()
+      return all.map(toPlayerSongRef.current)
     })
-  }, [fetchAllSongs, registerShuffleLoader])
+  }, [registerShuffleLoader])
 
   // Update shuffle queue when filters or playlist change while shuffle is active
   useEffect(() => {
-    if (isShuffling) {
-      fetchAllSongs()
-        .then((all) => {
-          const shuffledSongs = all.map(toPlayerSong)
-          // Only update if we actually have songs that match the current criteria
-          if (shuffledSongs.length > 0) {
-            updateQueue(shuffledSongs)
-          }
-        })
-        .catch((err) => console.error('Error updating shuffle queue after filter/playlist change:', err))
+    if (!isShuffling) return
+    
+    // Use a flag to prevent multiple simultaneous fetches
+    let isFetching = false
+    let timeoutId: NodeJS.Timeout
+    
+    const updateShuffleQueue = async () => {
+      if (isFetching) return
+      isFetching = true
+      
+      try {
+        const all = await fetchAllSongsRef.current()
+        const shuffledSongs = all.map(toPlayerSongRef.current)
+        // Only update if we actually have songs that match the current criteria
+        if (shuffledSongs.length > 0) {
+          updateQueueRef.current(shuffledSongs)
+        }
+      } catch (err) {
+        console.error('Error updating shuffle queue after filter/playlist change:', err)
+      } finally {
+        isFetching = false
+      }
     }
-  }, [isShuffling, debouncedFilters, selectedPlaylist, fetchAllSongs, updateQueue, toPlayerSong])
-
-  useEffect(() => {
-    if (isShuffling && queue.length < totalSongs && totalSongs > songs.length) {
-      fetchAllSongs()
-        .then((all) => updateQueue(all.map(toPlayerSong)))
-        .catch((err) => console.error('Error fetching all songs for shuffle:', err))
+    
+    // Debounce the update to avoid rapid successive calls
+    timeoutId = setTimeout(updateShuffleQueue, 500)
+    
+    return () => {
+      clearTimeout(timeoutId)
     }
-  }, [isShuffling, totalSongs, songs.length, fetchAllSongs, updateQueue, queue.length])
+  }, [isShuffling, debouncedFilters, selectedPlaylist])
 
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0,
