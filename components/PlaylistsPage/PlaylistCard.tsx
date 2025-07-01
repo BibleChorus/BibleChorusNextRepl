@@ -11,14 +11,14 @@ interface PlaylistCardProps {
 }
 
 const gradients = [
-  'from-purple-500 to-indigo-600',
-  'from-blue-500 to-cyan-500',
-  'from-pink-500 to-rose-500',
-  'from-amber-500 to-orange-500',
-  'from-emerald-500 to-teal-500',
-  'from-red-500 to-pink-500',
-  'from-violet-500 to-purple-500',
-  'from-sky-500 to-blue-500',
+  'from-violet-600 via-purple-600 to-indigo-600',
+  'from-blue-600 via-cyan-600 to-teal-600',
+  'from-pink-600 via-rose-600 to-red-600',
+  'from-amber-600 via-orange-600 to-red-600',
+  'from-emerald-600 via-green-600 to-teal-600',
+  'from-indigo-600 via-blue-600 to-purple-600',
+  'from-purple-600 via-pink-600 to-rose-600',
+  'from-cyan-600 via-blue-600 to-indigo-600',
 ];
 
 const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onClick, gradientIndex }) => {
@@ -28,7 +28,7 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onClick, gradient
   return (
     <Card
       onClick={onClick}
-      className="group relative aspect-square overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl border-0 bg-card/50 backdrop-blur-sm"
+      className="group relative aspect-square overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-xl"
     >
       {/* Background Image or Gradient */}
       {hasCoverArt ? (

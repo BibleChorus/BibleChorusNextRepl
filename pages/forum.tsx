@@ -78,51 +78,110 @@ export default function Forum() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="relative overflow-hidden bg-gradient-to-br from-indigo-600/10 via-purple-600/10 to-pink-600/10 dark:from-indigo-600/20 dark:via-purple-600/20 dark:to-pink-600/20 pb-16 pt-8"
+          className="relative overflow-hidden pb-16 pt-8"
         >
-          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+          {/* Animated Mesh Gradient Background */}
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/20 to-pink-600/20 dark:from-indigo-600/30 dark:via-purple-600/30 dark:to-pink-600/30"></div>
+            <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+            <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+            <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]"></div>
+          </div>
+          
           <div className="relative z-10 container mx-auto px-4">
             <div className="text-center mb-8">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+                className="mb-4"
+              >
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-600/10 to-purple-600/10 dark:from-indigo-600/20 dark:to-purple-600/20 backdrop-blur-sm border border-indigo-600/20 dark:border-indigo-600/30">
+                  <MessageSquare className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                    Join the Discussion
+                  </span>
+                </span>
+              </motion.div>
+              
               <motion.h1 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl"
               >
-                Community Forum
+                <span className="block text-foreground">Community</span>
+                <span className="block mt-2 relative">
+                  <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient-x">
+                    Forum
+                  </span>
+                  <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 10" preserveAspectRatio="none">
+                    <path d="M0,5 Q75,0 150,5 T300,5" stroke="url(#gradient-forum)" strokeWidth="2" fill="none" className="animate-draw-line" />
+                    <defs>
+                      <linearGradient id="gradient-forum" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#6366F1" />
+                        <stop offset="50%" stopColor="#9333EA" />
+                        <stop offset="100%" stopColor="#EC4899" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </span>
               </motion.h1>
+              
               <motion.p 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="mt-4 text-lg text-muted-foreground sm:text-xl max-w-2xl mx-auto"
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="mt-6 text-lg text-muted-foreground sm:text-xl max-w-2xl mx-auto leading-relaxed"
               >
                 Join the conversation about Bible-inspired music, share insights, and connect with fellow believers
               </motion.p>
             </div>
 
-            {/* Stats Cards */}
+            {/* Stats Cards - Improved Design */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
               className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto"
             >
-              <div className="bg-background/60 backdrop-blur-sm border rounded-xl p-6 text-center">
-                <MessageSquare className="w-8 h-8 mx-auto mb-2 text-indigo-600" />
-                <div className="text-2xl font-bold">{stats.totalTopics}</div>
-                <div className="text-sm text-muted-foreground">Active Topics</div>
+              <div className="group relative bg-white/5 dark:bg-black/20 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-2xl p-6 text-center hover:bg-white/10 dark:hover:bg-black/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <MessageSquare className="relative w-8 h-8 mx-auto mb-2 text-indigo-600 dark:text-indigo-400" />
+                <div className="relative text-3xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-400 bg-clip-text text-transparent">{stats.totalTopics}</div>
+                <div className="relative text-sm text-muted-foreground mt-1">Active Topics</div>
               </div>
-              <div className="bg-background/60 backdrop-blur-sm border rounded-xl p-6 text-center">
-                <TrendingUp className="w-8 h-8 mx-auto mb-2 text-purple-600" />
-                <div className="text-2xl font-bold">{stats.totalDiscussions}</div>
-                <div className="text-sm text-muted-foreground">Total Discussions</div>
+              <div className="group relative bg-white/5 dark:bg-black/20 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-2xl p-6 text-center hover:bg-white/10 dark:hover:bg-black/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <TrendingUp className="relative w-8 h-8 mx-auto mb-2 text-purple-600 dark:text-purple-400" />
+                <div className="relative text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">{stats.totalDiscussions}</div>
+                <div className="relative text-sm text-muted-foreground mt-1">Total Discussions</div>
               </div>
-              <div className="bg-background/60 backdrop-blur-sm border rounded-xl p-6 text-center">
-                <Clock className="w-8 h-8 mx-auto mb-2 text-pink-600" />
-                <div className="text-2xl font-bold">{stats.activeUsers}</div>
-                <div className="text-sm text-muted-foreground">Active Contributors</div>
+              <div className="group relative bg-white/5 dark:bg-black/20 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-2xl p-6 text-center hover:bg-white/10 dark:hover:bg-black/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-600/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <Clock className="relative w-8 h-8 mx-auto mb-2 text-pink-600 dark:text-pink-400" />
+                <div className="relative text-3xl font-bold bg-gradient-to-r from-pink-600 to-pink-400 bg-clip-text text-transparent">{stats.activeUsers}</div>
+                <div className="relative text-sm text-muted-foreground mt-1">Active Contributors</div>
               </div>
+            </motion.div>
+            
+            {/* Floating Elements */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.5 }}
+              className="absolute top-10 right-10 hidden lg:block"
+            >
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl backdrop-blur-sm animate-float"></div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.7 }}
+              className="absolute bottom-10 left-10 hidden lg:block"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl backdrop-blur-sm animate-float animation-delay-2000"></div>
             </motion.div>
           </div>
         </motion.div>
@@ -133,24 +192,24 @@ export default function Forum() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="bg-background/95 backdrop-blur-sm border rounded-2xl shadow-xl p-6 md:p-8"
+            className="bg-white/5 dark:bg-black/20 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-3xl shadow-2xl p-6 md:p-8"
           >
             {/* Action Bar */}
             <div className="flex flex-col lg:flex-row gap-4 mb-8">
               {/* Search and Filters */}
               <div className="flex-1 flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
                   <Input
                     placeholder="Search topics..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-background/50"
+                    className="pl-10 bg-white/5 dark:bg-black/20 backdrop-blur-sm border-white/10 dark:border-white/5 hover:bg-white/10 dark:hover:bg-black/30 focus:bg-white/10 dark:focus:bg-black/30 transition-all duration-300"
                   />
                 </div>
                 <div className="flex gap-2">
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-[180px] bg-background/50">
+                    <SelectTrigger className="w-[180px] bg-white/5 dark:bg-black/20 backdrop-blur-sm border-white/10 dark:border-white/5 hover:bg-white/10 dark:hover:bg-black/30 transition-all duration-300">
                       <Filter className="w-4 h-4 mr-2" />
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
@@ -164,7 +223,7 @@ export default function Forum() {
                     </SelectContent>
                   </Select>
                   <Select value={sortBy} onValueChange={(value: 'recent' | 'popular') => setSortBy(value)}>
-                    <SelectTrigger className="w-[140px] bg-background/50">
+                    <SelectTrigger className="w-[140px] bg-white/5 dark:bg-black/20 backdrop-blur-sm border-white/10 dark:border-white/5 hover:bg-white/10 dark:hover:bg-black/30 transition-all duration-300">
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>
@@ -184,9 +243,10 @@ export default function Forum() {
               {/* New Topic Button */}
               {user && (
                 <NewTopicDialog onTopicCreated={(newTopic: Topic) => setTopics([newTopic, ...topics])}>
-                  <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Topic
+                  <Button className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group">
+                    <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+                    <Plus className="relative w-4 h-4 mr-2" />
+                    <span className="relative">New Topic</span>
                   </Button>
                 </NewTopicDialog>
               )}

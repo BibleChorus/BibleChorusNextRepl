@@ -69,24 +69,27 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
 
   return (
     <>
-      <div className="flex items-center gap-1">
+      <div className="flex flex-col items-center gap-1 bg-white/5 dark:bg-black/10 backdrop-blur-sm rounded-full p-1 border border-white/10 dark:border-white/5">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => handleVote(1)}
           disabled={isVoting}
           className={cn(
-            "h-8 w-8 p-0",
-            userVote === 1 && "text-primary bg-primary/10 hover:bg-primary/20"
+            "h-8 w-8 p-0 rounded-full transition-all duration-300 hover:scale-110",
+            userVote === 1 
+              ? "text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg" 
+              : "hover:bg-white/10 dark:hover:bg-white/5"
           )}
         >
           <ChevronUp className="h-4 w-4" />
         </Button>
         
         <span className={cn(
-          "text-sm font-medium min-w-[2rem] text-center",
-          score > 0 && "text-primary",
-          score < 0 && "text-destructive"
+          "text-sm font-bold min-w-[2rem] text-center transition-all duration-300",
+          score > 0 && "text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text",
+          score < 0 && "text-transparent bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text",
+          score === 0 && "text-muted-foreground"
         )}>
           {score}
         </span>
@@ -97,8 +100,10 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
           onClick={() => handleVote(-1)}
           disabled={isVoting}
           className={cn(
-            "h-8 w-8 p-0",
-            userVote === -1 && "text-destructive bg-destructive/10 hover:bg-destructive/20"
+            "h-8 w-8 p-0 rounded-full transition-all duration-300 hover:scale-110",
+            userVote === -1 
+              ? "text-white bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 shadow-lg" 
+              : "hover:bg-white/10 dark:hover:bg-white/5"
           )}
         >
           <ChevronDown className="h-4 w-4" />
