@@ -1,15 +1,7 @@
 import React from 'react';
 import PlaylistCard from './PlaylistCard';
 import { Playlist } from '../../types';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
-import useEmblaCarousel from 'embla-carousel-react';
-import AutoPlay from 'embla-carousel-autoplay';
+import { motion } from 'framer-motion';
 
 interface PlaylistSectionProps {
   title: string;
@@ -18,47 +10,45 @@ interface PlaylistSectionProps {
 }
 
 const PlaylistSection: React.FC<PlaylistSectionProps> = ({ title, playlists, onPlaylistClick }) => {
-  const [emblaRef] = useEmblaCarousel(
-    { 
-      loop: true, 
-      align: 'start',
-      dragFree: true,
-      containScroll: 'trimSnaps',
-      dragThreshold: 20,
-      skipSnaps: true
-    }, 
-    [AutoPlay()]
-  );
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
 
   return (
-    <div className="mb-8">
-      <h2 className="text-2xl font-bold mb-4">{title}</h2>
-      <Carousel
-        ref={emblaRef}
-        className="w-full"
-        opts={{
-          align: 'start',
-          loop: true,
-          dragFree: true,
-          containScroll: 'trimSnaps',
-          dragThreshold: 20,
-          skipSnaps: true
-        }}
+    <div className="w-full">
+      {title && <h2 className="text-2xl font-bold mb-6">{title}</h2>}
+      <motion.div 
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5"
       >
-        <CarouselContent className="-ml-2 md:-ml-4">
-          {playlists.map((playlist, index) => (
-            <CarouselItem key={playlist.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
-              <PlaylistCard
-                playlist={playlist}
-                onClick={() => onPlaylistClick(playlist.id)}
-                gradientIndex={index}
-              />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
+        {playlists.map((playlist, index) => (
+          <motion.div
+            key={playlist.id}
+            variants={item}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <PlaylistCard
+              playlist={playlist}
+              onClick={() => onPlaylistClick(playlist.id)}
+              gradientIndex={index}
+            />
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
   );
 };
