@@ -4,7 +4,7 @@ import { PHASE_PRODUCTION_BUILD } from 'next/constants.js'
 export default (phase, defaultConfig) => {
   const isProd = phase === PHASE_PRODUCTION_BUILD
 
-  if (!process.env.JWT_SECRET) {
+  if (isProd && !process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET environment variable is required for JWT authentication.')
   }
 
