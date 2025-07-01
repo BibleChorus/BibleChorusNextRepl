@@ -1,4 +1,5 @@
 import React from 'react';
+import type { FC } from 'react';
 import Link from 'next/link';
 import { Topic } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +12,7 @@ interface TopicListProps {
   topics: Topic[];
 }
 
-export const TopicList: React.FC<TopicListProps> = ({ topics }) => {
+export const TopicList: FC<TopicListProps> = ({ topics }) => {
   return (
     <div className="space-y-4">
       {topics.map((topic, index) => {

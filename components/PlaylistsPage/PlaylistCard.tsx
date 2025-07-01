@@ -1,4 +1,5 @@
 import React from 'react';
+import type { FC } from 'react';
 import { Playlist } from '../../types';
 import Image from 'next/image';
 import { Music2, Play } from 'lucide-react';
@@ -21,7 +22,7 @@ const gradients = [
   'from-cyan-600 via-blue-600 to-indigo-600',
 ];
 
-const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onClick, gradientIndex }) => {
+const PlaylistCard: FC<PlaylistCardProps> = ({ playlist, onClick, gradientIndex }) => {
   const hasCoverArt = !!playlist.cover_art_url;
   const gradientBackground = `bg-gradient-to-br ${gradients[gradientIndex % gradients.length]}`;
 
