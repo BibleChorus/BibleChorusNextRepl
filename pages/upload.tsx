@@ -483,18 +483,25 @@ function UploadContent() {
       // Update this part
       // Get audio duration only if the file is an audio file
       if (fileType === 'audio') {
-        const reader = new FileReader();
-        reader.onload = function (event) {
-          const arrayBuffer = event.target!.result as ArrayBuffer;
-          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-          const audioContext = new AudioContext();
-          audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
-            const duration = audioBuffer.duration;
-            setAudioDuration(duration);
-            console.log("Audio duration:", duration);
-          });
-        };
-        reader.readAsArrayBuffer(file);
+        // Create a temporary audio element to get duration without loading entire file
+        const audio = new Audio();
+        const objectUrl = URL.createObjectURL(file);
+        
+        audio.addEventListener('loadedmetadata', () => {
+          const duration = audio.duration;
+          setAudioDuration(duration);
+          console.log("Audio duration:", duration);
+          // Clean up the object URL to free memory
+          URL.revokeObjectURL(objectUrl);
+        });
+        
+        audio.addEventListener('error', (e) => {
+          console.error('Error loading audio metadata:', e);
+          // Clean up the object URL even on error
+          URL.revokeObjectURL(objectUrl);
+        });
+        
+        audio.src = objectUrl;
       }
 
       return data.fileKey;
