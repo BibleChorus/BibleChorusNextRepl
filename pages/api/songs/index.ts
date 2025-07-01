@@ -65,8 +65,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Adjust limit and offset for infinite scroll
       const limitNum = parseInt(limit as string, 10) || 20;
+      // Add a safety limit to prevent extremely large queries
+      const maxLimit = 10000; // Set a reasonable maximum
+      const safeLimitNum = Math.min(limitNum, maxLimit);
       const pageNum = parseInt(page as string, 10) || 1;
-      const offset = (pageNum - 1) * limitNum;
+      const offset = (pageNum - 1) * safeLimitNum;
 
       // Start building the query with optimized aggregations
       let query = db('songs')
@@ -313,7 +316,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Apply pagination
-      const songsQuery = query.clone().offset(offset).limit(limitNum);
+      const songsQuery = query.clone().offset(offset).limit(safeLimitNum);
       const songs = await songsQuery;
 
       // Clone the existing query for total count

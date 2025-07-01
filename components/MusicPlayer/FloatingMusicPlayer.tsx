@@ -288,7 +288,7 @@ export default function FloatingMusicPlayer() {
         >
           {/* Queue Header - Sticky */}
           <div className="sticky top-0 z-10 p-4 border-b border-border flex items-center justify-between bg-background">
-            <h3 className="text-lg font-semibold">Up Next</h3>
+            <h3 className="text-lg font-semibold">Up Next ({queue.length} songs)</h3>
             <button onClick={() => setIsQueueVisible(false)} className="p-1 hover:bg-accent rounded">
               <X className="w-5 h-5" />
             </button>
