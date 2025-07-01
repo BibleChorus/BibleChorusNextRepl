@@ -61,7 +61,7 @@ export default function Forum() {
 
   const stats = {
     totalTopics: topics.length,
-    totalDiscussions: topics.reduce((acc, topic) => acc + (topic.comments?.length || 0), 0),
+    totalDiscussions: topics.reduce((acc, topic) => acc + (topic.replies_count || 0), 0),
     activeUsers: new Set(topics.map(t => t.username)).size
   };
 

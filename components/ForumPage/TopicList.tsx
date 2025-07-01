@@ -57,9 +57,9 @@ export const TopicList: React.FC<TopicListProps> = ({ topics }) => {
                             <h2 className="text-lg sm:text-xl font-bold line-clamp-2 group-hover/link:text-indigo-600 dark:group-hover/link:text-indigo-400 transition-colors duration-300 leading-tight">
                               {topic.title}
                             </h2>
-                            {topic.content && (
+                            {topic.preview && (
                               <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
-                                {topic.content.substring(0, 150)}...
+                                {topic.preview}
                               </p>
                             )}
                           </div>
@@ -98,13 +98,13 @@ export const TopicList: React.FC<TopicListProps> = ({ topics }) => {
                         })}
                       </time>
                     </div>
-                    {topic.comments && topic.comments.length > 0 && (
+                    {(topic.replies_count !== undefined && topic.replies_count > 0) && (
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-gradient-to-br from-emerald-200 to-emerald-300 dark:from-emerald-700 dark:to-emerald-600 rounded-full flex items-center justify-center">
                           <MessageSquare className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
                         </div>
                         <span className="font-medium text-emerald-700 dark:text-emerald-300">
-                          {topic.comments.length} {topic.comments.length === 1 ? 'reply' : 'replies'}
+                          {topic.replies_count} {topic.replies_count === 1 ? 'reply' : 'replies'}
                         </span>
                       </div>
                     )}
