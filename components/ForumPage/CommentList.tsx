@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import ReactHtmlParser from 'html-react-parser';
 import { cn } from "@/lib/utils";
+import { VoteButtons } from './VoteButtons';
 
 interface CommentListProps {
   comments: Comment[];
@@ -138,15 +139,14 @@ export const CommentList: React.FC<CommentListProps> = ({
               parentCommentId={comment.id}
             />
           )}
-          <div className="flex items-center mt-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleLike(comment.id)}
-            >
-              {likedComments.includes(comment.id) ? '👎 Unlike' : '👍 Like'} (
-              {likes[comment.id.toString()] || 0})
-            </Button>
+          <div className="flex items-center gap-4 mt-2">
+            <VoteButtons
+              itemId={comment.id}
+              itemType="comment"
+              initialUpvotes={comment.upvotes || 0}
+              initialDownvotes={comment.downvotes || 0}
+              initialUserVote={comment.userVote}
+            />
           </div>
           <div className="mt-2">
             {renderComments(commentList, comment.id, depth + 1)}

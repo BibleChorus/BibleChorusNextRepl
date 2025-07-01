@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Topic } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { categoryIcons, CategoryIconName } from '@/lib/categoryIcons';
+import { VoteButtons } from './VoteButtons';
 
 interface TopicListProps {
   topics: Topic[];
@@ -16,20 +17,31 @@ export const TopicList: React.FC<TopicListProps> = ({ topics }) => {
         
         return (
           <div key={topic.id} className="p-4 bg-card rounded-lg shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <Link href={`/Forum/topics/${topic.id}`} className="flex items-center">
-                <div className="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full mr-3">
-                  <CategoryIcon className="h-6 w-6 text-primary" />
+            <div className="flex items-start gap-3">
+              <VoteButtons
+                itemId={topic.id}
+                itemType="topic"
+                initialUpvotes={topic.upvotes || 0}
+                initialDownvotes={topic.downvotes || 0}
+                initialUserVote={topic.userVote}
+              />
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <Link href={`/Forum/topics/${topic.id}`} className="flex items-center">
+                    <div className="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full mr-3">
+                      <CategoryIcon className="h-6 w-6 text-primary" />
+                    </div>
+                    <h2 className="text-xl font-semibold hover:underline">{topic.title}</h2>
+                  </Link>
+                  {topic.category && (
+                    <Badge variant="secondary">{topic.category}</Badge>
+                  )}
                 </div>
-                <h2 className="text-xl font-semibold hover:underline">{topic.title}</h2>
-              </Link>
-              {topic.category && (
-                <Badge variant="secondary">{topic.category}</Badge>
-              )}
+                <p className="text-sm text-muted-foreground">
+                  Posted by {topic.username} on {new Date(topic.created_at).toLocaleDateString()}
+                </p>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Posted by {topic.username} on {new Date(topic.created_at).toLocaleDateString()}
-            </p>
           </div>
         );
       })}
