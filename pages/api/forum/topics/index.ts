@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
+import jwt from 'jsonwebtoken';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
@@ -7,6 +8,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (method === 'GET') {
     // Fetch all topics
     try {
+      // Get user ID from token if available
+      let userId: number | null = null;
+      const token = req.cookies.token;
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+          userId = decoded.userId;
+        } catch (error) {
+          // Token invalid, continue without user context
+        }
+      }
+
       const topics = await db('forum_topics')
         .join('users', 'forum_topics.user_id', 'users.id')
         .leftJoin('forum_categories', 'forum_topics.category_id', 'forum_categories.id')
@@ -16,6 +29,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           db.raw('COALESCE(forum_categories.name, ?) as category', ['Uncategorized'])
         )
         .orderBy('forum_topics.created_at', 'desc');
+
+      // If user is logged in, get their votes
+      if (userId) {
+        const userVotes = await db('forum_votes')
+          .where({ user_id: userId })
+          .whereNotNull('topic_id')
+          .select('topic_id', 'vote_value');
+
+        const voteMap = new Map(userVotes.map(v => [v.topic_id, v.vote_value]));
+        
+        // Add user vote to each topic
+        topics.forEach(topic => {
+          topic.userVote = voteMap.get(topic.id) || 0;
+        });
+      }
 
       res.status(200).json(topics);
     } catch (error) {

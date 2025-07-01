@@ -65,6 +65,10 @@ export interface Topic {
   category?: string;
   category_id?: number;
   profile_image_url?: string;
+  upvotes: number;
+  downvotes: number;
+  score: number;
+  userVote?: number; // -1, 0, or 1 for the current user's vote
 }
 
 export interface Comment {
@@ -75,6 +79,10 @@ export interface Comment {
   topic_id: number;
   created_at: string;
   parent_comment_id?: number;
+  upvotes: number;
+  downvotes: number;
+  score: number;
+  userVote?: number; // -1, 0, or 1 for the current user's vote
 }
 
 export interface SongComment {

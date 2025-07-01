@@ -14,6 +14,7 @@ export default function Forum() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'popular'>('recent');
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -38,10 +39,17 @@ export default function Forum() {
     fetchCategories();
   }, []);
 
-  const filteredTopics = topics.filter((topic) =>
-    topic.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (selectedCategory === 'all' || topic.category === selectedCategory)
-  );
+  const filteredTopics = topics
+    .filter((topic) =>
+      topic.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (selectedCategory === 'all' || topic.category === selectedCategory)
+    )
+    .sort((a, b) => {
+      if (sortBy === 'popular') {
+        return (b.score || 0) - (a.score || 0);
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -55,26 +63,37 @@ export default function Forum() {
         {user && <NewTopicDialog onTopicCreated={(newTopic: Topic) => setTopics([newTopic, ...topics])} />}
       </div>
 
-      <div className="flex space-x-4 mb-4">
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <Input
           placeholder="Search topics..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-grow"
         />
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.name}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.name}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={(value: 'recent' | 'popular') => setSortBy(value)}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">Most Recent</SelectItem>
+              <SelectItem value="popular">Most Popular</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <TopicList topics={filteredTopics} />
