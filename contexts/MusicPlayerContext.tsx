@@ -79,11 +79,18 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateQueue = (newQueue: MusicPlayerSong[]) => {
-    setQueue(newQueue);
+    // If shuffle is active, shuffle the new queue
+    const queueToSet = isShuffling ? shuffleArray(newQueue) : newQueue;
+    setQueue(queueToSet);
     if (currentSong) {
-      const newIndex = newQueue.findIndex((s) => s.id === currentSong.id);
+      const newIndex = queueToSet.findIndex((s) => s.id === currentSong.id);
       if (newIndex !== -1) {
         setCurrentIndex(newIndex);
+      } else if (queueToSet.length > 0) {
+        // If current song is not in the new queue, reset to first song but don't auto-play
+        setCurrentIndex(0);
+        // Optionally, you could set the current song to null or the first song in queue
+        // For now, we'll keep the current song but it won't be in the queue
       }
     }
   };
@@ -226,6 +233,18 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
       } catch (err) {
         console.error('Error loading songs for shuffle:', err);
+      }
+    } else if (isShuffling && shuffleLoaderRef.current) {
+      // When turning shuffle off, restore the original order
+      try {
+        const allSongs = await shuffleLoaderRef.current();
+        setQueue(allSongs); // Set unshuffled queue
+        if (currentSong) {
+          const idx = allSongs.findIndex((s) => s.id === currentSong.id);
+          if (idx !== -1) setCurrentIndex(idx);
+        }
+      } catch (err) {
+        console.error('Error loading songs for unshuffle:', err);
       }
     }
     setIsShuffling(!isShuffling);
