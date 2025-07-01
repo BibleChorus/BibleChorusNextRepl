@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import {
   Play,
@@ -56,6 +56,8 @@ export default function FloatingMusicPlayer() {
   const [duration, setDuration] = useState<number>(0);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
   const [isLyricsBibleDialogOpen, setIsLyricsBibleDialogOpen] = useState(false);
+  const [isQueueScrollable, setIsQueueScrollable] = useState(false);
+  const queueListRef = useRef<HTMLDivElement>(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isSmallMobile = useMediaQuery('(max-width: 400px)');
@@ -93,6 +95,15 @@ export default function FloatingMusicPlayer() {
   useEffect(() => {
     console.log('Current Song:', currentSong);
   }, [currentSong]);
+
+  // Check if queue list is scrollable
+  useEffect(() => {
+    if (isQueueVisible && queueListRef.current) {
+      const element = queueListRef.current;
+      const isScrollable = element.scrollHeight > element.clientHeight;
+      setIsQueueScrollable(isScrollable);
+    }
+  }, [isQueueVisible, queue]);
 
   // Transform currentSong to match the Song interface
   const getSongForOptions = (song: MusicPlayerSong): Song => {
@@ -283,7 +294,7 @@ export default function FloatingMusicPlayer() {
             </button>
           </div>
           {/* Queue List - Scrollable */}
-          <div className="flex-1 overflow-y-auto">
+          <div ref={queueListRef} className="flex-1 overflow-y-auto">
             <div className="p-4">
               {queue.map((song, index) => (
                 <div
@@ -303,8 +314,8 @@ export default function FloatingMusicPlayer() {
                   <Play className="w-4 h-4 flex-shrink-0 ml-2" />
                 </div>
               ))}
-              {/* Ellipsis indicator */}
-              {queue.length > 0 && (
+              {/* Ellipsis indicator - only show when queue is actually scrollable */}
+              {isQueueScrollable && (
                 <div className="text-center py-4 text-muted-foreground">
                   <div className="flex items-center justify-center space-x-1">
                     <div className="w-1 h-1 bg-current rounded-full animate-pulse"></div>
