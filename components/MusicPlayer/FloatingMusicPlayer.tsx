@@ -56,7 +56,6 @@ export default function FloatingMusicPlayer() {
   const [duration, setDuration] = useState<number>(0);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
   const [isLyricsBibleDialogOpen, setIsLyricsBibleDialogOpen] = useState(false);
-  const [isQueueScrollable, setIsQueueScrollable] = useState(false);
   const queueListRef = useRef<HTMLDivElement>(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -95,15 +94,6 @@ export default function FloatingMusicPlayer() {
   useEffect(() => {
     console.log('Current Song:', currentSong);
   }, [currentSong]);
-
-  // Check if queue list is scrollable
-  useEffect(() => {
-    if (isQueueVisible && queueListRef.current) {
-      const element = queueListRef.current;
-      const isScrollable = element.scrollHeight > element.clientHeight;
-      setIsQueueScrollable(isScrollable);
-    }
-  }, [isQueueVisible, queue]);
 
   // Transform currentSong to match the Song interface
   const getSongForOptions = (song: MusicPlayerSong): Song => {
@@ -314,17 +304,6 @@ export default function FloatingMusicPlayer() {
                   <Play className="w-4 h-4 flex-shrink-0 ml-2" />
                 </div>
               ))}
-              {/* Ellipsis indicator - only show when queue is actually scrollable */}
-              {isQueueScrollable && (
-                <div className="text-center py-4 text-muted-foreground">
-                  <div className="flex items-center justify-center space-x-1">
-                    <div className="w-1 h-1 bg-current rounded-full animate-pulse"></div>
-                    <div className="w-1 h-1 bg-current rounded-full animate-pulse animation-delay-200"></div>
-                    <div className="w-1 h-1 bg-current rounded-full animate-pulse animation-delay-400"></div>
-                  </div>
-                  <p className="text-xs mt-2">Scroll for more tracks</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
