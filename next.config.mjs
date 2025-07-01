@@ -4,7 +4,8 @@ import { PHASE_PRODUCTION_BUILD } from 'next/constants.js'
 export default (phase, defaultConfig) => {
   const isProd = phase === PHASE_PRODUCTION_BUILD
 
-  if (isProd && !process.env.JWT_SECRET) {
+  // In production we want to ensure secrets exist, but allow tools like ESLint to run locally
+  if (isProd && !process.env.JWT_SECRET && process.env.SKIP_ENV_VALIDATION !== 'true') {
     throw new Error('JWT_SECRET environment variable is required for JWT authentication.')
   }
 

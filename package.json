@@ -6,7 +6,7 @@
     "dev": "next dev --port 3000 --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start --port 3000 --hostname 0.0.0.0",
-    "lint": "next lint",
+    "lint": "SKIP_ENV_VALIDATION=true next lint",
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
     "knex": "knex"
