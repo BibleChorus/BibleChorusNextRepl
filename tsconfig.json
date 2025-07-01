@@ -12,7 +12,8 @@
     "incremental": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -20,6 +21,12 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "next": [
+        "./node_modules/next/types/index.d.ts"
+      ],
+      "next/*": [
+        "./node_modules/next/types/*"
       ]
     },
     "plugins": [
