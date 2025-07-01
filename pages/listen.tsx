@@ -231,7 +231,8 @@ function ListenContent({
     filters: FilterOptions,
     page: number,
     user: User | null,
-    selectedPlaylist: string | null
+    selectedPlaylist: string | null,
+    limit: number = 20 // New optional limit parameter (default 20)
   ) => {
     const params = new URLSearchParams()
 
@@ -300,7 +301,7 @@ function ListenContent({
     }
 
     params.append('page', page.toString())
-    params.append('limit', '20')
+    params.append('limit', limit.toString())
 
     // Add sort options
     if (filters.sortBy) {
@@ -376,7 +377,8 @@ function ListenContent({
         debouncedFilters,
         index + 1,
         user,
-        selectedPlaylist
+        selectedPlaylist,
+        20 // keep default page size for infinite scroll
       )}`,
     fetcher,
     {
@@ -415,14 +417,15 @@ function ListenContent({
   const totalSongs = data?.[0]?.total || 0
 
   const fetchAllSongs = useCallback(async (): Promise<Song[]> => {
-    const query = buildQueryString(debouncedFilters, 1, user, selectedPlaylist)
+    const countQuery = buildQueryString(debouncedFilters, 1, user, selectedPlaylist, 1)
     // First fetch to get the total count
-    const countResult = await fetcher(`/api/songs?${query}&limit=1`)
+    const countResult = await fetcher(`/api/songs?${countQuery}`)
     const total = countResult.total || 0
     
     // If there are songs, fetch all of them
     if (total > 0) {
-      const result = await fetcher(`/api/songs?${query}&limit=${total}`)
+      const allSongsQuery = buildQueryString(debouncedFilters, 1, user, selectedPlaylist, total)
+      const result = await fetcher(`/api/songs?${allSongsQuery}`)
       return result.songs
     }
     return []
