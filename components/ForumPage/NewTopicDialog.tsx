@@ -27,9 +27,10 @@ import 'react-quill/dist/quill.snow.css';
 
 interface NewTopicDialogProps {
   onTopicCreated: (topic: any) => void;
+  children?: React.ReactNode;
 }
 
-export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated }) => {
+export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, children }) => {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -75,7 +76,7 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated }
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>Create New Topic</Button>
+        {children || <Button>Create New Topic</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
