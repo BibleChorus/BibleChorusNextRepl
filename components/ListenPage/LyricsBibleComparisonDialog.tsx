@@ -10,6 +10,7 @@ import { BookOpen } from 'lucide-react';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface LyricsBibleComparisonDialogProps {
   isOpen: boolean;
@@ -88,7 +89,7 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
     return verses.map((verse, index) => (
       <div key={index} className="mb-4">
         <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
-        <div dangerouslySetInnerHTML={{ __html: verse.text }} />
+        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(verse.text) }} />
       </div>
     ));
   };

@@ -140,9 +140,6 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       audioRef.current.src = song.audioUrl;
       audioRef.current.play();
     }
-
-    // Increment play count when a new song starts playing
-    incrementPlayCount(song.id);
   };
 
   // Pause playback
