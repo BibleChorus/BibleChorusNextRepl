@@ -421,7 +421,7 @@ function ListenContent({
   }, [debouncedFilters, user, selectedPlaylist, totalSongs])
 
 
-  const toPlayerSong = (s: Song) => ({
+  const toPlayerSong = useCallback((s: Song) => ({
     id: s.id,
     title: s.title,
     artist: s.artist || s.username,
@@ -433,7 +433,7 @@ function ListenContent({
     bible_verses: s.bible_verses,
     bible_translation_used: s.bible_translation_used,
     uploaded_by: s.uploaded_by,
-  })
+  }), [])
 
   useEffect(() => {
     registerShuffleLoader(async () => {
@@ -441,6 +441,21 @@ function ListenContent({
       return all.map(toPlayerSong)
     })
   }, [fetchAllSongs, registerShuffleLoader])
+
+  // Update shuffle queue when filters or playlist change while shuffle is active
+  useEffect(() => {
+    if (isShuffling) {
+      fetchAllSongs()
+        .then((all) => {
+          const shuffledSongs = all.map(toPlayerSong)
+          // Only update if we actually have songs that match the current criteria
+          if (shuffledSongs.length > 0) {
+            updateQueue(shuffledSongs)
+          }
+        })
+        .catch((err) => console.error('Error updating shuffle queue after filter/playlist change:', err))
+    }
+  }, [isShuffling, debouncedFilters, selectedPlaylist, fetchAllSongs, updateQueue, toPlayerSong])
 
   useEffect(() => {
     if (isShuffling && queue.length < totalSongs && totalSongs > songs.length) {
