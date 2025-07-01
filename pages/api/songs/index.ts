@@ -107,9 +107,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .leftJoin(
           db('votes')
             .select('song_id')
-            .sum(db.raw(`CASE WHEN vote_type = 'Best Musically' THEN vote_value ELSE 0 END AS best_musically_votes`))
-            .sum(db.raw(`CASE WHEN vote_type = 'Best Lyrically' THEN vote_value ELSE 0 END AS best_lyrically_votes`))
-            .sum(db.raw(`CASE WHEN vote_type = 'Best Overall' THEN vote_value ELSE 0 END AS best_overall_votes`))
+            .select(db.raw(`SUM(CASE WHEN vote_type = 'Best Musically' THEN vote_value ELSE 0 END) AS best_musically_votes`))
+            .select(db.raw(`SUM(CASE WHEN vote_type = 'Best Lyrically' THEN vote_value ELSE 0 END) AS best_lyrically_votes`))
+            .select(db.raw(`SUM(CASE WHEN vote_type = 'Best Overall' THEN vote_value ELSE 0 END) AS best_overall_votes`))
             .groupBy('song_id')
             .as('vote_counts'),
           'songs.id',
