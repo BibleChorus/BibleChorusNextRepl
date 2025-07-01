@@ -54,6 +54,11 @@ declare module 'lucide-react' {
   // component.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const IconComponent: React.FC<LucideProps & { [key: string]: any }>
+  export const BookOpen: React.FC<LucideProps>
+  export const X: React.FC<LucideProps>
+  export const Check: React.FC<LucideProps>
+  export const Play: React.FC<LucideProps>
+  export const Pause: React.FC<LucideProps>
   export default IconComponent
 }
 
@@ -63,4 +68,14 @@ declare module 'axios' {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const axios: any
   export default axios
+}
+
+// Fallback for React types in case they are missing in the environment.
+// These are very minimal and should be replaced by @types/react once installed.
+// The declarations merge with the real React typings if they exist, so they
+// are safe to keep.
+declare module 'react' {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const React: any
+  export default React
 }
