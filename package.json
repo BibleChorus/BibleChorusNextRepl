@@ -102,6 +102,8 @@
     "@types/bcrypt": "^5.0.2",
     "@types/formidable": "^3.4.5",
     "@types/jsonwebtoken": "^9.0.7",
+    "@types/next": "^8.0.7",
+    "@types/next-auth": "^3.13.0",
     "@types/node": "^20.19.2",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
