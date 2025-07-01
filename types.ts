@@ -66,9 +66,17 @@ export interface Topic {
   category?: string;
   category_id?: number;
   profile_image_url?: string;
-  upvotes: number;
-  downvotes: number;
-  score: number;
+  upvotes?: number;
+  downvotes?: number;
+  score?: number;
+  /**
+   * Short text preview (first 140 characters, for list display).
+   */
+  preview?: string;
+  /**
+   * Cached number of replies for quick list rendering.
+   */
+  replies_count?: number;
   userVote?: number; // -1, 0, or 1 for the current user's vote
 }
 

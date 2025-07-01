@@ -34,7 +34,7 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onClick, gradient
       {hasCoverArt ? (
         <div className="absolute inset-0">
           <Image
-            src={playlist.cover_art_url}
+            src={playlist.cover_art_url!}
             alt={`${playlist.name} Cover`}
             layout="fill"
             objectFit="cover"
