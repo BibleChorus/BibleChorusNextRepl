@@ -27,6 +27,13 @@
         "name": "next"
       }
     ],
+    "types": [
+      "node",
+      "react",
+      "react-dom",
+      "next",
+      "next-auth"
+    ],
     "strictNullChecks": true
   },
   "include": [
