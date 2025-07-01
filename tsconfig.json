@@ -27,7 +27,12 @@
         "name": "next"
       }
     ],
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "types": [
+      "react",
+      "react-dom",
+      "node"
+    ]
   },
   "include": [
     "next-env.d.ts",
