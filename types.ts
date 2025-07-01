@@ -70,6 +70,8 @@ export interface Topic {
   downvotes: number;
   score: number;
   userVote?: number; // -1, 0, or 1 for the current user's vote
+  preview?: string; // Short preview snippet of the topic content
+  replies_count?: number; // Number of replies/discussions under the topic
 }
 
 export interface Comment {
