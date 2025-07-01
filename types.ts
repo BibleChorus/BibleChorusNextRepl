@@ -8,6 +8,7 @@ export interface Playlist {
   cover_art_url?: string;
   user_id: number;
   creator_username?: string;
+  song_count?: number;
 }
 
 export interface Song {
