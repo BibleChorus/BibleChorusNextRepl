@@ -2,7 +2,7 @@ import React from 'react';
 import type { FC } from 'react';
 import Link from 'next/link';
 import { Topic } from '@/types';
-import { Badge } from '@/components/ui/badge';
+import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { categoryIcons, CategoryIconName } from '@/lib/categoryIcons';
 import { VoteButtons } from './VoteButtons';
 import { MessageSquare, User, Calendar, ArrowRight } from 'lucide-react';
@@ -69,12 +69,15 @@ export const TopicList: FC<TopicListProps> = ({ topics }) => {
                     </div>
                     
                     {topic.category && (
-                      <Badge 
-                        variant="secondary" 
-                        className="flex-shrink-0 bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs sm:text-sm self-start"
-                      >
-                        {topic.category}
-                      </Badge>
+                      (() => {
+                        const badgeProps: BadgeProps = {
+                          variant: 'secondary',
+                          className: 'flex-shrink-0 bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs sm:text-sm self-start',
+                        };
+                        return (
+                          <Badge {...badgeProps}>{topic.category}</Badge>
+                        );
+                      })()
                     )}
                   </div>
                   
