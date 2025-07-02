@@ -81,58 +81,6 @@ declare module 're-resizable' {
 // }
 // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// Fallback stubs for commonly-used packages.  These are utilised only when the
-// real type declarations cannot be located (e.g. because the dependency was
-// not yet installed).  They purposefully contain the bare minimum surface area
-// required by this code-base – enough to satisfy the compiler without
-// re-declaring the full public API.  Replace with the official typings once
-// they become available in your environment.
-
-declare module 'react' {
-  /**
-   * Very minimal React typings – just enough for this project to compile if the
-   * real `@types/react` package is not installed.  All helpers are typed as
-   * `any` to avoid cascading type-chain errors.
-   */
-  export type ReactNode = any;
-  export interface FunctionComponent<P = {}> {
-    (props: P & { children?: ReactNode }): ReactNode;
-  }
-
-  export function useState<S = any>(initialState?: S | (() => S)): [S, (newState: S) => void];
-  export function useEffect(effect: () => void | (() => void), deps?: ReadonlyArray<any>): void;
-
-  export const Fragment: FunctionComponent;
-
-  /**
-   * Default export is typed as `any` so consumers can continue to import the
-   * namespace (`import React from "react"`).
-   */
-  const ReactStub: any;
-  export default ReactStub;
-}
-
-declare module 'next/head' {
-  import * as React from 'react';
-  const Head: React.ComponentType<React.PropsWithChildren<unknown>>;
-  export default Head;
-}
-
-declare module 'recharts' {
-  import * as React from 'react';
-  export const BarChart: React.ComponentType<any>;
-  export const Bar: React.ComponentType<any>;
-  export const CartesianGrid: React.ComponentType<any>;
-  export const XAxis: React.ComponentType<any>;
-  export const YAxis: React.ComponentType<any>;
-  export const Tooltip: React.ComponentType<any>;
-  export const Cell: React.ComponentType<any>;
-}
-
-declare module 'framer-motion' {
-  import * as React from 'react';
-  export const motion: { [key: string]: React.ComponentType<any> };
-  export const AnimatePresence: React.ComponentType<any>;
-}
+// Removed fallback stubs for React-related libraries – the project now relies on
+// the official `@types/*` packages that are listed in `devDependencies`.
 // ---------------------------------------------------------------------------
