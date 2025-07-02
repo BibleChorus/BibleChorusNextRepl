@@ -1,10 +1,10 @@
-import NextAuth, { DefaultSession } from "next-auth"
+import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import db from './db'
 
 // Extend the built-in session type
 declare module "next-auth" {
-  interface Session extends DefaultSession {
+  interface Session {
     user: {
       id: number;
       username: string;
@@ -12,7 +12,9 @@ declare module "next-auth" {
       is_moderator: boolean;
       email: string;
       profile_image_url: string | null;
-    } & DefaultSession["user"]
+      name?: string | null;
+      image?: string | null;
+    }
     access_token?: string;
   }
 
@@ -159,12 +161,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .first() as UserProfile | undefined
 
         if (dbUser) {
-          session.user.id = dbUser.id
-          session.user.username = dbUser.username
-          session.user.is_admin = dbUser.is_admin
-          session.user.is_moderator = dbUser.is_moderator
-          // Set profile image - prefer custom image if it exists
-          session.user.profile_image_url = dbUser.profile_image_url
+          session.user = {
+            ...session.user,
+            id: dbUser.id,
+            username: dbUser.username,
+            is_admin: dbUser.is_admin,
+            is_moderator: dbUser.is_moderator,
+            profile_image_url: dbUser.profile_image_url,
+            email: session.user.email || dbUser.email
+          }
         }
       }
 
