@@ -235,7 +235,7 @@ export default function Progress() {
               >
                 Track our collective journey of setting 
                 <span className="font-semibold text-slate-900 dark:text-white"> Scripture to song</span> and 
-                <span className="font-semibold text-slate-900 dark:text-white"> covering God's Word</span>
+                <span className="font-semibold text-slate-900 dark:text-white"> covering God&apos;s Word</span>
               </motion.p>
             </div>
 
