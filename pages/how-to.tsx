@@ -398,7 +398,7 @@ export default function HowTo() {
                         <Alert className="bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800 backdrop-blur-sm">
                           <AlertDescription>
                             <strong>Example:</strong><br />
-                            Title: 'The Lord, My Shepherd'<br />
+                            Title: &apos;The Lord, My Shepherd&apos;<br />
                             Genres: Pop, Indie, Folk<br />
                             Etc.
                           </AlertDescription>

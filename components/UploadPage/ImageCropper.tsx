@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react'
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { Button } from "@/components/ui/button"
+import Image from 'next/image'
 
 interface ImageCropperProps {
   imageUrl: string
@@ -92,10 +93,12 @@ export function ImageCropper({
         maxWidth={1260}
         maxHeight={1260}
       >
-        <img
+        <Image
           src={imageUrl}
           alt="Crop me"
           onLoad={(e) => onLoad(e.currentTarget)}
+          width={800}
+          height={600}
           style={{ 
             maxHeight: `${maxHeight - 100}px`,
             width: 'auto',
