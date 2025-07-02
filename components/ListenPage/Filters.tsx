@@ -4,7 +4,7 @@ import React, { Dispatch, SetStateAction, useState, useCallback, useEffect } fro
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark, Heart, Star, User } from "lucide-react"
+import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark, Heart, Star, User, Filter } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
@@ -279,6 +279,117 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       transition={{ duration: 0.3 }}
       className="space-y-2"
     >
+      {/* Active Filters Display */}
+      {(filterOptions.search || 
+        filterOptions.lyricsAdherence.length > 0 || 
+        filterOptions.isContinuous !== "all" || 
+        filterOptions.aiMusic !== "all" || 
+        filterOptions.genres.length > 0 || 
+        filterOptions.aiUsedForLyrics !== "all" || 
+        filterOptions.musicModelUsed || 
+        filterOptions.bibleTranslation || 
+        filterOptions.bibleBooks.length > 0 || 
+        Object.keys(filterOptions.bibleChapters || {}).length > 0 || 
+        filterOptions.bibleVerses.length > 0 || 
+        filterOptions.showLikedSongs || 
+        filterOptions.showBestMusically || 
+        filterOptions.showBestLyrically || 
+        filterOptions.showBestOverall || 
+        filterOptions.showMySongs) && (
+        <div className="mb-4 p-3 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Filter className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+              Current Filters
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {filterOptions.search && (
+              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Search: "{filterOptions.search}"
+              </span>
+            )}
+            {filterOptions.lyricsAdherence.map(value => (
+              <span key={value} className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Lyrics: {value.replace(/_/g, ' ')}
+              </span>
+            ))}
+            {filterOptions.isContinuous !== "all" && (
+              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Passage: {filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}
+              </span>
+            )}
+            {filterOptions.aiMusic !== "all" && (
+              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Music: {filterOptions.aiMusic === "true" ? "AI Generated" : "Human Composed"}
+              </span>
+            )}
+            {filterOptions.genres.map(genre => (
+              <span key={genre} className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Genre: {genre}
+              </span>
+            ))}
+            {filterOptions.aiUsedForLyrics !== "all" && (
+              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Lyrics: {filterOptions.aiUsedForLyrics === "true" ? "AI Generated" : "Human Written"}
+              </span>
+            )}
+            {filterOptions.musicModelUsed && (
+              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Model: {filterOptions.musicModelUsed}
+              </span>
+            )}
+            {filterOptions.bibleTranslation && (
+              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Translation: {filterOptions.bibleTranslation}
+              </span>
+            )}
+            {filterOptions.bibleBooks.map(book => (
+              <span key={book} className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Book: {book}
+              </span>
+            ))}
+            {Object.entries(filterOptions.bibleChapters || {}).map(([book, chapters]) =>
+              chapters.map(chapter => (
+                <span key={`${book}:${chapter}`} className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                  Chapter: {book} {chapter}
+                </span>
+              ))
+            )}
+            {filterOptions.bibleVerses.map(verse => (
+              <span key={verse} className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Verse: {verse}
+              </span>
+            ))}
+            {filterOptions.showLikedSongs && (
+              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Liked Songs
+              </span>
+            )}
+            {filterOptions.showBestMusically && (
+              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Best Musically
+              </span>
+            )}
+            {filterOptions.showBestLyrically && (
+              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Best Lyrically
+              </span>
+            )}
+            {filterOptions.showBestOverall && (
+              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                Best Overall
+              </span>
+            )}
+            {filterOptions.showMySongs && (
+              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                My Songs
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row items-center justify-between mb-2 space-y-2 sm:space-y-0">
         <div className="flex items-center justify-between w-full sm:w-auto">
           <div className="flex items-center space-x-1">
@@ -303,15 +414,6 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
             >
               <RefreshCw className="h-3 w-3 mr-1" />
               Clear
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsFilterExpanded(false)}
-              className="text-xs h-7 px-2"
-            >
-              <X className="h-3 w-3 mr-1" />
-              Close
             </Button>
           </div>
         </div>
@@ -402,7 +504,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           </Tooltip>
         </div>
 
-        {/* Clear Filters and Close Filters Buttons (visible on larger screens) */}
+        {/* Clear Filters Button (visible on larger screens) */}
         <div className="hidden sm:flex items-center space-x-1">
           <Button
             variant="outline"
@@ -412,15 +514,6 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           >
             <RefreshCw className="h-3 w-3" />
             Clear
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsFilterExpanded(false)}
-            className="flex items-center gap-1 h-7 text-xs"
-          >
-            Close
-            <X className="h-3 w-3" />
           </Button>
         </div>
       </div>
