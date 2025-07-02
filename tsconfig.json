@@ -32,10 +32,9 @@
       "node_modules/@types"
     ],
     "types": [
-      "react",
-      "react-dom",
       "node",
-      "next"
+      "react",
+      "react-dom"
     ],
     "strictNullChecks": true,
     "allowSyntheticDefaultImports": true
