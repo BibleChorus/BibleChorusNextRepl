@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Filters, FilterOptions } from "@/components/ProgressPage/Filters"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import { Filter, X, HelpCircle, Sparkles, PieChart, TrendingUp, BookOpen, Zap, Activity } from "lucide-react"
+import { Filter, X, HelpCircle, Sparkles, PieChart, TrendingUp, BookOpen, Zap } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Separator } from "@/components/ui/separator"
 import { PieChartGroup } from "@/components/ProgressPage/PieChartGroup"
@@ -253,7 +253,7 @@ export default function Progress() {
               <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-cyan-500/10">
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <BarChart3 className="relative w-10 h-10 mx-auto mb-4 text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
+                <TrendingUp className="relative w-10 h-10 mx-auto mb-4 text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
                 <div className="relative text-4xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 bg-clip-text text-transparent mb-2">{stats.booksWithProgress}</div>
                 <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Books with Songs</div>
               </div>
@@ -261,7 +261,7 @@ export default function Progress() {
               <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/10">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <Activity className="relative w-10 h-10 mx-auto mb-4 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300" />
+                <Zap className="relative w-10 h-10 mx-auto mb-4 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300" />
                 <div className="relative text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent mb-2">{stats.totalVerses.toLocaleString()}</div>
                 <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Total Bible Verses</div>
               </div>
@@ -298,7 +298,7 @@ export default function Progress() {
             <div className={`flex items-center justify-between transition-all duration-300 ${isHeaderVisible ? 'h-16' : 'h-12'}`}>
               <div className="flex items-center gap-4">
                 <div className="p-2 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-xl backdrop-blur-sm border border-emerald-500/20 dark:border-emerald-500/30">
-                  <BarChart3 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                  <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <h1 className={`text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent transition-opacity duration-300 ${isHeaderVisible ? 'opacity-100' : 'opacity-0'}`}>
                   Progress Map
@@ -380,7 +380,7 @@ export default function Progress() {
             >
               <div className="flex items-start gap-4">
                 <div className="p-2 bg-emerald-500/20 rounded-xl">
-                  <Activity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <Zap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Community Progress Tracking</h3>
@@ -419,7 +419,7 @@ export default function Progress() {
                   <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0 pb-6 bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-cyan-500/5 dark:from-emerald-500/10 dark:via-teal-500/10 dark:to-cyan-500/10 border-b border-white/20 dark:border-slate-700/50">
                     <div className="flex items-center gap-4">
                       <div className="p-3 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl backdrop-blur-sm border border-emerald-500/20 dark:border-emerald-500/30">
-                        <BarChart3 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                        <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                       </div>
                       <div>
                         <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
