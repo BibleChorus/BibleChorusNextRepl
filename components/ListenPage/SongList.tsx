@@ -370,12 +370,12 @@ const SongListItem = React.memo(function SongListItem({
     return 'No vote';
   };
 
-  const getVoteIcon = (voteType: string) => {
+  const getVoteIcon = (voteType: string, isNarrow: boolean = false) => {
     const voteValue = localVoteStates[voteType] || 0;
     const isUpvoted = voteValue === 1;
 
     const iconProps = {
-      className: 'h-4 w-4 mr-1',
+      className: isNarrow ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1',
     };
 
     if (isUpvoted) {
@@ -383,7 +383,7 @@ const SongListItem = React.memo(function SongListItem({
         case 'Best Musically':
           return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />;
         case 'Best Lyrically':
-          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />;
+          return <BookOpenFilled {...iconProps} style={{ color: '#22c55e' }} />;
         case 'Best Overall':
           return <StarFilled {...iconProps} style={{ color: '#eab308' }} />;
         default:
@@ -584,7 +584,7 @@ const SongListItem = React.memo(function SongListItem({
             onClick={() => handleLocalVoteClick('Best Musically')}
             className="flex items-center text-slate-500 hover:text-blue-500 transition-all duration-200 hover:scale-105"
           >
-            <Music className={`${isNarrowView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1'}`} />
+            {getVoteIcon('Best Musically', isNarrowView)}
             <span className="font-medium">{localVoteCounts['Best Musically'] || 0}</span>
           </button>
           
@@ -592,7 +592,7 @@ const SongListItem = React.memo(function SongListItem({
             onClick={() => handleLocalVoteClick('Best Lyrically')}
             className="flex items-center text-slate-500 hover:text-green-500 transition-all duration-200 hover:scale-105"
           >
-            <BookOpen className={`${isNarrowView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1'}`} />
+            {getVoteIcon('Best Lyrically', isNarrowView)}
             <span className="font-medium">{localVoteCounts['Best Lyrically'] || 0}</span>
           </button>
           
@@ -600,7 +600,7 @@ const SongListItem = React.memo(function SongListItem({
             onClick={() => handleLocalVoteClick('Best Overall')}
             className="flex items-center text-slate-500 hover:text-yellow-500 transition-all duration-200 hover:scale-105"
           >
-            <Star className={`${isNarrowView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1'}`} />
+            {getVoteIcon('Best Overall', isNarrowView)}
             <span className="font-medium">{localVoteCounts['Best Overall'] || 0}</span>
           </button>
           
