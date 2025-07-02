@@ -375,7 +375,7 @@ function UploadContent() {
 
   useEffect(() => {
     if (!watchAiUsedForLyrics) {
-      form.setValue("lyric_ai_prompt", undefined ?? "");
+      form.setValue("lyric_ai_prompt", "");
     }
     form.trigger("lyric_ai_prompt");
   }, [watchAiUsedForLyrics, form]);
