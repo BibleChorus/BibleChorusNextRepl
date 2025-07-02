@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Filters, FilterOptions } from "@/components/ProgressPage/Filters"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import { Filter, X, HelpCircle, Sparkles, PieChart, TrendingUp, BookOpen, Zap } from "lucide-react"
+import { Filter, X, HelpCircle, Sparkles, TrendingUp, BookOpen, Zap } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Separator } from "@/components/ui/separator"
 import { PieChartGroup } from "@/components/ProgressPage/PieChartGroup"
@@ -74,6 +74,7 @@ export default function Progress() {
   }, [filterOptions])
 
   const isSmallScreen = useMediaQuery("(max-width: 768px)")
+  const isMobile = useMediaQuery("(max-width: 640px)")
 
   // Change the initial state of isFilterExpanded to false
   const [isFilterExpanded, setIsFilterExpanded] = useState(false)
@@ -99,6 +100,17 @@ export default function Progress() {
         };
       })
     : []
+
+  // For mobile, create grouped data with only books that have progress
+  const mobileChartData = chartData
+    ? barChartData
+        .filter(book => book.filtered_book_percentage > 0)
+        .sort((a, b) => b.filtered_book_percentage - a.filtered_book_percentage)
+        .slice(0, 20) // Show top 20 books with progress
+    : []
+
+  // Mobile chart view state
+  const [mobileChartView, setMobileChartView] = useState<'top' | 'all'>('top')
 
   const removeFilter = (filterType: keyof FilterOptions, value?: string) => {
     setFilterOptions((prev) => {
@@ -451,65 +463,168 @@ export default function Progress() {
                       <div className="relative">
                         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-cyan-500/5 rounded-2xl -m-4"></div>
                         <div className="relative">
-                          <ChartContainer
-                            className={`${isSmallScreen ? 'min-h-[400px]' : 'min-h-[400px]'} max-w-full overflow-x-auto`}
-                            config={{}}
-                          >
-                                                         <BarChart
-                               key={`bar-chart-${isSmallScreen ? 'vertical' : 'horizontal'}`}
-                               data={barChartData}
-                               layout={isSmallScreen ? "vertical" : "horizontal"}
-                               width={isSmallScreen ? 750 : undefined}
-                               height={isSmallScreen ? Math.max(750, barChartData.length * 20) : 400}
-                               margin={isSmallScreen ? { top: 5, right: 20, left: -43, bottom: 5 } : { top: 5, right: 30, left: 5, bottom: 5 }}
-                             >
-                               <defs>
-                                 <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                   <stop offset="0%" stopColor="#10b981" />
-                                   <stop offset="50%" stopColor="#14b8a6" />
-                                   <stop offset="100%" stopColor="#06b6d4" />
-                                 </linearGradient>
-                               </defs>
-                               <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.3)" />
-                               {isSmallScreen ? (
-                                 <React.Fragment>
-                                   <XAxis type="number" tickFormatter={(value) => `${value.toFixed(2)}%`} />
-                                   <YAxis 
-                                     dataKey="book" 
-                                     type="category" 
-                                     width={100} 
-                                     tick={{ fontSize: 8 }}
-                                     interval={0}
-                                     tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
-                                   />
-                                 </React.Fragment>
-                               ) : (
-                                 <React.Fragment>
-                                   <XAxis 
-                                     dataKey="book" 
-                                     tick={{ fontSize: 11 }} 
-                                     angle={-40} 
-                                     textAnchor="end" 
-                                     interval={0} 
-                                     height={55}
-                                     tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
-                                   />
-                                   <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
-                                 </React.Fragment>
-                               )}
-                               <RechartsTooltip content={<ChartTooltipContent showPercentage />} />
-                               <Bar 
-                                 dataKey="filtered_book_percentage" 
-                                 fill="url(#barGradient)"
-                                 name="Percent Covered:"
-                                 radius={[4, 4, 0, 0]}
-                               >
-                                 {barChartData.map((entry, index) => (
-                                   <Cell key={`cell-${entry.book}-${index}`} />
-                                 ))}
-                               </Bar>
-                             </BarChart>
-                          </ChartContainer>
+                          {isMobile ? (
+                            // Mobile-optimized view
+                            <div className="space-y-6">
+                              {/* Mobile view toggle */}
+                              <div className="flex items-center justify-center gap-2 mb-6">
+                                <button
+                                  onClick={() => setMobileChartView('top')}
+                                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                                    mobileChartView === 'top'
+                                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
+                                      : 'bg-white/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/80'
+                                  }`}
+                                >
+                                  Top Books ({mobileChartData.length})
+                                </button>
+                                <button
+                                  onClick={() => setMobileChartView('all')}
+                                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                                    mobileChartView === 'all'
+                                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
+                                      : 'bg-white/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/80'
+                                  }`}
+                                >
+                                  All Books
+                                </button>
+                              </div>
+
+                              {mobileChartView === 'top' ? (
+                                // Top books list view - more readable on mobile
+                                <div className="space-y-3">
+                                  {mobileChartData.map((book, index) => (
+                                    <motion.div
+                                      key={book.book}
+                                      initial={{ opacity: 0, x: -20 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                                      className="flex items-center justify-between p-4 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-white/30 dark:border-slate-700/30 hover:bg-white/60 dark:hover:bg-slate-800/60 transition-all duration-300"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                                          {index + 1}
+                                        </div>
+                                        <div>
+                                          <h4 className="font-semibold text-slate-900 dark:text-white text-base">
+                                            {book.book}
+                                          </h4>
+                                          <div className="flex items-center gap-2 mt-1">
+                                            <div className="w-20 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                              <div 
+                                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                                                style={{ width: `${Math.min(book.filtered_book_percentage, 100)}%` }}
+                                              />
+                                            </div>
+                                            <span className="text-sm text-slate-600 dark:text-slate-400">
+                                              {book.filtered_book_percentage.toFixed(1)}%
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                                          {book.filtered_book_percentage.toFixed(1)}%
+                                        </div>
+                                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                                          covered
+                                        </div>
+                                      </div>
+                                    </motion.div>
+                                  ))}
+                                  
+                                  {mobileChartData.length === 0 && (
+                                    <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+                                      <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                      <p>No books have been covered yet with the current filters.</p>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                // Compact chart view for all books
+                                <ChartContainer
+                                  className="min-h-[500px] max-w-full"
+                                  config={{}}
+                                >
+                                  <BarChart
+                                    data={barChartData}
+                                    layout="vertical"
+                                    width={400}
+                                    height={Math.max(500, barChartData.length * 15)}
+                                    margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+                                  >
+                                    <defs>
+                                      <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stopColor="#10b981" />
+                                        <stop offset="50%" stopColor="#14b8a6" />
+                                        <stop offset="100%" stopColor="#06b6d4" />
+                                      </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.3)" />
+                                    <XAxis type="number" tickFormatter={(value) => `${value}%`} />
+                                    <YAxis 
+                                      dataKey="book" 
+                                      type="category" 
+                                      width={80} 
+                                      tick={{ fontSize: 10 }}
+                                      interval={0}
+                                      tickFormatter={(value) => value.length > 8 ? value.slice(0, 8) + '...' : value}
+                                    />
+                                    <RechartsTooltip content={<ChartTooltipContent showPercentage />} />
+                                    <Bar 
+                                      dataKey="filtered_book_percentage" 
+                                      fill="url(#barGradient)"
+                                      name="Percent Covered:"
+                                      radius={[0, 4, 4, 0]}
+                                    />
+                                  </BarChart>
+                                </ChartContainer>
+                              )}
+                            </div>
+                          ) : (
+                            // Desktop view (unchanged)
+                            <ChartContainer
+                              className="min-h-[400px] max-w-full overflow-x-auto"
+                              config={{}}
+                            >
+                              <BarChart
+                                data={barChartData}
+                                layout="horizontal"
+                                height={400}
+                                margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+                              >
+                                <defs>
+                                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#10b981" />
+                                    <stop offset="50%" stopColor="#14b8a6" />
+                                    <stop offset="100%" stopColor="#06b6d4" />
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.3)" />
+                                <XAxis 
+                                  dataKey="book" 
+                                  tick={{ fontSize: 11 }} 
+                                  angle={-40} 
+                                  textAnchor="end" 
+                                  interval={0} 
+                                  height={55}
+                                  tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
+                                />
+                                <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
+                                <RechartsTooltip content={<ChartTooltipContent showPercentage />} />
+                                <Bar 
+                                  dataKey="filtered_book_percentage" 
+                                  fill="url(#barGradient)"
+                                  name="Percent Covered:"
+                                  radius={[4, 4, 0, 0]}
+                                >
+                                  {barChartData.map((entry, index) => (
+                                    <Cell key={`cell-${entry.book}-${index}`} />
+                                  ))}
+                                </Bar>
+                              </BarChart>
+                            </ChartContainer>
+                          )}
                         </div>
                       </div>
                     )}
