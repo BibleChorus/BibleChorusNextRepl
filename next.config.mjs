@@ -4,8 +4,10 @@ import { PHASE_PRODUCTION_BUILD } from 'next/constants.js'
 export default (phase, defaultConfig) => {
   const isProd = phase === PHASE_PRODUCTION_BUILD
 
-  if (isProd && !process.env.JWT_SECRET && !process.env.NEXTAUTH_SECRET) {
-    throw new Error('JWT_SECRET or NEXTAUTH_SECRET environment variable is required for authentication.')
+  // Only check for auth secrets in production when they're actually needed
+  // Allow builds to proceed if secrets will be provided at runtime
+  if (isProd && process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET && !process.env.NEXTAUTH_SECRET) {
+    console.warn('Warning: JWT_SECRET or NEXTAUTH_SECRET not set. Ensure these are configured for production runtime.')
   }
 
   return {

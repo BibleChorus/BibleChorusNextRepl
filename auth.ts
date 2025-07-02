@@ -198,8 +198,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: true,
-        domain: 'biblechorus.com'
+        secure: process.env.NODE_ENV === 'production'
       }
     }
   }
