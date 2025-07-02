@@ -55,8 +55,17 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-6 relative"
     >
+      {/* Small X button in top right corner */}
+      <button
+        onClick={() => setIsFilterExpanded(false)}
+        className="absolute top-0 right-0 -mt-2 -mr-2 w-8 h-8 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 shadow-lg z-10"
+        aria-label="Close filters"
+      >
+        <X className="h-4 w-4" />
+      </button>
+
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-xl">
@@ -79,14 +88,6 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
             <RefreshCw className="h-4 w-4" />
             Clear Filters
           </Button>
-          <button
-            onClick={() => setIsFilterExpanded(false)}
-            className="text-sm flex items-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-200 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 px-3 py-2 rounded-xl"
-            aria-label="Close filters"
-          >
-            Close Filters
-            <X className="h-4 w-4 ml-1" />
-          </button>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
