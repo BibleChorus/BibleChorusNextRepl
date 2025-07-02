@@ -851,52 +851,25 @@ function ListenContent({
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="flex items-center gap-3"
               >
-                {/* Active Filters Preview */}
-                {getFilterTags().length > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500/5 to-purple-500/5 border border-indigo-500/20 backdrop-blur-sm">
-                    <Filter className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {getFilterTags().length} filter{getFilterTags().length !== 1 ? 's' : ''}
-                    </span>
-                    <button
-                      onClick={() => setFilterOptions({
-                        lyricsAdherence: [],
-                        isContinuous: "all",
-                        aiMusic: "all", 
-                        genres: [],
-                        aiUsedForLyrics: 'all',
-                        musicModelUsed: "",
-                        title: "",
-                        artist: "",
-                        bibleTranslation: "",
-                        bibleBooks: [],
-                        search: "",
-                        bibleChapters: {},
-                        bibleVerses: [],
-                        showLikedSongs: false,
-                        showBestMusically: false,
-                        showBestLyrically: false,
-                        showBestOverall: false,
-                        sortBy: 'mostRecent',
-                        sortOrder: 'desc',
-                        showMySongs: false,
-                      })}
-                      className="text-xs text-slate-500 hover:text-red-500 transition-colors"
-                    >
-                      Clear All
-                    </button>
-                  </div>
-                )}
-                
                 {/* Quick Action Buttons */}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setIsFilterExpanded(!isFilterExpanded)}
-                  className="h-9 px-3 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
+                  className={cn(
+                    "h-9 px-3 backdrop-blur-sm transition-all duration-300",
+                    getFilterTags().length > 0
+                      ? "bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border-indigo-500/50 text-indigo-700 dark:text-indigo-300 hover:from-indigo-600/30 hover:to-purple-600/30"
+                      : "bg-white/60 dark:bg-slate-700/60 border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
+                  )}
                 >
                   <Filter className="h-4 w-4 mr-2" />
                   Filters
+                  {getFilterTags().length > 0 && (
+                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-indigo-600/20 dark:bg-indigo-400/20 rounded-full">
+                      {getFilterTags().length}
+                    </span>
+                  )}
                 </Button>
                 
                 <Button
@@ -913,10 +886,18 @@ function ListenContent({
                   variant="outline"
                   size="sm"
                   onClick={() => setIsPlaylistExpanded(!isPlaylistExpanded)}
-                  className="h-9 px-3 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
+                  className={cn(
+                    "h-9 px-3 backdrop-blur-sm transition-all duration-300",
+                    selectedPlaylist
+                      ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-700 dark:text-purple-300 hover:from-purple-600/30 hover:to-pink-600/30"
+                      : "bg-white/60 dark:bg-slate-700/60 border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
+                  )}
                 >
                   <ListMusic className="h-4 w-4 mr-2" />
                   Playlists
+                  {selectedPlaylist && (
+                    <span className="ml-2 w-2 h-2 bg-purple-600/60 dark:bg-purple-400/60 rounded-full"></span>
+                  )}
                 </Button>
 
                 <Tooltip>
