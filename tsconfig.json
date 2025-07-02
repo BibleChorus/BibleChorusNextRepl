@@ -33,6 +33,7 @@
     ],
     "types": [
       "react",
+      "react-dom",
       "node",
       "next"
     ],
