@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GetServerSideProps } from 'next';
+import type { GetServerSideProps, NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 import db from '@/db';
@@ -11,6 +11,7 @@ import { BookCheck, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { Pdf } from '@/types';
 import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 
 interface PdfWithUser extends Pdf {
   username: string;
