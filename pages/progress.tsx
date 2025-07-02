@@ -8,12 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Filters, FilterOptions } from "@/components/ProgressPage/Filters"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import { Filter, X, HelpCircle, Sparkles, TrendingUp, BookOpen, Zap } from "lucide-react"
+import { Filter, X, Sparkles, TrendingUp, BookOpen, Zap } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Separator } from "@/components/ui/separator"
 import { PieChartGroup } from "@/components/ProgressPage/PieChartGroup"
 import { BIBLE_BOOKS } from "@/lib/constants"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
 
 interface ChartData {
   "Old Testament": {
@@ -316,45 +316,11 @@ export default function Progress() {
                   Progress Map
                 </h1>
               </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="p-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 cursor-help">
-                      <HelpCircle className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="max-w-xs">
-                    <p className="text-sm">
-                      This progress map shows the total Bible verses covered by all uploaded songs on BibleChorus. It reflects our community&apos;s collective effort in setting Scripture to music.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+
             </div>
           </div>
 
-          {/* Enhanced Filter Section */}
-          <AnimatePresence>
-            {isFilterExpanded && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="border-t border-white/20 dark:border-slate-700/50"
-              >
-                <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
-                  <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-white/30 dark:border-slate-700/30 p-4 sm:p-6">
-                    <Filters 
-                      filterOptions={filterOptions} 
-                      setFilterOptions={setFilterOptions}
-                      setIsFilterExpanded={setIsFilterExpanded}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+
         </motion.div>
 
         {/* Enhanced Filter Toggle Button */}
@@ -365,15 +331,34 @@ export default function Progress() {
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.2 }}
             onClick={() => setIsFilterExpanded(true)}
-            className={`fixed right-3 sm:right-6 z-40 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 hover:scale-110 group ${
-              isHeaderVisible ? 'top-20' : 'top-16'
-            }`}
+            className="fixed top-4 right-3 sm:right-6 z-40 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 hover:scale-110 group"
             aria-label="Expand filters"
           >
             <Filter className="h-5 w-5 sm:h-6 sm:w-6 group-hover:rotate-6 transition-transform duration-300" />
             <span className="absolute -top-2 -right-2 w-3 h-3 bg-gradient-to-br from-cyan-400 to-blue-400 rounded-full animate-pulse"></span>
           </motion.button>
         )}
+
+        {/* Filter Popup at top of page */}
+        <AnimatePresence>
+          {isFilterExpanded && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="fixed top-4 left-4 right-4 z-50 mx-auto max-w-6xl"
+            >
+              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-2xl shadow-2xl p-4 sm:p-6">
+                <Filters 
+                  filterOptions={filterOptions} 
+                  setFilterOptions={setFilterOptions}
+                  setIsFilterExpanded={setIsFilterExpanded}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Main Content */}
         <div className="container mx-auto px-2 sm:px-4 -mt-8 relative z-20">
