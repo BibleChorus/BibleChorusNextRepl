@@ -66,7 +66,7 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
   const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
   return (
-    <div className="p-6 bg-card rounded-lg shadow-md flex flex-col md:flex-row md:items-center">
+    <div className="group p-6 bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-2xl flex flex-col md:flex-row md:items-center transition-all duration-500 hover:scale-[1.02]">
       {/* Song Art */}
       <div className="flex-shrink-0 w-full md:w-64 h-64 relative mb-4 md:mb-0 md:mr-6">
         <Image

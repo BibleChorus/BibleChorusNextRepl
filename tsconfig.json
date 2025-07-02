@@ -27,6 +27,17 @@
         "name": "next"
       }
     ],
+    "typeRoots": [
+      "types",
+      "node_modules/@types"
+    ],
+    "types": [
+      "node",
+      "react",
+      "react-dom",
+      "next",
+      "next-auth"
+    ],
     "strictNullChecks": true
   },
   "include": [

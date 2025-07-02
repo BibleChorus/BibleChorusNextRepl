@@ -18,6 +18,7 @@ import axios from 'axios';
 import { toast } from "sonner";
 import { uploadFile } from '@/lib/uploadUtils'; // Import the uploadFile function
 import { User } from '@/types'; // Ensure User type is imported
+import { motion } from 'framer-motion';
 
 interface PlaylistPageProps {
   playlist: Playlist;
@@ -171,7 +172,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
   }, [playlist.id, playlist.name, creatorUsername]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50/50 via-white to-fuchsia-50/30 dark:from-violet-950/50 dark:via-slate-900 dark:to-fuchsia-950/30">
       <Head>
         <title>{`${playlist.name} by ${creatorUsername} - BibleChorus`}</title>
         <meta property="og:title" content={`${playlist.name} by ${creatorUsername}`} />
@@ -183,7 +184,12 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
       </Head>
 
       {/* Playlist Banner */}
-      <div className="relative h-64 sm:h-80 w-full mb-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative h-64 sm:h-80 w-full mb-8 overflow-hidden"
+      >
         <Image
           src={playlist.cover_art_url ? `${CDN_URL}${playlist.cover_art_url}` : '/biblechorus-icon.png'}
           alt={`${playlist.name} cover art`}
@@ -246,7 +252,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
             <Pencil className="h-4 w-4" />
           </Button>
         )}
-      </div>
+      </motion.div>
 
       {/* Song List */}
       <main className="container mx-auto px-4 py-6">
