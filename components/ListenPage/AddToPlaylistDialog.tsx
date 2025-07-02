@@ -95,12 +95,16 @@ export function AddToPlaylistDialog({ isOpen, onClose, songId }: AddToPlaylistDi
           </DialogDescription>
         </DialogHeader>
         <Select onValueChange={setSelectedPlaylistId} value={selectedPlaylistId}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-12">
             <SelectValue placeholder="Select a playlist" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
             {playlists.map((playlist) => (
-              <SelectItem key={playlist.id} value={playlist.id.toString()}>
+              <SelectItem 
+                key={playlist.id} 
+                value={playlist.id.toString()}
+                className="hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-all duration-200 rounded-lg"
+              >
                 <div className="flex items-center">
                   <ListMusic className="w-4 h-4 mr-2" />
                   {playlist.name}

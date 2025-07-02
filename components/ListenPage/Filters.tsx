@@ -923,20 +923,20 @@ interface FilterSelectProps {
 function FilterSelect({ title, value, onChange, options, icon }: FilterSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full h-8 text-xs">
+      <SelectTrigger className="w-full bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs">
         <div className="flex items-center">
           {React.cloneElement(icon as React.ReactElement, { className: "h-3 w-3 mr-1" })}
           <SelectValue placeholder={title} />
         </div>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
         <SelectGroup>
-          <SelectLabel className="text-xs">{title}</SelectLabel>
+          <SelectLabel className="text-emerald-600 dark:text-emerald-400 font-semibold text-xs">{title}</SelectLabel>
           {options.map((option) => (
             <SelectItem 
               key={option.value} 
               value={option.value || '_empty_'}
-              className="text-xs"
+              className="text-xs hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-all duration-200 rounded-lg"
             >
               {option.label}
             </SelectItem>

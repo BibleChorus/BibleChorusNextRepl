@@ -119,10 +119,10 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
                 open={openTranslation}
                 onOpenChange={setOpenTranslation}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-12">
                   <SelectValue placeholder="Select Translation" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
                   <div className="p-2">
                     <Input
                       placeholder="Search translations..."
@@ -131,7 +131,11 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
                       className="mb-2"
                     />
                     {filteredTranslations.map((option) => (
-                      <SelectItem key={option.shortName} value={option.shortName}>
+                      <SelectItem 
+                        key={option.shortName} 
+                        value={option.shortName}
+                        className="hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-all duration-200 rounded-lg"
+                      >
                         {option.shortName} - {option.fullName}
                       </SelectItem>
                     ))}
