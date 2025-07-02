@@ -80,3 +80,40 @@ declare module 're-resizable' {
 //   export const AnimatePresence: React.ComponentType<any>;
 // }
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Fallback stubs for commonly-used packages.  These are utilised only when the
+// real type declarations cannot be located (e.g. because the dependency was
+// not yet installed).  They purposefully contain the bare minimum surface area
+// required by this code-base – enough to satisfy the compiler without
+// re-declaring the full public API.  Replace with the official typings once
+// they become available in your environment.
+
+declare module 'react' {
+  import * as React from 'react';
+  export = React;
+}
+
+declare module 'next/head' {
+  import * as React from 'react';
+  const Head: React.ComponentType<React.PropsWithChildren<unknown>>;
+  export default Head;
+}
+
+declare module 'recharts' {
+  import * as React from 'react';
+  export const BarChart: React.ComponentType<any>;
+  export const Bar: React.ComponentType<any>;
+  export const CartesianGrid: React.ComponentType<any>;
+  export const XAxis: React.ComponentType<any>;
+  export const YAxis: React.ComponentType<any>;
+  export const Tooltip: React.ComponentType<any>;
+  export const Cell: React.ComponentType<any>;
+}
+
+declare module 'framer-motion' {
+  import * as React from 'react';
+  export const motion: { [key: string]: React.ComponentType<any> };
+  export const AnimatePresence: React.ComponentType<any>;
+}
+// ---------------------------------------------------------------------------
