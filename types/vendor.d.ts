@@ -90,8 +90,27 @@ declare module 're-resizable' {
 // they become available in your environment.
 
 declare module 'react' {
-  import * as React from 'react';
-  export = React;
+  /**
+   * Very minimal React typings – just enough for this project to compile if the
+   * real `@types/react` package is not installed.  All helpers are typed as
+   * `any` to avoid cascading type-chain errors.
+   */
+  export type ReactNode = any;
+  export interface FunctionComponent<P = {}> {
+    (props: P & { children?: ReactNode }): ReactNode;
+  }
+
+  export function useState<S = any>(initialState?: S | (() => S)): [S, (newState: S) => void];
+  export function useEffect(effect: () => void | (() => void), deps?: ReadonlyArray<any>): void;
+
+  export const Fragment: FunctionComponent;
+
+  /**
+   * Default export is typed as `any` so consumers can continue to import the
+   * namespace (`import React from "react"`).
+   */
+  const ReactStub: any;
+  export default ReactStub;
 }
 
 declare module 'next/head' {

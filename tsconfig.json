@@ -36,7 +36,8 @@
       "node",
       "next"
     ],
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "next-env.d.ts",
