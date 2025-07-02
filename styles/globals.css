@@ -61,9 +61,9 @@ a {
     --chart-2: 215 20% 65%;
  
     /* Update these variables for the chart colors */
-    --chart-purple: 270 50% 60%;
+    --chart-purple: 158 64% 52%; /* Emerald color to match theme */
     --chart-gray: 215 20% 65%;
-    --chart-uncovered: 0 0% 0%; /* Black for light mode */
+    --chart-uncovered: 210 40% 96%; /* Light gray for light mode */
   }
  
   .dark {
@@ -100,9 +100,9 @@ a {
     --chart-2: 215 16% 47%;
  
     /* Update these variables for the chart colors in dark mode */
-    --chart-purple: 270 50% 70%;
+    --chart-purple: 158 64% 52%; /* Emerald color to match theme */
     --chart-gray: 215 16% 47%;
-    --chart-uncovered: 0 0% 100%; /* White for dark mode */
+    --chart-uncovered: 217.2 32.6% 17.5%; /* Dark gray for dark mode */
   }
 }
 

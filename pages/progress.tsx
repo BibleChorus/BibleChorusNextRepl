@@ -376,7 +376,7 @@ export default function Progress() {
         )}
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 -mt-12 relative z-20">
+        <div className="container mx-auto px-4 -mt-8 relative z-20">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -388,7 +388,7 @@ export default function Progress() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.7 }}
-              className="mb-8 p-6 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:via-teal-500/20 dark:to-cyan-500/20 backdrop-blur-sm border border-emerald-500/20 dark:border-emerald-500/30 rounded-2xl"
+              className="mb-10 p-6 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:via-teal-500/20 dark:to-cyan-500/20 backdrop-blur-sm border border-emerald-500/20 dark:border-emerald-500/30 rounded-2xl"
             >
               <div className="flex items-start gap-4">
                 <div className="p-2 bg-emerald-500/20 rounded-xl">
@@ -405,7 +405,7 @@ export default function Progress() {
               </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 gap-8">
+            <div className="grid grid-cols-1 gap-10">
               {/* Enhanced Pie Charts Section */}
               {chartData && (
                 <motion.div
@@ -516,17 +516,14 @@ export default function Progress() {
                                                 style={{ width: `${Math.min(book.filtered_book_percentage, 100)}%` }}
                                               />
                                             </div>
-                                            <span className="text-sm text-slate-600 dark:text-slate-400">
-                                              {book.filtered_book_percentage.toFixed(1)}%
-                                            </span>
                                           </div>
                                         </div>
                                       </div>
-                                      <div className="text-right">
-                                        <div className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                                      <div className="flex flex-col items-end text-right min-w-[80px]">
+                                        <div className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent leading-tight">
                                           {book.filtered_book_percentage.toFixed(1)}%
                                         </div>
-                                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
                                           covered
                                         </div>
                                       </div>

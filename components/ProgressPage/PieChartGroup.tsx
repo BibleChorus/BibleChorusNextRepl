@@ -97,40 +97,61 @@ export function PieChartGroup({ chartData, filterOptions, removeFilter }: PieCha
   ]
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 pb-2">
-        <CardTitle className="text-xl font-semibold">Bible Coverage Overview</CardTitle>
+    <Card className="border-0 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0 pb-6 bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-cyan-500/5 dark:from-emerald-500/10 dark:via-teal-500/10 dark:to-cyan-500/10 border-b border-white/20 dark:border-slate-700/50">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl backdrop-blur-sm border border-emerald-500/20 dark:border-emerald-500/30">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+          </div>
+          <div>
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Bible Coverage Overview</CardTitle>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              Scripture coverage breakdown by testament
+            </p>
+          </div>
+        </div>
         <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
           {getFilterTags().map((tag, index) => (
-            <Badge key={index} variant="secondary" className="flex items-center gap-1">
-              {tag.label}
+            <Badge 
+              key={index} 
+              variant="secondary" 
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl"
+            >
+              <span className="text-xs font-medium">{tag.label}</span>
               <X
-                className="h-3 w-3 cursor-pointer"
+                className="h-3 w-3 cursor-pointer hover:text-red-500 transition-colors duration-200"
                 onClick={() => removeFilter(tag.type, tag.value)}
               />
             </Badge>
           ))}
         </div>
       </CardHeader>
-      <CardContent>
-        {isSmallScreen ? (
-          <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
-            {pieCharts.map((chart, index) => (
-              <AccordionItem value={`item-${index}`} key={index}>
-                <AccordionTrigger>{chart.title}</AccordionTrigger>
-                <AccordionContent>
-                  <PieChartCard {...chart} />
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {pieCharts.map((chart, index) => (
-              <PieChartCard key={index} {...chart} />
-            ))}
+      <CardContent className="p-8">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-cyan-500/5 rounded-2xl -m-4"></div>
+          <div className="relative">
+            {isSmallScreen ? (
+              <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
+                {pieCharts.map((chart, index) => (
+                  <AccordionItem value={`item-${index}`} key={index} className="border-white/20 dark:border-slate-700/30">
+                    <AccordionTrigger className="text-lg font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent hover:no-underline">{chart.title}</AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                      <PieChartCard {...chart} />
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {pieCharts.map((chart, index) => (
+                  <div key={index} className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-white/30 dark:border-slate-700/30 p-6 hover:bg-white/60 dark:hover:bg-slate-800/60 transition-all duration-300">
+                    <PieChartCard {...chart} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   )

@@ -57,33 +57,31 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center space-x-2">
-          <h2 className="text-lg font-semibold">Filters</h2>
-          <Popover>
-            <PopoverTrigger>
-              <Info className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer" />
-            </PopoverTrigger>
-            <PopoverContent>
-              <p className="text-sm">
-                Adjust filters to refine your view of Bible coverage progress.
-              </p>
-            </PopoverContent>
-          </Popover>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-xl">
+            <Info className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Filters</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Adjust filters to refine your view of Bible coverage progress
+            </p>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           <Button
             variant="outline"
             size="sm"
             onClick={clearFilters}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl"
           >
             <RefreshCw className="h-4 w-4" />
             Clear Filters
           </Button>
           <button
             onClick={() => setIsFilterExpanded(false)}
-            className="text-sm flex items-center text-muted-foreground hover:text-foreground"
+            className="text-sm flex items-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-200 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 px-3 py-2 rounded-xl"
             aria-label="Close filters"
           >
             Close Filters
@@ -91,14 +89,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           </button>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Popover open={openLyricsAdherence} onOpenChange={setOpenLyricsAdherence}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               role="combobox"
               aria-expanded={openLyricsAdherence}
-              className="w-full justify-between"
+              className="w-full justify-between bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-12"
             >
               {filterOptions.lyricsAdherence.length > 0
                 ? `${filterOptions.lyricsAdherence.length} selected`
@@ -106,21 +104,21 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full p-0">
-            <div className="p-2">
+          <PopoverContent className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
+            <div className="p-3">
               {lyricsAdherenceOptions.map((option) => (
                 <div
                   key={option.value}
                   className={cn(
-                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                    filterOptions.lyricsAdherence.includes(option.value) && "bg-accent"
+                    "flex cursor-pointer items-center rounded-xl px-3 py-2 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-all duration-200",
+                    filterOptions.lyricsAdherence.includes(option.value) && "bg-emerald-500/10 dark:bg-emerald-500/20"
                   )}
                   onClick={() => toggleLyricsAdherence(option.value)}
                 >
-                  <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                    {filterOptions.lyricsAdherence.includes(option.value) && <Check className="h-3 w-3" />}
+                  <div className="mr-3 h-4 w-4 border-2 border-emerald-500 rounded flex items-center justify-center">
+                    {filterOptions.lyricsAdherence.includes(option.value) && <Check className="h-3 w-3 text-emerald-500" />}
                   </div>
-                  {option.label}
+                  <span className="text-sm font-medium">{option.label}</span>
                 </div>
               ))}
             </div>
@@ -161,14 +159,18 @@ interface FilterSelectProps {
 function FilterSelect({ title, value, onChange, options }: FilterSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full">
+      <SelectTrigger className="w-full bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-12">
         <SelectValue placeholder={title} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
         <SelectGroup>
-          <SelectLabel>{title}</SelectLabel>
+          <SelectLabel className="text-emerald-600 dark:text-emerald-400 font-semibold">{title}</SelectLabel>
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem 
+              key={option.value} 
+              value={option.value}
+              className="hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-all duration-200 rounded-lg"
+            >
               {option.label}
             </SelectItem>
           ))}
