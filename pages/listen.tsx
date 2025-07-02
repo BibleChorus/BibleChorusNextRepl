@@ -919,8 +919,8 @@ function ListenContent({
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                 <Headphones className="relative w-10 h-10 mx-auto mb-4 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-500 bg-clip-text text-transparent mb-2">{songs.length}</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Now Playing</div>
+                <div className="relative text-4xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-500 bg-clip-text text-transparent mb-2">{queue.length}</div>
+                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">In Queue</div>
               </div>
             </motion.div>
             
