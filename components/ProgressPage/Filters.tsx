@@ -104,7 +104,12 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
+          <PopoverContent 
+            className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl" 
+            side="bottom" 
+            align="start"
+            sideOffset={4}
+          >
             <div className="p-3">
               {lyricsAdherenceOptions.map((option) => (
                 <div
@@ -162,7 +167,13 @@ function FilterSelect({ title, value, onChange, options }: FilterSelectProps) {
       <SelectTrigger className="w-full bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-12">
         <SelectValue placeholder={title} />
       </SelectTrigger>
-      <SelectContent className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
+      <SelectContent 
+        className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl"
+        position="popper"
+        side="bottom"
+        align="start"
+        sideOffset={4}
+      >
         <SelectGroup>
           <SelectLabel className="text-emerald-600 dark:text-emerald-400 font-semibold">{title}</SelectLabel>
           {options.map((option) => (

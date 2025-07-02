@@ -309,27 +309,10 @@ export default function Progress() {
           <div className="container mx-auto px-2 sm:px-4">
             <div className={`flex items-center justify-between transition-all duration-300 ${isHeaderVisible ? 'h-16' : 'h-12'}`}>
               <div className="flex items-center gap-4">
-                <div className="p-2 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-xl backdrop-blur-sm border border-emerald-500/20 dark:border-emerald-500/30">
-                  <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                </div>
                 <h1 className={`text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent transition-opacity duration-300 ${isHeaderVisible ? 'opacity-100' : 'opacity-0'}`}>
                   Progress Map
                 </h1>
               </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="p-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 cursor-help">
-                      <HelpCircle className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="max-w-xs">
-                    <p className="text-sm">
-                      This progress map shows the total Bible verses covered by all uploaded songs on BibleChorus. It reflects our community&apos;s collective effort in setting Scripture to music.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
             </div>
           </div>
 
@@ -366,7 +349,7 @@ export default function Progress() {
             transition={{ duration: 0.2 }}
             onClick={() => setIsFilterExpanded(true)}
             className={`fixed right-3 sm:right-6 z-40 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 hover:scale-110 group ${
-              isHeaderVisible ? 'top-20' : 'top-16'
+              isHeaderVisible ? 'top-4' : 'top-2'
             }`}
             aria-label="Expand filters"
           >
