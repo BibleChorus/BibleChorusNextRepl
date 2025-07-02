@@ -4,7 +4,7 @@ import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
 import { Filters } from '@/components/ListenPage/Filters'
 import { motion, AnimatePresence } from "framer-motion"
-import { Filter, X, Info, Save, Search, Check, ListMusic, ArrowUpDown, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Expand, Shrink, Music2, Headphones, TrendingUp, Sparkles } from "lucide-react"
+import { Filter, X, Info, Save, Search, Check, ListMusic, ArrowUpDown, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Expand, Shrink } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -827,341 +827,200 @@ function ListenContent({
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/30 dark:from-blue-950/50 dark:via-slate-900 dark:to-purple-950/30">
+      <div className="min-h-screen bg-background">
         <Head>
           <title>BibleChorus - Listen</title>
           <link rel="icon" href="/favicon.ico" />
         </Head>
 
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative overflow-hidden pb-16 pt-12"
-        >
-          {/* Enhanced Background Effects */}
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.08] via-purple-500/[0.06] to-indigo-500/[0.08] dark:from-blue-500/[0.15] dark:via-purple-500/[0.12] dark:to-indigo-500/[0.15]"></div>
-            <div className="absolute top-0 -left-8 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
-            <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-12 left-32 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(59,130,246,0.1),rgba(255,255,255,0))]"></div>
-          </div>
-          
-          <div className="relative z-10 container mx-auto px-4">
-            <div className="text-center mb-12">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.1 }}
-                className="mb-6"
-              >
-                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10 dark:from-blue-500/20 dark:via-purple-500/20 dark:to-indigo-500/20 backdrop-blur-md border border-blue-500/20 dark:border-blue-500/30 shadow-lg">
-                  <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent font-semibold">
-                    Discover Music
-                  </span>
-                </span>
-              </motion.div>
-              
-              <motion.h1 
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-6xl font-bold tracking-tight sm:text-7xl md:text-8xl"
-              >
-                <span className="block text-slate-900 dark:text-white mb-2">Listen &</span>
-                <span className="block relative">
-                  <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
-                    Explore
-                  </span>
-                  <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-full scale-x-0 animate-scale-x"></div>
-                </span>
-              </motion.h1>
-              
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="mt-8 text-xl text-slate-600 dark:text-slate-300 sm:text-2xl max-w-3xl mx-auto leading-relaxed"
-              >
-                Dive into a vast collection of 
-                <span className="font-semibold text-slate-900 dark:text-white"> Bible-inspired music</span> with 
-                <span className="font-semibold text-slate-900 dark:text-white"> powerful filters and playlists</span>
-              </motion.p>
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          {/* Header Section */}
+          <div className={`container mx-auto px-2 transition-all duration-300 ${isHeaderVisible ? 'h-12' : 'h-8'}`}>
+            <div className="flex items-center justify-between h-full">
+              <h1 className={`text-xl font-bold text-foreground transition-opacity duration-300 ${isHeaderVisible ? 'opacity-100' : 'opacity-0'}`}>
+                Listen to Songs
+              </h1>
             </div>
-
-            {/* Enhanced Stats Cards */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto"
-            >
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <Music2 className="relative w-10 h-10 mx-auto mb-4 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent mb-2">{totalSongs}</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Songs Available</div>
-              </div>
-              
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <ListMusic className="relative w-10 h-10 mx-auto mb-4 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-500 bg-clip-text text-transparent mb-2">{playlists?.length || 0}</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Playlists</div>
-              </div>
-              
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <Headphones className="relative w-10 h-10 mx-auto mb-4 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-500 bg-clip-text text-transparent mb-2">{queue.length}</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">In Queue</div>
-              </div>
-            </motion.div>
-            
-            {/* Enhanced Floating Elements */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.6 }}
-              className="absolute top-16 right-16 hidden xl:block"
-            >
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl backdrop-blur-sm animate-float shadow-xl"></div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.8 }}
-              className="absolute bottom-16 left-16 hidden xl:block"
-            >
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-2xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"></div>
-            </motion.div>
           </div>
-        </motion.div>
 
-        {/* Main Content Container */}
-        <div className="container mx-auto px-4 -mt-8 relative z-20">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl overflow-hidden"
-          >
-            {/* Enhanced Header Controls */}
-            <div className="sticky top-0 z-20 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-b border-white/20 dark:border-slate-700/50">
-              {/* Playlist Selection and Save Button */}
-              <div className="px-8 py-6 flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-[240px] justify-between h-12 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl text-base">
-                        <div className="flex items-center overflow-hidden">
-                          <ListMusic className="h-5 w-5 mr-3 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-                          <span className="truncate">
-                            {selectedPlaylist
-                              ? playlists?.find(p => p.id.toString() === selectedPlaylist)?.name
-                              : 'Select a playlist'}
-                          </span>
-                        </div>
-                        {selectedPlaylist && (
-                          <X
-                            className="h-4 w-4 flex-shrink-0 hover:text-destructive ml-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              clearPlaylistSelection();
-                            }}
-                          />
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[240px] p-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-2xl">
-                      <div className="p-4">
-                        <div className="flex items-center space-x-3 mb-4">
-                          <Search className="h-4 w-4 text-muted-foreground" />
-                          <Input
-                            placeholder="Search playlists..."
-                            value={playlistSearch}
-                            onChange={(e) => setPlaylistSearch(e.target.value)}
-                            className="h-10 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 rounded-xl"
-                          />
-                        </div>
-                        <ScrollArea className="h-[200px]">
-                          {filteredPlaylists.map((playlist) => (
-                            <div
-                              key={playlist.id}
-                              className={cn(
-                                "flex items-center px-3 py-2 cursor-pointer hover:bg-white/40 dark:hover:bg-slate-600/40 rounded-xl transition-all duration-300",
-                                selectedPlaylist === playlist.id.toString() && "bg-blue-100/60 dark:bg-blue-900/30"
-                              )}
-                              onClick={() => handlePlaylistSelect(playlist.id.toString())}
-                            >
-                              <ListMusic className="h-4 w-4 mr-3 flex-shrink-0" />
-                              <span className="break-words overflow-hidden">{playlist.name}</span>
-                              {selectedPlaylist === playlist.id.toString() && (
-                                <Check className="ml-auto h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-                              )}
-                            </div>
-                          ))}
-                        </ScrollArea>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                  {selectedPlaylist && (
-                    <div className="w-12 h-12 relative flex-shrink-0">
-                      <Image
-                        src={playlists?.find((p) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
-                        alt="Playlist cover"
-                        layout="fill"
-                        objectFit="cover"
-                        className="rounded-xl shadow-lg"
-                      />
+          {/* Playlist Selection and Save Button */}
+          <div className={`container mx-auto px-2 py-2 flex items-center justify-between transition-all duration-300 ${isHeaderVisible ? 'mt-0' : 'mt-2'}`}>
+            <div className="flex items-center space-x-2">
+              <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[200px] justify-between h-8 text-xs">
+                    <div className="flex items-center overflow-hidden">
+                      <ListMusic className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span className="truncate">
+                        {selectedPlaylist
+                          ? playlists?.find(p => p.id.toString() === selectedPlaylist)?.name
+                          : 'Select a playlist'}
+                      </span>
                     </div>
-                  )}
-                  <Button onClick={handleSavePlaylist} className="h-12 px-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-semibold">
-                    <Save className="w-5 h-5 mr-2" />
-                    <span>Save Playlist</span>
+                    {selectedPlaylist && (
+                      <X
+                        className="h-3 w-3 flex-shrink-0 hover:text-destructive ml-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearPlaylistSelection();
+                        }}
+                      />
+                    )}
                   </Button>
-                </div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsNarrowView(!isNarrowView)}
-                      className="h-12 w-12 p-0 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl"
-                    >
-                      {isNarrowView ? (
-                        <Expand className="h-5 w-5" />
-                      ) : (
-                        <Shrink className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{isNarrowView ? 'Expand view' : 'Narrow view'}</p>
-                  </TooltipContent>
-                </Tooltip>
-                             </div>
-
-              {/* Enhanced Filter and Sort Sections */}
-              <AnimatePresence>
-                {isFilterExpanded && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border-t border-white/20 dark:border-slate-700/50"
-                  >
-                    <div className="px-8 py-6">
-                      <Filters 
-                        filterOptions={filterOptions} 
-                        setFilterOptions={setFilterOptions}
-                        setIsFilterExpanded={setIsFilterExpanded}
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                  <div className="p-2">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Search className="h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search playlists..."
+                        value={playlistSearch}
+                        onChange={(e) => setPlaylistSearch(e.target.value)}
+                        className="h-8"
                       />
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <AnimatePresence>
-                {isSortExpanded && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border-t border-white/20 dark:border-slate-700/50"
-                  >
-                    <div className="px-8 py-6">
-                      <SortOptions
-                        filterOptions={filterOptions as FilterOptions}
-                        setFilterOptions={setFilterOptions}
-                        setIsSortExpanded={setIsSortExpanded}
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Enhanced Main Content */}
-            <div className="p-8">
-              {/* Filter Tags */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="flex flex-wrap gap-3 mb-8"
-              >
-                {getFilterTags().map((tag, index) => (
-                  <Badge 
-                    key={index} 
-                    variant="secondary" 
-                    className="flex items-center gap-2 px-4 py-2 text-sm bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl shadow-sm"
-                  >
-                    {tag.label}
-                    <X
-                      className="h-4 w-4 cursor-pointer hover:text-destructive transition-colors duration-300"
-                      onClick={() => removeFilter(tag.type, tag.value)}
-                    />
-                  </Badge>
-                ))}
-              </motion.div>
-
-              {/* Song List Content */}
-              {songs.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
-                >
-                  <SongList
-                    songs={songs}
-                    isNarrowView={isNarrowView}
-                    totalSongs={totalSongs}
-                    fetchAllSongs={fetchAllSongs}
+                    <ScrollArea className="h-[200px]">
+                      {filteredPlaylists.map((playlist) => (
+                        <div
+                          key={playlist.id}
+                          className={cn(
+                            "flex items-center px-2 py-1 cursor-pointer hover:bg-accent",
+                            selectedPlaylist === playlist.id.toString() && "bg-accent"
+                          )}
+                          onClick={() => handlePlaylistSelect(playlist.id.toString())}
+                        >
+                          <ListMusic className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span className="break-words overflow-hidden">{playlist.name}</span>
+                          {selectedPlaylist === playlist.id.toString() && (
+                            <Check className="ml-auto h-4 w-4 flex-shrink-0" />
+                          )}
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {selectedPlaylist && (
+                <div className="w-8 h-8 relative flex-shrink-0">
+                  <Image
+                    src={playlists?.find((p) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
+                    alt="Playlist cover"
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-md"
                   />
-                  {hasMore && (
-                    <>
-                      {isValidating && <SongListSkeleton />}
-                      {/* Sentinel for infinite scroll */}
-                      <div ref={loadMoreRef} className="h-1" />
-                    </>
-                  )}
-                </motion.div>
-              ) : isValidating ? (
-                <div className="flex items-center justify-center min-h-[500px]">
-                  <div className="space-y-6 text-center">
-                    <div className="relative">
-                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 dark:border-slate-700 border-t-blue-600 mx-auto"></div>
-                      <div className="absolute inset-0 rounded-full animate-pulse bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
-                    </div>
-                    <p className="text-slate-600 dark:text-slate-300 text-lg">Loading songs...</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <div className="relative mb-6">
-                    <Music2 className="w-16 h-16 mx-auto text-slate-400 dark:text-slate-500" />
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full opacity-20"></div>
-                  </div>
-                  <h3 className="text-2xl font-semibold mb-3 text-slate-900 dark:text-white">No songs found</h3>
-                  <p className="text-slate-600 dark:text-slate-300 text-lg max-w-md mx-auto">
-                    Try adjusting your filters or search terms to find more music that matches your preferences.
-                  </p>
                 </div>
               )}
+              <Button onClick={handleSavePlaylist} className="h-8 text-xs px-2 flex items-center space-x-1">
+                <Save className="w-3 h-3" />
+                <span className="hidden sm:inline">Save</span>
+              </Button>
             </div>
-          </motion.div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsNarrowView(!isNarrowView)}
+                  className="h-8 w-8 p-0"
+                >
+                  {isNarrowView ? (
+                    <Expand className="h-4 w-4" />
+                  ) : (
+                    <Shrink className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isNarrowView ? 'Expand view' : 'Narrow view'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          {/* Filter Group Section */}
+          <AnimatePresence>
+            {isFilterExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+              >
+                <div className="container mx-auto px-2 py-2">
+                  <Filters 
+                    filterOptions={filterOptions} 
+                    setFilterOptions={setFilterOptions}
+                    setIsFilterExpanded={setIsFilterExpanded}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Sort Group Section */}
+          <AnimatePresence>
+            {isSortExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+              >
+                <div className="container mx-auto px-2 py-2">
+                  <SortOptions
+                    filterOptions={filterOptions as FilterOptions}
+                    setFilterOptions={setFilterOptions}
+                    setIsSortExpanded={setIsSortExpanded}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <Separator />
         </div>
 
-        {/* Enhanced Filter Toggle Button */}
+        <main className="container mx-auto px-4 py-6">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {getFilterTags().map((tag, index) => (
+              <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                {tag.label}
+                <X
+                  className="h-3 w-3 cursor-pointer"
+                  onClick={() => removeFilter(tag.type, tag.value)}
+                />
+              </Badge>
+            ))}
+          </div>
+
+          {songs.length > 0 ? (
+            <>
+              <SongList
+                songs={songs}
+                isNarrowView={isNarrowView}
+                totalSongs={totalSongs}
+                fetchAllSongs={fetchAllSongs}
+              />
+              {hasMore && (
+                <>
+                  {isValidating && <SongListSkeleton />}
+                  {/* Sentinel for infinite scroll */}
+                  <div ref={loadMoreRef} className="h-1" />
+                </>
+              )}
+            </>
+          ) : isValidating ? (
+            // Show skeletons while loading
+            <SongListSkeleton />
+          ) : (
+            // Show 'No songs found' when no songs are available after loading
+            <p>No songs found.</p>
+          )}
+        </main>
+
+        {/* Filter Toggle Button - Moved to bottom right */}
         {!isFilterExpanded && (
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
@@ -1169,14 +1028,14 @@ function ListenContent({
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.2 }}
             onClick={() => setIsFilterExpanded(true)}
-            className={`fixed right-4 z-30 p-4 rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 backdrop-blur-sm ${filterButtonBottomClass}`}
+            className={`fixed right-4 z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
             aria-label="Expand filters"
           >
-            <Filter className="h-6 w-6" />
+            <Filter className="h-5 w-5" />
           </motion.button>
         )}
 
-        {/* Enhanced Sort Toggle Button */}
+        {/* Sort Toggle Button - Left aligned */}
         {!isSortExpanded && (
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
@@ -1184,10 +1043,10 @@ function ListenContent({
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.2 }}
             onClick={() => setIsSortExpanded(true)}
-            className={`fixed ${sortButtonLeftClass} z-30 p-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:via-indigo-700 hover:to-blue-700 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 backdrop-blur-sm ${filterButtonBottomClass}`}
+            className={`fixed ${sortButtonLeftClass} z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
             aria-label="Expand sorting"
           >
-            <ArrowUpDown className="h-6 w-6" />
+            <ArrowUpDown className="h-5 w-5" />
           </motion.button>
         )}
 
