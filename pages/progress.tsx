@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Separator } from "@/components/ui/separator"
 import { PieChartGroup } from "@/components/ProgressPage/PieChartGroup"
 import { BIBLE_BOOKS } from "@/lib/constants"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
 
 interface ChartData {
   "Old Testament": {
@@ -78,17 +78,6 @@ export default function Progress() {
 
   // Change the initial state of isFilterExpanded to false
   const [isFilterExpanded, setIsFilterExpanded] = useState(false)
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY
-      setIsHeaderVisible(scrollPosition < 50)
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   const barChartData = chartData
     ? BIBLE_BOOKS.map((book) => {
@@ -299,64 +288,6 @@ export default function Progress() {
           </div>
         </motion.div>
 
-        {/* Enhanced Sticky Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="sticky top-0 z-30 bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border-b border-white/20 dark:border-slate-700/50 shadow-lg"
-        >
-          <div className="container mx-auto px-2 sm:px-4">
-            <div className={`flex items-center justify-between transition-all duration-300 ${isHeaderVisible ? 'h-16' : 'h-12'}`}>
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-xl backdrop-blur-sm border border-emerald-500/20 dark:border-emerald-500/30">
-                  <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <h1 className={`text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent transition-opacity duration-300 ${isHeaderVisible ? 'opacity-100' : 'opacity-0'}`}>
-                  Progress Map
-                </h1>
-              </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="p-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 cursor-help">
-                      <HelpCircle className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="max-w-xs">
-                    <p className="text-sm">
-                      This progress map shows the total Bible verses covered by all uploaded songs on BibleChorus. It reflects our community&apos;s collective effort in setting Scripture to music.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </div>
-
-          {/* Enhanced Filter Section */}
-          <AnimatePresence>
-            {isFilterExpanded && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="border-t border-white/20 dark:border-slate-700/50"
-              >
-                <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
-                  <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-white/30 dark:border-slate-700/30 p-4 sm:p-6">
-                    <Filters 
-                      filterOptions={filterOptions} 
-                      setFilterOptions={setFilterOptions}
-                      setIsFilterExpanded={setIsFilterExpanded}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
         {/* Enhanced Filter Toggle Button */}
         {!isFilterExpanded && (
           <motion.button
@@ -365,9 +296,7 @@ export default function Progress() {
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.2 }}
             onClick={() => setIsFilterExpanded(true)}
-            className={`fixed right-3 sm:right-6 z-40 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 hover:scale-110 group ${
-              isHeaderVisible ? 'top-20' : 'top-16'
-            }`}
+            className="fixed right-3 sm:right-6 top-6 z-40 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 hover:scale-110 group"
             aria-label="Expand filters"
           >
             <Filter className="h-5 w-5 sm:h-6 sm:w-6 group-hover:rotate-6 transition-transform duration-300" />
@@ -375,8 +304,31 @@ export default function Progress() {
           </motion.button>
         )}
 
+        {/* Enhanced Filter Section */}
+        <AnimatePresence>
+          {isFilterExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed top-0 left-0 right-0 z-30 bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border-b border-white/20 dark:border-slate-700/50 shadow-lg"
+            >
+              <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+                <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-white/30 dark:border-slate-700/30 p-4 sm:p-6">
+                  <Filters 
+                    filterOptions={filterOptions} 
+                    setFilterOptions={setFilterOptions}
+                    setIsFilterExpanded={setIsFilterExpanded}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Main Content */}
-        <div className="container mx-auto px-2 sm:px-4 -mt-8 relative z-20">
+        <div className="container mx-auto px-4 sm:px-6 relative z-20">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
