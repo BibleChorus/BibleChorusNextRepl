@@ -57,7 +57,7 @@ export default function HowTo() {
                 <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:via-teal-500/20 dark:to-cyan-500/20 backdrop-blur-md border border-emerald-500/20 dark:border-emerald-500/30 shadow-lg">
                   <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400 bg-clip-text text-transparent font-semibold">
-                    Creator's Guide
+                    Creator&apos;s Guide
                   </span>
                 </span>
               </motion.div>
@@ -216,7 +216,7 @@ export default function HowTo() {
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="pt-4">
-                        <p className="text-slate-600 dark:text-slate-300">Utilize an AI language model (like OpenAI's GPT-4) to help generate lyrics based on your chosen scripture.</p>
+                        <p className="text-slate-600 dark:text-slate-300">Utilize an AI language model (like OpenAI&apos;s GPT-4) to help generate lyrics based on your chosen scripture.</p>
                       </AccordionContent>
                     </AccordionItem>
 

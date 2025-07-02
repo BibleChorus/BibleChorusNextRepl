@@ -306,7 +306,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           <div className="flex flex-wrap gap-1">
             {filterOptions.search && (
               <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
-                Search: "{filterOptions.search}"
+                Search: &quot;{filterOptions.search}&quot;
               </span>
             )}
             {filterOptions.lyricsAdherence.map(value => (
