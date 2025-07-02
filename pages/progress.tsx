@@ -1,18 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import Head from "next/head"
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 import { Bar, BarChart, CartesianGrid, Tooltip as RechartsTooltip, XAxis, YAxis, Cell } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ProgressStats } from "@/components/ProgressPage/ProgressStats"
 import { Filters, FilterOptions } from "@/components/ProgressPage/Filters"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import { Filter, X, Info, RefreshCw, HelpCircle, Sparkles } from "lucide-react"
+import { Filter, X, HelpCircle, Sparkles } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Separator } from "@/components/ui/separator"
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { PieChartGroup } from "@/components/ProgressPage/PieChartGroup"
 import { BIBLE_BOOKS } from "@/lib/constants"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -315,7 +313,7 @@ export default function Progress() {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     {isSmallScreen ? (
-                      <>
+                      <React.Fragment>
                         <XAxis type="number" tickFormatter={(value) => `${value.toFixed(2)}%`} />
                         <YAxis 
                           dataKey="book" 
@@ -325,9 +323,9 @@ export default function Progress() {
                           interval={0}
                           tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
                         />
-                      </>
+                      </React.Fragment>
                     ) : (
-                      <>
+                      <React.Fragment>
                         <XAxis 
                           dataKey="book" 
                           tick={{ fontSize: 11 }} 
@@ -338,7 +336,7 @@ export default function Progress() {
                           tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
                         />
                         <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
-                      </>
+                      </React.Fragment>
                     )}
                     <RechartsTooltip content={<ChartTooltipContent showPercentage />} />
                     <Bar 
