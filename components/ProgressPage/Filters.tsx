@@ -55,9 +55,18 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-6 relative"
     >
-      <div className="flex justify-between items-center mb-6">
+      {/* Close button at top right */}
+      <button
+        onClick={() => setIsFilterExpanded(false)}
+        className="absolute top-0 right-0 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors duration-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+        aria-label="Close filters"
+      >
+        <X className="h-5 w-5" />
+      </button>
+
+      <div className="flex justify-between items-center mb-6 pr-12">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-xl">
             <Info className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -69,25 +78,15 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
             </p>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={clearFilters}
-            className="flex items-center gap-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Clear Filters
-          </Button>
-          <button
-            onClick={() => setIsFilterExpanded(false)}
-            className="text-sm flex items-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-200 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 px-3 py-2 rounded-xl"
-            aria-label="Close filters"
-          >
-            Close Filters
-            <X className="h-4 w-4 ml-1" />
-          </button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={clearFilters}
+          className="flex items-center gap-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Clear Filters
+        </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Popover open={openLyricsAdherence} onOpenChange={setOpenLyricsAdherence}>
