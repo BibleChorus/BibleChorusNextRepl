@@ -104,12 +104,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent 
-            className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl" 
-            align="start" 
-            side="bottom"
-            sideOffset={4}
-          >
+          <PopoverContent className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
             <div className="p-3">
               {lyricsAdherenceOptions.map((option) => (
                 <div
