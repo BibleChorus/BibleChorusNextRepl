@@ -1,14 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
+import { auth } from '@/auth';
 import sanitizeHtml from 'sanitize-html';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Note: Session handling can be added back once NextAuth v5 migration is complete
   const { method } = req;
   const songId = Number(req.query.id);
 
   if (method === 'GET') {
-    // Fetch comments for the song
+    // Fetch comments for the song (no authentication required for reading)
     try {
       const comments = await db('song_comments')
         .join('users', 'song_comments.user_id', 'users.id')
@@ -26,11 +26,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(500).json({ message: 'Error fetching comments' });
     }
   } else if (method === 'POST') {
-    // Create a new comment
-    const { comment, parent_comment_id, user_id } = req.body;
+    // SECURITY: Authenticate user before allowing comment creation
+    const session = await auth(req, res);
+    
+    if (!session || !session.user) {
+      return res.status(401).json({ message: 'Authentication required to post comments' });
+    }
 
-    if (!user_id) {
-      return res.status(401).json({ message: 'Unauthorized' });
+    // Extract comment data from request body (ignore any user_id - use authenticated user)
+    const { comment, parent_comment_id } = req.body;
+    
+    if (!comment || typeof comment !== 'string' || comment.trim().length === 0) {
+      return res.status(400).json({ message: 'Comment content is required' });
     }
 
     try {
@@ -39,19 +46,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, '*': ['class'] },
       });
 
+      // Use the authenticated user's ID from the session
+      const authenticatedUserId = session.user.id;
+
       const [newComment] = await db('song_comments')
         .insert({
           song_id: songId,
-          user_id,
+          user_id: authenticatedUserId,
           comment: sanitizedComment,
           parent_comment_id: parent_comment_id || null,
           created_at: new Date(),
         })
         .returning('*');
 
-      const user = await db('users').where('id', user_id).first();
+      // Get user details for response
+      const user = await db('users').where('id', authenticatedUserId).first();
 
-      res.status(201).json({ ...newComment, username: user.username });
+      res.status(201).json({ 
+        ...newComment, 
+        username: user?.username || session.user.username,
+        profile_image_url: user?.profile_image_url || session.user.profile_image_url
+      });
     } catch (error) {
       console.error('Error adding comment:', error);
       res.status(500).json({ message: 'Error adding comment' });
