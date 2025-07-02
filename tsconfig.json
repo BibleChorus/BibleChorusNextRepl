@@ -32,11 +32,13 @@
       "node_modules/@types"
     ],
     "types": [
-      "react",
       "node",
+      "react",
+      "react-dom",
       "next"
     ],
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "next-env.d.ts",

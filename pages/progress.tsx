@@ -1,18 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import Head from "next/head"
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 import { Bar, BarChart, CartesianGrid, Tooltip as RechartsTooltip, XAxis, YAxis, Cell } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ProgressStats } from "@/components/ProgressPage/ProgressStats"
 import { Filters, FilterOptions } from "@/components/ProgressPage/Filters"
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import { Filter, X, Info, RefreshCw, HelpCircle } from "lucide-react"
+import { Filter, X, HelpCircle, Sparkles } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Separator } from "@/components/ui/separator"
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { PieChartGroup } from "@/components/ProgressPage/PieChartGroup"
 import { BIBLE_BOOKS } from "@/lib/constants"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -145,11 +143,68 @@ export default function Progress() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30">
       <Head>
         <title>BibleChorus - Progress Map</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
+
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative overflow-hidden pb-20 pt-12"
+      >
+        {/* Background Effects */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.08] via-purple-500/[0.06] to-pink-500/[0.08] dark:from-indigo-500/[0.15] dark:via-purple-500/[0.12] dark:to-pink-500/[0.15]"></div>
+          <div className="absolute top-0 -left-8 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+          <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-12 left-32 w-96 h-96 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
+        </div>
+
+        <div className="relative z-10 container mx-auto px-4 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="mb-6"
+          >
+            <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-500/20 dark:via-purple-500/20 dark:to-pink-500/20 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 shadow-lg">
+              <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent font-semibold">
+                Progress Map
+              </span>
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-6xl font-bold tracking-tight sm:text-7xl md:text-8xl"
+          >
+            <span className="block text-slate-900 dark:text-white mb-2">Track Your</span>
+            <span className="block relative">
+              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                Spiritual Journey
+              </span>
+              <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-full scale-x-0 animate-scale-x"></div>
+            </span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mt-8 text-xl text-slate-600 dark:text-slate-300 sm:text-2xl max-w-3xl mx-auto leading-relaxed"
+          >
+            Visualize how Bible verses are being covered through music contributions.
+          </motion.p>
+        </div>
+      </motion.div>
 
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         {/* Header Section */}
@@ -258,7 +313,7 @@ export default function Progress() {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     {isSmallScreen ? (
-                      <>
+                      <React.Fragment>
                         <XAxis type="number" tickFormatter={(value) => `${value.toFixed(2)}%`} />
                         <YAxis 
                           dataKey="book" 
@@ -268,9 +323,9 @@ export default function Progress() {
                           interval={0}
                           tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
                         />
-                      </>
+                      </React.Fragment>
                     ) : (
-                      <>
+                      <React.Fragment>
                         <XAxis 
                           dataKey="book" 
                           tick={{ fontSize: 11 }} 
@@ -281,7 +336,7 @@ export default function Progress() {
                           tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
                         />
                         <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
-                      </>
+                      </React.Fragment>
                     )}
                     <RechartsTooltip content={<ChartTooltipContent showPercentage />} />
                     <Bar 
