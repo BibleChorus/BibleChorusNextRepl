@@ -455,60 +455,60 @@ export default function Progress() {
                             className={`${isSmallScreen ? 'min-h-[400px]' : 'min-h-[400px]'} max-w-full overflow-x-auto`}
                             config={{}}
                           >
-                            <BarChart
-                              key={`bar-chart-${isSmallScreen ? 'vertical' : 'horizontal'}`}
-                              data={barChartData}
-                              layout={isSmallScreen ? "vertical" : "horizontal"}
-                              width={isSmallScreen ? 750 : undefined}
-                              height={isSmallScreen ? Math.max(750, barChartData.length * 20) : 400}
-                              margin={isSmallScreen ? { top: 5, right: 20, left: -43, bottom: 5 } : { top: 5, right: 30, left: 5, bottom: 5 }}
-                            >
-                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.3)" />
-                              {isSmallScreen ? (
-                                <React.Fragment>
-                                  <XAxis type="number" tickFormatter={(value) => `${value.toFixed(2)}%`} />
-                                  <YAxis 
-                                    dataKey="book" 
-                                    type="category" 
-                                    width={100} 
-                                    tick={{ fontSize: 8 }}
-                                    interval={0}
-                                    tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
-                                  />
-                                </React.Fragment>
-                              ) : (
-                                <React.Fragment>
-                                  <XAxis 
-                                    dataKey="book" 
-                                    tick={{ fontSize: 11 }} 
-                                    angle={-40} 
-                                    textAnchor="end" 
-                                    interval={0} 
-                                    height={55}
-                                    tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
-                                  />
-                                  <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
-                                </React.Fragment>
-                              )}
-                              <RechartsTooltip content={<ChartTooltipContent showPercentage />} />
-                              <Bar 
-                                dataKey="filtered_book_percentage" 
-                                fill="url(#barGradient)"
-                                name="Percent Covered:"
-                                radius={[4, 4, 0, 0]}
-                              >
-                                <defs>
-                                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#10b981" />
-                                    <stop offset="50%" stopColor="#14b8a6" />
-                                    <stop offset="100%" stopColor="#06b6d4" />
-                                  </linearGradient>
-                                </defs>
-                                {barChartData.map((entry, index) => (
-                                  <Cell key={`cell-${entry.book}-${index}`} />
-                                ))}
-                              </Bar>
-                            </BarChart>
+                                                         <BarChart
+                               key={`bar-chart-${isSmallScreen ? 'vertical' : 'horizontal'}`}
+                               data={barChartData}
+                               layout={isSmallScreen ? "vertical" : "horizontal"}
+                               width={isSmallScreen ? 750 : undefined}
+                               height={isSmallScreen ? Math.max(750, barChartData.length * 20) : 400}
+                               margin={isSmallScreen ? { top: 5, right: 20, left: -43, bottom: 5 } : { top: 5, right: 30, left: 5, bottom: 5 }}
+                             >
+                               <defs>
+                                 <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                   <stop offset="0%" stopColor="#10b981" />
+                                   <stop offset="50%" stopColor="#14b8a6" />
+                                   <stop offset="100%" stopColor="#06b6d4" />
+                                 </linearGradient>
+                               </defs>
+                               <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.3)" />
+                               {isSmallScreen ? (
+                                 <React.Fragment>
+                                   <XAxis type="number" tickFormatter={(value) => `${value.toFixed(2)}%`} />
+                                   <YAxis 
+                                     dataKey="book" 
+                                     type="category" 
+                                     width={100} 
+                                     tick={{ fontSize: 8 }}
+                                     interval={0}
+                                     tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
+                                   />
+                                 </React.Fragment>
+                               ) : (
+                                 <React.Fragment>
+                                   <XAxis 
+                                     dataKey="book" 
+                                     tick={{ fontSize: 11 }} 
+                                     angle={-40} 
+                                     textAnchor="end" 
+                                     interval={0} 
+                                     height={55}
+                                     tickFormatter={(value, index) => index % 5 === 0 ? value : ''}
+                                   />
+                                   <YAxis tickFormatter={(value) => `${value.toFixed(2)}%`} />
+                                 </React.Fragment>
+                               )}
+                               <RechartsTooltip content={<ChartTooltipContent showPercentage />} />
+                               <Bar 
+                                 dataKey="filtered_book_percentage" 
+                                 fill="url(#barGradient)"
+                                 name="Percent Covered:"
+                                 radius={[4, 4, 0, 0]}
+                               >
+                                 {barChartData.map((entry, index) => (
+                                   <Cell key={`cell-${entry.book}-${index}`} />
+                                 ))}
+                               </Bar>
+                             </BarChart>
                           </ChartContainer>
                         </div>
                       </div>
