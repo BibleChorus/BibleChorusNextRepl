@@ -7,10 +7,10 @@ import { BIBLE_BOOKS } from '@/lib/constants';
 
 // Helper to convert a readable stream to a Buffer
 async function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
-  const chunks: Buffer[] = [];
+  const chunks: Uint8Array[] = [];
   return new Promise((resolve, reject) => {
-    stream.on('data', chunk => chunks.push(Buffer.from(chunk)));
-    stream.on('error', err => reject(err));
+    stream.on('data', (chunk: any) => chunks.push(new Uint8Array(chunk)));
+    stream.on('error', (err: any) => reject(err));
     stream.on('end', () => resolve(Buffer.concat(chunks)));
   });
 }
