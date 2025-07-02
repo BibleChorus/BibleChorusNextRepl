@@ -126,9 +126,9 @@ export function PieChartGroup({ chartData, filterOptions, removeFilter }: PieCha
           ))}
         </div>
       </CardHeader>
-      <CardContent className="p-8">
+      <CardContent className="p-4 sm:p-8">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-cyan-500/5 rounded-2xl -m-4"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-cyan-500/5 rounded-2xl -m-2 sm:-m-4"></div>
           <div className="relative">
             {isSmallScreen ? (
               <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
@@ -142,9 +142,9 @@ export function PieChartGroup({ chartData, filterOptions, removeFilter }: PieCha
                 ))}
               </Accordion>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {pieCharts.map((chart, index) => (
-                  <div key={index} className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-white/30 dark:border-slate-700/30 p-6 hover:bg-white/60 dark:hover:bg-slate-800/60 transition-all duration-300">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                  {pieCharts.map((chart, index) => (
+                    <div key={index} className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-white/30 dark:border-slate-700/30 p-4 sm:p-6 hover:bg-white/60 dark:hover:bg-slate-800/60 transition-all duration-300">
                     <PieChartCard {...chart} />
                   </div>
                 ))}
