@@ -186,10 +186,10 @@ export default function Progress() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-6xl font-bold tracking-tight sm:text-7xl md:text-8xl"
           >
-            <span className="block text-slate-900 dark:text-white mb-2">Track Your</span>
+            <span className="block text-slate-900 dark:text-white mb-2">Track Our</span>
             <span className="block relative">
               <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
-                Spiritual Journey
+                Community&apos;s Efforts
               </span>
               <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-full scale-x-0 animate-scale-x"></div>
             </span>
