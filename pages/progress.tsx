@@ -349,7 +349,7 @@ export default function Progress() {
             transition={{ duration: 0.2 }}
             onClick={() => setIsFilterExpanded(true)}
             className={`fixed right-3 sm:right-6 z-40 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 hover:scale-110 group ${
-              isHeaderVisible ? 'top-4' : 'top-2'
+              isHeaderVisible ? 'top-20' : 'top-16'
             }`}
             aria-label="Expand filters"
           >
