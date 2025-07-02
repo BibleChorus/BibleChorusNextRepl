@@ -6,7 +6,7 @@ import db from './db'
 declare module "next-auth" {
   interface Session {
     user: {
-      id: number;
+      id: string;
       username: string;
       is_admin: boolean;
       is_moderator: boolean;
@@ -19,7 +19,7 @@ declare module "next-auth" {
   }
 
   interface User {
-    id: number;
+    id: string;
     username: string;
     is_admin: boolean;
     is_moderator: boolean;
@@ -163,7 +163,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (dbUser) {
           session.user = {
             ...session.user,
-            id: dbUser.id,
+            id: dbUser.id.toString(),
             username: dbUser.username,
             is_admin: dbUser.is_admin,
             is_moderator: dbUser.is_moderator,
