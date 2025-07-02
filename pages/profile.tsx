@@ -5,6 +5,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/contexts/AuthContext'
 import axios from 'axios'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
@@ -478,7 +479,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <Head>
         <title>{`${profileUser.username}'s Profile | BibleChorus`}</title>
         <meta name="description" content={`View ${profileUser.username}'s profile, songs, playlists, and activities on BibleChorus`} />
@@ -490,144 +491,306 @@ export default function Profile() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Image banner at the top */}
-        <div className="relative h-64 sm:h-80 w-full mb-8">
-          <Image
-            src={profileUser?.profile_image_url ? `${CDN_URL}${profileUser.profile_image_url}` : DEFAULT_PROFILE_IMAGE}
-            alt={`${profileUser?.username} profile banner`}
-            layout="fill"
-            objectFit="cover"
-            className="object-cover"
-            priority
-          />
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-white">{profileUser?.username}</h1>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/30 dark:from-blue-950/50 dark:via-slate-900 dark:to-purple-950/30">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="relative overflow-hidden pb-20 pt-12"
+        >
+          {/* Enhanced Background Effects */}
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.08] via-purple-500/[0.06] to-indigo-500/[0.08] dark:from-blue-500/[0.15] dark:via-purple-500/[0.12] dark:to-indigo-500/[0.15]"></div>
+            <div className="absolute top-0 -left-8 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+            <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-12 left-32 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(99,102,241,0.1),rgba(255,255,255,0))]"></div>
           </div>
-          {/* Only show edit button if it's the user's own profile */}
-          {isOwnProfile && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 text-white hover:text-primary-300 transition-colors"
-              onClick={handleEditProfileImageClick}
+          
+          <div className="relative z-10 container mx-auto px-4">
+            <div className="text-center mb-12">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+                className="mb-6"
+              >
+                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10 dark:from-blue-500/20 dark:via-purple-500/20 dark:to-indigo-500/20 backdrop-blur-md border border-blue-500/20 dark:border-blue-500/30 shadow-lg">
+                  <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent font-semibold">
+                    {isOwnProfile ? 'Your Profile' : 'User Profile'}
+                  </span>
+                </span>
+              </motion.div>
+              
+              <motion.h1 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="text-6xl font-bold tracking-tight sm:text-7xl md:text-8xl"
+              >
+                <span className="block text-slate-900 dark:text-white mb-2">{profileUser.username}</span>
+                <span className="block relative">
+                  <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                    Profile
+                  </span>
+                  <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-full scale-x-0 animate-scale-x"></div>
+                </span>
+              </motion.h1>
+              
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="mt-8 text-xl text-slate-600 dark:text-slate-300 sm:text-2xl max-w-3xl mx-auto leading-relaxed"
+              >
+                {isOwnProfile ? 
+                  'Manage your contributions and track your musical journey' :
+                  `Explore ${profileUser.username}'s musical contributions and activities`
+                }
+              </motion.p>
+            </div>
+
+            {/* Profile Image Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="flex justify-center"
             >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-
-        {/* Main content */}
-        <Button variant="outline" onClick={() => router.back()} className="mb-4">
-          Back
-        </Button>
-
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
-          {/* User Details Card */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl font-bold">{`${profileUser.username}'s Profile Details`}</CardTitle>
+              <div className="relative group">
+                <div className="w-48 h-48 rounded-full overflow-hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-4 border-white/20 dark:border-slate-700/50 shadow-2xl group-hover:shadow-3xl transition-all duration-500">
+                  <Image
+                    src={profileUser?.profile_image_url ? `${CDN_URL}${profileUser.profile_image_url}` : DEFAULT_PROFILE_IMAGE}
+                    alt={`${profileUser?.username} profile`}
+                    width={192}
+                    height={192}
+                    className="w-full h-full object-cover"
+                    priority
+                  />
+                </div>
+                <div className="absolute inset-0 bg-slate-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
                 {isOwnProfile && (
-                  <Button variant="ghost" size="sm">
-                    {/* Add edit icon if needed */}
-                  </Button>
+                  <button
+                    onClick={handleEditProfileImageClick}
+                    className="absolute bottom-2 right-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-lg"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
                 )}
               </div>
-            </CardHeader>
-            <CardContent>
-              <p><strong>Username:</strong> {profileUser.username}</p>
-              {isOwnProfile && <p><strong>Email:</strong> {profileUser.email}</p>}
-              {/* Add more profile details as needed */}
-            </CardContent>
-          </Card>
+            </motion.div>
+            
+            {/* Enhanced Floating Elements */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.6 }}
+              className="absolute top-16 right-16 hidden xl:block"
+            >
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl backdrop-blur-sm animate-float shadow-xl"></div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.8 }}
+              className="absolute bottom-16 left-16 hidden xl:block"
+            >
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-2xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"></div>
+            </motion.div>
+          </div>
+        </motion.div>
 
-          {/* Playlists Card */}
-          <Card className="lg:col-span-4">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Playlists</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible>
-                <AccordionItem value="playlists">
-                  <AccordionTrigger>View Playlists</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                      {playlists.map((playlist) => (
-                        <Link
-                          href={`/playlists/${playlist.id}`}
-                          key={playlist.id}
-                        >
-                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer">
-                            {playlist.cover_art_url && (
-                              <Image
-                                src={playlist.cover_art_url}
-                                alt={playlist.name}
-                                width={200}
-                                height={200}
-                                className="w-full h-32 object-cover rounded-md mb-2"
-                              />
-                            )}
-                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{playlist.name}</h3>
-                            {playlist.description && (
-                              <p className="text-gray-600 dark:text-gray-400">{playlist.description}</p>
-                            )}
-                            <p className="text-xs text-gray-400 dark:text-gray-600 mt-2">
-                              {new Date(playlist.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </Link>
-                      ))}
+        {/* Main Content */}
+        <div className="container mx-auto px-4 -mt-12 relative z-20">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-8 md:p-10"
+          >
+            {/* Main content */}
+            <Button variant="outline" onClick={() => router.back()} className="mb-6 hover:scale-105 transition-all duration-300">
+              Back
+            </Button>
+
+            <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+              {/* Enhanced User Details Card */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="lg:col-span-2"
+              >
+                <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        Profile Details
+                      </CardTitle>
+                      <div className="p-2 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl backdrop-blur-sm border border-blue-500/20 dark:border-blue-500/30">
+                        <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-
-          {/* Uploaded Songs Card */}
-          <Card className="lg:col-span-6">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Uploaded Songs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible>
-                <AccordionItem value="songs">
-                  <AccordionTrigger>View Songs</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {songs.map((song) => (
-                        <Link href={`/Songs/${song.id}`} key={song.id}>
-                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer">
-                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{song.title}</h3>
-                            <p className="text-gray-600 dark:text-gray-400">{song.artist}</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-500">{song.genre}</p>
-                            <p className="text-xs text-gray-400 dark:text-gray-600 mt-2">
-                              {new Date(song.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </Link>
-                      ))}
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-xl border border-blue-200/30 dark:border-blue-800/30">
+                      <p className="text-slate-700 dark:text-slate-300">
+                        <strong className="text-blue-600 dark:text-blue-400">Username:</strong> {profileUser.username}
+                      </p>
+                      {isOwnProfile && (
+                        <p className="text-slate-700 dark:text-slate-300 mt-2">
+                          <strong className="text-purple-600 dark:text-purple-400">Email:</strong> {profileUser.email}
+                        </p>
+                      )}
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              </motion.div>
 
-          {/* Replace the Forum Comments and Song Comments cards with the Activity Card */}
-          {isOwnProfile && (
-            <Card className="lg:col-span-6" id="activities">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl md:text-2xl font-bold">Recent Activity</CardTitle>
-                  {unreadActivitiesCount > 0 && (
-                    <span className="bg-primary text-primary-foreground text-sm rounded-full px-3 py-1">
-                      {unreadActivitiesCount} new
-                    </span>
-                  )}
-                </div>
-              </CardHeader>
+              {/* Enhanced Playlists Card */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="lg:col-span-4"
+              >
+                <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                        Playlists
+                      </CardTitle>
+                      <div className="p-2 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-xl backdrop-blur-sm border border-purple-500/20 dark:border-purple-500/30">
+                        <Music className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Accordion type="single" collapsible>
+                      <AccordionItem value="playlists" className="border-purple-200/30 dark:border-purple-800/30">
+                        <AccordionTrigger className="text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                          View Playlists ({playlists.length})
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                            {playlists.map((playlist) => (
+                              <Link
+                                href={`/playlists/${playlist.id}`}
+                                key={playlist.id}
+                              >
+                                <div className="group bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm p-4 rounded-xl border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer">
+                                  {playlist.cover_art_url && (
+                                    <Image
+                                      src={playlist.cover_art_url}
+                                      alt={playlist.name}
+                                      width={200}
+                                      height={200}
+                                      className="w-full h-32 object-cover rounded-lg mb-3 group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                  )}
+                                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                                    {playlist.name}
+                                  </h3>
+                                  {playlist.description && (
+                                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">{playlist.description}</p>
+                                  )}
+                                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 flex items-center">
+                                    <span className="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>
+                                    {new Date(playlist.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Enhanced Uploaded Songs Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="lg:col-span-6"
+              >
+                <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                        Uploaded Songs
+                      </CardTitle>
+                      <div className="p-2 bg-gradient-to-br from-indigo-500/10 to-blue-500/10 rounded-xl backdrop-blur-sm border border-indigo-500/20 dark:border-indigo-500/30">
+                        <Upload className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Accordion type="single" collapsible>
+                      <AccordionItem value="songs" className="border-indigo-200/30 dark:border-indigo-800/30">
+                        <AccordionTrigger className="text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                          View Songs ({songs.length})
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {songs.map((song) => (
+                              <Link href={`/Songs/${song.id}`} key={song.id}>
+                                <div className="group bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm p-4 rounded-xl border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer">
+                                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
+                                    {song.title}
+                                  </h3>
+                                  <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">{song.artist}</p>
+                                  <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-100/60 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                                      {song.genre}
+                                    </span>
+                                  </p>
+                                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 flex items-center">
+                                    <span className="w-2 h-2 bg-indigo-400 rounded-full mr-2"></span>
+                                    {new Date(song.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Enhanced Activity Card */}
+              {isOwnProfile && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                  className="lg:col-span-6"
+                  id="activities"
+                >
+                  <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                          Recent Activity
+                        </CardTitle>
+                        <div className="flex items-center gap-3">
+                          {unreadActivitiesCount > 0 && (
+                            <span className="bg-gradient-to-r from-green-600 to-teal-600 text-white text-sm rounded-full px-3 py-1 shadow-lg">
+                              {unreadActivitiesCount} new
+                            </span>
+                          )}
+                          <div className="p-2 bg-gradient-to-br from-green-500/10 to-teal-500/10 rounded-xl backdrop-blur-sm border border-green-500/20 dark:border-green-500/30">
+                            <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
               <CardContent>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="activities">
@@ -791,10 +954,13 @@ export default function Profile() {
                       </div>
                     </AccordionContent>
                   </AccordionItem>
-                </Accordion>
-              </CardContent>
-            </Card>
-          )}
+                                    </Accordion>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+            </div>
+          </motion.div>
         </div>
 
         {/* Edit Profile Image Dialog */}
@@ -842,7 +1008,7 @@ export default function Profile() {
             </Dialog>
           </>
         )}
-      </main>
-    </div>
+      </div>
+    </>
   )
 }
