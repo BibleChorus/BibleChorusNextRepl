@@ -195,7 +195,7 @@ export const SongList = React.memo(function SongList({ songs, isNarrowView, tota
   }, [voteStates])
 
   return (
-    <div className="space-y-2 sm:space-y-4">
+    <div className="space-y-2">
       {songs.map((song) => (
         <SongListItem
           key={song.id}
@@ -305,8 +305,7 @@ const SongListItem = React.memo(function SongListItem({
     setLocalCommentsCount((prevCount) => prevCount + 1);
   };
 
-  // Add this console.log to debug the duration
-  console.log(`Song ${song.id} duration:`, song.duration);
+
 
   useEffect(() => {
     setLocalVoteCounts(voteCounts[song.id] || {})
@@ -371,12 +370,12 @@ const SongListItem = React.memo(function SongListItem({
     return 'No vote';
   };
 
-  const getVoteIcon = (voteType: string) => {
+  const getVoteIcon = (voteType: string, isNarrow: boolean = false) => {
     const voteValue = localVoteStates[voteType] || 0;
     const isUpvoted = voteValue === 1;
 
     const iconProps = {
-      className: 'h-4 w-4 mr-1',
+      className: isNarrow ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1',
     };
 
     if (isUpvoted) {
@@ -384,7 +383,7 @@ const SongListItem = React.memo(function SongListItem({
         case 'Best Musically':
           return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />;
         case 'Best Lyrically':
-          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />;
+          return <BookOpenFilled {...iconProps} style={{ color: '#22c55e' }} />;
         case 'Best Overall':
           return <StarFilled {...iconProps} style={{ color: '#eab308' }} />;
         default:
@@ -482,12 +481,12 @@ const SongListItem = React.memo(function SongListItem({
 
   return (
     <motion.div
-      className={`flex items-center p-3 sm:p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-lg relative overflow-hidden group song-card hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 ${isNarrowView ? 'h-[80px] sm:h-[96px]' : 'min-h-[120px]'}`}
+      className={`flex items-center p-2 sm:p-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-lg relative overflow-hidden group song-card hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 ${isNarrowView ? 'h-[70px] sm:h-[80px]' : 'min-h-[110px]'}`}
       whileHover={{ scale: 1.01, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
       transition={{ duration: 0.3 }}
     >
       {/* Song Art with Play/Pause Button */}
-              <div className={`${isNarrowView ? 'w-16 h-16 sm:w-20 sm:h-20' : 'w-20 h-20 sm:w-24 sm:h-24'} mr-4 sm:mr-6 relative flex-shrink-0`}>
+      <div className={`${isNarrowView ? 'w-14 h-14 sm:w-16 sm:h-16' : 'w-16 h-16 sm:w-20 sm:h-20'} mr-3 sm:mr-4 relative flex-shrink-0`}>
         {song.song_art_url && !imageError[song.id] ? (
           <Image
             src={`${CDN_URL}${song.song_art_url}`}
@@ -512,9 +511,9 @@ const SongListItem = React.memo(function SongListItem({
             onClick={handlePlayClick}
           >
             {currentSong?.id === song.id && isPlaying ? (
-              <Pause className={`${isNarrowView ? 'h-6 w-6 sm:h-8 sm:w-8' : 'h-8 w-8 sm:h-10 sm:w-10'}`} />
+              <Pause className={`${isNarrowView ? 'h-5 w-5 sm:h-6 sm:w-6' : 'h-7 w-7 sm:h-8 sm:w-8'}`} />
             ) : (
-              <Play className={`${isNarrowView ? 'h-6 w-6 sm:h-8 sm:w-8' : 'h-8 w-8 sm:h-10 sm:w-10'}`} />
+              <Play className={`${isNarrowView ? 'h-5 w-5 sm:h-6 sm:w-6' : 'h-7 w-7 sm:h-8 sm:w-8'}`} />
             )}
           </button>
         </div>
@@ -533,61 +532,24 @@ const SongListItem = React.memo(function SongListItem({
 
       {/* Song Details */}
       <div className="flex-1 min-w-0 flex flex-col justify-center">
-        <div className="flex items-start justify-between mb-2">
+        <div className={`flex items-start justify-between ${isNarrowView ? 'mb-1' : 'mb-2'}`}>
           <Link href={`/Songs/${song.id}`} className="flex-1 min-w-0">
-            <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 truncate">
+            <h2 className={`font-semibold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 truncate ${isNarrowView ? 'text-sm' : 'text-base sm:text-lg'}`}>
               {song.title}
             </h2>
           </Link>
-          <button
-            onClick={() => setIsLyricsBibleDialogOpen(true)}
-            className="text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 ml-3 flex-shrink-0"
-          >
-            <BookOpenText className="h-5 w-5" />
-          </button>
+          {!isNarrowView && (
+            <button
+              onClick={() => setIsLyricsBibleDialogOpen(true)}
+              className="text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 ml-3 flex-shrink-0"
+            >
+              <BookOpenText className="h-5 w-5" />
+            </button>
+          )}
         </div>
-        <div className={`flex flex-wrap items-center gap-3 text-sm ${isNarrowView ? 'mt-1' : 'mt-2'}`}>
-          <button
-            onClick={() => handleLike(song)}
-            className="flex items-center text-slate-500 hover:text-red-500 transition-all duration-200 hover:scale-105"
-          >
-            <Heart
-              className={`h-4 w-4 mr-1.5 ${
-                likeStates[song.id] ? 'fill-current text-red-500' : ''
-              }`}
-            />
-            <span className="font-medium">{likeCounts[song.id] || 0}</span>
-          </button>
-          <button
-            onClick={() => handleLocalVoteClick('Best Musically')}
-            className="flex items-center text-slate-500 hover:text-blue-500 transition-all duration-200 hover:scale-105"
-          >
-            {getVoteIcon('Best Musically')}
-            <span className="font-medium">{localVoteCounts['Best Musically'] || 0}</span>
-          </button>
-          <button
-            onClick={() => handleLocalVoteClick('Best Lyrically')}
-            className="flex items-center text-slate-500 hover:text-green-500 transition-all duration-200 hover:scale-105"
-          >
-            {getVoteIcon('Best Lyrically')}
-            <span className="font-medium">{localVoteCounts['Best Lyrically'] || 0}</span>
-          </button>
-          <button
-            onClick={() => handleLocalVoteClick('Best Overall')}
-            className="flex items-center text-slate-500 hover:text-yellow-500 transition-all duration-200 hover:scale-105"
-          >
-            {getVoteIcon('Best Overall')}
-            <span className="font-medium">{localVoteCounts['Best Overall'] || 0}</span>
-          </button>
-          <button
-            onClick={() => setIsCommentsDialogOpen(true)}
-            className="flex items-center text-slate-500 hover:text-purple-500 transition-all duration-200 hover:scale-105"
-          >
-            <MessageCircle className="h-4 w-4 mr-1.5" />
-            <span className="font-medium">{localCommentsCount}</span>
-          </button>
-        </div>
-        <div className="flex items-center text-sm mt-1">
+        
+        {/* Artist and Bible Verses Row */}
+        <div className={`flex items-center text-xs ${isNarrowView ? 'mb-1' : 'mb-2'}`}>
           <button
             onClick={() => router.push(`/profile?id=${song.uploaded_by}`)}
             className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors duration-200 truncate font-medium"
@@ -596,34 +558,95 @@ const SongListItem = React.memo(function SongListItem({
           </button>
           {song.bible_verses && song.bible_verses.length > 0 && (
             <>
-              <span className="mx-3 text-slate-300 dark:text-slate-600">•</span>
-              <span className="font-medium text-sm text-indigo-600 dark:text-indigo-400 italic overflow-hidden overflow-ellipsis whitespace-nowrap flex-shrink min-w-0">
+              <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
+              <span className="font-medium text-indigo-600 dark:text-indigo-400 italic overflow-hidden overflow-ellipsis whitespace-nowrap flex-shrink min-w-0">
                 {formatBibleVerses(song.bible_verses)}
               </span>
             </>
           )}
         </div>
+        
+        {/* Action Buttons Row - Compact for narrow view */}
+        <div className={`flex items-center ${isNarrowView ? 'gap-2 text-xs' : 'gap-3 text-sm flex-wrap'} ${isNarrowView ? 'mt-0' : 'mt-2'}`}>
+          <button
+            onClick={() => handleLike(song)}
+            className="flex items-center text-slate-500 hover:text-red-500 transition-all duration-200 hover:scale-105"
+          >
+            <Heart
+              className={`${isNarrowView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1.5'} ${
+                likeStates[song.id] ? 'fill-current text-red-500' : ''
+              }`}
+            />
+            <span className="font-medium">{likeCounts[song.id] || 0}</span>
+          </button>
+          
+          <button
+            onClick={() => handleLocalVoteClick('Best Musically')}
+            className="flex items-center text-slate-500 hover:text-blue-500 transition-all duration-200 hover:scale-105"
+          >
+            {getVoteIcon('Best Musically', isNarrowView)}
+            <span className="font-medium">{localVoteCounts['Best Musically'] || 0}</span>
+          </button>
+          
+          <button
+            onClick={() => handleLocalVoteClick('Best Lyrically')}
+            className="flex items-center text-slate-500 hover:text-green-500 transition-all duration-200 hover:scale-105"
+          >
+            {getVoteIcon('Best Lyrically', isNarrowView)}
+            <span className="font-medium">{localVoteCounts['Best Lyrically'] || 0}</span>
+          </button>
+          
+          <button
+            onClick={() => handleLocalVoteClick('Best Overall')}
+            className="flex items-center text-slate-500 hover:text-yellow-500 transition-all duration-200 hover:scale-105"
+          >
+            {getVoteIcon('Best Overall', isNarrowView)}
+            <span className="font-medium">{localVoteCounts['Best Overall'] || 0}</span>
+          </button>
+          
+          <button
+            onClick={() => setIsCommentsDialogOpen(true)}
+            className="flex items-center text-slate-500 hover:text-purple-500 transition-all duration-200 hover:scale-105"
+          >
+            <MessageCircle className={`${isNarrowView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1.5'}`} />
+            <span className="font-medium">{localCommentsCount}</span>
+          </button>
+          
+          {isNarrowView && (
+            <button
+              onClick={() => setIsLyricsBibleDialogOpen(true)}
+              className="flex items-center text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 ml-auto"
+            >
+              <BookOpenText className="h-3 w-3" />
+            </button>
+          )}
+        </div>
 
-        {/* Enhanced Tags / Badges */}
+        {/* Enhanced Tags / Badges - More compact layout */}
         {!isNarrowView && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {song.genres && song.genres.map((genre, index) => (
-              <Badge key={`${song.id}-${genre}-${index}`} variant="secondary" className="text-xs px-2 py-1 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-300 border-0 rounded-lg font-medium">
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {song.genres && song.genres.slice(0, 3).map((genre, index) => (
+              <Badge key={`${song.id}-${genre}-${index}`} variant="secondary" className="text-xs px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-300 border-0 rounded-md font-medium">
                 {genre}
               </Badge>
             ))}
+            {song.genres && song.genres.length > 3 && (
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-300 border-0 rounded-md font-medium">
+                +{song.genres.length - 3}
+              </Badge>
+            )}
             {song.bible_translation_used && (
-              <Badge variant="outline" className="text-xs px-2 py-1 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg font-medium">
+              <Badge variant="outline" className="text-xs px-2 py-0.5 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-md font-medium">
                 {song.bible_translation_used}
               </Badge>
             )}
             {song.lyrics_scripture_adherence && (
-              <Badge variant="default" className="text-xs px-2 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 rounded-lg font-medium">
+              <Badge variant="default" className="text-xs px-2 py-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 rounded-md font-medium">
                 {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
               </Badge>
             )}
             {song.is_continuous_passage !== undefined && (
-              <Badge variant="outline" className="text-xs px-2 py-1 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg font-medium">
+              <Badge variant="outline" className="text-xs px-2 py-0.5 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 rounded-md font-medium">
                 {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
               </Badge>
             )}

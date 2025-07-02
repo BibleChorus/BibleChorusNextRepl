@@ -152,7 +152,7 @@ function ListenContent({
   const router = useRouter()
   const querySearch = router.query.search as string || ''
   const { user } = useAuth(); // useAuth already provides User | null with correct type
-  const { currentSong, isMinimized, isShuffling, queue, updateQueue, registerShuffleLoader } = useMusicPlayer();
+  const { currentSong, isMinimized, isShuffling, queue, updateQueue, registerShuffleLoader, playSong, toggleShuffle } = useMusicPlayer();
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
 
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(initialSelectedPlaylist)
@@ -781,6 +781,7 @@ function ListenContent({
   const formRef = useRef<UseFormReturn<FormValues>>(null);
 
   const [isSortExpanded, setIsSortExpanded] = useState(false);
+  const [isPlaylistExpanded, setIsPlaylistExpanded] = useState(false);
 
   const [isNarrowView, setIsNarrowView] = useState(false);
 
@@ -907,6 +908,16 @@ function ListenContent({
                   <ArrowUpDown className="h-4 w-4 mr-2" />
                   Sort
                 </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsPlaylistExpanded(!isPlaylistExpanded)}
+                  className="h-9 px-3 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
+                >
+                  <ListMusic className="h-4 w-4 mr-2" />
+                  Playlists
+                </Button>
 
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -931,146 +942,7 @@ function ListenContent({
             </div>
           </div>
 
-          {/* Enhanced Playlist Management Panel */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="container mx-auto px-4 pb-4"
-          >
-            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl p-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                {/* Current Playlist Section */}
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="flex items-center gap-3">
-                    {selectedPlaylist && (
-                      <div className="w-12 h-12 relative flex-shrink-0 group">
-                        <Image
-                          src={playlists?.find((p) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
-                          alt="Playlist cover"
-                          layout="fill"
-                          objectFit="cover"
-                          className="rounded-xl transition-transform group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                      </div>
-                    )}
-                    
-                    <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="h-12 px-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl min-w-[200px] justify-start">
-                          <div className="flex items-center gap-3 overflow-hidden">
-                            <ListMusic className="h-4 w-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
-                            <div className="flex flex-col items-start min-w-0">
-                              <span className="font-medium text-sm truncate">
-                                {selectedPlaylist
-                                  ? playlists?.find(p => p.id.toString() === selectedPlaylist)?.name
-                                  : 'Select Playlist'}
-                              </span>
-                              {selectedPlaylist && (
-                                <span className="text-xs text-slate-500 dark:text-slate-400">
-                                  {playlists?.find(p => p.id.toString() === selectedPlaylist)?.song_count || 0} songs
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {selectedPlaylist && (
-                            <X
-                              className="h-4 w-4 flex-shrink-0 hover:text-red-500 ml-auto transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                clearPlaylistSelection();
-                              }}
-                            />
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80 p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-2xl">
-                        <div className="p-4">
-                          <div className="flex items-center gap-2 mb-4">
-                            <Search className="h-4 w-4 text-slate-400" />
-                            <Input
-                              placeholder="Search playlists..."
-                              value={playlistSearch}
-                              onChange={(e) => setPlaylistSearch(e.target.value)}
-                              className="h-9 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 rounded-lg"
-                            />
-                          </div>
-                          <ScrollArea className="h-[300px]">
-                            <div className="space-y-1">
-                              {filteredPlaylists.map((playlist) => (
-                                <motion.div
-                                  key={playlist.id}
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  className={cn(
-                                    "flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-indigo-500/10 hover:to-purple-500/10",
-                                    selectedPlaylist === playlist.id.toString() && "bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20"
-                                  )}
-                                  onClick={() => handlePlaylistSelect(playlist.id.toString())}
-                                >
-                                  <div className="w-10 h-10 relative flex-shrink-0">
-                                    <Image
-                                      src={playlist.cover_art_url || '/biblechorus-icon.png'}
-                                      alt={playlist.name}
-                                      layout="fill"
-                                      objectFit="cover"
-                                      className="rounded-lg"
-                                    />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="font-medium text-sm truncate text-slate-900 dark:text-white">
-                                      {playlist.name}
-                                    </div>
-                                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                                      {playlist.song_count || 0} songs
-                                    </div>
-                                  </div>
-                                  {selectedPlaylist === playlist.id.toString() && (
-                                    <Check className="h-4 w-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
-                                  )}
-                                </motion.div>
-                              ))}
-                            </div>
-                          </ScrollArea>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  
-                  {/* Quick Playlist Actions */}
-                  {selectedPlaylist && (
-                    <motion.div 
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4 }}
-                      className="hidden sm:flex items-center gap-2"
-                    >
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 px-3 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
-                      >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                    </motion.div>
-                  )}
-                </div>
 
-                {/* Save and Quick Actions */}
-                <div className="flex items-center gap-2">
-                  <Button 
-                    onClick={handleSavePlaylist}
-                    className="h-12 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Playlist
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
 
           {/* Enhanced Filter Section */}
           <AnimatePresence>
@@ -1149,9 +1021,176 @@ function ListenContent({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Enhanced Playlist Section */}
+          <AnimatePresence>
+            {isPlaylistExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="container mx-auto px-4 pb-4"
+              >
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl p-6"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      Playlist Management
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsPlaylistExpanded(false)}
+                      className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    {/* Current Playlist Section */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex items-center gap-3">
+                          {selectedPlaylist && (
+                            <div className="w-12 h-12 relative flex-shrink-0 group">
+                              <Image
+                                src={playlists?.find((p) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
+                                alt="Playlist cover"
+                                layout="fill"
+                                objectFit="cover"
+                                className="rounded-xl transition-transform group-hover:scale-105"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            </div>
+                          )}
+                          
+                          <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" className="h-12 px-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl min-w-[200px] justify-start">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                  <ListMusic className="h-4 w-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
+                                  <div className="flex flex-col items-start min-w-0">
+                                    <span className="font-medium text-sm truncate">
+                                      {selectedPlaylist
+                                        ? playlists?.find(p => p.id.toString() === selectedPlaylist)?.name
+                                        : 'Select Playlist'}
+                                    </span>
+                                    {selectedPlaylist && (
+                                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                                        {playlists?.find(p => p.id.toString() === selectedPlaylist)?.song_count || 0} songs
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                {selectedPlaylist && (
+                                  <X
+                                    className="h-4 w-4 flex-shrink-0 hover:text-red-500 ml-auto transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      clearPlaylistSelection();
+                                    }}
+                                  />
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-2xl">
+                              <div className="p-4">
+                                <div className="flex items-center gap-2 mb-4">
+                                  <Search className="h-4 w-4 text-slate-400" />
+                                  <Input
+                                    placeholder="Search playlists..."
+                                    value={playlistSearch}
+                                    onChange={(e) => setPlaylistSearch(e.target.value)}
+                                    className="h-9 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 rounded-lg"
+                                  />
+                                </div>
+                                <ScrollArea className="h-[300px]">
+                                  <div className="space-y-1">
+                                    {filteredPlaylists.map((playlist) => (
+                                      <motion.div
+                                        key={playlist.id}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className={cn(
+                                          "flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-indigo-500/10 hover:to-purple-500/10",
+                                          selectedPlaylist === playlist.id.toString() && "bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20"
+                                        )}
+                                        onClick={() => handlePlaylistSelect(playlist.id.toString())}
+                                      >
+                                        <div className="w-10 h-10 relative flex-shrink-0">
+                                          <Image
+                                            src={playlist.cover_art_url || '/biblechorus-icon.png'}
+                                            alt={playlist.name}
+                                            layout="fill"
+                                            objectFit="cover"
+                                            className="rounded-lg"
+                                          />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="font-medium text-sm truncate text-slate-900 dark:text-white">
+                                            {playlist.name}
+                                          </div>
+                                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                                            {playlist.song_count || 0} songs
+                                          </div>
+                                        </div>
+                                        {selectedPlaylist === playlist.id.toString() && (
+                                          <Check className="h-4 w-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
+                                        )}
+                                      </motion.div>
+                                    ))}
+                                  </div>
+                                </ScrollArea>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        
+                        {/* Quick Playlist Actions */}
+                        {selectedPlaylist && (
+                          <motion.div 
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="hidden sm:flex items-center gap-2"
+                          >
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-9 px-3 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
+                            >
+                              <Edit className="h-3 w-3 mr-1" />
+                              Edit
+                            </Button>
+                          </motion.div>
+                        )}
+                      </div>
+
+                      {/* Save Button */}
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          onClick={handleSavePlaylist}
+                          className="h-12 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Playlist
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-2 sm:px-4 py-6">
           {/* Enhanced Active Filters Display */}
           {getFilterTags().length > 0 && (
             <motion.div 
@@ -1231,7 +1270,7 @@ function ListenContent({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white/30 dark:bg-slate-800/30 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-6 shadow-xl"
+            className="bg-white/30 dark:bg-slate-800/30 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-3 sm:p-6 shadow-xl"
           >
             {songs.length > 0 ? (
               <div className="space-y-4">
@@ -1239,14 +1278,8 @@ function ListenContent({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/50 dark:border-slate-700/50">
                   <div className="flex items-center gap-4">
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                      {songs.length.toLocaleString()} of {totalSongs.toLocaleString()} songs
+                      {totalSongs.toLocaleString()} Songs
                     </h2>
-                    {songs.length < totalSongs && (
-                      <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-                        Loading more...
-                      </div>
-                    )}
                   </div>
                   
                   {/* Quick Actions */}
@@ -1255,8 +1288,26 @@ function ListenContent({
                       variant="outline"
                       size="sm"
                       onClick={async () => {
-                        const allSongs = await fetchAllSongs();
-                        // Add shuffle logic here
+                        try {
+                          const allSongs = await fetchAllSongs();
+                          if (allSongs.length > 0) {
+                            const playerSongs = allSongs.map(toPlayerSong);
+                            // Enable shuffle mode and start playing the first song
+                            updateQueue(playerSongs);
+                            if (!isShuffling) {
+                              toggleShuffle(); // This will shuffle the queue
+                            }
+                            // Play the first song in the shuffled queue
+                            const firstSong = playerSongs[0];
+                            playSong(firstSong, playerSongs);
+                            toast.success(`Shuffling ${allSongs.length} songs`);
+                          } else {
+                            toast.error('No songs to shuffle');
+                          }
+                        } catch (error) {
+                          console.error('Error shuffling songs:', error);
+                          toast.error('Failed to shuffle songs');
+                        }
                       }}
                       className="h-9 px-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 rounded-lg"
                     >
@@ -1267,8 +1318,26 @@ function ListenContent({
                       variant="outline"
                       size="sm"
                       onClick={async () => {
-                        const allSongs = await fetchAllSongs();
-                        // Add play all logic here
+                        try {
+                          const allSongs = await fetchAllSongs();
+                          if (allSongs.length > 0) {
+                            const playerSongs = allSongs.map(toPlayerSong);
+                            // Disable shuffle mode and start playing the first song
+                            updateQueue(playerSongs);
+                            if (isShuffling) {
+                              toggleShuffle(); // This will disable shuffle
+                            }
+                            // Play the first song in order
+                            const firstSong = playerSongs[0];
+                            playSong(firstSong, playerSongs);
+                            toast.success(`Playing ${allSongs.length} songs`);
+                          } else {
+                            toast.error('No songs to play');
+                          }
+                        } catch (error) {
+                          console.error('Error playing songs:', error);
+                          toast.error('Failed to play songs');
+                        }
                       }}
                       className="h-9 px-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 rounded-lg"
                     >
