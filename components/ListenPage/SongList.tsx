@@ -482,23 +482,23 @@ const SongListItem = React.memo(function SongListItem({
 
   return (
     <motion.div
-      className={`flex items-center p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow relative overflow-hidden group song-card ${isNarrowView ? 'h-[72px] sm:h-[88px]' : ''}`}
-      whileHover={{ scale: 1.01 }}
-      transition={{ duration: 0.2 }}
+      className={`flex items-center p-3 sm:p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-lg relative overflow-hidden group song-card hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 ${isNarrowView ? 'h-[80px] sm:h-[96px]' : 'min-h-[120px]'}`}
+      whileHover={{ scale: 1.01, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
+      transition={{ duration: 0.3 }}
     >
       {/* Song Art with Play/Pause Button */}
-      <div className={`${isNarrowView ? 'w-16 h-16 sm:w-20 sm:h-20' : 'w-20 h-20 sm:w-24 sm:h-24'} mr-3 sm:mr-4 relative flex-shrink-0`}>
+              <div className={`${isNarrowView ? 'w-16 h-16 sm:w-20 sm:h-20' : 'w-20 h-20 sm:w-24 sm:h-24'} mr-4 sm:mr-6 relative flex-shrink-0`}>
         {song.song_art_url && !imageError[song.id] ? (
           <Image
             src={`${CDN_URL}${song.song_art_url}`}
             alt={song.title}
             layout="fill"
             objectFit="cover"
-            className="rounded"
+            className="rounded-xl"
             onError={() => setImageError(prev => ({ ...prev, [song.id]: true }))}
           />
         ) : (
-          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-400 text-xs">
+          <div className="w-full h-full bg-slate-200 dark:bg-slate-700 rounded-xl flex items-center justify-center text-slate-400 text-xs backdrop-blur-sm">
             No Image
           </div>
         )}
@@ -533,97 +533,97 @@ const SongListItem = React.memo(function SongListItem({
 
       {/* Song Details */}
       <div className="flex-1 min-w-0 flex flex-col justify-center">
-        <div className="flex items-center justify-between">
-          <Link href={`/Songs/${song.id}`} className="mb-1 sm:mb-0">
-            <h2 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-100 hover:underline truncate">
+        <div className="flex items-start justify-between mb-2">
+          <Link href={`/Songs/${song.id}`} className="flex-1 min-w-0">
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 truncate">
               {song.title}
             </h2>
           </Link>
           <button
             onClick={() => setIsLyricsBibleDialogOpen(true)}
-            className="text-gray-500 hover:text-primary-500 transition-colors duration-200 ml-2"
+            className="text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 ml-3 flex-shrink-0"
           >
             <BookOpenText className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+        <div className={`flex flex-wrap items-center gap-3 text-sm ${isNarrowView ? 'mt-1' : 'mt-2'}`}>
           <button
             onClick={() => handleLike(song)}
-            className="flex items-center text-gray-500 hover:text-red-500 transition-colors duration-200"
+            className="flex items-center text-slate-500 hover:text-red-500 transition-all duration-200 hover:scale-105"
           >
             <Heart
-              className={`h-4 w-4 mr-1 ${
+              className={`h-4 w-4 mr-1.5 ${
                 likeStates[song.id] ? 'fill-current text-red-500' : ''
               }`}
             />
-            <span>{likeCounts[song.id] || 0}</span>
+            <span className="font-medium">{likeCounts[song.id] || 0}</span>
           </button>
           <button
             onClick={() => handleLocalVoteClick('Best Musically')}
-            className="flex items-center text-gray-500 hover:text-blue-500 transition-colors duration-200"
+            className="flex items-center text-slate-500 hover:text-blue-500 transition-all duration-200 hover:scale-105"
           >
             {getVoteIcon('Best Musically')}
-            <span>{localVoteCounts['Best Musically'] || 0}</span>
+            <span className="font-medium">{localVoteCounts['Best Musically'] || 0}</span>
           </button>
           <button
             onClick={() => handleLocalVoteClick('Best Lyrically')}
-            className="flex items-center text-gray-500 hover:text-green-500 transition-colors duration-200"
+            className="flex items-center text-slate-500 hover:text-green-500 transition-all duration-200 hover:scale-105"
           >
             {getVoteIcon('Best Lyrically')}
-            <span>{localVoteCounts['Best Lyrically'] || 0}</span>
+            <span className="font-medium">{localVoteCounts['Best Lyrically'] || 0}</span>
           </button>
           <button
             onClick={() => handleLocalVoteClick('Best Overall')}
-            className="flex items-center text-gray-500 hover:text-yellow-500 transition-colors duration-200"
+            className="flex items-center text-slate-500 hover:text-yellow-500 transition-all duration-200 hover:scale-105"
           >
             {getVoteIcon('Best Overall')}
-            <span>{localVoteCounts['Best Overall'] || 0}</span>
+            <span className="font-medium">{localVoteCounts['Best Overall'] || 0}</span>
           </button>
           <button
             onClick={() => setIsCommentsDialogOpen(true)}
-            className="flex items-center text-gray-500 hover:text-purple-500 transition-colors duration-200 ml-2"
+            className="flex items-center text-slate-500 hover:text-purple-500 transition-all duration-200 hover:scale-105"
           >
-            <MessageCircle className="h-4 w-4 mr-1" />
-            <span>{localCommentsCount}</span>
+            <MessageCircle className="h-4 w-4 mr-1.5" />
+            <span className="font-medium">{localCommentsCount}</span>
           </button>
         </div>
-        <div className="flex items-center text-xs sm:text-sm mt-1">
+        <div className="flex items-center text-sm mt-1">
           <button
             onClick={() => router.push(`/profile?id=${song.uploaded_by}`)}
-            className="text-gray-600 dark:text-gray-400 hover:underline truncate"
+            className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors duration-200 truncate font-medium"
           >
             {song.username || 'Unknown User'}
           </button>
           {song.bible_verses && song.bible_verses.length > 0 && (
             <>
-              <span className="mx-2 text-gray-400">|</span>
-              <span className="font-light text-xs sm:text-sm text-primary-600 dark:text-primary-400 italic overflow-hidden overflow-ellipsis whitespace-nowrap flex-shrink min-w-0 pr-1">
+              <span className="mx-3 text-slate-300 dark:text-slate-600">•</span>
+              <span className="font-medium text-sm text-indigo-600 dark:text-indigo-400 italic overflow-hidden overflow-ellipsis whitespace-nowrap flex-shrink min-w-0">
                 {formatBibleVerses(song.bible_verses)}
               </span>
             </>
           )}
         </div>
 
-        {/* Tags / Badges */}
+        {/* Enhanced Tags / Badges */}
         {!isNarrowView && (
-          <div className="mt-1 sm:mt-2 flex flex-wrap gap-1">
+          <div className="mt-3 flex flex-wrap gap-2">
             {song.genres && song.genres.map((genre, index) => (
-              <Badge key={`${song.id}-${genre}-${index}`} variant="secondary" className="text-[10px] sm:text-xs px-1 py-0">
+              <Badge key={`${song.id}-${genre}-${index}`} variant="secondary" className="text-xs px-2 py-1 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-300 border-0 rounded-lg font-medium">
                 {genre}
               </Badge>
             ))}
             {song.bible_translation_used && (
-              <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
+              <Badge variant="outline" className="text-xs px-2 py-1 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg font-medium">
                 {song.bible_translation_used}
               </Badge>
             )}
             {song.lyrics_scripture_adherence && (
-              <Badge variant="default" className="text-[10px] sm:text-xs px-1 py-0 bg-primary text-primary-foreground">
+              <Badge variant="default" className="text-xs px-2 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 rounded-lg font-medium">
                 {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
               </Badge>
             )}
             {song.is_continuous_passage !== undefined && (
-              <Badge variant="outline" className="text-[10px] sm:text-xs px-1 py-0">
+              <Badge variant="outline" className="text-xs px-2 py-1 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg font-medium">
                 {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
               </Badge>
             )}

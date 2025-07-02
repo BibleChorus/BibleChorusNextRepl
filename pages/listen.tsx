@@ -4,8 +4,8 @@ import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
 import { Filters } from '@/components/ListenPage/Filters'
 import { motion, AnimatePresence } from "framer-motion"
-import { Filter, X, Info, Save, Search, Check, ListMusic, ArrowUpDown, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Expand, Shrink } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
+import { Filter, X, Info, Save, Search, Check, ListMusic, ArrowUpDown, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Expand, Shrink, PlayCircle, Edit } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import qs from 'qs'
@@ -32,7 +32,7 @@ import { uploadFile } from '@/lib/uploadUtils';
 import { useForm, UseFormReturn } from 'react-hook-form'; // Add this import
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { SortOptions } from '@/components/ListenPage/SortOptions';
-import { useSidebar } from '@/contexts/SidebarContext';  // Import useSidebar
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 // Import User from types.ts
@@ -154,8 +154,6 @@ function ListenContent({
   const { user } = useAuth(); // useAuth already provides User | null with correct type
   const { currentSong, isMinimized, isShuffling, queue, updateQueue, registerShuffleLoader } = useMusicPlayer();
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
-  const { isOpen: isSidebarOpen } = useSidebar(); // Get sidebar state
-  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(initialSelectedPlaylist)
   const [filterOptions, setFilterOptions] = useState<FilterOptions>(initialFilterOptions)
@@ -191,28 +189,7 @@ function ListenContent({
     }
   }, [router.isReady, router.query.bibleBooks, router.query.bibleChapters, router.query.bibleVerses]);
 
-  // Adjust bottom offset for filter button
-  const filterButtonBottomClass = useMemo(() => {
-    // Adjusted values to ensure both buttons align correctly
-    if (currentSong) {
-      if (isSmallScreen) {
-        return isMinimized ? 'bottom-16' : 'bottom-40';
-      } else {
-        return 'bottom-20';
-      }
-    } else {
-      return 'bottom-4';
-    }
-  }, [currentSong, isSmallScreen, isMinimized]);
 
-  // Adjust the left offset for the sort button
-  const sortButtonLeftClass = useMemo(() => {
-    if (isMobile) {
-      return 'left-4';
-    } else {
-      return isSidebarOpen ? 'left-[260px]' : 'left-16';
-    }
-  }, [isMobile, isSidebarOpen]);
 
   // Initialize filterOptions with URL query
   const [isFilterExpanded, setIsFilterExpanded] = useState(false)
@@ -827,228 +804,558 @@ function ListenContent({
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30">
         <Head>
           <title>BibleChorus - Listen</title>
           <link rel="icon" href="/favicon.ico" />
         </Head>
 
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          {/* Header Section */}
-          <div className={`container mx-auto px-2 transition-all duration-300 ${isHeaderVisible ? 'h-12' : 'h-8'}`}>
-            <div className="flex items-center justify-between h-full">
-              <h1 className={`text-xl font-bold text-foreground transition-opacity duration-300 ${isHeaderVisible ? 'opacity-100' : 'opacity-0'}`}>
-                Listen to Songs
-              </h1>
-            </div>
-          </div>
+        <motion.div 
+          className="sticky top-0 z-20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border-b border-white/20 dark:border-slate-700/50 shadow-lg"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Smart Header with Filter Preview */}
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              {/* Title and Stats */}
+              <div className="flex items-center gap-4">
+                <motion.h1 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  className="text-2xl lg:text-3xl font-bold"
+                >
+                  <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    Listen
+                  </span>
+                </motion.h1>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20"
+                >
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    {totalSongs.toLocaleString()} songs
+                  </span>
+                </motion.div>
+              </div>
 
-          {/* Playlist Selection and Save Button */}
-          <div className={`container mx-auto px-2 py-2 flex items-center justify-between transition-all duration-300 ${isHeaderVisible ? 'mt-0' : 'mt-2'}`}>
-            <div className="flex items-center space-x-2">
-              <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-[200px] justify-between h-8 text-xs">
-                    <div className="flex items-center overflow-hidden">
-                      <ListMusic className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span className="truncate">
-                        {selectedPlaylist
-                          ? playlists?.find(p => p.id.toString() === selectedPlaylist)?.name
-                          : 'Select a playlist'}
-                      </span>
-                    </div>
-                    {selectedPlaylist && (
-                      <X
-                        className="h-3 w-3 flex-shrink-0 hover:text-destructive ml-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          clearPlaylistSelection();
-                        }}
-                      />
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0">
-                  <div className="p-2">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Search className="h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search playlists..."
-                        value={playlistSearch}
-                        onChange={(e) => setPlaylistSearch(e.target.value)}
-                        className="h-8"
-                      />
-                    </div>
-                    <ScrollArea className="h-[200px]">
-                      {filteredPlaylists.map((playlist) => (
-                        <div
-                          key={playlist.id}
-                          className={cn(
-                            "flex items-center px-2 py-1 cursor-pointer hover:bg-accent",
-                            selectedPlaylist === playlist.id.toString() && "bg-accent"
-                          )}
-                          onClick={() => handlePlaylistSelect(playlist.id.toString())}
-                        >
-                          <ListMusic className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span className="break-words overflow-hidden">{playlist.name}</span>
-                          {selectedPlaylist === playlist.id.toString() && (
-                            <Check className="ml-auto h-4 w-4 flex-shrink-0" />
-                          )}
-                        </div>
-                      ))}
-                    </ScrollArea>
+              {/* Filter Preview and Quick Actions */}
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="flex items-center gap-3"
+              >
+                {/* Active Filters Preview */}
+                {getFilterTags().length > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500/5 to-purple-500/5 border border-indigo-500/20 backdrop-blur-sm">
+                    <Filter className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {getFilterTags().length} filter{getFilterTags().length !== 1 ? 's' : ''}
+                    </span>
+                    <button
+                      onClick={() => setFilterOptions({
+                        lyricsAdherence: [],
+                        isContinuous: "all",
+                        aiMusic: "all", 
+                        genres: [],
+                        aiUsedForLyrics: 'all',
+                        musicModelUsed: "",
+                        title: "",
+                        artist: "",
+                        bibleTranslation: "",
+                        bibleBooks: [],
+                        search: "",
+                        bibleChapters: {},
+                        bibleVerses: [],
+                        showLikedSongs: false,
+                        showBestMusically: false,
+                        showBestLyrically: false,
+                        showBestOverall: false,
+                        sortBy: 'mostRecent',
+                        sortOrder: 'desc',
+                        showMySongs: false,
+                      })}
+                      className="text-xs text-slate-500 hover:text-red-500 transition-colors"
+                    >
+                      Clear All
+                    </button>
                   </div>
-                </PopoverContent>
-              </Popover>
-              {selectedPlaylist && (
-                <div className="w-8 h-8 relative flex-shrink-0">
-                  <Image
-                    src={playlists?.find((p) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
-                    alt="Playlist cover"
-                    layout="fill"
-                    objectFit="cover"
-                    className="rounded-md"
-                  />
-                </div>
-              )}
-              <Button onClick={handleSavePlaylist} className="h-8 text-xs px-2 flex items-center space-x-1">
-                <Save className="w-3 h-3" />
-                <span className="hidden sm:inline">Save</span>
-              </Button>
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
+                )}
+                
+                {/* Quick Action Buttons */}
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setIsNarrowView(!isNarrowView)}
-                  className="h-8 w-8 p-0"
+                  onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+                  className="h-9 px-3 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
                 >
-                  {isNarrowView ? (
-                    <Expand className="h-4 w-4" />
-                  ) : (
-                    <Shrink className="h-4 w-4" />
-                  )}
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isNarrowView ? 'Expand view' : 'Narrow view'}</p>
-              </TooltipContent>
-            </Tooltip>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsSortExpanded(!isSortExpanded)}
+                  className="h-9 px-3 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
+                >
+                  <ArrowUpDown className="h-4 w-4 mr-2" />
+                  Sort
+                </Button>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsNarrowView(!isNarrowView)}
+                      className="h-9 w-9 p-0 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
+                    >
+                      {isNarrowView ? (
+                        <Expand className="h-4 w-4" />
+                      ) : (
+                        <Shrink className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isNarrowView ? 'Expand view' : 'Narrow view'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </motion.div>
+            </div>
           </div>
 
-          {/* Filter Group Section */}
+          {/* Enhanced Playlist Management Panel */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="container mx-auto px-4 pb-4"
+          >
+            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                {/* Current Playlist Section */}
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="flex items-center gap-3">
+                    {selectedPlaylist && (
+                      <div className="w-12 h-12 relative flex-shrink-0 group">
+                        <Image
+                          src={playlists?.find((p) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
+                          alt="Playlist cover"
+                          layout="fill"
+                          objectFit="cover"
+                          className="rounded-xl transition-transform group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      </div>
+                    )}
+                    
+                    <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="h-12 px-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl min-w-[200px] justify-start">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <ListMusic className="h-4 w-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
+                            <div className="flex flex-col items-start min-w-0">
+                              <span className="font-medium text-sm truncate">
+                                {selectedPlaylist
+                                  ? playlists?.find(p => p.id.toString() === selectedPlaylist)?.name
+                                  : 'Select Playlist'}
+                              </span>
+                              {selectedPlaylist && (
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
+                                  {playlists?.find(p => p.id.toString() === selectedPlaylist)?.song_count || 0} songs
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {selectedPlaylist && (
+                            <X
+                              className="h-4 w-4 flex-shrink-0 hover:text-red-500 ml-auto transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                clearPlaylistSelection();
+                              }}
+                            />
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-2xl">
+                        <div className="p-4">
+                          <div className="flex items-center gap-2 mb-4">
+                            <Search className="h-4 w-4 text-slate-400" />
+                            <Input
+                              placeholder="Search playlists..."
+                              value={playlistSearch}
+                              onChange={(e) => setPlaylistSearch(e.target.value)}
+                              className="h-9 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 rounded-lg"
+                            />
+                          </div>
+                          <ScrollArea className="h-[300px]">
+                            <div className="space-y-1">
+                              {filteredPlaylists.map((playlist) => (
+                                <motion.div
+                                  key={playlist.id}
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  className={cn(
+                                    "flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-indigo-500/10 hover:to-purple-500/10",
+                                    selectedPlaylist === playlist.id.toString() && "bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20"
+                                  )}
+                                  onClick={() => handlePlaylistSelect(playlist.id.toString())}
+                                >
+                                  <div className="w-10 h-10 relative flex-shrink-0">
+                                    <Image
+                                      src={playlist.cover_art_url || '/biblechorus-icon.png'}
+                                      alt={playlist.name}
+                                      layout="fill"
+                                      objectFit="cover"
+                                      className="rounded-lg"
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-medium text-sm truncate text-slate-900 dark:text-white">
+                                      {playlist.name}
+                                    </div>
+                                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                                      {playlist.song_count || 0} songs
+                                    </div>
+                                  </div>
+                                  {selectedPlaylist === playlist.id.toString() && (
+                                    <Check className="h-4 w-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
+                                  )}
+                                </motion.div>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  {/* Quick Playlist Actions */}
+                  {selectedPlaylist && (
+                    <motion.div 
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="hidden sm:flex items-center gap-2"
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 px-3 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Save and Quick Actions */}
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={handleSavePlaylist}
+                    className="h-12 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Playlist
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Enhanced Filter Section */}
           <AnimatePresence>
             {isFilterExpanded && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="container mx-auto px-4 pb-4"
               >
-                <div className="container mx-auto px-2 py-2">
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl p-6"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      Filters & Search
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsFilterExpanded(false)}
+                      className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <Filters 
                     filterOptions={filterOptions} 
                     setFilterOptions={setFilterOptions}
                     setIsFilterExpanded={setIsFilterExpanded}
                   />
-                </div>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Sort Group Section */}
+          {/* Enhanced Sort Section */}
           <AnimatePresence>
             {isSortExpanded && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="container mx-auto px-4 pb-4"
               >
-                <div className="container mx-auto px-2 py-2">
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl p-6"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      Sort Options
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsSortExpanded(false)}
+                      className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <SortOptions
                     filterOptions={filterOptions as FilterOptions}
                     setFilterOptions={setFilterOptions}
                     setIsSortExpanded={setIsSortExpanded}
                   />
-                </div>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
-
-          <Separator />
-        </div>
+        </motion.div>
 
         <main className="container mx-auto px-4 py-6">
-          <div className="flex flex-wrap gap-2 mb-4">
-            {getFilterTags().map((tag, index) => (
-              <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                {tag.label}
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => removeFilter(tag.type, tag.value)}
-                />
-              </Badge>
-            ))}
-          </div>
-
-          {songs.length > 0 ? (
-            <>
-              <SongList
-                songs={songs}
-                isNarrowView={isNarrowView}
-                totalSongs={totalSongs}
-                fetchAllSongs={fetchAllSongs}
-              />
-              {hasMore && (
-                <>
-                  {isValidating && <SongListSkeleton />}
-                  {/* Sentinel for infinite scroll */}
-                  <div ref={loadMoreRef} className="h-1" />
-                </>
-              )}
-            </>
-          ) : isValidating ? (
-            // Show skeletons while loading
-            <SongListSkeleton />
-          ) : (
-            // Show 'No songs found' when no songs are available after loading
-            <p>No songs found.</p>
+          {/* Enhanced Active Filters Display */}
+          {getFilterTags().length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl p-4 mb-6"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Active Filters ({getFilterTags().length})
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFilterOptions({
+                      lyricsAdherence: [],
+                      isContinuous: "all",
+                      aiMusic: "all", 
+                      genres: [],
+                      aiUsedForLyrics: 'all',
+                      musicModelUsed: "",
+                      title: "",
+                      artist: "",
+                      bibleTranslation: "",
+                      bibleBooks: [],
+                      search: "",
+                      bibleChapters: {},
+                      bibleVerses: [],
+                      showLikedSongs: false,
+                      showBestMusically: false,
+                      showBestLyrically: false,
+                      showBestOverall: false,
+                      sortBy: 'mostRecent',
+                      sortOrder: 'desc',
+                      showMySongs: false,
+                    })}
+                    className="h-8 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    Clear All
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {getFilterTags().map((tag, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Badge 
+                        variant="secondary" 
+                        className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-slate-700 dark:text-slate-300 hover:from-indigo-500/20 hover:to-purple-500/20 transition-all duration-200 rounded-lg"
+                      >
+                        <span className="text-sm">{tag.label}</span>
+                        <button
+                          onClick={() => removeFilter(tag.type, tag.value)}
+                          className="ml-1 hover:text-red-500 transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
           )}
+
+          {/* Enhanced Song List Container */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="bg-white/30 dark:bg-slate-800/30 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-6 shadow-xl"
+          >
+            {songs.length > 0 ? (
+              <div className="space-y-4">
+                {/* Song Count and Quick Actions */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/50 dark:border-slate-700/50">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                      {songs.length.toLocaleString()} of {totalSongs.toLocaleString()} songs
+                    </h2>
+                    {songs.length < totalSongs && (
+                      <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                        Loading more...
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Quick Actions */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        const allSongs = await fetchAllSongs();
+                        // Add shuffle logic here
+                      }}
+                      className="h-9 px-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 rounded-lg"
+                    >
+                      <ChevronUp className="h-4 w-4 mr-2" />
+                      Shuffle All
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        const allSongs = await fetchAllSongs();
+                        // Add play all logic here
+                      }}
+                      className="h-9 px-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 rounded-lg"
+                    >
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      Play All
+                    </Button>
+                  </div>
+                </div>
+
+                <SongList
+                  songs={songs}
+                  isNarrowView={isNarrowView}
+                  totalSongs={totalSongs}
+                  fetchAllSongs={fetchAllSongs}
+                />
+                
+                {hasMore && (
+                  <>
+                    {isValidating && <SongListSkeleton />}
+                    {/* Sentinel for infinite scroll */}
+                    <div ref={loadMoreRef} className="h-1" />
+                  </>
+                )}
+              </div>
+            ) : isValidating ? (
+              // Enhanced loading state
+              <div className="space-y-6">
+                <div className="flex items-center justify-center py-12">
+                  <div className="space-y-4 text-center">
+                    <div className="relative">
+                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-600 mx-auto"></div>
+                      <div className="absolute inset-0 rounded-full animate-pulse bg-gradient-to-r from-indigo-600/20 to-purple-600/20"></div>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-300 text-lg">Loading songs...</p>
+                  </div>
+                </div>
+                <SongListSkeleton />
+              </div>
+            ) : (
+              // Enhanced empty state
+              <div className="text-center py-16">
+                <div className="relative mb-6">
+                  <PlayCircle className="w-16 h-16 mx-auto text-slate-400 dark:text-slate-500" />
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full opacity-20"></div>
+                </div>
+                <h3 className="text-2xl font-semibold mb-3 text-slate-900 dark:text-white">No songs found</h3>
+                <p className="text-slate-600 dark:text-slate-300 mb-6 text-lg max-w-md mx-auto">
+                  {getFilterTags().length > 0 
+                    ? "Try adjusting your filters to find more songs"
+                    : "Start exploring our collection of Bible-inspired music!"}
+                </p>
+                {getFilterTags().length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setFilterOptions({
+                      lyricsAdherence: [],
+                      isContinuous: "all",
+                      aiMusic: "all", 
+                      genres: [],
+                      aiUsedForLyrics: 'all',
+                      musicModelUsed: "",
+                      title: "",
+                      artist: "",
+                      bibleTranslation: "",
+                      bibleBooks: [],
+                      search: "",
+                      bibleChapters: {},
+                      bibleVerses: [],
+                      showLikedSongs: false,
+                      showBestMusically: false,
+                      showBestLyrically: false,
+                      showBestOverall: false,
+                      sortBy: 'mostRecent',
+                      sortOrder: 'desc',
+                      showMySongs: false,
+                    })}
+                    className="h-12 px-6 border-2 hover:scale-105 transition-all duration-300 rounded-xl"
+                  >
+                    Clear All Filters
+                  </Button>
+                )}
+              </div>
+            )}
+          </motion.div>
         </main>
 
-        {/* Filter Toggle Button - Moved to bottom right */}
-        {!isFilterExpanded && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => setIsFilterExpanded(true)}
-            className={`fixed right-4 z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
-            aria-label="Expand filters"
-          >
-            <Filter className="h-5 w-5" />
-          </motion.button>
-        )}
 
-        {/* Sort Toggle Button - Left aligned */}
-        {!isSortExpanded && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => setIsSortExpanded(true)}
-            className={`fixed ${sortButtonLeftClass} z-20 p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-300 ${filterButtonBottomClass}`}
-            aria-label="Expand sorting"
-          >
-            <ArrowUpDown className="h-5 w-5" />
-          </motion.button>
-        )}
 
         {/* Add SavePlaylistDialog */}
         <SavePlaylistDialog
