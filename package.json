@@ -86,6 +86,8 @@
     "react-select": "^5.8.1",
     "react-select-async-paginate": "^0.7.6",
     "recharts": "^2.12.7",
+    "framer-motion": "^12.22.0",
+    "next": "^15.3.4",
     "sanitize-html": "^2.13.1",
     "sharp": "^0.33.5",
     "sonner": "^1.5.0",
