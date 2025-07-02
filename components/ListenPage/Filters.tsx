@@ -779,8 +779,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                     <Input
                       placeholder="Search chapters..."
                       value={chapterSearch}
-                      onChange={(e) => setChapterSearch(e.target.value)}
-                      className="mr-2 h-7 text-xs"
+                      onChange={(e) => setChapterSearch(e.target.value)}                      className="mr-2 h-7 text-xs"
                     />
                     <Button
                       variant="outline"
