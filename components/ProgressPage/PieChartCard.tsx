@@ -50,13 +50,13 @@ export function PieChartCard({ title, description, data, totalVerses }: PieChart
   }))
 
   return (
-    <div data-chart={id} className="flex flex-col">
+    <div data-chart={id} className="flex flex-col h-full">
       <ChartStyle id={id} config={chartConfig} />
-      <div className="text-center mb-2">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        <p className="text-sm text-muted-foreground">{description}</p>
+      <div className="text-center mb-4">
+        <h3 className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">{title}</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-400">{description}</p>
       </div>
-      <div className="flex justify-center">
+      <div className="flex justify-center flex-grow">
         <ChartContainer
           id={id}
           config={chartConfig}
