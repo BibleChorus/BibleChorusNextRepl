@@ -3,6 +3,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useRouter } from 'next/router'
+import { motion } from 'framer-motion'
+import { Sparkles, LogIn, UserPlus, ArrowLeft } from 'lucide-react'
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -56,70 +58,177 @@ export default function AuthenticationPage() {
   }
 
   return (
-    <div className="container relative min-h-screen flex flex-col items-center justify-center lg:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <Link
-        href="/"
-        className={cn(
-          buttonVariants({ variant: "ghost" }),
-          "absolute right-2 top-2 md:right-4 md:top-4"
-        )}
-      >
-        Home
-      </Link>
-      <div className="relative hidden h-full flex-col bg-lavender-100 dark:bg-zinc-800 p-10 text-gray-800 dark:text-white dark:border-r lg:flex rounded-lg">
-        <div className="absolute inset-0 bg-lavender-100 dark:bg-zinc-800 rounded-lg" />
-        <div className="relative z-20 flex items-center text-lg font-medium">
-          <Image
-            src="/biblechorus-icon.png"
-            alt="BibleChorus"
-            width={40}
-            height={40}
-            className="mr-2"
-          />
-          BibleChorus
-        </div>
-        <div className="relative z-20 flex-grow mt-4" style={{ height: 'calc(100% - 60px)' }}>
-          <ScriptureScroll />
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30">
+      {/* Enhanced Background Effects */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.08] via-purple-500/[0.06] to-pink-500/[0.08] dark:from-indigo-500/[0.15] dark:via-purple-500/[0.12] dark:to-pink-500/[0.15]"></div>
+        <div className="absolute top-0 -left-8 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+        <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-12 left-32 w-96 h-96 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
       </div>
-      <div className="w-full px-2 sm:px-4 md:px-6 lg:p-8 xl:p-12">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-          <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {isLogin ? "Sign in to your account" : "Create an account"}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {isLogin 
-                ? "Enter your email below to sign in to your account"
-                : "Enter your details below to create your account"}
-            </p>
+
+      {/* Home Button */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="absolute top-4 right-4 z-50"
+      >
+        <Link
+          href="/"
+          className={cn(
+            "inline-flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-xl shadow-lg hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 hover:scale-105 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium"
+          )}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">Home</span>
+        </Link>
+      </motion.div>
+
+      <div className="container relative min-h-screen flex flex-col items-center justify-center lg:grid lg:max-w-none lg:grid-cols-2 lg:px-4">
+        
+        {/* Left Panel - Scripture Scroll */}
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="relative hidden h-full flex-col p-10 text-slate-800 dark:text-white lg:flex"
+        >
+          <div className="absolute inset-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl" />
+          
+          {/* Logo and Brand */}
+          <div className="relative z-20 flex items-center text-xl font-bold mb-8">
+            <div className="p-2 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl backdrop-blur-sm border border-indigo-500/20 dark:border-indigo-500/30 mr-3">
+              <Image
+                src="/biblechorus-icon.png"
+                alt="BibleChorus"
+                width={32}
+                height={32}
+                className="rounded-lg"
+              />
+            </div>
+            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+              BibleChorus
+            </span>
           </div>
-          <UserAuthForm isLogin={isLogin} onLoginSuccess={handleLoginSuccess} />
-          <p className="px-8 text-center text-sm text-muted-foreground">
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <button
-              onClick={toggleView}
-              className="underline underline-offset-4 hover:text-primary"
+
+          {/* Scripture Scroll Container */}
+          <div className="relative z-20 flex-grow overflow-hidden rounded-2xl">
+            <ScriptureScroll />
+          </div>
+
+          {/* Floating Elements */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.5 }}
+            className="absolute top-16 right-16 w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl backdrop-blur-sm animate-float shadow-xl"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.7 }}
+            className="absolute bottom-20 left-16 w-16 h-16 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"
+          />
+        </motion.div>
+
+        {/* Right Panel - Auth Form */}
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="w-full px-4 sm:px-6 lg:p-8 xl:p-12 relative z-10"
+        >
+          <div className="mx-auto flex w-full flex-col justify-center space-y-8 sm:w-[400px]">
+            
+            {/* Enhanced Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="flex flex-col space-y-6 text-center"
             >
-              {isLogin ? "Sign Up" : "Sign In"}
-            </button>
-          </p>
-          <p className="px-8 text-center text-sm text-muted-foreground">
-            By clicking continue, you agree to our{" "}
-            <TermsDialog>
-              <button className="underline underline-offset-4 hover:text-primary">
-                Terms of Service
-              </button>
-            </TermsDialog>
-            {" "}and{" "}
-            <PrivacyDialog>
-              <button className="underline underline-offset-4 hover:text-primary">
-                Privacy Policy
-              </button>
-            </PrivacyDialog>
-            .
-          </p>
-        </div>
+              {/* Badge */}
+              <div className="mb-4">
+                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-500/20 dark:via-purple-500/20 dark:to-pink-500/20 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 shadow-lg">
+                  <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent font-semibold">
+                    Welcome to BibleChorus
+                  </span>
+                </span>
+              </div>
+
+              {/* Main Title */}
+              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
+                <span className="block text-slate-900 dark:text-white mb-2">
+                  {isLogin ? "Welcome" : "Join Our"}
+                </span>
+                <span className="block relative">
+                  <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                    {isLogin ? "Back" : "Community"}
+                  </span>
+                  <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-full scale-x-0 animate-scale-x"></div>
+                </span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-lg text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+                {isLogin 
+                  ? "Sign in to continue your journey with Bible-inspired music"
+                  : "Create your account and discover a world of spiritual melodies"}
+              </p>
+            </motion.div>
+
+            {/* Enhanced Form Container */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-8"
+            >
+              <UserAuthForm isLogin={isLogin} onLoginSuccess={handleLoginSuccess} />
+            </motion.div>
+
+            {/* Enhanced Footer */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="space-y-6"
+            >
+              {/* Toggle View */}
+              <div className="text-center">
+                <p className="text-slate-600 dark:text-slate-300 mb-3">
+                  {isLogin ? "Don't have an account?" : "Already have an account?"}
+                </p>
+                <button
+                  onClick={toggleView}
+                  className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600/10 to-purple-600/10 hover:from-indigo-600/20 hover:to-purple-600/20 dark:from-indigo-500/20 dark:to-purple-500/20 dark:hover:from-indigo-500/30 dark:hover:to-purple-500/30 backdrop-blur-sm border border-indigo-500/20 dark:border-indigo-500/30 rounded-xl transition-all duration-300 hover:scale-105 font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                >
+                  {isLogin ? <UserPlus className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
+                  {isLogin ? "Create Account" : "Sign In"}
+                </button>
+              </div>
+
+              {/* Terms and Privacy */}
+              <p className="text-center text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                By continuing, you agree to our{" "}
+                <TermsDialog>
+                  <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 underline underline-offset-2 font-medium transition-colors">
+                    Terms of Service
+                  </button>
+                </TermsDialog>
+                {" "}and{" "}
+                <PrivacyDialog>
+                  <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 underline underline-offset-2 font-medium transition-colors">
+                    Privacy Policy
+                  </button>
+                </PrivacyDialog>
+              </p>
+            </motion.div>
+          </div>
+        </motion.div>
       </div>
     </div>
   )
