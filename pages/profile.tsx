@@ -11,7 +11,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Button } from "@/components/ui/button"
 import { CommentList } from '@/components/SongComments/CommentList' // Adjust the import path as needed
 import { ImageCropper } from '@/components/UploadPage/ImageCropper'
-import { Pencil } from 'lucide-react'
+import { Pencil, User } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { Music, MessageCircle, Upload, ArrowRight, Heart, ThumbsUp } from 'lucide-react';
