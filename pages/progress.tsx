@@ -316,9 +316,9 @@ export default function Progress() {
             </div>
           </div>
 
-          {/* Enhanced Filter Section */}
+          {/* Enhanced Filter Section - Only show inline when scrolled */}
           <AnimatePresence>
-            {isFilterExpanded && (
+            {isFilterExpanded && !isHeaderVisible && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
@@ -340,6 +340,37 @@ export default function Progress() {
           </AnimatePresence>
         </motion.div>
 
+        {/* Filter Modal Overlay - Show when on hero section */}
+        <AnimatePresence>
+          {isFilterExpanded && isHeaderVisible && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+              onClick={() => setIsFilterExpanded(false)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ duration: 0.3 }}
+                className="absolute top-20 left-1/2 transform -translate-x-1/2 w-full max-w-4xl mx-auto px-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-3xl border border-white/30 dark:border-slate-700/30 p-4 sm:p-6 shadow-2xl">
+                  <Filters 
+                    filterOptions={filterOptions} 
+                    setFilterOptions={setFilterOptions}
+                    setIsFilterExpanded={setIsFilterExpanded}
+                  />
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Enhanced Filter Toggle Button */}
         {!isFilterExpanded && (
           <motion.button
@@ -359,7 +390,7 @@ export default function Progress() {
         )}
 
         {/* Main Content */}
-        <div className="container mx-auto px-2 sm:px-4 -mt-8 relative z-20">
+        <div className="container mx-auto px-2 sm:px-4 mt-8 relative z-20">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
