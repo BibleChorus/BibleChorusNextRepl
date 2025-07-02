@@ -233,7 +233,7 @@ export default function HowTo() {
                         </p>
                         <Alert className="bg-teal-50/80 dark:bg-teal-950/50 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-800 backdrop-blur-sm">
                           <AlertDescription>
-                            <strong>Example Prompt:</strong> "Make the following into a song in the style of George Herbert, but with language that a modern listener would understand. Use verses, chorus, bridge, and outro. Stay as close to the passage of Scripture as possible. Use a rhyming scheme that is suitable for song."
+                            <strong>Example Prompt:</strong> &quot;Make the following into a song in the style of George Herbert, but with language that a modern listener would understand. Use verses, chorus, bridge, and outro. Stay as close to the passage of Scripture as possible. Use a rhyming scheme that is suitable for song.&quot;
                           </AlertDescription>
                         </Alert>
                       </AccordionContent>
@@ -318,7 +318,7 @@ export default function HowTo() {
                         <p className="mb-4 text-slate-600 dark:text-slate-300">Describe the style, genre, mood, and any instruments you want in your music.</p>
                         <Alert className="bg-cyan-50/80 dark:bg-cyan-950/50 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-800 backdrop-blur-sm">
                           <AlertDescription>
-                            <strong>Example Prompt:</strong> "gentle acoustic guitar melody, soft piano accompaniment; calm, uplifting, Psalm."
+                            <strong>Example Prompt:</strong> &quot;gentle acoustic guitar melody, soft piano accompaniment; calm, uplifting, Psalm.&quot;
                           </AlertDescription>
                         </Alert>
                       </AccordionContent>

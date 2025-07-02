@@ -211,7 +211,7 @@ export default function Progress() {
                   </span>
                 </span>
               </motion.div>
-              
+
               <motion.h1 
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -226,7 +226,7 @@ export default function Progress() {
                   <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-full scale-x-0 animate-scale-x"></div>
                 </span>
               </motion.h1>
-              
+
               <motion.p 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -253,7 +253,7 @@ export default function Progress() {
                 <div className="relative text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent mb-2">{stats.totalVersesCovered.toLocaleString()}</div>
                 <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Verses Covered</div>
               </div>
-              
+
               <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-6 sm:p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-teal-500/10">
                 <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
@@ -261,7 +261,7 @@ export default function Progress() {
                 <div className="relative text-4xl font-bold bg-gradient-to-r from-teal-600 to-teal-500 bg-clip-text text-transparent mb-2">{stats.overallProgress.toFixed(1)}%</div>
                 <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Overall Progress</div>
               </div>
-              
+
               <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-6 sm:p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-cyan-500/10">
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
@@ -269,7 +269,7 @@ export default function Progress() {
                 <div className="relative text-4xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 bg-clip-text text-transparent mb-2">{stats.booksWithProgress}</div>
                 <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Books with Songs</div>
               </div>
-              
+
               <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-6 sm:p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/10">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
@@ -278,7 +278,7 @@ export default function Progress() {
                 <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Total Bible Verses</div>
               </div>
             </motion.div>
-            
+
             {/* Enhanced Floating Elements */}
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
@@ -483,7 +483,7 @@ export default function Progress() {
                                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                                     mobileChartView === 'all'
                                       ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
-                                      : 'bg-white/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/80'
+                                      : 'bg-white/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bgslate-700/80'
                                   }`}
                                 >
                                   All Books
@@ -529,7 +529,7 @@ export default function Progress() {
                                         </div>
                                     </motion.div>
                                   ))}
-                                  
+
                                   {mobileChartData.length === 0 && (
                                     <div className="text-center py-12 text-slate-500 dark:text-slate-400">
                                       <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
