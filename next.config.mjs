@@ -4,8 +4,8 @@ import { PHASE_PRODUCTION_BUILD } from 'next/constants.js'
 export default (phase, defaultConfig) => {
   const isProd = phase === PHASE_PRODUCTION_BUILD
 
-  if (isProd && !process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET environment variable is required for JWT authentication.')
+  if (isProd && !process.env.JWT_SECRET && !process.env.NEXTAUTH_SECRET) {
+    throw new Error('JWT_SECRET or NEXTAUTH_SECRET environment variable is required for authentication.')
   }
 
   return {
@@ -33,7 +33,7 @@ export default (phase, defaultConfig) => {
   // Runtime configuration
   env: {
     // Security-related environment variables
-    JWT_SECRET: process.env.JWT_SECRET,
+    JWT_SECRET: process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET,
     
     // AWS configuration
     AWS_REGION: process.env.AWS_REGION,
@@ -50,7 +50,6 @@ export default (phase, defaultConfig) => {
   // Performance optimizations
   compress: true,
   reactStrictMode: true,
-  swcMinify: isProd,
 
   // Handle trailing slashes consistently
   trailingSlash: false,

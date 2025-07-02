@@ -38,7 +38,8 @@
       "next"
     ],
     "strictNullChecks": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2017"
   },
   "include": [
     "next-env.d.ts",

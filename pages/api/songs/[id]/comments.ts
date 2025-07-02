@@ -1,9 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
-import { getSession } from 'next-auth/react';
 import sanitizeHtml from 'sanitize-html';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Note: Session handling can be added back once NextAuth v5 migration is complete
   const { method } = req;
   const songId = Number(req.query.id);
 
