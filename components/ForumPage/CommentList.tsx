@@ -108,9 +108,10 @@ export const CommentList: React.FC<CommentListProps> = ({
       .map((comment) => (
         <div
           key={comment.id}
-          className={`p-4 bg-card rounded-lg shadow-sm ${
-            depth > 0 ? 'ml-4 mt-2' : 'mt-4'
-          }`}
+          className={cn(
+            'p-4 rounded-xl border border-white/20 dark:border-slate-700/50 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-sm',
+            depth > 0 ? 'ml-6 mt-4' : 'mt-4'
+          )}
         >
           <p className="text-sm text-muted-foreground mb-2">
             {comment.username} •{' '}
@@ -139,7 +140,7 @@ export const CommentList: React.FC<CommentListProps> = ({
               parentCommentId={comment.id}
             />
           )}
-          <div className="flex items-center gap-4 mt-2">
+          <div className="flex items-center gap-2 mt-2">
             <VoteButtons
               itemId={comment.id}
               itemType="comment"

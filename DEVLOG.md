@@ -70,3 +70,7 @@
 ## 2025-06-30
 - Removed `source_url` and `uploaded_at` columns from PDFs.
 - Updated NotebookLM icon with a white background and blue fill to improve dark mode visibility.
+## 2025-07-03
+- Restyled forum vote buttons to a compact horizontal layout.
+- Updated forum comment boxes with glassmorphism borders and spacing.
+- Tweaked the forum text editor styling for a cleaner look.

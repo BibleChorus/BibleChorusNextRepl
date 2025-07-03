@@ -36,14 +36,14 @@ export const NewCommentForm: React.FC<NewCommentFormProps> = ({ topicId, onComme
 
   return (
     <div className="mb-6">
-      <div className="border rounded-md mb-2">
+      <div className="rounded-xl overflow-hidden border border-white/20 dark:border-slate-700/50 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md mb-2">
         <ReactQuill
           value={content}
           onChange={setContent}
-          className="[&_.ql-editor]:min-h-[100px]"
+          className="[&_.ql-editor]:min-h-[120px] [&_.ql-editor]:bg-transparent"
         />
       </div>
-      <Button onClick={handleAddComment} disabled={!content}>
+      <Button onClick={handleAddComment} disabled={!content} size="sm" className="mt-2">
         {parentCommentId ? 'Reply' : 'Add Comment'}
       </Button>
     </div>
