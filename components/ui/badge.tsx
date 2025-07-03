@@ -25,10 +25,14 @@ const badgeVariants = cva(
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
+   * Content displayed inside the badge.
+   */
+  children: React.ReactNode;
+  /**
    * Visual style variant to apply.
    * Matches the keys of `badgeVariants.variant`.
    */
-  variant?: "default" | "secondary" | "destructive" | "outline";
+  variant?: "default" | "secondary" | "outline";
   /**
    * Optional React key – useful when rendering in lists.
    */

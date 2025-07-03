@@ -18,3 +18,6 @@ declare namespace NodeJS {
     [key: string]: string | undefined;
   }
 }
+
+// Removed unnecessary custom module declarations that interfered with the real
+// type definitions shipped by Next.js and framer-motion.
