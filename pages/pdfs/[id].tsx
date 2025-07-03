@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
+import React, { useEffect, useState, useCallback } from 'react';
 import Head from 'next/head';
-import { useEffect, useState, useCallback } from 'react';
 import db from '@/db';
 import { parsePostgresArray } from '@/lib/utils';
 import { Pdf, PdfComment, PdfNote } from '@/types';
@@ -12,8 +12,8 @@ import Image from 'next/image';
 import { NewCommentForm } from '@/components/PdfComments/NewCommentForm';
 import { NotesSection } from '@/components/PdfNotes/NotesSection';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThumbsUp, ThumbsDown, Headphones, FileText, Share2 } from 'lucide-react';
-import axios from 'axios';
+import { ThumbsUp, ThumbsDown, Headphones, FileText, Share2, Sparkles } from 'lucide-react';
+import apiClient from '@/lib/apiClient';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
@@ -26,6 +26,8 @@ import {
 import DOMPurify from 'isomorphic-dompurify';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BIBLE_BOOKS } from '@/lib/constants';
+import { motion } from 'framer-motion';
+import { FetchVersesResponse } from '@/types/api';
 
 interface BibleVerse {
   book: string;
@@ -57,7 +59,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
 
   const handleVote = async (category: 'quality' | 'theology' | 'helpfulness', value: number) => {
     try {
-      await axios.post(`/api/pdfs/${pdf.id}/rate`, { category, value });
+      await apiClient.post(`/api/pdfs/${pdf.id}/rate`, { category, value });
       setRatingCounts((prev) => ({ ...prev, [category]: prev[category] + value }));
     } catch (err) {
       console.error('Error submitting vote', err);
@@ -66,7 +68,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
 
   const handleDetailsSave = async () => {
     try {
-      await axios.put(`/api/pdfs/${pdf.id}/edit`, {
+      await apiClient.put(`/api/pdfs/${pdf.id}/edit`, {
         notebook_lm_url: notebookLmUrl || null,
         summary: summary || null,
       });
@@ -122,8 +124,8 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
           chapter: v.chapter,
           verses: [v.verse],
         }));
-        const response = await axios.post('/api/fetch-verses', versesToFetch);
-        const fetched = response.data.flat().map((verse: any) => ({
+        const { data } = await apiClient.post<FetchVersesResponse>('/api/fetch-verses', versesToFetch);
+        const fetched = data.flat().map((verse) => ({
           book: BIBLE_BOOKS[verse.book - 1],
           chapter: verse.chapter,
           verse: verse.verse,
@@ -139,209 +141,276 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
     fetchVerses();
   }, [bibleVerses]);
 
-
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50/60 via-white to-yellow-50/30 dark:from-amber-950/40 dark:via-slate-900 dark:to-yellow-950/30">
       <Head>
         <title>{pdf.title}</title>
       </Head>
-      <div className="flex flex-col md:flex-row md:items-start md:space-x-6">
-        {pdf.image_url && (
-          <div className="w-full md:w-1/3 mb-4 md:mb-0">
-            <Image
-              src={
-                pdf.image_url.startsWith('http')
-                  ? pdf.image_url
-                  : `${process.env.NEXT_PUBLIC_CDN_URL ?? ''}${pdf.image_url}`
-              }
-              alt={pdf.title}
-              width={400}
-              height={500}
-              className="w-full h-auto object-contain rounded"
-            />
+
+      {/* Page Background */}
+      <div className="min-h-screen bg-gradient-to-br from-amber-50/60 via-white to-yellow-50/30 dark:from-amber-950/40 dark:via-slate-900 dark:to-yellow-950/30">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="relative overflow-hidden pb-20 pt-12"
+        >
+          {/* Background Blobs & Gradients */}
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.08] via-rose-500/[0.06] to-emerald-500/[0.08] dark:from-amber-500/[0.15] dark:via-rose-500/[0.12] dark:to-emerald-500/[0.15]"></div>
+            <div className="absolute top-0 -left-8 w-96 h-96 bg-amber-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+            <div className="absolute top-12 -right-8 w-80 h-80 bg-rose-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-12 left-32 w-96 h-96 bg-emerald-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(251,191,36,0.1),rgba(255,255,255,0))]"></div>
           </div>
-        )}
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold mb-1">{pdf.title}</h1>
-          {pdf.author && (
-            <p className="text-muted-foreground">By {pdf.author}</p>
-          )}
-        <p className="text-sm text-muted-foreground">
-          Uploaded on {new Date(pdf.created_at).toLocaleDateString()}
-        </p>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {pdf.themes.map((t) => (
-            <Badge key={t}>{t}</Badge>
-          ))}
-        </div>
-        {pdf.summary && <p className="mt-2 whitespace-pre-wrap">{pdf.summary}</p>}
-        {(pdf.notebook_lm_url || pdf.file_url) && (
-          <div className="mt-4 flex items-center gap-4">
-            {pdf.notebook_lm_url && (
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={pdf.notebook_lm_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Image
-                        src="/icons/notebooklm.svg"
-                        alt="NotebookLM"
-                        width={32}
-                        height={32}
-                        className="w-8 h-8"
-                      />
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Google NotebookLM lets you ask questions and explore your PDFs.
-                  </TooltipContent>
-                </Tooltip>
-                <Link
-                  href={pdf.notebook_lm_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline text-primary text-lg"
-                >
-                  Open in NotebookLM
-                </Link>
-              </>
-            )}
-            {pdf.file_url && (
-              <Link
-                href={pdf.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 underline text-primary text-lg"
-              >
-                <FileText className="w-5 h-5" />
-                Open PDF
-              </Link>
-            )}
-            <Button
-              variant="outline"
-              onClick={handleShare}
-              className="flex items-center gap-1"
+
+          {/* Hero Content */}
+          <div className="relative z-10 container mx-auto px-4 text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              className="mb-6"
             >
-              <Share2 className="w-5 h-5" />
-              Share
-            </Button>
-          </div>
-        )}
-        {user && user.id === pdf.uploaded_by && (
-          <div className="mt-2 space-y-1">
-            {!editingDetails ? (
-              <Button size="sm" onClick={() => setEditingDetails(true)}>
-                Edit Details
-              </Button>
-            ) : (
-              <div className="space-y-1">
-                <Input
-                  value={notebookLmUrl}
-                  onChange={(e) => setNotebookLmUrl(e.target.value)}
-                  placeholder="https://notebooklm.google.com/..."
-                />
-                <Textarea
-                  value={summary}
-                  onChange={(e) => setSummary(e.target.value)}
-                  placeholder="One paragraph summary"
-                />
-                <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={handleDetailsSave}>Save Details</Button>
-                  <Button size="sm" variant="secondary" onClick={() => setEditingDetails(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
+              <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 dark:from-amber-500/20 dark:via-rose-500/20 dark:to-emerald-500/20 backdrop-blur-md border border-amber-500/20 dark:border-amber-500/30 shadow-lg">
+                <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span className="bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 dark:from-amber-400 dark:via-rose-400 dark:to-emerald-400 bg-clip-text text-transparent font-semibold">
+                  Study Resource
+                </span>
+              </span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-5xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white"
+            >
+              {pdf.title}
+            </motion.h1>
+
+            {pdf.author && (
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="mt-4 text-lg text-slate-600 dark:text-slate-300"
+              >
+                By {pdf.author}
+              </motion.p>
             )}
           </div>
-        )}
+        </motion.div>
+
+        {/* Main Content */}
+        <div className="container mx-auto px-4 -mt-12 relative z-20">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-6 md:p-10 space-y-6"
+          >
+            <div className="flex flex-col md:flex-row md:items-start md:space-x-6">
+              {pdf.image_url && (
+                <div className="w-full md:w-1/3 mb-4 md:mb-0">
+                  <Image
+                    src={
+                      pdf.image_url.startsWith('http')
+                        ? pdf.image_url
+                        : `${process.env.NEXT_PUBLIC_CDN_URL ?? ''}${pdf.image_url}`
+                    }
+                    alt={pdf.title}
+                    width={400}
+                    height={500}
+                    className="w-full h-auto object-contain rounded"
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold mb-1">{pdf.title}</h1>
+                {pdf.author && (
+                  <p className="text-muted-foreground">By {pdf.author}</p>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  Uploaded on {new Date(pdf.created_at).toLocaleDateString()}
+                </p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {pdf.themes.map((t) => (
+                    <Badge key={t}>{t}</Badge>
+                  ))}
+                </div>
+                {pdf.summary && <p className="mt-2 whitespace-pre-wrap">{pdf.summary}</p>}
+                {(pdf.notebook_lm_url || pdf.file_url) && (
+                  <div className="mt-4 flex items-center gap-4">
+                    {pdf.notebook_lm_url && (
+                      <>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link
+                              href={pdf.notebook_lm_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Image
+                                src="/icons/notebooklm.svg"
+                                alt="NotebookLM"
+                                width={32}
+                                height={32}
+                                className="w-8 h-8"
+                              />
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Google NotebookLM lets you ask questions and explore your PDFs.
+                          </TooltipContent>
+                        </Tooltip>
+                        <Link
+                          href={pdf.notebook_lm_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline text-primary text-lg"
+                        >
+                          Open in NotebookLM
+                        </Link>
+                      </>
+                    )}
+                    {pdf.file_url && (
+                      <Link
+                        href={pdf.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 underline text-primary text-lg"
+                      >
+                        <FileText className="w-5 h-5" />
+                        Open PDF
+                      </Link>
+                    )}
+                    <Button
+                      variant="outline"
+                      onClick={handleShare}
+                      className="flex items-center gap-1"
+                    >
+                      <Share2 className="w-5 h-5" />
+                      Share
+                    </Button>
+                  </div>
+                )}
+                {user && user.id === pdf.uploaded_by && (
+                  <div className="mt-2 space-y-1">
+                    {!editingDetails ? (
+                      <Button size="sm" onClick={() => setEditingDetails(true)}>
+                        Edit Details
+                      </Button>
+                    ) : (
+                      <div className="space-y-1">
+                        <Input
+                          value={notebookLmUrl}
+                          onChange={(e) => setNotebookLmUrl(e.target.value)}
+                          placeholder="https://notebooklm.google.com/..."
+                        />
+                        <Textarea
+                          value={summary}
+                          onChange={(e) => setSummary(e.target.value)}
+                          placeholder="One paragraph summary"
+                        />
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" onClick={handleDetailsSave}>Save Details</Button>
+                          <Button size="sm" variant="secondary" onClick={() => setEditingDetails(false)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator />
+
+            <section>
+              <h2 className="text-xl font-semibold mb-2">Bible Verses</h2>
+              {isLoadingVerses ? (
+                <p>Loading verses...</p>
+              ) : verses.length === 0 ? (
+                <p>No verses linked.</p>
+              ) : (
+                <ScrollArea className="h-[400px] pr-4">
+                  <div className="space-y-4">
+                    {verses.map((v, i) => (
+                      <div key={i}>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold">{`${v.book} ${v.chapter}:${v.verse}`}</p>
+                          <Link
+                            href={{
+                              pathname: '/listen',
+                              query: {
+                                bibleBooks: v.book,
+                                bibleChapters: `${v.book}:${v.chapter}`,
+                                bibleVerses: `${v.book} ${v.chapter}:${v.verse}`,
+                              },
+                            }}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Headphones className="w-4 h-4" />
+                          </Link>
+                        </div>
+                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(v.text) }} />
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </section>
+
+            <Separator />
+
+            <section>
+              <h2 className="text-xl font-semibold mb-2">Ratings</h2>
+              <div className="space-y-2">
+                {(['quality', 'theology', 'helpfulness'] as const).map((cat) => (
+                  <div key={cat} className="flex items-center space-x-2">
+                    <span className="capitalize w-32">{cat}</span>
+                    <Button aria-label={`Upvote ${cat}`} size="sm" variant="outline" onClick={() => handleVote(cat, 1)}>
+                      <ThumbsUp className="h-4 w-4" />
+                    </Button>
+                    <Button aria-label={`Downvote ${cat}`} size="sm" variant="outline" onClick={() => handleVote(cat, -1)}>
+                      <ThumbsDown className="h-4 w-4" />
+                    </Button>
+                    <span>{ratingCounts[cat]}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <Separator />
+
+            <section>
+              <h2 className="text-xl font-semibold mb-2">Comments</h2>
+              {user ? (
+                <NewCommentForm pdfId={pdf.id} onCommentAdded={handleCommentAdded} />
+              ) : (
+                <p>Please log in to add a comment.</p>
+              )}
+              <CommentList
+                comments={comments}
+                pdfId={pdf.id}
+                fileUrl={pdf.file_url}
+                onCommentAdded={handleCommentAdded}
+              />
+            </section>
+
+            <Separator />
+
+            <section>
+              <h2 className="text-xl font-semibold mb-2">My Notes</h2>
+              <NotesSection initialNotes={initialNotes} pdfId={pdf.id} />
+            </section>
+          </motion.div>
         </div>
       </div>
-
-      <Separator />
-
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Bible Verses</h2>
-        {isLoadingVerses ? (
-          <p>Loading verses...</p>
-        ) : verses.length === 0 ? (
-          <p>No verses linked.</p>
-        ) : (
-          <ScrollArea className="h-[400px] pr-4">
-            <div className="space-y-4">
-              {verses.map((v, i) => (
-                <div key={i}>
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold">{`${v.book} ${v.chapter}:${v.verse}`}</p>
-                    <Link
-                      href={{
-                        pathname: '/listen',
-                        query: {
-                          bibleBooks: v.book,
-                          bibleChapters: `${v.book}:${v.chapter}`,
-                          bibleVerses: `${v.book} ${v.chapter}:${v.verse}`,
-                        },
-                      }}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Headphones className="w-4 h-4" />
-                    </Link>
-                  </div>
-                  <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(v.text) }} />
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        )}
-      </section>
-
-      <Separator />
-
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Ratings</h2>
-        <div className="space-y-2">
-          {(['quality', 'theology', 'helpfulness'] as const).map((cat) => (
-            <div key={cat} className="flex items-center space-x-2">
-              <span className="capitalize w-32">{cat}</span>
-              <Button aria-label={`Upvote ${cat}`} size="sm" variant="outline" onClick={() => handleVote(cat, 1)}>
-                <ThumbsUp className="h-4 w-4" />
-              </Button>
-              <Button aria-label={`Downvote ${cat}`} size="sm" variant="outline" onClick={() => handleVote(cat, -1)}>
-                <ThumbsDown className="h-4 w-4" />
-              </Button>
-              <span>{ratingCounts[cat]}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <Separator />
-
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Comments</h2>
-        {user ? (
-          <NewCommentForm pdfId={pdf.id} onCommentAdded={handleCommentAdded} />
-        ) : (
-          <p>Please log in to add a comment.</p>
-        )}
-        <CommentList
-          comments={comments}
-          pdfId={pdf.id}
-          fileUrl={pdf.file_url}
-          onCommentAdded={handleCommentAdded}
-        />
-      </section>
-
-      <Separator />
-
-      <section>
-        <h2 className="text-xl font-semibold mb-2">My Notes</h2>
-        <NotesSection initialNotes={initialNotes} pdfId={pdf.id} />
-      </section>
     </div>
   );
 }
