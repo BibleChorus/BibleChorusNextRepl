@@ -11,7 +11,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Button } from "@/components/ui/button"
 import { CommentList } from '@/components/SongComments/CommentList' // Adjust the import path as needed
 import { ImageCropper } from '@/components/UploadPage/ImageCropper'
-import { Pencil, User, Sparkles, TrendingUp, Zap, Star } from 'lucide-react'
+import { Pencil, User } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { Music, MessageCircle, Upload, ArrowRight, Heart, ThumbsUp } from 'lucide-react';
@@ -429,14 +429,6 @@ export default function Profile() {
     }
   };
 
-  // Calculate user statistics
-  const userStats = {
-    totalSongs: songs.length,
-    totalPlaylists: playlists.length,
-    totalActivities: totalActivities,
-    joinDate: profileUser ? new Date(profileUser.created_at || Date.now()).getFullYear() : new Date().getFullYear()
-  };
-
   // Add this early return for the login prompt
   if (showLoginPrompt) {
     return (
@@ -525,9 +517,9 @@ export default function Profile() {
                 className="mb-6"
               >
                 <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10 dark:from-blue-500/20 dark:via-purple-500/20 dark:to-indigo-500/20 backdrop-blur-md border border-blue-500/20 dark:border-blue-500/30 shadow-lg">
-                  <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent font-semibold">
-                    {isOwnProfile ? 'Your Profile' : 'Community Member'}
+                    {isOwnProfile ? 'Your Profile' : 'User Profile'}
                   </span>
                 </span>
               </motion.div>
@@ -554,10 +546,9 @@ export default function Profile() {
                 className="mt-8 text-xl text-slate-600 dark:text-slate-300 sm:text-2xl max-w-3xl mx-auto leading-relaxed"
               >
                 {isOwnProfile ? 
-                  'Manage your contributions and track your ' :
-                  `Explore ${profileUser.username}'s `}
-                <span className="font-semibold text-slate-900 dark:text-white">musical journey</span> and 
-                <span className="font-semibold text-slate-900 dark:text-white"> spiritual contributions</span>
+                  'Manage your contributions and track your musical journey' :
+                  `Explore ${profileUser.username}'s musical contributions and activities`
+                }
               </motion.p>
             </div>
 
@@ -566,7 +557,7 @@ export default function Profile() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="flex justify-center mb-12"
+              className="flex justify-center"
             >
               <div className="relative group">
                 <div className="w-48 h-48 rounded-full overflow-hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-4 border-white/20 dark:border-slate-700/50 shadow-2xl group-hover:shadow-3xl transition-all duration-500">
@@ -590,52 +581,12 @@ export default function Profile() {
                 )}
               </div>
             </motion.div>
-
-            {/* Enhanced Stats Cards */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto"
-            >
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <Music className="relative w-10 h-10 mx-auto mb-4 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent mb-2">{userStats.totalSongs}</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Songs Uploaded</div>
-              </div>
-              
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <TrendingUp className="relative w-10 h-10 mx-auto mb-4 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-500 bg-clip-text text-transparent mb-2">{userStats.totalPlaylists}</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Playlists Created</div>
-              </div>
-              
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <Zap className="relative w-10 h-10 mx-auto mb-4 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-500 bg-clip-text text-transparent mb-2">{userStats.totalActivities}</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Total Activities</div>
-              </div>
-
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-violet-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-violet-500 to-pink-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <Star className="relative w-10 h-10 mx-auto mb-4 text-violet-600 dark:text-violet-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-violet-600 to-violet-500 bg-clip-text text-transparent mb-2">{userStats.joinDate}</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Member Since</div>
-              </div>
-            </motion.div>
             
             {/* Enhanced Floating Elements */}
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.7 }}
+              transition={{ duration: 1, delay: 0.6 }}
               className="absolute top-16 right-16 hidden xl:block"
             >
               <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl backdrop-blur-sm animate-float shadow-xl"></div>
@@ -643,7 +594,7 @@ export default function Profile() {
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.9 }}
+              transition={{ duration: 1, delay: 0.8 }}
               className="absolute bottom-16 left-16 hidden xl:block"
             >
               <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-2xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"></div>
@@ -656,60 +607,43 @@ export default function Profile() {
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
             className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-8 md:p-10"
           >
-            {/* Enhanced Back Button */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
-              className="mb-8"
-            >
-              <Button 
-                variant="outline" 
-                onClick={() => router.back()} 
-                className="h-12 px-6 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:scale-105 rounded-xl font-medium"
-              >
-                ← Back
-              </Button>
-            </motion.div>
+            {/* Main content */}
+            <Button variant="outline" onClick={() => router.back()} className="mb-6 hover:scale-105 transition-all duration-300">
+              Back
+            </Button>
 
             <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
               {/* Enhanced User Details Card */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
                 className="lg:col-span-2"
               >
-                <Card className="border-0 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl shadow-2xl hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl rounded-3xl overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-indigo-500/5 dark:from-blue-500/10 dark:via-purple-500/10 dark:to-indigo-500/10 border-b border-white/20 dark:border-slate-700/50 pb-6">
+                <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
+                  <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                         Profile Details
                       </CardTitle>
-                      <div className="p-3 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl backdrop-blur-sm border border-blue-500/20 dark:border-blue-500/30">
-                        <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                      <div className="p-2 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl backdrop-blur-sm border border-blue-500/20 dark:border-blue-500/30">
+                        <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-8">
-                    <div className="space-y-6">
-                      <div className="p-6 bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:from-blue-950/40 dark:to-purple-950/40 rounded-2xl border border-blue-200/30 dark:border-blue-800/30 backdrop-blur-sm">
-                        <p className="text-slate-700 dark:text-slate-300 flex items-center gap-3">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                          <strong className="text-blue-600 dark:text-blue-400">Username:</strong> 
-                          <span className="font-medium">{profileUser.username}</span>
+                  <CardContent className="space-y-4">
+                    <div className="p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-xl border border-blue-200/30 dark:border-blue-800/30">
+                      <p className="text-slate-700 dark:text-slate-300">
+                        <strong className="text-blue-600 dark:text-blue-400">Username:</strong> {profileUser.username}
+                      </p>
+                      {isOwnProfile && (
+                        <p className="text-slate-700 dark:text-slate-300 mt-2">
+                          <strong className="text-purple-600 dark:text-purple-400">Email:</strong> {profileUser.email}
                         </p>
-                        {isOwnProfile && (
-                          <p className="text-slate-700 dark:text-slate-300 mt-4 flex items-center gap-3">
-                            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                            <strong className="text-purple-600 dark:text-purple-400">Email:</strong> 
-                            <span className="font-medium">{profileUser.email}</span>
-                          </p>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -719,78 +653,57 @@ export default function Profile() {
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.9 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
                 className="lg:col-span-4"
               >
-                <Card className="border-0 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl shadow-2xl hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl rounded-3xl overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-purple-500/5 via-indigo-500/5 to-violet-500/5 dark:from-purple-500/10 dark:via-indigo-500/10 dark:to-violet-500/10 border-b border-white/20 dark:border-slate-700/50 pb-6">
+                <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
+                  <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                        Playlists Collection
+                        Playlists
                       </CardTitle>
-                      <div className="p-3 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-2xl backdrop-blur-sm border border-purple-500/20 dark:border-purple-500/30">
-                        <Music className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                      <div className="p-2 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-xl backdrop-blur-sm border border-purple-500/20 dark:border-purple-500/30">
+                        <Music className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-8">
+                  <CardContent>
                     <Accordion type="single" collapsible>
                       <AccordionItem value="playlists" className="border-purple-200/30 dark:border-purple-800/30">
-                        <AccordionTrigger className="text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors font-medium text-lg hover:no-underline">
-                          <span className="flex items-center gap-3">
-                            <span className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-xl text-sm font-bold text-purple-600 dark:text-purple-400">
-                              {playlists.length}
-                            </span>
-                            View Playlists
-                          </span>
+                        <AccordionTrigger className="text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                          View Playlists ({playlists.length})
                         </AccordionTrigger>
-                        <AccordionContent className="pt-6">
-                          {playlists.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                              {playlists.map((playlist) => (
-                                <Link
-                                  href={`/playlists/${playlist.id}`}
-                                  key={playlist.id}
-                                >
-                                  <div className="group bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl p-6 rounded-2xl border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] cursor-pointer">
-                                    {playlist.cover_art_url && (
-                                      <div className="relative overflow-hidden rounded-xl mb-4">
-                                        <Image
-                                          src={playlist.cover_art_url}
-                                          alt={playlist.name}
-                                          width={200}
-                                          height={200}
-                                          className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-500"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                                      </div>
-                                    )}
-                                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors mb-2">
-                                      {playlist.name}
-                                    </h3>
-                                    {playlist.description && (
-                                      <p className="text-slate-600 dark:text-slate-400 text-sm mb-3 line-clamp-2">{playlist.description}</p>
-                                    )}
-                                    <p className="text-xs text-slate-500 dark:text-slate-500 flex items-center gap-2">
-                                      <span className="w-2 h-2 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full"></span>
-                                      {new Date(playlist.created_at).toLocaleDateString()}
-                                    </p>
-                                  </div>
-                                </Link>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-center py-12">
-                              <div className="relative mb-6">
-                                <Music className="w-16 h-16 mx-auto text-slate-400 dark:text-slate-500" />
-                                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full opacity-20"></div>
-                              </div>
-                              <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">No playlists yet</h3>
-                              <p className="text-slate-600 dark:text-slate-300">
-                                {isOwnProfile ? "Start creating your first playlist!" : `${profileUser.username} hasn't created any playlists yet.`}
-                              </p>
-                            </div>
-                          )}
+                        <AccordionContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                            {playlists.map((playlist) => (
+                              <Link
+                                href={`/playlists/${playlist.id}`}
+                                key={playlist.id}
+                              >
+                                <div className="group bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm p-4 rounded-xl border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer">
+                                  {playlist.cover_art_url && (
+                                    <Image
+                                      src={playlist.cover_art_url}
+                                      alt={playlist.name}
+                                      width={200}
+                                      height={200}
+                                      className="w-full h-32 object-cover rounded-lg mb-3 group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                  )}
+                                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                                    {playlist.name}
+                                  </h3>
+                                  {playlist.description && (
+                                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">{playlist.description}</p>
+                                  )}
+                                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 flex items-center">
+                                    <span className="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>
+                                    {new Date(playlist.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
@@ -802,74 +715,48 @@ export default function Profile() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 1.0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
                 className="lg:col-span-6"
               >
-                <Card className="border-0 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl shadow-2xl hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.01] hover:shadow-2xl rounded-3xl overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-indigo-500/5 via-blue-500/5 to-cyan-500/5 dark:from-indigo-500/10 dark:via-blue-500/10 dark:to-cyan-500/10 border-b border-white/20 dark:border-slate-700/50 pb-6">
+                <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
+                  <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-                        Musical Contributions
+                        Uploaded Songs
                       </CardTitle>
-                      <div className="p-3 bg-gradient-to-br from-indigo-500/10 to-blue-500/10 rounded-2xl backdrop-blur-sm border border-indigo-500/20 dark:border-indigo-500/30">
-                        <Upload className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                      <div className="p-2 bg-gradient-to-br from-indigo-500/10 to-blue-500/10 rounded-xl backdrop-blur-sm border border-indigo-500/20 dark:border-indigo-500/30">
+                        <Upload className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-8">
+                  <CardContent>
                     <Accordion type="single" collapsible>
                       <AccordionItem value="songs" className="border-indigo-200/30 dark:border-indigo-800/30">
-                        <AccordionTrigger className="text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium text-lg hover:no-underline">
-                          <span className="flex items-center gap-3">
-                            <span className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-indigo-500/20 to-blue-500/20 rounded-xl text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                              {songs.length}
-                            </span>
-                            View Songs
-                          </span>
+                        <AccordionTrigger className="text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                          View Songs ({songs.length})
                         </AccordionTrigger>
-                        <AccordionContent className="pt-6">
-                          {songs.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                              {songs.map((song) => (
-                                <Link href={`/Songs/${song.id}`} key={song.id}>
-                                  <div className="group bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl p-6 rounded-2xl border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] cursor-pointer">
-                                    <div className="space-y-4">
-                                      <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 leading-tight">
-                                        {song.title}
-                                      </h3>
-                                      
-                                      <div className="space-y-2">
-                                        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium flex items-center gap-2">
-                                          <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
-                                          {song.artist}
-                                        </p>
-                                        
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100/80 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-800/50">
-                                          {song.genre}
-                                        </span>
-                                      </div>
-                                      
-                                      <p className="text-xs text-slate-500 dark:text-slate-500 flex items-center gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-600/50">
-                                        <span className="w-2 h-2 bg-gradient-to-r from-indigo-400 to-blue-400 rounded-full"></span>
-                                        {new Date(song.created_at).toLocaleDateString()}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </Link>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-center py-12">
-                              <div className="relative mb-6">
-                                <Upload className="w-16 h-16 mx-auto text-slate-400 dark:text-slate-500" />
-                                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-full opacity-20"></div>
-                              </div>
-                              <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">No songs uploaded yet</h3>
-                              <p className="text-slate-600 dark:text-slate-300">
-                                {isOwnProfile ? "Share your first Bible-inspired song with the community!" : `${profileUser.username} hasn't uploaded any songs yet.`}
-                              </p>
-                            </div>
-                          )}
+                        <AccordionContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {songs.map((song) => (
+                              <Link href={`/Songs/${song.id}`} key={song.id}>
+                                <div className="group bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm p-4 rounded-xl border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer">
+                                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
+                                    {song.title}
+                                  </h3>
+                                  <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">{song.artist}</p>
+                                  <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-100/60 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                                      {song.genre}
+                                    </span>
+                                  </p>
+                                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 flex items-center">
+                                    <span className="w-2 h-2 bg-indigo-400 rounded-full mr-2"></span>
+                                    {new Date(song.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
@@ -882,30 +769,33 @@ export default function Profile() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.1 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
                   className="lg:col-span-6"
                   id="activities"
                 >
-                  <Card className="border-0 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl shadow-2xl hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.01] hover:shadow-2xl rounded-3xl overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-green-500/5 via-teal-500/5 to-cyan-500/5 dark:from-green-500/10 dark:via-teal-500/10 dark:to-cyan-500/10 border-b border-white/20 dark:border-slate-700/50 pb-6">
+                  <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
+                    <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-                          Recent Activity Feed
+                          Recent Activity
                         </CardTitle>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                           {unreadActivitiesCount > 0 && (
-                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white text-sm rounded-full shadow-lg backdrop-blur-sm">
-                              <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                            <span className="bg-gradient-to-r from-green-600 to-teal-600 text-white text-sm rounded-full px-3 py-1 shadow-lg">
                               {unreadActivitiesCount} new
                             </span>
                           )}
-                          <div className="p-3 bg-gradient-to-br from-green-500/10 to-teal-500/10 rounded-2xl backdrop-blur-sm border border-green-500/20 dark:border-green-500/30">
-                            <MessageCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+                          <div className="p-2 bg-gradient-to-br from-green-500/10 to-teal-500/10 rounded-xl backdrop-blur-sm border border-green-500/20 dark:border-green-500/30">
+                            <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                           </div>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent>
+              <CardContent>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="activities">
+                    <AccordionTrigger>View Activity</AccordionTrigger>
+                    <AccordionContent>
                       <div className="space-y-4">
                         {activities.length === 0 ? (
                           <p className="text-muted-foreground">No recent activity</p>
@@ -1062,10 +952,13 @@ export default function Profile() {
                           </>
                         )}
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
+                    </AccordionContent>
+                  </AccordionItem>
+                                    </Accordion>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
             </div>
           </motion.div>
         </div>
