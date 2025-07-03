@@ -171,20 +171,28 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
           </div>
 
           {/* Enhanced Tags */}
-          <div className="flex flex-wrap gap-2">
-            {song.genres && song.genres.map((genre) => (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {song.genres && song.genres.slice(0, 3).map((genre, index) => (
               <Badge 
-                key={genre} 
+                key={`${song.id}-${genre}-${index}`} 
                 variant="secondary"
-                className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 text-indigo-700 dark:text-indigo-300 hover:from-indigo-500/20 hover:to-purple-500/20 transition-all duration-300 border-indigo-500/20 dark:border-indigo-400/20 font-medium px-3 py-1 rounded-lg"
+                className="text-xs px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-300 border-0 rounded-md font-medium"
               >
                 {genre}
               </Badge>
             ))}
+            {song.genres && song.genres.length > 3 && (
+              <Badge 
+                variant="secondary" 
+                className="text-xs px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-300 border-0 rounded-md font-medium"
+              >
+                +{song.genres.length - 3}
+              </Badge>
+            )}
             {song.bible_translation_used && (
               <Badge 
                 variant="outline"
-                className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-700 dark:text-purple-300 hover:from-purple-500/20 hover:to-pink-500/20 transition-all duration-300 border-purple-500/20 dark:border-purple-400/20 font-medium px-3 py-1 rounded-lg"
+                className="text-xs px-2 py-0.5 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-md font-medium"
               >
                 {song.bible_translation_used}
               </Badge>
@@ -192,7 +200,7 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
             {song.lyrics_scripture_adherence && (
               <Badge 
                 variant="default" 
-                className="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white shadow-lg transition-all duration-300 font-medium px-3 py-1 rounded-lg"
+                className="text-xs px-2 py-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 rounded-md font-medium"
               >
                 {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
               </Badge>
@@ -200,7 +208,7 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
             {song.is_continuous_passage !== undefined && (
               <Badge 
                 variant="outline"
-                className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-700 dark:text-emerald-300 hover:from-emerald-500/20 hover:to-teal-500/20 transition-all duration-300 border-emerald-500/20 dark:border-emerald-400/20 font-medium px-3 py-1 rounded-lg"
+                className="text-xs px-2 py-0.5 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 rounded-md font-medium"
               >
                 {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
               </Badge>
