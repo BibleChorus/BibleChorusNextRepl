@@ -585,7 +585,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 variant="outline"
                 role="combobox"
                 aria-expanded={openGenres}
-                className="w-full justify-between h-7 text-xs"
+                className="w-full justify-between bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs"
               >
                 <div className="flex items-center">
                   <Tag className="h-3 w-3 mr-1" />
@@ -596,7 +596,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
+            <PopoverContent className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
               <div className="p-2">
                 <div className="flex items-center justify-between pb-2">
                   <Input
@@ -653,7 +653,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 variant="outline"
                 role="combobox"
                 aria-expanded={openLyricsAdherence}
-                className="w-full justify-between h-7 text-xs"
+                className="w-full justify-between bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs"
               >
                 <div className="flex items-center">
                   <AlignJustify className="h-3 w-3 mr-1" />
@@ -664,7 +664,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
+            <PopoverContent className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
               <div className="p-2">
                 {lyricsAdherenceOptions.map((option) => (
                   <div
@@ -701,7 +701,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 variant="outline"
                 role="combobox"
                 aria-expanded={openBibleBooks}
-                className="w-full justify-between h-7 text-xs"
+                className="w-full justify-between bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs"
               >
                 <div className="flex items-center">
                   <BookOpen className="h-3 w-3 mr-1" />
@@ -712,7 +712,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
+            <PopoverContent className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
               <div className="p-2">
                 <div className="flex items-center justify-between pb-2">
                   <Input
@@ -759,7 +759,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   variant="outline"
                   role="combobox"
                   aria-expanded={openChapters}
-                  className="w-full justify-between h-7 text-xs"
+                  className="w-full justify-between bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs"
                 >
                   <div className="flex items-center">
                     <Bookmark className="h-3 w-3 mr-1" />
@@ -771,7 +771,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-full max-w-[80vw] p-0"  // Updated here
+                className="w-full max-w-[80vw] p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl"  // Updated here
                 style={{ maxWidth: '80vw' }}        // Added inline style
               >
                 <div className="p-2">
@@ -835,7 +835,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   variant="outline"
                   role="combobox"
                   aria-expanded={openBibleVerses}
-                  className="w-full justify-between h-7 text-xs"
+                  className="w-full justify-between bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs"
                 >
                   <div className="flex items-center">
                     <FileText className="h-3 w-3 mr-1" />
@@ -846,7 +846,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full p-0" style={{ maxWidth: '80vw' }}>
+              <PopoverContent className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl" style={{ maxWidth: '80vw' }}>
                 <div className="p-2">
                   <div className="flex items-center justify-between pb-2">
                     <Input
