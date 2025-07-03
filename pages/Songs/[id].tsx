@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Play, Pause, Edit, Share2, Info, Trash2, Heart, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Pencil, BookOpenText } from 'lucide-react'
+import { Play, Pause, Edit, Share2, Info, Trash2, Heart, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Pencil, BookOpenText , Sparkles } from 'lucide-react'
 import db from '@/db'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -935,7 +935,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   }, [song]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50/60 via-white to-fuchsia-50/30 dark:from-violet-950/40 dark:via-slate-900 dark:to-fuchsia-950/30">
       <Head>
         <title>{`${song.title} by ${song.username} - BibleChorus`}</title>
         <meta property="og:title" content={`${song.title} by ${song.username}`} />
@@ -948,22 +948,64 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
         {/* Add other Open Graph music tags as needed */}
       </Head>
 
-      {/* Song Art Banner with Bible Verses */}
-      <div className="relative h-64 sm:h-80 w-full mb-8">
-        <Image
-          src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
-          alt={`${song.title} cover art`}
-          layout="fill"
-          objectFit="cover"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">{song.title}</h1>
-          <p className="text-xl sm:text-2xl mb-4">{song.artist}</p>
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative overflow-hidden pb-20 pt-12"
+      >
+        <div className="absolute inset-0">
+          <Image
+            src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
+            alt={`${song.title} cover art`}
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/60 via-fuchsia-500/40 to-indigo-500/60"></div>
+          <div className="absolute top-0 -left-8 w-96 h-96 bg-violet-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+          <div className="absolute top-12 -right-8 w-80 h-80 bg-fuchsia-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-12 left-32 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(139,92,246,0.1),rgba(255,255,255,0))]"></div>
+        </div>
+        <div className="relative z-10 container mx-auto px-4 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="mb-6"
+          >
+            <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-indigo-500/10 dark:from-violet-500/20 dark:via-fuchsia-500/20 dark:to-indigo-500/20 backdrop-blur-md border border-violet-500/20 dark:border-violet-500/30 shadow-lg">
+              <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+              <span className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 dark:from-violet-400 dark:via-fuchsia-400 dark:to-indigo-400 bg-clip-text text-transparent font-semibold">
+                Song Spotlight
+              </span>
+            </span>
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-5xl md:text-6xl font-bold tracking-tight"
+          >
+            <span className="relative inline-block">
+              <span className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                {song.title}
+              </span>
+              <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 rounded-full scale-x-0 animate-scale-x"></div>
+            </span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mt-4 text-lg text-slate-600 dark:text-slate-300"
+          >
+            By {song.artist}
+          </motion.p>
           {song.bible_verses && song.bible_verses.length > 0 && (
-            <div className="flex items-center">
-              <p className="text-sm sm:text-base font-semibold">
+            <div className="mt-4 flex items-center justify-center">
+              <p className="text-sm sm:text-base font-semibold text-white">
                 {formatBibleVerses(song.bible_verses)}
               </p>
               <TooltipProvider>
@@ -983,27 +1025,37 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               </TooltipProvider>
             </div>
           )}
+          {isCreator && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 text-white hover:text-primary-300 transition-colors"
+              onClick={handleEditArtClick}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
         </div>
-        {isCreator && (
+      </motion.div>
+
+      <div className="container mx-auto px-4 -mt-12 relative z-20">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-6 md:p-10 space-y-6"
+        >
           <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 text-white hover:text-primary-300 transition-colors"
-            onClick={handleEditArtClick}
+            variant="outline"
+            onClick={() => router.back()}
+            className="mb-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300"
           >
-            <Pencil className="h-4 w-4" />
+            Back
           </Button>
-        )}
-      </div>
 
-      <main className="container mx-auto px-4 py-8">
-        <Button variant="outline" onClick={() => router.back()} className="mb-4">
-          Back
-        </Button>
-
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
           {/* Song Info Card */}
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-2xl font-bold mb-2">Song Details</CardTitle>
@@ -1086,7 +1138,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           </Card>
 
           {/* Votes and Likes Card */}
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
             <CardHeader>
               <CardTitle>Votes & Likes</CardTitle>
             </CardHeader>
@@ -1152,7 +1204,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
           {/* AI Info Card */}
           {(song.ai_used_for_lyrics || song.music_ai_generated) && (
-            <Card className="lg:col-span-2">
+            <Card className="lg:col-span-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold">AI Information</CardTitle>
@@ -1198,7 +1250,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           )}
 
           {/* Bible Info Card */}
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-2xl font-bold">Bible Info</CardTitle>
@@ -1303,7 +1355,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           </Card>
 
           {/* Lyrics Card */}
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-2xl font-bold">Lyrics</CardTitle>
@@ -1332,7 +1384,8 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             </CardContent>
           </Card>
         </div>
-      </main>
+        </motion.div>
+      </div>
 
       {/* KJV Text Dialog */}
       <Dialog open={isKJVTextOpen} onOpenChange={setIsKJVTextOpen}>
