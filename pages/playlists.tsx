@@ -197,7 +197,7 @@ export default function PlaylistsPage() {
               className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-8 md:p-10"
             >
               <Tabs defaultValue="auto" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-16 p-1 bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 rounded-2xl shadow-xl min-h-12 gap-1 auto-rows-max">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-16 p-1 bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 rounded-2xl shadow-xl gap-1 h-auto items-start">
                   {playlistGroups.map((group) => (
                     <TabsTrigger 
                       key={group.tabValue} 
