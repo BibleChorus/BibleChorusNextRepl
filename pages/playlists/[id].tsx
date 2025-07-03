@@ -5,7 +5,7 @@ import db from '@/db'; // Database connection
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Play, Edit, Pencil, Share2 } from 'lucide-react';
+import { Play, Edit, Pencil, Share2, Music, Users2, Clock, Sparkles } from 'lucide-react';
 import { formatBibleVerses, parsePostgresArray } from '@/lib/utils'; // Add parsePostgresArray import
 import { Playlist, Song } from '@/types'; // Define these types as needed
 import SongList from '@/components/PlaylistPage/SongList'; // New SongList component for the playlist page
@@ -18,7 +18,7 @@ import axios from 'axios';
 import { toast } from "sonner";
 import { uploadFile } from '@/lib/uploadUtils'; // Import the uploadFile function
 import { User } from '@/types'; // Ensure User type is imported
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PlaylistPageProps {
   playlist: Playlist;
@@ -171,8 +171,24 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
     }
   }, [playlist.id, playlist.name, creatorUsername]);
 
+  // Calculate stats
+  const stats = {
+    totalSongs: songs.length,
+    totalDuration: songs.reduce((acc, song) => acc + (song.duration || 0), 0),
+    uniqueArtists: new Set(songs.map(song => song.artist || song.username)).size
+  };
+
+  const formatDuration = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50/50 via-white to-fuchsia-50/30 dark:from-violet-950/50 dark:via-slate-900 dark:to-fuchsia-950/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30">
       <Head>
         <title>{`${playlist.name} by ${creatorUsername} - BibleChorus`}</title>
         <meta property="og:title" content={`${playlist.name} by ${creatorUsername}`} />
@@ -183,85 +199,240 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
         <meta property="music:creator" content={creatorUsername} />
       </Head>
 
-      {/* Playlist Banner */}
+      {/* Enhanced Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="relative h-64 sm:h-80 w-full mb-8 overflow-hidden"
+        className="relative overflow-hidden pb-20 pt-12"
       >
-        <Image
-          src={playlist.cover_art_url ? `${CDN_URL}${playlist.cover_art_url}` : '/biblechorus-icon.png'}
-          alt={`${playlist.name} cover art`}
-          layout="fill"
-          objectFit="cover"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">{playlist.name}</h1>
-          {playlist.description && (
-            <p className="text-xl sm:text-2xl mb-4">{playlist.description}</p>
-          )}
-          <p className="text-lg">Created by: {creatorUsername}</p>
-          <div className="flex flex-wrap items-center justify-center mt-2">
-            {playlist.is_auto && (
-              <Badge variant="default" className="mr-2">Auto Playlist</Badge>
-            )}
-            {playlist.tags && playlist.tags.map((tag: string) => (
-              <Badge key={tag} variant="secondary" className="mr-2">{tag}</Badge>
-            ))}
-          </div>
-          <div className="flex flex-wrap space-x-2 sm:space-x-4 mt-4">
-            <Button 
-              onClick={handlePlayPlaylist} 
-              className="flex items-center"
-              variant="default"
-            >
-              <Play className="mr-2 h-4 w-4" />
-              Play Playlist
-            </Button>
-            {!playlist.is_auto && isCreator && (
-              <Button
-                onClick={handleEditClick}
-                className="flex items-center"
-                variant="outline"
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Playlist
-              </Button>
-            )}
-            <Button
-              onClick={handleShare}
-              className="flex items-center"
-              variant="outline"
-              aria-label="Share playlist"
-            >
-              <Share2 className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Share</span>
-            </Button>
-          </div>
+        {/* Enhanced Background Effects */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.08] via-purple-500/[0.06] to-pink-500/[0.08] dark:from-indigo-500/[0.15] dark:via-purple-500/[0.12] dark:to-pink-500/[0.15]"></div>
+          <div className="absolute top-0 -left-8 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+          <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-12 left-32 w-96 h-96 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
         </div>
-        {!playlist.is_auto && isCreator && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 text-white hover:text-primary-300 transition-colors"
-            onClick={handleEditArtClick}
+        
+        <div className="relative z-10 container mx-auto px-4">
+          <div className="text-center mb-12">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              className="mb-6"
+            >
+              <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-500/20 dark:via-purple-500/20 dark:to-pink-500/20 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 shadow-lg">
+                <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent font-semibold">
+                  {playlist.is_auto ? 'Auto Playlist' : 'Curated Playlist'}
+                </span>
+              </span>
+            </motion.div>
+
+            {/* Playlist Cover Art */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative w-48 h-48 mx-auto mb-8 group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+              <div className="relative w-full h-full rounded-3xl overflow-hidden border-2 border-white/20 dark:border-slate-700/50 shadow-2xl">
+                <Image
+                  src={playlist.cover_art_url ? `${CDN_URL}${playlist.cover_art_url}` : '/biblechorus-icon.png'}
+                  alt={`${playlist.name} cover art`}
+                  layout="fill"
+                  objectFit="cover"
+                  className="transition-transform duration-500 group-hover:scale-105"
+                />
+                {!playlist.is_auto && isCreator && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm transition-all duration-300 opacity-0 group-hover:opacity-100"
+                    onClick={handleEditArtClick}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </motion.div>
+            
+            <motion.h1 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl mb-4"
+            >
+              <span className="block relative">
+                <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                  {playlist.name}
+                </span>
+                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-full scale-x-0 animate-scale-x"></div>
+              </span>
+            </motion.h1>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="space-y-4"
+            >
+              {playlist.description && (
+                <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+                  {playlist.description}
+                </p>
+              )}
+              <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
+                Created by{' '}
+                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent font-semibold">
+                  {creatorUsername}
+                </span>
+              </p>
+              
+              {/* Tags */}
+              {playlist.tags && playlist.tags.length > 0 && (
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                  {playlist.tags.map((tag: string) => (
+                    <Badge 
+                      key={tag} 
+                      variant="secondary" 
+                      className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-slate-700 dark:text-slate-300 hover:from-indigo-500/20 hover:to-purple-500/20 transition-all duration-200 rounded-lg px-3 py-1"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Action Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="flex flex-wrap justify-center gap-4 mt-8"
+            >
+              <Button 
+                onClick={handlePlayPlaylist} 
+                className="relative h-12 px-8 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
+              >
+                <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+                <Play className="relative w-5 h-5 mr-2" />
+                <span className="relative">Play Playlist</span>
+              </Button>
+              
+              {!playlist.is_auto && isCreator && (
+                <Button
+                  onClick={handleEditClick}
+                  variant="outline"
+                  className="h-12 px-6 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
+                >
+                  <Edit className="w-5 h-5 mr-2" />
+                  Edit Playlist
+                </Button>
+              )}
+              
+              <Button
+                onClick={handleShare}
+                variant="outline"
+                className="h-12 px-6 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
+                aria-label="Share playlist"
+              >
+                <Share2 className="w-5 h-5 mr-2" />
+                <span>Share</span>
+              </Button>
+            </motion.div>
+          </div>
+
+          {/* Enhanced Stats Cards */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
           >
-            <Pencil className="h-4 w-4" />
-          </Button>
-        )}
+            <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-6 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+              <Music className="relative w-8 h-8 mx-auto mb-3 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300" />
+              <div className="relative text-3xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-500 bg-clip-text text-transparent mb-1">{stats.totalSongs}</div>
+              <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Songs</div>
+            </div>
+            
+            <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-6 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/10">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+              <Clock className="relative w-8 h-8 mx-auto mb-3 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-300" />
+              <div className="relative text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-500 bg-clip-text text-transparent mb-1">{formatDuration(stats.totalDuration)}</div>
+              <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Duration</div>
+            </div>
+            
+            <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-6 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-pink-500/10">
+              <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-pink-500 to-red-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+              <Users2 className="relative w-8 h-8 mx-auto mb-3 text-pink-600 dark:text-pink-400 group-hover:scale-110 transition-transform duration-300" />
+              <div className="relative text-3xl font-bold bg-gradient-to-r from-pink-600 to-pink-500 bg-clip-text text-transparent mb-1">{stats.uniqueArtists}</div>
+              <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Artists</div>
+            </div>
+          </motion.div>
+          
+          {/* Enhanced Floating Elements */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.8 }}
+            className="absolute top-16 right-16 hidden xl:block"
+          >
+            <div className="w-24 h-24 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl backdrop-blur-sm animate-float shadow-xl"></div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 1.0 }}
+            className="absolute bottom-16 left-16 hidden xl:block"
+          >
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"></div>
+          </motion.div>
+        </div>
       </motion.div>
 
-      {/* Song List */}
-      <main className="container mx-auto px-4 py-6">
-        {songs.length > 0 ? (
-          <SongList songs={songs} />
-        ) : (
-          <p className="text-center text-lg">No songs found in this playlist.</p>
-        )}
-      </main>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 -mt-12 relative z-20">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.7 }}
+          className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-6 md:p-8"
+        >
+          {songs.length > 0 ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-700/50 pb-4">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  Playlist Songs
+                </h2>
+                <div className="text-sm text-slate-600 dark:text-slate-300">
+                  {songs.length} song{songs.length !== 1 ? 's' : ''}
+                </div>
+              </div>
+              <SongList songs={songs} />
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="relative mb-6">
+                <Music className="w-16 h-16 mx-auto text-slate-400 dark:text-slate-500" />
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full opacity-20"></div>
+              </div>
+              <h3 className="text-2xl font-semibold mb-3 text-slate-900 dark:text-white">No songs found</h3>
+              <p className="text-slate-600 dark:text-slate-300 text-lg max-w-md mx-auto">
+                This playlist is currently empty. {isCreator && !playlist.is_auto && "Add some songs to get started!"}
+              </p>
+            </div>
+          )}
+        </motion.div>
+      </div>
 
       <EditPlaylistDialog
         isOpen={isEditDialogOpen}
@@ -273,19 +444,29 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
 
       {/* Edit Playlist Cover Art Dialog */}
       <Dialog open={isEditArtDialogOpen} onOpenChange={setIsEditArtDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/20 dark:border-slate-700/50">
           <DialogHeader>
-            <DialogTitle>Edit Playlist Cover Art</DialogTitle>
+            <DialogTitle className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Edit Playlist Cover Art
+            </DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col items-center">
-            <Image
-              src={playlist.cover_art_url ? `${CDN_URL}${playlist.cover_art_url}` : '/biblechorus-icon.png'}
-              alt="Current Playlist Cover Art"
-              width={200}
-              height={200}
-              className="rounded-lg mb-4"
-            />
-            <Button onClick={handleReplaceClick}>Replace Image</Button>
+          <div className="flex flex-col items-center space-y-6">
+            <div className="relative group">
+              <Image
+                src={playlist.cover_art_url ? `${CDN_URL}${playlist.cover_art_url}` : '/biblechorus-icon.png'}
+                alt="Current Playlist Cover Art"
+                width={200}
+                height={200}
+                className="rounded-2xl shadow-lg"
+              />
+              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
+            <Button 
+              onClick={handleReplaceClick}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-2 rounded-xl font-medium transition-all duration-300 hover:scale-105"
+            >
+              Replace Image
+            </Button>
             <input
               type="file"
               ref={fileInputRef}
@@ -298,9 +479,11 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
       </Dialog>
 
       <Dialog open={isImageCropperOpen} onOpenChange={setIsImageCropperOpen}>
-        <DialogContent className="sm:max-w-[600px] p-0">
+        <DialogContent className="sm:max-w-[600px] p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/20 dark:border-slate-700/50">
           <DialogHeader className="p-4">
-            <DialogTitle>Crop Image</DialogTitle>
+            <DialogTitle className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Crop Image
+            </DialogTitle>
           </DialogHeader>
           {cropImageUrl && (
             <ImageCropper
