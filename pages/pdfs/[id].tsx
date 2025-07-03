@@ -242,59 +242,67 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {pdf.themes.map((t) => (
-                    <Badge key={t}>{t}</Badge>
+                    <Badge
+                      key={t}
+                      variant="secondary"
+                      className="bg-gradient-to-r from-amber-500/10 to-rose-500/10 text-amber-700 dark:text-amber-300 hover:from-amber-500/20 hover:to-rose-500/20 transition-all duration-300 text-xs border-amber-500/20 dark:border-amber-400/20 font-medium px-2 py-1 rounded-lg"
+                    >
+                      {t}
+                    </Badge>
                   ))}
                 </div>
                 {pdf.summary && <p className="mt-2 whitespace-pre-wrap">{pdf.summary}</p>}
                 {(pdf.notebook_lm_url || pdf.file_url) && (
-                  <div className="mt-4 flex items-center gap-4">
+                  <div className="mt-4 flex flex-wrap items-center gap-4">
                     {pdf.notebook_lm_url && (
-                      <>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            asChild
+                            className="relative h-12 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
+                          >
                             <Link
                               href={pdf.notebook_lm_url}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
+                              <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
                               <Image
                                 src="/icons/notebooklm.svg"
                                 alt="NotebookLM"
-                                width={32}
-                                height={32}
-                                className="w-8 h-8"
+                                width={24}
+                                height={24}
+                                className="relative w-5 h-5 mr-2"
                               />
+                              <span className="relative">Open in NotebookLM</span>
                             </Link>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Google NotebookLM lets you ask questions and explore your PDFs.
-                          </TooltipContent>
-                        </Tooltip>
-                        <Link
-                          href={pdf.notebook_lm_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2 rounded-xl bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-slate-200/50 dark:border-slate-600/50 hover:bg-gradient-to-r hover:from-amber-500 hover:to-rose-500 hover:text-white hover:border-transparent transition-all duration-300 flex items-center gap-1 text-lg"
-                        >
-                          Open in NotebookLM
-                        </Link>
-                      </>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Google NotebookLM lets you ask questions and explore your PDFs.
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                     {pdf.file_url && (
-                      <Link
-                        href={pdf.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 px-4 py-2 rounded-xl bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-slate-200/50 dark:border-slate-600/50 hover:bg-gradient-to-r hover:from-amber-500 hover:to-rose-500 hover:text-white hover:border-transparent transition-all duration-300 text-lg"
+                      <Button
+                        asChild
+                        className="relative h-12 px-6 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 hover:from-amber-700 hover:via-rose-700 hover:to-emerald-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
                       >
-                        <FileText className="w-5 h-5" />
-                        Open PDF
-                      </Link>
+                        <Link
+                          href={pdf.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+                          <FileText className="relative w-5 h-5 mr-2" />
+                          <span className="relative">Open PDF</span>
+                        </Link>
+                      </Button>
                     )}
                     <Button
                       variant="outline"
                       onClick={handleShare}
-                      className="flex items-center gap-1 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-gradient-to-r hover:from-amber-500 hover:to-rose-500 hover:text-white hover:border-transparent transition-all duration-300 rounded-xl"
+                      className="h-12 px-6 flex items-center gap-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
                     >
                       <Share2 className="w-5 h-5" />
                       Share
