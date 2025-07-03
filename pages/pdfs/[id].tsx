@@ -1,5 +1,6 @@
+/// <reference types="react" />
 import { GetServerSideProps } from 'next';
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Head from 'next/head';
 import db from '@/db';
 import { parsePostgresArray } from '@/lib/utils';
@@ -141,7 +142,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
   }, [bibleVerses]);
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50/60 via-white to-yellow-50/30 dark:from-amber-950/40 dark:via-slate-900 dark:to-yellow-950/30">
       <Head>
         <title>{pdf.title}</title>
       </Head>
@@ -410,7 +411,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
           </motion.div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
