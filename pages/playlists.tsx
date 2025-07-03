@@ -57,14 +57,14 @@ export default function PlaylistsPage() {
             playlists: oldTestamentPlaylists,
             icon: BookOpen,
             description: 'Songs from Genesis to Malachi',
-            tabValue: 'old'
+            tabValue: 'old-testament'
           },
           {
             title: 'New Testament Songs',
             playlists: newTestamentPlaylists,
             icon: Heart,
             description: 'Songs from Matthew to Revelation',
-            tabValue: 'new'
+            tabValue: 'new-testament'
           },
           {
             title: 'User Playlists',
@@ -206,7 +206,11 @@ export default function PlaylistsPage() {
                     >
                       <group.icon className="w-4 h-4 mr-2" />
                       <span className="hidden sm:inline">{group.title}</span>
-                      <span className="sm:hidden">{group.title.split(' ')[0]}</span>
+                      <span className="sm:hidden">
+                        {group.tabValue === 'old-testament' ? 'Old Testament' : 
+                         group.tabValue === 'new-testament' ? 'New Testament' : 
+                         group.title.split(' ')[0]}
+                      </span>
                     </TabsTrigger>
                   ))}
                 </TabsList>
