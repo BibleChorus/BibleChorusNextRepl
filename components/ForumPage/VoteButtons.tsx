@@ -13,6 +13,13 @@ interface VoteButtonsProps {
   initialUpvotes: number;
   initialDownvotes: number;
   initialUserVote?: number;
+  /**
+   * Direction that the up / down / score elements should be laid out.
+   * Defaults to `vertical` which preserves the existing stacked layout.
+   * A value of `horizontal` places the controls in a row – useful for
+   * displaying the voting widget inline without adding extra vertical space.
+   */
+  orientation?: 'vertical' | 'horizontal';
   onVoteUpdate?: (upvotes: number, downvotes: number, userVote: number) => void;
 }
 
@@ -22,6 +29,7 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
   initialUpvotes,
   initialDownvotes,
   initialUserVote = 0,
+  orientation = 'vertical',
   onVoteUpdate
 }) => {
   const { user } = useAuth();
@@ -57,9 +65,15 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
       if (onVoteUpdate) {
         onVoteUpdate(newUpvotes, newDownvotes, newUserVote);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error voting:', error);
-      toast.error('Failed to register vote');
+      // If we received an unauthorized response, prompt login; otherwise show error toast
+      if ((error as any)?.response?.status === 401) {
+        // Unauthorized – prompt the user to log in
+        setShowLoginPrompt(true);
+      } else {
+        toast.error('Failed to register vote');
+      }
     } finally {
       setIsVoting(false);
     }
@@ -69,7 +83,14 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
 
   return (
     <>
-      <div className="flex flex-col items-center gap-1 bg-white/5 dark:bg-black/10 backdrop-blur-sm rounded-full p-1 border border-white/10 dark:border-white/5">
+      <div
+        className={cn(
+          // Direction
+          orientation === 'vertical' ? 'flex flex-col items-center gap-1' : 'flex flex-row items-center gap-2',
+          // Shared styles
+          'bg-white/5 dark:bg-black/10 backdrop-blur-sm rounded-full p-1 border border-white/10 dark:border-white/5'
+        )}
+      >
         <Button
           variant="ghost"
           size="sm"
@@ -85,12 +106,15 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
           <ChevronUp className="h-4 w-4" />
         </Button>
         
-        <span className={cn(
-          "text-sm font-bold min-w-[2rem] text-center transition-all duration-300",
-          score > 0 && "text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text",
-          score < 0 && "text-transparent bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text",
-          score === 0 && "text-muted-foreground"
-        )}>
+        <span
+          className={cn(
+            "text-sm font-bold min-w-[2rem] text-center transition-all duration-300",
+            orientation === 'horizontal' && 'min-w-0 px-1',
+            score > 0 && "text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text",
+            score < 0 && "text-transparent bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text",
+            score === 0 && "text-muted-foreground"
+          )}
+        >
           {score}
         </span>
         

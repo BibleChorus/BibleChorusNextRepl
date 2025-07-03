@@ -146,6 +146,7 @@ export const CommentList: React.FC<CommentListProps> = ({
               initialUpvotes={comment.upvotes || 0}
               initialDownvotes={comment.downvotes || 0}
               initialUserVote={comment.userVote}
+              orientation="horizontal"
             />
           </div>
           <div className="mt-2">
