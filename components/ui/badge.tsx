@@ -37,6 +37,10 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
    * Additional class names to merge with the component styles.
    */
   className?: string;
+  /**
+   * Children to render inside the badge.
+   */
+  children?: React.ReactNode;
 }
 
 function Badge({ className, variant, ...props }: BadgeProps) {
