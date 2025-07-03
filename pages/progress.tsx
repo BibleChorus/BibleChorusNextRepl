@@ -348,7 +348,7 @@ export default function Progress() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-start justify-center pt-20 px-4"
               onClick={() => setIsFilterExpanded(false)}
             >
               <motion.div
@@ -356,7 +356,7 @@ export default function Progress() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ duration: 0.3 }}
-                className="absolute top-20 left-1/2 transform -translate-x-1/2 w-full max-w-4xl mx-auto px-4"
+                className="w-full max-w-4xl mx-auto"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-3xl border border-white/30 dark:border-slate-700/30 p-4 sm:p-6 shadow-2xl">

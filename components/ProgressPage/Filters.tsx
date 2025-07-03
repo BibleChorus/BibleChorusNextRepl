@@ -106,12 +106,12 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
             </Button>
           </PopoverTrigger>
           <PopoverContent 
-            className="w-[calc(100vw-2rem)] max-w-[300px] p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl" 
+            className="w-80 max-w-[calc(100vw-2rem)] p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl" 
             side="bottom" 
             align="center"
             sideOffset={4}
             avoidCollisions={true}
-            collisionPadding={16}
+            collisionPadding={8}
           >
             <div className="p-3">
               {lyricsAdherenceOptions.map((option) => (
@@ -171,13 +171,13 @@ function FilterSelect({ title, value, onChange, options }: FilterSelectProps) {
         <SelectValue placeholder={title} />
       </SelectTrigger>
       <SelectContent 
-        className="w-[calc(100vw-2rem)] max-w-[300px] bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl"
+        className="w-80 max-w-[calc(100vw-2rem)] bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl"
         position="popper"
         side="bottom"
         align="center"
         sideOffset={4}
         avoidCollisions={true}
-        collisionPadding={16}
+        collisionPadding={8}
       >
         <SelectGroup>
           <SelectLabel className="text-emerald-600 dark:text-emerald-400 font-semibold">{title}</SelectLabel>
