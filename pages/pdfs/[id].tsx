@@ -185,9 +185,14 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-5xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white"
+              className="text-5xl md:text-6xl font-bold tracking-tight"
             >
-              {pdf.title}
+              <span className="relative inline-block">
+                <span className="bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                  {pdf.title}
+                </span>
+                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 rounded-full scale-x-0 animate-scale-x"></div>
+              </span>
             </motion.h1>
 
             {pdf.author && (
@@ -269,7 +274,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                           href={pdf.notebook_lm_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="underline text-primary text-lg"
+                          className="px-4 py-2 rounded-xl bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-slate-200/50 dark:border-slate-600/50 hover:bg-gradient-to-r hover:from-amber-500 hover:to-rose-500 hover:text-white hover:border-transparent transition-all duration-300 flex items-center gap-1 text-lg"
                         >
                           Open in NotebookLM
                         </Link>
@@ -280,7 +285,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                         href={pdf.file_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 underline text-primary text-lg"
+                        className="flex items-center gap-1 px-4 py-2 rounded-xl bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-slate-200/50 dark:border-slate-600/50 hover:bg-gradient-to-r hover:from-amber-500 hover:to-rose-500 hover:text-white hover:border-transparent transition-all duration-300 text-lg"
                       >
                         <FileText className="w-5 h-5" />
                         Open PDF
@@ -289,7 +294,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                     <Button
                       variant="outline"
                       onClick={handleShare}
-                      className="flex items-center gap-1"
+                      className="flex items-center gap-1 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-gradient-to-r hover:from-amber-500 hover:to-rose-500 hover:text-white hover:border-transparent transition-all duration-300 rounded-xl"
                     >
                       <Share2 className="w-5 h-5" />
                       Share
@@ -330,7 +335,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
             <Separator />
 
             <section>
-              <h2 className="text-xl font-semibold mb-2">Bible Verses</h2>
+              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 bg-clip-text text-transparent">Bible Verses</h2>
               {isLoadingVerses ? (
                 <p>Loading verses...</p>
               ) : verses.length === 0 ? (
@@ -368,15 +373,27 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
             <Separator />
 
             <section>
-              <h2 className="text-xl font-semibold mb-2">Ratings</h2>
+              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 bg-clip-text text-transparent">Ratings</h2>
               <div className="space-y-2">
                 {(['quality', 'theology', 'helpfulness'] as const).map((cat) => (
                   <div key={cat} className="flex items-center space-x-2">
                     <span className="capitalize w-32">{cat}</span>
-                    <Button aria-label={`Upvote ${cat}`} size="sm" variant="outline" onClick={() => handleVote(cat, 1)}>
+                    <Button
+                      aria-label={`Upvote ${cat}`}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleVote(cat, 1)}
+                      className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-gradient-to-r hover:from-amber-500 hover:to-emerald-500 hover:text-white hover:border-transparent transition-all duration-300 rounded-lg"
+                    >
                       <ThumbsUp className="h-4 w-4" />
                     </Button>
-                    <Button aria-label={`Downvote ${cat}`} size="sm" variant="outline" onClick={() => handleVote(cat, -1)}>
+                    <Button
+                      aria-label={`Downvote ${cat}`}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleVote(cat, -1)}
+                      className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-gradient-to-r hover:from-rose-500 hover:to-amber-500 hover:text-white hover:border-transparent transition-all duration-300 rounded-lg"
+                    >
                       <ThumbsDown className="h-4 w-4" />
                     </Button>
                     <span>{ratingCounts[cat]}</span>
@@ -388,7 +405,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
             <Separator />
 
             <section>
-              <h2 className="text-xl font-semibold mb-2">Comments</h2>
+              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 bg-clip-text text-transparent">Comments</h2>
               {user ? (
                 <NewCommentForm pdfId={pdf.id} onCommentAdded={handleCommentAdded} />
               ) : (
@@ -405,7 +422,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
             <Separator />
 
             <section>
-              <h2 className="text-xl font-semibold mb-2">My Notes</h2>
+              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 bg-clip-text text-transparent">My Notes</h2>
               <NotesSection initialNotes={initialNotes} pdfId={pdf.id} />
             </section>
           </motion.div>
