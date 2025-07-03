@@ -956,12 +956,6 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
         className="relative overflow-hidden pb-20 pt-12"
       >
         <div className="absolute inset-0">
-          <Image
-            src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
-            alt={`${song.title} cover art`}
-            fill
-            className="object-cover"
-          />
           <div className="absolute inset-0 bg-gradient-to-br from-violet-500/60 via-fuchsia-500/40 to-indigo-500/60"></div>
           <div className="absolute top-0 -left-8 w-96 h-96 bg-violet-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
           <div className="absolute top-12 -right-8 w-80 h-80 bg-fuchsia-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
@@ -1053,12 +1047,27 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             Back
           </Button>
 
-          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+          <div className="flex flex-col md:flex-row md:items-start md:space-x-6">
+            {song.song_art_url && (
+              <div className="w-full md:w-1/3 mb-4 md:mb-0">
+                <Image
+                  src={song.song_art_url.startsWith('http') ? song.song_art_url : `${CDN_URL}${song.song_art_url}`}
+                  alt={song.title}
+                  width={400}
+                  height={500}
+                  className="w-full h-auto object-contain rounded"
+                />
+              </div>
+            )}
+            <div className="flex-1">
+              <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
           {/* Song Info Card */}
           <Card className="lg:col-span-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl font-bold mb-2">Song Details</CardTitle>
+                <CardTitle className="text-2xl font-bold mb-2 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                  Song Details
+                </CardTitle>
                 {isCreator && (
                   <Button
                     variant="ghost"
@@ -1140,7 +1149,9 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           {/* Votes and Likes Card */}
           <Card className="lg:col-span-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
             <CardHeader>
-              <CardTitle>Votes & Likes</CardTitle>
+              <CardTitle className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent text-2xl font-bold">
+                Votes & Likes
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col space-y-4">
@@ -1207,7 +1218,9 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             <Card className="lg:col-span-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold">AI Information</CardTitle>
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                  AI Information
+                </CardTitle>
                   {isCreator && (
                     <Button
                       variant="ghost"
@@ -1253,7 +1266,9 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           <Card className="lg:col-span-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl font-bold">Bible Info</CardTitle>
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                  Bible Info
+                </CardTitle>
                 {isCreator && (
                   <Button
                     variant="ghost"
@@ -1358,7 +1373,9 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           <Card className="lg:col-span-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl font-bold">Lyrics</CardTitle>
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                  Lyrics
+                </CardTitle>
                 {isCreator && (
                   <Button
                     variant="ghost"
@@ -1383,7 +1400,9 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               </Accordion>
             </CardContent>
           </Card>
-        </div>
+              </div>
+            </div>
+          </div>
         </motion.div>
       </div>
 
