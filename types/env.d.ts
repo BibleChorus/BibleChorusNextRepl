@@ -21,3 +21,12 @@ declare namespace NodeJS {
 
 // Removed unnecessary custom module declarations that interfered with the real
 // type definitions shipped by Next.js and framer-motion.
+
+// Generic module stubs requested by the user — note these shadow built-in typings.
+
+declare module 'react';
+declare module 'next/link';
+declare module 'next/router';
+declare module 'next/image';
+declare module 'framer-motion';
+declare module 'class-variance-authority';
