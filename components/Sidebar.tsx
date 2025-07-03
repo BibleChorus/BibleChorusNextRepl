@@ -5,6 +5,7 @@ import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSidebar } from '@/contexts/SidebarContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const menuItems = [
   { name: 'Upload Songs', icon: Upload, href: '/upload' },
@@ -36,75 +37,107 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      <div
-        className={`fixed top-0 left-0 h-full bg-background text-foreground shadow-lg transition-all duration-300 ease-in-out z-[55] 
-          ${isMobileOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'} 
-          ${isOpen ? 'lg:w-64' : 'lg:w-16'}
-          ${!isMobileOpen && !isOpen ? 'lg:w-0 lg:-translate-x-full' : ''}`}
-      >
-        <div className={`p-4 h-full overflow-y-auto ${isMobileOpen ? 'block' : 'hidden lg:block'}`}>
-          {/* Close button for mobile view */}
-          <button
-            onClick={() => setIsMobileOpen(false)}
-            className="absolute top-4 right-4 p-2 text-muted-foreground lg:hidden"
+      <AnimatePresence>
+        {(isMobileOpen || isOpen) && (
+          <motion.div
+            initial={{ opacity: 0, x: -300 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -300 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className={`fixed top-0 left-0 h-full transition-all duration-300 ease-in-out z-[55] 
+              ${isMobileOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'} 
+              ${isOpen ? 'lg:w-64' : 'lg:w-16'}
+              ${!isMobileOpen && !isOpen ? 'lg:w-0 lg:-translate-x-full' : ''}`}
           >
-            <X className="h-6 w-6" />
-          </button>
+            {/* Glass morphism background with gradient overlay */}
+            <div className="absolute inset-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border-r border-white/20 dark:border-slate-700/50"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.08] via-purple-500/[0.06] to-pink-500/[0.08] dark:from-indigo-500/[0.15] dark:via-purple-500/[0.12] dark:to-pink-500/[0.15]"></div>
+            
+            <div className={`relative p-4 h-full overflow-y-auto ${isMobileOpen ? 'block' : 'hidden lg:block'}`}>
+              {/* Close button for mobile view */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsMobileOpen(false)}
+                className="absolute top-4 right-4 p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 lg:hidden"
+              >
+                <X className="h-6 w-6" />
+              </motion.button>
 
-          {/* Toggle button for desktop view */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="absolute top-4 right-4 p-2 text-muted-foreground hidden lg:block"
-          >
-            {isOpen ? <PanelLeftClose className="h-6 w-6" /> : <PanelLeftOpen className="h-6 w-6" />}
-          </button>
+              {/* Toggle button for desktop view */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsOpen(!isOpen)}
+                className="absolute top-4 right-4 p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 hidden lg:block"
+              >
+                {isOpen ? <PanelLeftClose className="h-6 w-6" /> : <PanelLeftOpen className="h-6 w-6" />}
+              </motion.button>
 
-          {/* Reduced spacer for toggle button */}
-          <div className="h-12"></div>
-          
-          {/* BibleChorus icon and text */}
-          <Link href="/" className={`flex items-center py-2 px-2 mb-4 text-foreground hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer
-            ${isOpen ? 'lg:px-4' : 'lg:px-2 lg:justify-center'}
-            h-10 overflow-hidden whitespace-nowrap`}>
-            <div className="w-6 h-6 flex items-center justify-center">
-              <Image
-                src="/biblechorus-icon.png"
-                alt="BibleChorus"
-                width={24}
-                height={24}
-                className="flex-shrink-0"
-              />
+              {/* Reduced spacer for toggle button */}
+              <div className="h-12"></div>
+              
+              {/* BibleChorus icon and text */}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Link href="/" className={`flex items-center py-3 px-3 mb-6 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white rounded-2xl cursor-pointer transition-all duration-300
+                  ${isOpen ? 'lg:px-4' : 'lg:px-3 lg:justify-center'}
+                  h-12 overflow-hidden whitespace-nowrap bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg hover:shadow-indigo-500/10`}>
+                  <div className="w-6 h-6 flex items-center justify-center">
+                    <Image
+                      src="/biblechorus-icon.png"
+                      alt="BibleChorus"
+                      width={24}
+                      height={24}
+                      className="flex-shrink-0"
+                    />
+                  </div>
+                  <span className={`ml-4 font-semibold transition-all duration-300
+                    ${isOpen ? 'opacity-100 lg:inline' : 'opacity-0 lg:hidden'}
+                    ${isMobileOpen ? 'inline' : 'hidden'} bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent`}>
+                    BibleChorus
+                  </span>
+                </Link>
+              </motion.div>
+              
+              {/* Enhanced separator line with gradient */}
+              <div className="h-px bg-gradient-to-r from-transparent via-slate-200/60 dark:via-slate-600/60 to-transparent mb-6"></div>
+              
+              {menuItems.map((item, index) => (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  whileHover={{ scale: 1.02 }}
+                  className="mb-2"
+                >
+                  <div
+                    onClick={() => handleItemClick(item.href)}
+                    className={`group flex items-center py-3 px-3 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white rounded-2xl cursor-pointer transition-all duration-300
+                      ${isOpen ? 'lg:px-4' : 'lg:px-3 lg:justify-center'}
+                      h-12 overflow-hidden whitespace-nowrap bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-500/20 dark:hover:border-indigo-400/20 relative`}
+                  >
+                    {/* Gradient accent line on hover */}
+                    <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-l-2xl"></div>
+                    
+                    <div className="w-6 h-6 flex items-center justify-center relative z-10">
+                      <item.icon className="h-5 w-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors duration-300" />
+                    </div>
+                    <span className={`ml-4 transition-all duration-300 font-medium relative z-10
+                      ${isOpen ? 'opacity-100 lg:inline' : 'opacity-0 lg:hidden'}
+                      ${isMobileOpen ? 'inline' : 'hidden'}`}>
+                      {item.name}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
             </div>
-            <span className={`ml-4 font-semibold transition-opacity duration-300
-              ${isOpen ? 'opacity-100 lg:inline' : 'opacity-0 lg:hidden'}
-              ${isMobileOpen ? 'inline' : 'hidden'}`}>
-              BibleChorus
-            </span>
-          </Link>
-          
-          {/* Separator line */}
-          <div className="border-b border-border mb-4"></div>
-          
-          {menuItems.map((item) => (
-            <div
-              key={item.name}
-              onClick={() => handleItemClick(item.href)}
-              className={`flex items-center py-2 px-2 text-foreground hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer
-                ${isOpen ? 'lg:px-4' : 'lg:px-2 lg:justify-center'}
-                h-10 overflow-hidden whitespace-nowrap`}
-            >
-              <div className="w-6 h-6 flex items-center justify-center">
-                <item.icon className="h-5 w-5 text-primary flex-shrink-0" />
-              </div>
-              <span className={`ml-4 transition-opacity duration-300
-                ${isOpen ? 'opacity-100 lg:inline' : 'opacity-0 lg:hidden'}
-                ${isMobileOpen ? 'inline' : 'hidden'}`}>
-                {item.name}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
