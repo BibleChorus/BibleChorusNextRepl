@@ -19,7 +19,7 @@ export function TermsDialog({ children }: { children: React.ReactNode }) {
         <DialogHeader>
           <DialogTitle>Terms of Service</DialogTitle>
           <DialogDescription>
-            Last updated: {new Date().toLocaleDateString()}
+            Last updated: <span suppressHydrationWarning>{new Date().toLocaleDateString()}</span>
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[60vh] pr-4">

@@ -19,7 +19,7 @@ export function PrivacyDialog({ children }: { children: React.ReactNode }) {
         <DialogHeader>
           <DialogTitle>Privacy Policy</DialogTitle>
           <DialogDescription>
-            Last updated: {new Date().toLocaleDateString()}
+            Last updated: <span suppressHydrationWarning>{new Date().toLocaleDateString()}</span>
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[60vh] pr-4">
