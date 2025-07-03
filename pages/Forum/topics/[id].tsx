@@ -13,6 +13,7 @@ import Link from 'next/link';
 import ReactHtmlParser from 'html-react-parser';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
+import { motion } from 'framer-motion';
 
 export default function TopicPage() {
   const router = useRouter();
@@ -101,33 +102,78 @@ export default function TopicPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30">
       <Head>
         <title>{topic.title} - BibleChorus Forum</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="mb-6">
-        <Link href="/forum">
-          <Button variant="outline" size="sm" className="flex items-center">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Forum
-          </Button>
-        </Link>
-      </div>
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative overflow-hidden pb-20 pt-12"
+      >
+        {/* Background Effects */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.08] via-purple-500/[0.06] to-pink-500/[0.08] dark:from-indigo-500/[0.15] dark:via-purple-500/[0.12] dark:to-pink-500/[0.15]"></div>
+          <div className="absolute top-0 -left-8 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+          <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-12 left-32 w-96 h-96 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
+        </div>
 
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-3xl font-bold">{topic.title}</h1>
-        {topic.category && (
-          <Badge variant="secondary">{topic.category}</Badge>
-        )}
-      </div>
-      <p className="text-sm text-muted-foreground mb-4">
-        Posted by {topic.username} on {new Date(topic.created_at).toLocaleDateString()}
-      </p>
-      <div className={richTextStyles.prose}>
-        {ReactHtmlParser(topic.content)}
-      </div>
+        <div className="relative z-10 container mx-auto px-4 text-center">
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-5xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white"
+          >
+            {topic.title}
+          </motion.h1>
+          {topic.category && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="mt-4"
+            >
+              <Badge variant="secondary">{topic.category}</Badge>
+            </motion.div>
+          )}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="mt-4 text-slate-600 dark:text-slate-300 text-lg"
+          >
+            Posted by {topic.username} on {new Date(topic.created_at).toLocaleDateString()}
+          </motion.p>
+        </div>
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 -mt-12 relative z-20">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-6 md:p-10"
+        >
+          <div className="mb-6">
+            <Link href="/forum">
+              <Button variant="outline" size="sm" className="flex items-center">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Forum
+              </Button>
+            </Link>
+          </div>
+
+          <div className={richTextStyles.prose}>
+            {ReactHtmlParser(topic.content)}
+          </div>
 
       {topic.song && (
         <div className="mb-6 p-4 bg-card rounded-lg shadow-sm flex items-center">
@@ -179,6 +225,8 @@ export default function TopicPage() {
           <Lock className="h-4 w-4" /> Lock Topic
         </Button>
       )}
+        </motion.div>
+      </div>
     </div>
   );
 }
