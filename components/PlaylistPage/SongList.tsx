@@ -1,4 +1,8 @@
 import React from 'react';
+import type { FC } from 'react';
+import type { NextPage } from 'next';
+import type { Variants } from 'framer-motion';
+import type { AxiosResponse } from 'axios';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
