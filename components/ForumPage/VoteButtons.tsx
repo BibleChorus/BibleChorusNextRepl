@@ -24,7 +24,7 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
   initialUserVote = 0,
   onVoteUpdate
 }) => {
-  const { user } = useAuth();
+  const { user, getAuthToken } = useAuth();
   const [upvotes, setUpvotes] = useState(initialUpvotes);
   const [downvotes, setDownvotes] = useState(initialDownvotes);
   const [userVote, setUserVote] = useState(initialUserVote);
@@ -47,7 +47,9 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
         ? `/api/forum/topics/${itemId}/vote`
         : `/api/forum/comments/${itemId}/vote`;
 
-      const response = await axios.post(endpoint, { vote: newVote });
+      const token = await getAuthToken();
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+      const response = await axios.post(endpoint, { vote: newVote }, config);
       const { upvotes: newUpvotes, downvotes: newDownvotes, userVote: newUserVote } = response.data;
 
       setUpvotes(newUpvotes);
