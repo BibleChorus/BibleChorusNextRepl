@@ -197,12 +197,12 @@ export default function PlaylistsPage() {
               className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-8 md:p-10"
             >
               <Tabs defaultValue="auto" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-16 p-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 rounded-2xl shadow-xl min-h-20 auto-rows-fr gap-2">
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-16 p-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 rounded-2xl shadow-xl min-h-14 auto-rows-fr gap-2">
                   {playlistGroups.map((group) => (
                     <TabsTrigger 
                       key={group.tabValue} 
                       value={group.tabValue}
-                      className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-fuchsia-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300 data-[state=active]:scale-[1.02] h-16 font-medium text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-600/40"
+                      className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-fuchsia-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300 data-[state=active]:scale-[1.02] h-12 font-medium text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-600/40"
                     >
                       <group.icon className="w-4 h-4 mr-2" />
                       <span className="hidden sm:inline">{group.title}</span>
