@@ -1,7 +1,7 @@
 declare namespace NodeJS {
   interface ProcessEnv {
     NODE_ENV?: 'development' | 'production' | 'test';
-    NEXT_PUBLIC_CDN_URL?: string;
+    NEXT_PUBLIC_CDN_URL: string;
     NEXT_PUBLIC_BASE_URL?: string;
     CDN_URL?: string;
     DATABASE_URL?: string;
