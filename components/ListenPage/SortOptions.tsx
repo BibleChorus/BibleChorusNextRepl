@@ -53,25 +53,15 @@ export function SortOptions({ filterOptions, setFilterOptions, setIsSortExpanded
             </p>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={clearSort}
-            className="flex items-center gap-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Reset Sort
-          </Button>
-          <button
-            onClick={() => setIsSortExpanded(false)}
-            className="text-sm flex items-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-200 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 px-3 py-2 rounded-xl"
-            aria-label="Close sort options"
-          >
-            Close Sort
-            <X className="h-4 w-4 ml-1" />
-          </button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={clearSort}
+          className="flex items-center gap-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Reset Sort
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
