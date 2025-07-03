@@ -11,7 +11,6 @@ import { BookCheck, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { Pdf } from '@/types';
 import { motion } from 'framer-motion';
-import type { Variants } from 'framer-motion';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 

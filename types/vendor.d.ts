@@ -72,13 +72,31 @@ declare module 're-resizable' {
 //   export const Cell: React.ComponentType<any>;
 // }
 
-// Basic stub for framer-motion.  Most of the time the real typings will be
-// resolved, but this prevents hard failures if they're not available.
-// declare module 'framer-motion' {
-//   import * as React from 'react';
-//   export const motion: { [key: string]: React.ComponentType<any> };
-//   export const AnimatePresence: React.ComponentType<any>;
-// }
+// ---------------------------------------------------------------------------
+// Minimal fallback stubs for a handful of libraries.  The real packages ship
+// their own typings, but on some CI / editor setups those typings may not be
+// discovered.  These declarations are only used when TypeScript cannot locate
+// the official ones – they will otherwise be ignored.
+
+// framer-motion (ships types, but we add a loose stub just in case)
+declare module 'framer-motion' {
+  import * as React from 'react';
+  // We don't attempt to replicate the full Motion interface – this is only to
+  // satisfy the compiler when IntelliSense can't find the official .d.ts.
+  export const motion: { [key: string]: React.ComponentType<any> };
+  export const AnimatePresence: React.ComponentType<any>;
+  export function useMotionValue<T>(init: T): { get: () => T; set: (v: T) => void };
+}
+
+// html-react-parser (also bundles its own types ≥ v5)
+declare module 'html-react-parser' {
+  import * as React from 'react';
+  function parse(html: string, options?: any): React.ReactNode;
+  export = parse;
+}
+
+// We intentionally do NOT override any `next/*` modules because the official
+// Next.js package already ships comprehensive type definitions for them.
 // ---------------------------------------------------------------------------
 
 // Removed fallback stubs for React-related libraries – the project now relies on
