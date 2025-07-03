@@ -44,7 +44,7 @@ interface PdfPageProps {
 }
 
 export default function PdfPage({ pdf, bibleVerses, initialComments, initialNotes }: PdfPageProps) {
-  const { user } = useAuth();
+  const { user, getAuthToken } = useAuth();
   const [comments, setComments] = useState<PdfComment[]>(initialComments);
   const [ratingCounts, setRatingCounts] = useState({ quality: 0, theology: 0, helpfulness: 0 });
   const [notebookLmUrl, setNotebookLmUrl] = useState(pdf.notebook_lm_url || '');
@@ -66,11 +66,21 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
       return;
     }
     try {
-      const response = await apiClient.post(`/api/pdfs/${pdf.id}/rate`, {
-        user_id: user.id,
-        category,
-        value,
-      });
+      const token = await getAuthToken();
+      if (!token) {
+        toast.error('Authentication required');
+        return;
+      }
+      const response = await apiClient.post(
+        `/api/pdfs/${pdf.id}/rate`,
+        {
+          category,
+          value,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       setRatingCounts((prev) => ({
         ...prev,
         [category]: response.data.count,
