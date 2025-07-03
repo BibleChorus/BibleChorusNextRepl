@@ -57,12 +57,28 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
     setComments((prev) => [comment, ...prev]);
   };
 
-  const handleVote = async (category: 'quality' | 'theology' | 'helpfulness', value: number) => {
+  const handleVote = async (
+    category: 'quality' | 'theology' | 'helpfulness',
+    value: number,
+  ) => {
+    if (!user) {
+      toast.error('You need to be logged in to vote');
+      return;
+    }
     try {
-      await apiClient.post(`/api/pdfs/${pdf.id}/rate`, { category, value });
-      setRatingCounts((prev) => ({ ...prev, [category]: prev[category] + value }));
+      const response = await apiClient.post(`/api/pdfs/${pdf.id}/rate`, {
+        user_id: user.id,
+        category,
+        value,
+      });
+      setRatingCounts((prev) => ({
+        ...prev,
+        [category]: response.data.count,
+      }));
+      toast.success('Vote submitted');
     } catch (err) {
       console.error('Error submitting vote', err);
+      toast.error('Failed to submit vote');
     }
   };
 
