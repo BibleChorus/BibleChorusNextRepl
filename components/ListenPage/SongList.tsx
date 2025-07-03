@@ -33,6 +33,9 @@ import Image from 'next/image' // Import Next.js Image component
 import LyricsBibleComparisonDialog from './LyricsBibleComparisonDialog';
 import { BookOpenText } from 'lucide-react';
 import { SongOptionsMenu } from '@/components/SongOptionsMenu';
+import type { FC } from 'react';
+import type { NextPage } from 'next';
+import type { Variants } from 'framer-motion';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
