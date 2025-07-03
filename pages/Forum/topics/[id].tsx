@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
+import type { Topic, Song, Comment } from '@/types';
 import { CommentList } from '@/components/ForumPage/CommentList';
 import { NewCommentForm } from '@/components/ForumPage/NewCommentForm';
 import Head from 'next/head';
@@ -19,7 +20,8 @@ export default function TopicPage() {
   const router = useRouter();
   const { id } = router.query;
   const { user } = useAuth();
-  const [topic, setTopic] = useState<any>(null);
+  type TopicWithSong = Topic & { song?: Song; comments?: Comment[]; is_locked?: boolean };
+  const [topic, setTopic] = useState<TopicWithSong | null>(null);
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
   const [isLocked, setIsLocked] = useState(false);
 
@@ -28,8 +30,9 @@ export default function TopicPage() {
       const fetchTopic = async () => {
         try {
           const response = await axios.get(`/api/forum/topics/${id}`);
-          setTopic(response.data);
-          setIsLocked(response.data.is_locked);
+          const data = response.data as TopicWithSong;
+          setTopic(data);
+          setIsLocked(!!data.is_locked);
         } catch (error) {
           console.error('Error fetching topic:', error);
         }
@@ -67,10 +70,10 @@ export default function TopicPage() {
 
   const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
-  const handleCommentAdded = (newComment: any) => {
-    setTopic((prevTopic: any) => ({
-      ...prevTopic,
-      comments: [newComment, ...prevTopic.comments],
+  const handleCommentAdded = (newComment: Comment) => {
+    setTopic((prevTopic) => ({
+      ...prevTopic!,
+      comments: [newComment, ...(prevTopic?.comments || [])],
     }));
   };
 
