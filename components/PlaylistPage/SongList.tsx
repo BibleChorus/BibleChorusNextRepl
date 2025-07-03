@@ -29,7 +29,12 @@ export const SongList: React.FC<SongListProps> = ({ songs }) => {
   );
 };
 
-const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSongs }) => {
+interface SongListItemProps {
+  song: Song;
+  allSongs: Song[];
+}
+
+const SongListItem: React.FC<SongListItemProps> = ({ song, allSongs }) => {
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
 
   const handlePlayClick = () => {
@@ -172,7 +177,7 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
 
           {/* Enhanced Tags */}
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {song.genres && song.genres.slice(0, 3).map((genre, index) => (
+            {song.genres && song.genres.slice(0, 3).map((genre: string, index: number) => (
               <Badge 
                 key={`${song.id}-${genre}-${index}`} 
                 variant="secondary"
