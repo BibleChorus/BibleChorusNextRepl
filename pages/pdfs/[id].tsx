@@ -1,6 +1,5 @@
-/// <reference types="react" />
 import { GetServerSideProps } from 'next';
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Head from 'next/head';
 import db from '@/db';
 import { parsePostgresArray } from '@/lib/utils';
@@ -14,7 +13,7 @@ import { NewCommentForm } from '@/components/PdfComments/NewCommentForm';
 import { NotesSection } from '@/components/PdfNotes/NotesSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThumbsUp, ThumbsDown, Headphones, FileText, Share2, Sparkles } from 'lucide-react';
-import axios from 'axios';
+import apiClient from '@/lib/apiClient';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
@@ -28,6 +27,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BIBLE_BOOKS } from '@/lib/constants';
 import { motion } from 'framer-motion';
+import { FetchVersesResponse } from '@/types/api';
 
 interface BibleVerse {
   book: string;
@@ -59,7 +59,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
 
   const handleVote = async (category: 'quality' | 'theology' | 'helpfulness', value: number) => {
     try {
-      await axios.post(`/api/pdfs/${pdf.id}/rate`, { category, value });
+      await apiClient.post(`/api/pdfs/${pdf.id}/rate`, { category, value });
       setRatingCounts((prev) => ({ ...prev, [category]: prev[category] + value }));
     } catch (err) {
       console.error('Error submitting vote', err);
@@ -68,7 +68,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
 
   const handleDetailsSave = async () => {
     try {
-      await axios.put(`/api/pdfs/${pdf.id}/edit`, {
+      await apiClient.put(`/api/pdfs/${pdf.id}/edit`, {
         notebook_lm_url: notebookLmUrl || null,
         summary: summary || null,
       });
@@ -124,8 +124,8 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
           chapter: v.chapter,
           verses: [v.verse],
         }));
-        const response = await axios.post('/api/fetch-verses', versesToFetch);
-        const fetched = response.data.flat().map((verse: any) => ({
+        const { data } = await apiClient.post<FetchVersesResponse>('/api/fetch-verses', versesToFetch);
+        const fetched = data.flat().map((verse) => ({
           book: BIBLE_BOOKS[verse.book - 1],
           chapter: verse.chapter,
           verse: verse.verse,
