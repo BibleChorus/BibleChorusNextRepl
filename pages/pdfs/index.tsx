@@ -13,6 +13,8 @@ import { Pdf } from '@/types';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+
 interface PdfWithUser extends Pdf {
   username: string;
 }
@@ -124,49 +126,119 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((pdf) => (
-                <Card key={pdf.id} className="transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
+              {filtered.map((pdf, index) => (
+                <motion.div
+                  key={pdf.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="group relative bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 hover:border-slate-300/80 dark:hover:border-slate-600/80 transition-all duration-500 overflow-hidden hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900/30 hover:scale-[1.01]"
+                  whileHover={{ scale: 1.01, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
+                >
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-rose-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-amber-500 via-rose-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  {/* PDF Image */}
                   {pdf.image_url && (
-                    <Image
-                      src={
-                        pdf.image_url.startsWith('http')
-                          ? pdf.image_url
-                          : `${process.env.NEXT_PUBLIC_CDN_URL ?? ''}${pdf.image_url}`
-                      }
-                      alt={pdf.title}
-                      width={320}
-                      height={480}
-                      className="w-full h-60 object-cover rounded-t"
-                    />
+                    <div className="relative overflow-hidden rounded-t-2xl">
+                      <Image
+                        src={
+                          pdf.image_url.startsWith('http')
+                            ? pdf.image_url
+                            : `${CDN_URL}${pdf.image_url}`
+                        }
+                        alt={pdf.title}
+                        width={320}
+                        height={480}
+                        className="w-full h-60 object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    </div>
                   )}
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-1">
-                      {pdf.title}
-                      {pdf.is_bible_book && (
-                        <BookCheck className="w-5 h-5 text-yellow-500" />
-                      )}
-                    </CardTitle>
-                    {pdf.author && <CardDescription>By {pdf.author}</CardDescription>}
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      Uploaded by {pdf.username} on {new Date(pdf.created_at).toLocaleDateString()}
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {pdf.themes.map((t) => (
-                        <Badge key={t}>{t}</Badge>
+                  
+                  {/* Content */}
+                  <div className="relative p-6">
+                    {/* Title and Bible Book Badge */}
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300 leading-tight">
+                        {pdf.title}
+                        {pdf.is_bible_book && (
+                          <BookCheck className="inline w-5 h-5 text-amber-500 ml-2" />
+                        )}
+                      </h3>
+                    </div>
+
+                    {/* Author */}
+                    {pdf.author && (
+                      <p className="text-slate-600 dark:text-slate-300 text-sm font-medium mb-4">
+                        By {pdf.author}
+                      </p>
+                    )}
+
+                    {/* Meta Information */}
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                        <div className="w-8 h-8 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded-full flex items-center justify-center">
+                          <BookCheck className="w-4 h-4" />
+                        </div>
+                        <span className="font-medium text-slate-700 dark:text-slate-300">
+                          Uploaded by {pdf.username}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                        <div className="w-8 h-8 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded-full flex items-center justify-center">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <time className="font-medium text-slate-700 dark:text-slate-300">
+                          {new Date(pdf.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: new Date(pdf.created_at).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                          })}
+                        </time>
+                      </div>
+                    </div>
+
+                    {/* Themes */}
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {pdf.themes.map((theme) => (
+                        <Badge 
+                          key={theme}
+                          variant="secondary"
+                          className="bg-gradient-to-r from-amber-500/10 to-rose-500/10 text-amber-700 dark:text-amber-300 hover:from-amber-500/20 hover:to-rose-500/20 transition-all duration-300 text-xs border-amber-500/20 dark:border-amber-400/20 font-medium px-2 py-1 rounded-lg"
+                        >
+                          {theme}
+                        </Badge>
                       ))}
                     </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Link href={`/pdfs/${pdf.id}`} className="ml-auto">
-                      <Button size="sm" variant="outline">View</Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
+
+                    {/* View Button */}
+                    <div className="flex justify-end">
+                      <Link href={`/pdfs/${pdf.id}`}>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-gradient-to-r hover:from-amber-500 hover:to-rose-500 hover:text-white hover:border-transparent transition-all duration-300 rounded-xl font-medium px-4 py-2"
+                        >
+                          View
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
               ))}
               {filtered.length === 0 && (
-                <p className="col-span-full text-center text-lg text-muted-foreground py-16">No PDFs found.</p>
+                <div className="col-span-full text-center py-16">
+                  <div className="relative mb-6">
+                    <BookCheck className="w-16 h-16 mx-auto text-slate-400 dark:text-slate-500" />
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-amber-500 to-rose-500 rounded-full opacity-20"></div>
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-3 text-slate-900 dark:text-white">No PDFs found</h3>
+                  <p className="text-slate-600 dark:text-slate-300 text-lg max-w-md mx-auto">
+                    Try adjusting your search terms or browse our collection of Bible study materials.
+                  </p>
+                </div>
               )}
             </div>
           </motion.div>
