@@ -860,7 +860,7 @@ function ListenContent({
                   transition={{ duration: 0.6, delay: 0.1 }}
                   className="text-2xl lg:text-3xl font-bold"
                 >
-                  <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400 bg-clip-text text-transparent">
                     Listen
                   </span>
                 </motion.h1>
@@ -868,7 +868,7 @@ function ListenContent({
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.6, delay: 0.2 }}
-                  className="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20"
+                  className="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-400/12 to-purple-400/12 border border-indigo-400/12"
                 >
                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                     {totalSongs.toLocaleString()} songs
@@ -891,14 +891,14 @@ function ListenContent({
                   className={cn(
                     "h-9 px-3 backdrop-blur-sm transition-all duration-300",
                     getFilterTags().length > 0
-                      ? "bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border-indigo-500/50 text-indigo-700 dark:text-indigo-300 hover:from-indigo-600/30 hover:to-purple-600/30"
+                      ? "bg-gradient-to-r from-indigo-400/14 to-purple-400/14 border-indigo-400/24 text-indigo-700 dark:text-indigo-300 hover:from-indigo-400/20 hover:to-purple-400/20"
                       : "bg-white/60 dark:bg-slate-700/60 border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
                   )}
                 >
                   <Filter className="h-4 w-4 mr-2" />
                   Filters
                   {getFilterTags().length > 0 && (
-                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-indigo-600/20 dark:bg-indigo-400/20 rounded-full">
+                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-indigo-400/16 dark:bg-indigo-300/16 rounded-full">
                       {getFilterTags().length}
                     </span>
                   )}
@@ -921,14 +921,14 @@ function ListenContent({
                   className={cn(
                     "h-9 px-3 backdrop-blur-sm transition-all duration-300",
                     selectedPlaylist
-                      ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-700 dark:text-purple-300 hover:from-purple-600/30 hover:to-pink-600/30"
+                      ? "bg-gradient-to-r from-purple-400/14 to-pink-400/14 border-purple-400/24 text-purple-700 dark:text-purple-300 hover:from-purple-400/20 hover:to-pink-400/20"
                       : "bg-white/60 dark:bg-slate-700/60 border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
                   )}
                 >
                   <ListMusic className="h-4 w-4 mr-2" />
                   Playlists
                   {selectedPlaylist && (
-                    <span className="ml-2 w-2 h-2 bg-purple-600/60 dark:bg-purple-400/60 rounded-full"></span>
+                    <span className="ml-2 w-2 h-2 bg-purple-400/50 dark:bg-purple-300/50 rounded-full"></span>
                   )}
                 </Button>
 
@@ -971,10 +971,10 @@ function ListenContent({
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
-                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl p-6"
+                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-2xl shadow-xl p-6"
                 >
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
                       Filters & Search
                     </h3>
                     <Button
@@ -1010,10 +1010,10 @@ function ListenContent({
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
-                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl p-6"
+                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-2xl shadow-xl p-6"
                 >
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
                       Sort Options
                     </h3>
                     <Button
@@ -1049,10 +1049,10 @@ function ListenContent({
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
-                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl p-6"
+                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-2xl shadow-xl p-6"
                 >
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
                       Playlist Management
                     </h3>
                     <Button
@@ -1079,7 +1079,7 @@ function ListenContent({
                                 objectFit="cover"
                                 className="rounded-xl transition-transform group-hover:scale-105"
                               />
-                              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-400/16 to-purple-400/16 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             </div>
                           )}
                           
@@ -1131,8 +1131,8 @@ function ListenContent({
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         className={cn(
-                                          "flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-indigo-500/10 hover:to-purple-500/10",
-                                          selectedPlaylist === playlist.id.toString() && "bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20"
+                                          "flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-indigo-400/12 hover:to-purple-400/12",
+                                          selectedPlaylist === playlist.id.toString() && "bg-gradient-to-r from-indigo-400/12 to-purple-400/12 border border-indigo-400/12"
                                         )}
                                         onClick={() => handlePlaylistSelect(playlist.id.toString())}
                                       >
@@ -1189,7 +1189,7 @@ function ListenContent({
                       <div className="flex items-center gap-2">
                         <Button 
                           onClick={handleSavePlaylist}
-                          className="h-12 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
+                          className="h-12 px-6 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
                         >
                           <Save className="h-4 w-4 mr-2" />
                           Save Playlist
@@ -1261,7 +1261,7 @@ function ListenContent({
                     >
                       <Badge 
                         variant="secondary" 
-                        className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-slate-700 dark:text-slate-300 hover:from-indigo-500/20 hover:to-purple-500/20 transition-all duration-200 rounded-lg"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-400/12 to-purple-400/12 border border-indigo-400/12 text-slate-700 dark:text-slate-300 hover:from-indigo-400/18 hover:to-purple-400/18 transition-all duration-200 rounded-lg"
                       >
                         <span className="text-sm">{tag.label}</span>
                         <button
@@ -1382,7 +1382,7 @@ function ListenContent({
                   <div className="space-y-4 text-center">
                     <div className="relative">
                       <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-600 mx-auto"></div>
-                      <div className="absolute inset-0 rounded-full animate-pulse bg-gradient-to-r from-indigo-600/20 to-purple-600/20"></div>
+                      <div className="absolute inset-0 rounded-full animate-pulse bg-gradient-to-r from-indigo-400/16 to-purple-400/16"></div>
                     </div>
                     <p className="text-slate-600 dark:text-slate-300 text-lg">Loading songs...</p>
                   </div>
@@ -1394,7 +1394,7 @@ function ListenContent({
               <div className="text-center py-16">
                 <div className="relative mb-6">
                   <PlayCircle className="w-16 h-16 mx-auto text-slate-400 dark:text-slate-500" />
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full opacity-20"></div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full opacity-20"></div>
                 </div>
                 <h3 className="text-2xl font-semibold mb-3 text-slate-900 dark:text-white">No songs found</h3>
                 <p className="text-slate-600 dark:text-slate-300 mb-6 text-lg max-w-md mx-auto">

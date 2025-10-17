@@ -82,10 +82,10 @@ export default function Forum() {
         >
           {/* Enhanced Background Effects */}
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.08] via-purple-500/[0.06] to-pink-500/[0.08] dark:from-indigo-500/[0.15] dark:via-purple-500/[0.12] dark:to-pink-500/[0.15]"></div>
-            <div className="absolute top-0 -left-8 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
-            <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-12 left-32 w-96 h-96 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/[0.08] via-purple-400/[0.06] to-pink-400/[0.08] dark:from-indigo-400/[0.13] dark:via-purple-400/[0.1] dark:to-pink-400/[0.13]"></div>
+            <div className="absolute top-0 -left-8 w-96 h-96 bg-indigo-400/14 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+            <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/14 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-12 left-32 w-96 h-96 bg-pink-400/14 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
           </div>
           
@@ -97,9 +97,9 @@ export default function Forum() {
                 transition={{ duration: 0.8, delay: 0.1 }}
                 className="mb-6"
               >
-                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-500/20 dark:via-purple-500/20 dark:to-pink-500/20 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 shadow-lg">
-                  <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent font-semibold">
+                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-400/12 via-purple-400/12 to-pink-400/12 dark:from-indigo-400/16 dark:via-purple-400/16 dark:to-pink-400/16 backdrop-blur-md border border-indigo-400/14 dark:border-indigo-400/18 shadow-lg">
+                  <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-300" />
+                  <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-300 dark:via-purple-300 dark:to-pink-300 bg-clip-text text-transparent font-semibold">
                     Join the Conversation
                   </span>
                 </span>
@@ -113,10 +113,10 @@ export default function Forum() {
               >
                 <span className="block text-slate-900 dark:text-white mb-2">Community</span>
                 <span className="block relative">
-                  <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                  <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
                     Forum
                   </span>
-                  <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-full scale-x-0 animate-scale-x"></div>
+                  <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full scale-x-0 animate-scale-x"></div>
                 </span>
               </motion.h1>
               
@@ -139,27 +139,27 @@ export default function Forum() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto"
             >
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <MessageSquare className="relative w-10 h-10 mx-auto mb-4 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-500 bg-clip-text text-transparent mb-2">{stats.totalTopics}</div>
+              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/12 dark:border-slate-700/40 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-400/12">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/6 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full opacity-20 group-hover:opacity-35 transition-opacity duration-500"></div>
+                <MessageSquare className="relative w-10 h-10 mx-auto mb-4 text-indigo-500 dark:text-indigo-300 group-hover:scale-110 transition-transform duration-300" />
+                <div className="relative text-4xl font-bold bg-gradient-to-r from-indigo-500 to-indigo-400 bg-clip-text text-transparent mb-2">{stats.totalTopics}</div>
                 <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Active Topics</div>
               </div>
               
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <TrendingUp className="relative w-10 h-10 mx-auto mb-4 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-500 bg-clip-text text-transparent mb-2">{stats.totalDiscussions}</div>
+              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/12 dark:border-slate-700/40 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-400/12">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/6 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 group-hover:opacity-35 transition-opacity duration-500"></div>
+                <TrendingUp className="relative w-10 h-10 mx-auto mb-4 text-purple-500 dark:text-purple-300 group-hover:scale-110 transition-transform duration-300" />
+                <div className="relative text-4xl font-bold bg-gradient-to-r from-purple-500 to-purple-400 bg-clip-text text-transparent mb-2">{stats.totalDiscussions}</div>
                 <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Total Discussions</div>
               </div>
               
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-pink-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-pink-500 to-red-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <Users2 className="relative w-10 h-10 mx-auto mb-4 text-pink-600 dark:text-pink-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-pink-600 to-pink-500 bg-clip-text text-transparent mb-2">{stats.activeUsers}</div>
+              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/12 dark:border-slate-700/40 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-pink-400/12">
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-400/6 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-pink-400 to-rose-400 rounded-full opacity-20 group-hover:opacity-35 transition-opacity duration-500"></div>
+                <Users2 className="relative w-10 h-10 mx-auto mb-4 text-pink-500 dark:text-pink-300 group-hover:scale-110 transition-transform duration-300" />
+                <div className="relative text-4xl font-bold bg-gradient-to-r from-pink-500 to-pink-400 bg-clip-text text-transparent mb-2">{stats.activeUsers}</div>
                 <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Active Contributors</div>
               </div>
             </motion.div>
@@ -171,7 +171,7 @@ export default function Forum() {
               transition={{ duration: 1, delay: 0.6 }}
               className="absolute top-16 right-16 hidden xl:block"
             >
-              <div className="w-24 h-24 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl backdrop-blur-sm animate-float shadow-xl"></div>
+              <div className="w-24 h-24 bg-gradient-to-br from-indigo-400/16 to-purple-400/16 rounded-3xl backdrop-blur-sm animate-float shadow-xl"></div>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
@@ -179,7 +179,7 @@ export default function Forum() {
               transition={{ duration: 1, delay: 0.8 }}
               className="absolute bottom-16 left-16 hidden xl:block"
             >
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"></div>
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-400/16 to-pink-400/16 rounded-2xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"></div>
             </motion.div>
           </div>
         </motion.div>
@@ -190,7 +190,7 @@ export default function Forum() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-8 md:p-10"
+            className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-3xl shadow-2xl p-8 md:p-10"
           >
             {/* Enhanced Action Bar */}
             <div className="flex flex-col lg:flex-row gap-6 mb-10">
@@ -241,7 +241,7 @@ export default function Forum() {
               {/* Enhanced New Topic Button */}
               {user && (
                 <NewTopicDialog onTopicCreated={(newTopic: Topic) => setTopics([newTopic, ...topics])}>
-                  <Button className="relative h-12 px-8 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold">
+                  <Button className="relative h-12 px-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold">
                     <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
                     <Plus className="relative w-5 h-5 mr-2" />
                     <span className="relative">New Topic</span>
@@ -255,8 +255,8 @@ export default function Forum() {
               <div className="flex items-center justify-center min-h-[500px]">
                 <div className="space-y-6 text-center">
                   <div className="relative">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-600 mx-auto"></div>
-                    <div className="absolute inset-0 rounded-full animate-pulse bg-gradient-to-r from-indigo-600/20 to-purple-600/20"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-500 mx-auto"></div>
+                    <div className="absolute inset-0 rounded-full animate-pulse bg-gradient-to-r from-indigo-400/16 to-purple-400/16"></div>
                   </div>
                   <p className="text-slate-600 dark:text-slate-300 text-lg">Loading discussions...</p>
                 </div>
@@ -273,7 +273,7 @@ export default function Forum() {
               <div className="text-center py-16">
                 <div className="relative mb-6">
                   <MessageSquare className="w-16 h-16 mx-auto text-slate-400 dark:text-slate-500" />
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full opacity-20"></div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full opacity-20"></div>
                 </div>
                 <h3 className="text-2xl font-semibold mb-3 text-slate-900 dark:text-white">No topics found</h3>
                 <p className="text-slate-600 dark:text-slate-300 mb-6 text-lg max-w-md mx-auto">
