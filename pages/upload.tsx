@@ -680,22 +680,39 @@ function UploadContent() {
   }
   const areVersesContinuous = (verses: string[]) => {
     if (verses.length === 0) return false;
-    const sortedVerses = verses.sort((a, b) => {
-      const [bookA, chapterVerseA] = a.split(' ');
-      const [bookB, chapterVerseB] = b.split(' ');
+
+    const parseVerseReference = (reference: string) => {
+      const trimmedReference = reference.trim();
+      const lastSpaceIndex = trimmedReference.lastIndexOf(' ');
+
+      if (lastSpaceIndex === -1) {
+        return { book: trimmedReference, chapter: NaN, verse: NaN };
+      }
+
+      const book = trimmedReference.slice(0, lastSpaceIndex);
+      const chapterVerse = trimmedReference.slice(lastSpaceIndex + 1);
+      const [chapterStr, verseStr] = chapterVerse.split(':');
+
+      return {
+        book,
+        chapter: Number(chapterStr),
+        verse: Number(verseStr),
+      };
+    };
+
+    const sortedVerses = [...verses].sort((a, b) => {
+      const { book: bookA, chapter: chapterA, verse: verseA } = parseVerseReference(a);
+      const { book: bookB, chapter: chapterB, verse: verseB } = parseVerseReference(b);
+
       if (bookA !== bookB) return bookA.localeCompare(bookB);
-      const [chapterA, verseA] = chapterVerseA.split(':').map(Number);
-      const [chapterB, verseB] = chapterVerseB.split(':').map(Number);
-      
       if (chapterA !== chapterB) return chapterA - chapterB;
       return verseA - verseB;
     });
 
     let prevBook = '', prevChapter = 0, prevVerse = 0;
     for (let i = 0; i < sortedVerses.length; i++) {
-      const [book, chapterVerse] = sortedVerses[i].split(' ');
-      const [chapter, verse] = chapterVerse.split(':').map(Number);
-      
+      const { book, chapter, verse } = parseVerseReference(sortedVerses[i]);
+
       if (i > 0) {
         if (book !== prevBook) return false;
         if (chapter === prevChapter && verse !== prevVerse + 1) return false;
