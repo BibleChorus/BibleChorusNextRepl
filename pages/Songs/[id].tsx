@@ -1027,16 +1027,6 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               </TooltipProvider>
             </div>
           )}
-          {isCreator && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 text-white hover:text-primary-300 transition-colors"
-              onClick={handleEditArtClick}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          )}
         </div>
       </motion.div>
 
@@ -1058,13 +1048,25 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-12">
             {song.song_art_url && (
               <div className="md:col-span-2 xl:col-span-4">
-                <Image
-                  src={song.song_art_url.startsWith('http') ? song.song_art_url : `${CDN_URL}${song.song_art_url}`}
-                  alt={song.title}
-                  width={400}
-                  height={500}
-                  className="w-full h-auto object-contain rounded"
-                />
+                <div className="relative">
+                  <Image
+                    src={song.song_art_url.startsWith('http') ? song.song_art_url : `${CDN_URL}${song.song_art_url}`}
+                    alt={song.title}
+                    width={400}
+                    height={500}
+                    className="w-full h-auto object-contain rounded"
+                  />
+                  {isCreator && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-3 right-3 bg-white/80 text-slate-700 hover:bg-white hover:text-slate-900 shadow-lg"
+                      onClick={handleEditArtClick}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
             {/* Song Info Card */}
