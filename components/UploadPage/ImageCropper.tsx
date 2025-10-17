@@ -73,18 +73,27 @@ export function ImageCropper({
   const onLoad = useCallback((img: HTMLImageElement) => {
     setImageRef(img)
 
-    const ratio = aspectRatioRef.current && aspectRatioRef.current > 0 ? aspectRatioRef.current : 1
+    const imageAspect = img.naturalWidth / img.naturalHeight || 1
+    const desiredAspect = aspectRatioRef.current && aspectRatioRef.current > 0 ? aspectRatioRef.current : imageAspect
+
     let widthPercent = 100
-    let heightPercent = 100
-    if (ratio >= 1) {
-      // landscape or square
-      heightPercent = 100 / ratio
-    } else {
-      widthPercent = 100 * ratio
+    let heightPercent = (100 * imageAspect) / desiredAspect
+
+    if (heightPercent > 100) {
+      heightPercent = 100
+      widthPercent = (100 * desiredAspect) / imageAspect
     }
+
     const xPercent = (100 - widthPercent) / 2
     const yPercent = (100 - heightPercent) / 2
-    const newCrop = { unit: '%', width: widthPercent, height: heightPercent, x: xPercent, y: yPercent } as Crop
+
+    const newCrop = {
+      unit: '%',
+      width: widthPercent,
+      height: heightPercent,
+      x: xPercent,
+      y: yPercent,
+    } as Crop
     setCrop(newCrop)
 
     const widthPx = (img.naturalWidth * widthPercent) / 100
