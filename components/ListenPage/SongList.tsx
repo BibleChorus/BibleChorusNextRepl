@@ -381,11 +381,11 @@ const SongListItem = React.memo(function SongListItem({
     if (isUpvoted) {
       switch (voteType) {
         case 'Best Musically':
-          return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />;
+          return <MusicFilled {...iconProps} style={{ color: '#5f7f9c' }} />;
         case 'Best Lyrically':
-          return <BookOpenFilled {...iconProps} style={{ color: '#22c55e' }} />;
+          return <BookOpenFilled {...iconProps} style={{ color: '#6f9b87' }} />;
         case 'Best Overall':
-          return <StarFilled {...iconProps} style={{ color: '#eab308' }} />;
+          return <StarFilled {...iconProps} style={{ color: '#c4a963' }} />;
         default:
           return null;
       }
