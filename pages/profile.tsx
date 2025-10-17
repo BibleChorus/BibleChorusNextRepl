@@ -498,7 +498,7 @@ export default function Profile() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/30 dark:from-blue-950/50 dark:via-slate-900 dark:to-purple-950/30">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/40 via-white to-purple-50/24 dark:from-blue-950/40 dark:via-slate-900 dark:to-purple-950/24">
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -508,10 +508,10 @@ export default function Profile() {
         >
           {/* Enhanced Background Effects */}
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.08] via-purple-500/[0.06] to-indigo-500/[0.08] dark:from-blue-500/[0.15] dark:via-purple-500/[0.12] dark:to-indigo-500/[0.15]"></div>
-            <div className="absolute top-0 -left-8 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
-            <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-12 left-32 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/[0.08] via-purple-400/[0.06] to-indigo-400/[0.08] dark:from-blue-400/[0.13] dark:via-purple-400/[0.1] dark:to-indigo-400/[0.13]"></div>
+            <div className="absolute top-0 -left-8 w-96 h-96 bg-blue-400/14 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+            <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/14 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-12 left-32 w-96 h-96 bg-indigo-400/14 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(99,102,241,0.1),rgba(255,255,255,0))]"></div>
           </div>
           
@@ -523,9 +523,9 @@ export default function Profile() {
                 transition={{ duration: 0.8, delay: 0.1 }}
                 className="mb-6"
               >
-                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10 dark:from-blue-500/20 dark:via-purple-500/20 dark:to-indigo-500/20 backdrop-blur-md border border-blue-500/20 dark:border-blue-500/30 shadow-lg">
-                  <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent font-semibold">
+                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-400/12 via-purple-400/12 to-indigo-400/12 dark:from-blue-400/16 dark:via-purple-400/16 dark:to-indigo-400/16 backdrop-blur-md border border-blue-400/14 dark:border-blue-400/18 shadow-lg">
+                  <User className="w-4 h-4 text-blue-500 dark:text-blue-300" />
+                  <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 dark:from-blue-300 dark:via-purple-300 dark:to-indigo-300 bg-clip-text text-transparent font-semibold">
                     {isOwnProfile ? 'Your Profile' : 'User Profile'}
                   </span>
                 </span>
@@ -539,10 +539,10 @@ export default function Profile() {
               >
                 <span className="block text-slate-900 dark:text-white mb-2">{profileUser.username}</span>
                 <span className="block relative">
-                  <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                  <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
                     Profile
                   </span>
-                  <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-full scale-x-0 animate-scale-x"></div>
+                  <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 rounded-full scale-x-0 animate-scale-x"></div>
                 </span>
               </motion.h1>
               
@@ -566,8 +566,8 @@ export default function Profile() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="flex justify-center"
             >
-              <div className="relative group">
-                <div className="w-48 h-48 rounded-full overflow-hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-4 border-white/20 dark:border-slate-700/50 shadow-2xl group-hover:shadow-3xl transition-all duration-500">
+                <div className="relative group">
+                  <div className="w-48 h-48 rounded-full overflow-hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-4 border-white/12 dark:border-slate-700/40 shadow-2xl group-hover:shadow-3xl transition-all duration-500">
                   <Image
                     src={profileUser?.profile_image_url ? `${CDN_URL}${profileUser.profile_image_url}` : DEFAULT_PROFILE_IMAGE}
                     alt={`${profileUser?.username} profile`}
@@ -577,11 +577,11 @@ export default function Profile() {
                     priority
                   />
                 </div>
-                <div className="absolute inset-0 bg-slate-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
+                  <div className="absolute inset-0 bg-slate-900/16 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
                 {isOwnProfile && (
-                  <button
-                    onClick={handleEditProfileImageClick}
-                    className="absolute bottom-2 right-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-lg"
+                    <button
+                      onClick={handleEditProfileImageClick}
+                      className="absolute bottom-2 right-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-lg"
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
@@ -590,33 +590,33 @@ export default function Profile() {
             </motion.div>
             
             {/* Enhanced Floating Elements */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.6 }}
-              className="absolute top-16 right-16 hidden xl:block"
-            >
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl backdrop-blur-sm animate-float shadow-xl"></div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.8 }}
-              className="absolute bottom-16 left-16 hidden xl:block"
-            >
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-2xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"></div>
-            </motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, delay: 0.6 }}
+                className="absolute top-16 right-16 hidden xl:block"
+              >
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-400/16 to-purple-400/16 rounded-3xl backdrop-blur-sm animate-float shadow-xl"></div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, delay: 0.8 }}
+                className="absolute bottom-16 left-16 hidden xl:block"
+              >
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-400/16 to-indigo-400/16 rounded-2xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"></div>
+              </motion.div>
           </div>
         </motion.div>
 
         {/* Main Content */}
         <div className="container mx-auto px-4 -mt-12 relative z-20">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-8 md:p-10"
-          >
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-3xl shadow-2xl p-8 md:p-10"
+            >
             {/* Main content */}
             <Button variant="outline" onClick={() => router.back()} className="mb-6 hover:scale-105 transition-all duration-300">
               Back

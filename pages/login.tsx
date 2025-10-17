@@ -58,13 +58,13 @@ export default function AuthenticationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/24 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/24">
       {/* Enhanced Background Effects */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.08] via-purple-500/[0.06] to-pink-500/[0.08] dark:from-indigo-500/[0.15] dark:via-purple-500/[0.12] dark:to-pink-500/[0.15]"></div>
-        <div className="absolute top-0 -left-8 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
-        <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-12 left-32 w-96 h-96 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/[0.08] via-purple-400/[0.06] to-pink-400/[0.08] dark:from-indigo-400/[0.13] dark:via-purple-400/[0.1] dark:to-pink-400/[0.13]"></div>
+        <div className="absolute top-0 -left-8 w-96 h-96 bg-indigo-400/14 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+        <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/14 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-12 left-32 w-96 h-96 bg-pink-400/14 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
       </div>
 
@@ -78,7 +78,7 @@ export default function AuthenticationPage() {
         <Link
           href="/"
           className={cn(
-            "inline-flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-xl shadow-lg hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 hover:scale-105 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium"
+            "inline-flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/12 dark:border-slate-700/40 rounded-xl shadow-lg hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 hover:scale-105 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium"
           )}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -95,11 +95,11 @@ export default function AuthenticationPage() {
           transition={{ duration: 0.8 }}
           className="relative hidden h-full flex-col p-10 text-slate-800 dark:text-white lg:flex"
         >
-          <div className="absolute inset-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl" />
+          <div className="absolute inset-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-3xl shadow-2xl" />
           
           {/* Logo and Brand */}
           <div className="relative z-20 flex items-center text-xl font-bold mb-8">
-            <div className="p-2 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl backdrop-blur-sm border border-indigo-500/20 dark:border-indigo-500/30 mr-3">
+            <div className="p-2 bg-gradient-to-br from-indigo-400/12 to-purple-400/12 rounded-2xl backdrop-blur-sm border border-indigo-400/14 dark:border-indigo-400/18 mr-3">
               <Image
                 src="/biblechorus-icon.png"
                 alt="BibleChorus"
@@ -108,7 +108,7 @@ export default function AuthenticationPage() {
                 className="rounded-lg"
               />
             </div>
-            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-300 dark:via-purple-300 dark:to-pink-300 bg-clip-text text-transparent">
               BibleChorus
             </span>
           </div>
@@ -123,13 +123,13 @@ export default function AuthenticationPage() {
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.5 }}
-            className="absolute top-16 right-16 w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl backdrop-blur-sm animate-float shadow-xl"
+            className="absolute top-16 right-16 w-20 h-20 bg-gradient-to-br from-indigo-400/16 to-purple-400/16 rounded-2xl backdrop-blur-sm animate-float shadow-xl"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.7 }}
-            className="absolute bottom-20 left-16 w-16 h-16 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"
+            className="absolute bottom-20 left-16 w-16 h-16 bg-gradient-to-br from-purple-400/16 to-pink-400/16 rounded-xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"
           />
         </motion.div>
 
@@ -151,9 +151,9 @@ export default function AuthenticationPage() {
             >
               {/* Badge */}
               <div className="mb-4">
-                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-500/20 dark:via-purple-500/20 dark:to-pink-500/20 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 shadow-lg">
-                  <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent font-semibold">
+                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-400/12 via-purple-400/12 to-pink-400/12 dark:from-indigo-400/16 dark:via-purple-400/16 dark:to-pink-400/16 backdrop-blur-md border border-indigo-400/14 dark:border-indigo-400/18 shadow-lg">
+                  <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-300" />
+                  <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-300 dark:via-purple-300 dark:to-pink-300 bg-clip-text text-transparent font-semibold">
                     Welcome to BibleChorus
                   </span>
                 </span>
@@ -165,10 +165,10 @@ export default function AuthenticationPage() {
                   {isLogin ? "Welcome" : "Join Our"}
                 </span>
                 <span className="block relative">
-                  <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                  <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
                     {isLogin ? "Back" : "Community"}
                   </span>
-                  <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-full scale-x-0 animate-scale-x"></div>
+                  <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full scale-x-0 animate-scale-x"></div>
                 </span>
               </h1>
 
@@ -185,7 +185,7 @@ export default function AuthenticationPage() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-8"
+              className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-3xl shadow-2xl p-8"
             >
               <UserAuthForm isLogin={isLogin} onLoginSuccess={handleLoginSuccess} />
             </motion.div>
@@ -204,7 +204,7 @@ export default function AuthenticationPage() {
                 </p>
                 <button
                   onClick={toggleView}
-                  className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600/10 to-purple-600/10 hover:from-indigo-600/20 hover:to-purple-600/20 dark:from-indigo-500/20 dark:to-purple-500/20 dark:hover:from-indigo-500/30 dark:hover:to-purple-500/30 backdrop-blur-sm border border-indigo-500/20 dark:border-indigo-500/30 rounded-xl transition-all duration-300 hover:scale-105 font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-400/14 to-purple-400/14 hover:from-indigo-400/18 hover:to-purple-400/18 dark:from-indigo-400/18 dark:to-purple-400/18 dark:hover:from-indigo-400/22 dark:hover:to-purple-400/22 backdrop-blur-sm border border-indigo-400/16 dark:border-indigo-400/18 rounded-xl transition-all duration-300 hover:scale-105 font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                 >
                   {isLogin ? <UserPlus className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
                   {isLogin ? "Create Account" : "Sign In"}
