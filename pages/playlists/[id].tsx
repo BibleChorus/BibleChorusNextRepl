@@ -236,7 +236,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
             >
               <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-500/20 dark:via-purple-500/20 dark:to-pink-500/20 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 shadow-lg">
                 <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent font-semibold">
+                <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 dark:from-indigo-400 dark:via-violet-400 dark:to-purple-400 bg-clip-text text-transparent font-semibold">
                   {playlist.is_auto ? 'Auto Playlist' : 'Curated Playlist'}
                 </span>
               </span>
@@ -278,10 +278,10 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
               className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl mb-4"
             >
               <span className="block relative">
-                <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
                   {playlist.name}
                 </span>
-                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-full scale-x-0 animate-scale-x"></div>
+                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 rounded-full scale-x-0 animate-scale-x"></div>
               </span>
             </motion.h1>
             
@@ -298,7 +298,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
               )}
               <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
                 Created by{' '}
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent font-semibold">
+                <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent font-semibold">
                   {creatorUsername}
                 </span>
               </p>
@@ -328,7 +328,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
             >
               <Button 
                 onClick={handlePlayPlaylist} 
-                className="relative h-12 px-8 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
+                className="relative h-12 px-8 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 hover:from-indigo-600 hover:via-violet-600 hover:to-purple-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
               >
                 <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
                 <Play className="relative w-5 h-5 mr-2" />
@@ -421,7 +421,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
           {songs.length > 0 ? (
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-700/50 pb-4">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
                   Playlist Songs
                 </h2>
                 <div className="text-sm text-slate-600 dark:text-slate-300">
@@ -457,7 +457,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
       <Dialog open={isEditArtDialogOpen} onOpenChange={setIsEditArtDialogOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/20 dark:border-slate-700/50">
           <DialogHeader>
-            <DialogTitle className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <DialogTitle className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
               Edit Playlist Cover Art
             </DialogTitle>
           </DialogHeader>
@@ -474,7 +474,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
             </div>
             <Button 
               onClick={handleReplaceClick}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-2 rounded-xl font-medium transition-all duration-300 hover:scale-105"
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-2 rounded-xl font-medium transition-all duration-300 hover:scale-105"
             >
               Replace Image
             </Button>
@@ -492,7 +492,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
       <Dialog open={isImageCropperOpen} onOpenChange={setIsImageCropperOpen}>
         <DialogContent className="sm:max-w-[600px] p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/20 dark:border-slate-700/50">
           <DialogHeader className="p-4">
-            <DialogTitle className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <DialogTitle className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
               Crop Image
             </DialogTitle>
           </DialogHeader>

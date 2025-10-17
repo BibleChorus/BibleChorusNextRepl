@@ -979,7 +979,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           >
             <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-500/20 dark:via-purple-500/20 dark:to-pink-500/20 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 shadow-lg">
               <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-300 dark:via-purple-300 dark:to-pink-300 bg-clip-text text-transparent font-semibold">
+              <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 dark:from-indigo-400 dark:via-violet-400 dark:to-purple-400 bg-clip-text text-transparent font-semibold">
                 Song Spotlight
               </span>
             </span>
@@ -991,10 +991,10 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             className="text-5xl md:text-6xl font-bold tracking-tight"
           >
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+              <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
                 {song.title}
               </span>
-              <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-full scale-x-0 animate-scale-x"></div>
+              <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 rounded-full scale-x-0 animate-scale-x"></div>
             </span>
           </motion.h1>
           <motion.p
@@ -1071,7 +1071,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold mb-2 text-primary">
+                  <CardTitle className="text-2xl font-bold mb-2 bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
                     Song Details
                   </CardTitle>
                   {isCreator && (
@@ -1155,7 +1155,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             {/* Votes and Likes Card */}
             <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-primary">
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
                   Votes & Likes
                 </CardTitle>
               </CardHeader>
@@ -1224,7 +1224,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl font-bold text-primary">
+                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
                       AI Information
                     </CardTitle>
                     {isCreator && (
@@ -1272,7 +1272,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             <Card className="md:col-span-2 xl:col-span-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-primary">
+                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
                     Bible Info
                   </CardTitle>
                   {isCreator && (
@@ -1379,7 +1379,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             <Card className="md:col-span-2 xl:col-span-12 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-primary">
+                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
                     Lyrics
                   </CardTitle>
                   {isCreator && (

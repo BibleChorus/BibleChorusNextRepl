@@ -56,7 +56,7 @@ export default function HowTo() {
               >
                 <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:via-teal-500/20 dark:to-cyan-500/20 backdrop-blur-md border border-emerald-500/20 dark:border-emerald-500/30 shadow-lg">
                   <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400 bg-clip-text text-transparent font-semibold">
+                  <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400 bg-clip-text text-transparent font-semibold">
                     Creator&apos;s Guide
                   </span>
                 </span>
@@ -70,10 +70,10 @@ export default function HowTo() {
               >
                 <span className="block text-slate-900 dark:text-white mb-2">Create &</span>
                 <span className="block relative">
-                  <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                  <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
                     Upload
                   </span>
-                  <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-full scale-x-0 animate-scale-x"></div>
+                  <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-full scale-x-0 animate-scale-x"></div>
                 </span>
               </motion.h1>
               
@@ -153,21 +153,21 @@ export default function HowTo() {
               <TabsList className="mb-10 grid grid-cols-3 p-1.5 bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 rounded-2xl shadow-xl h-16">
                 <TabsTrigger 
                   value="lyrics"
-                  className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:via-teal-600 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300 data-[state=active]:scale-[1.02] h-12 font-medium text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-600/40"
+                  className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:via-teal-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300 data-[state=active]:scale-[1.02] h-12 font-medium text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-600/40"
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   <span className="hidden sm:inline">Generate</span> Lyrics
                 </TabsTrigger>
                 <TabsTrigger 
                   value="music"
-                  className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:via-teal-600 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300 data-[state=active]:scale-[1.02] h-12 font-medium text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-600/40"
+                  className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:via-teal-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300 data-[state=active]:scale-[1.02] h-12 font-medium text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-600/40"
                 >
                   <Music className="mr-2 h-4 w-4" />
                   <span className="hidden sm:inline">Generate</span> Music
                 </TabsTrigger>
                 <TabsTrigger 
                   value="upload"
-                  className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:via-teal-600 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300 data-[state=active]:scale-[1.02] h-12 font-medium text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-600/40"
+                  className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:via-teal-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300 data-[state=active]:scale-[1.02] h-12 font-medium text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-600/40"
                 >
                   <UploadCloud className="mr-2 h-4 w-4" />
                   Upload Song

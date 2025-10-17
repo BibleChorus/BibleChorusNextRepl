@@ -96,7 +96,7 @@ const Sidebar: React.FC = () => {
                   </div>
                   <span className={`ml-4 font-semibold transition-all duration-300
                     ${isOpen ? 'opacity-100 lg:inline' : 'opacity-0 lg:hidden'}
-                    ${isMobileOpen ? 'inline' : 'hidden'} bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400 bg-clip-text text-transparent`}>
+                    ${isMobileOpen ? 'inline' : 'hidden'} bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 bg-clip-text text-transparent`}>
                     BibleChorus
                   </span>
                 </Link>

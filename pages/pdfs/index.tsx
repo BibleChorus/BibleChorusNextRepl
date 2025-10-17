@@ -70,7 +70,7 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
             >
               <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 dark:from-amber-500/20 dark:via-rose-500/20 dark:to-emerald-500/20 backdrop-blur-md border border-amber-500/20 dark:border-amber-500/30 shadow-lg">
                 <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span className="bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 dark:from-amber-400 dark:via-rose-400 dark:to-emerald-400 bg-clip-text text-transparent font-semibold">
+                <span className="bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 dark:from-amber-400 dark:via-pink-400 dark:to-emerald-400 bg-clip-text text-transparent font-semibold">
                   Dive Deeper
                 </span>
               </span>
@@ -84,10 +84,10 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
             >
               <span className="block text-slate-900 dark:text-white mb-2">Bible Study</span>
               <span className="block relative">
-                <span className="bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                <span className="bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
                   Library
                 </span>
-                <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 rounded-full scale-x-0 animate-scale-x"></div>
+                <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 rounded-full scale-x-0 animate-scale-x"></div>
               </span>
             </motion.h1>
 
@@ -119,7 +119,7 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
                 className="flex-1 h-12 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 focus:bg-white dark:focus:bg-slate-700 transition-all duration-300 rounded-xl text-base"
               />
               <Link href="/pdfs/upload" className="shrink-0">
-                <Button className="h-12 px-8 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 hover:from-amber-700 hover:via-rose-700 hover:to-emerald-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-semibold">
+                <Button className="h-12 px-8 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 hover:from-amber-600 hover:via-pink-600 hover:to-emerald-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-semibold">
                   Upload New PDF
                 </Button>
               </Link>

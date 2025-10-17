@@ -201,7 +201,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
             >
               <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 dark:from-amber-500/20 dark:via-rose-500/20 dark:to-emerald-500/20 backdrop-blur-md border border-amber-500/20 dark:border-amber-500/30 shadow-lg">
                 <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span className="bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 dark:from-amber-400 dark:via-rose-400 dark:to-emerald-400 bg-clip-text text-transparent font-semibold">
+                <span className="bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 dark:from-amber-400 dark:via-pink-400 dark:to-emerald-400 bg-clip-text text-transparent font-semibold">
                   Study Resource
                 </span>
               </span>
@@ -214,10 +214,10 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
               className="text-5xl md:text-6xl font-bold tracking-tight"
             >
               <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                <span className="bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
                   {pdf.title}
                 </span>
-                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 rounded-full scale-x-0 animate-scale-x"></div>
+                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 rounded-full scale-x-0 animate-scale-x"></div>
               </span>
             </motion.h1>
 
@@ -285,7 +285,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                         <TooltipTrigger asChild>
                           <Button
                             asChild
-                            className="relative h-12 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
+                            className="relative h-12 px-6 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 hover:from-indigo-600 hover:via-violet-600 hover:to-purple-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
                           >
                             <Link
                               href={pdf.notebook_lm_url}
@@ -312,7 +312,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                     {pdf.file_url && (
                       <Button
                         asChild
-                        className="relative h-12 px-6 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 hover:from-amber-700 hover:via-rose-700 hover:to-emerald-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
+                        className="relative h-12 px-6 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 hover:from-amber-600 hover:via-pink-600 hover:to-emerald-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
                       >
                         <Link
                           href={pdf.file_url}
@@ -369,7 +369,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
             <Separator />
 
             <section>
-              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 bg-clip-text text-transparent">Bible Verses</h2>
+              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 bg-clip-text text-transparent">Bible Verses</h2>
               {isLoadingVerses ? (
                 <p>Loading verses...</p>
               ) : verses.length === 0 ? (
@@ -407,7 +407,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
             <Separator />
 
             <section>
-              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 bg-clip-text text-transparent">Ratings</h2>
+              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 bg-clip-text text-transparent">Ratings</h2>
               <div className="space-y-2">
                 {(['quality', 'theology', 'helpfulness'] as const).map((cat) => (
                   <div key={cat} className="flex items-center space-x-2">
@@ -439,7 +439,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
             <Separator />
 
             <section>
-              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 bg-clip-text text-transparent">Comments</h2>
+              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 bg-clip-text text-transparent">Comments</h2>
               {user ? (
                 <NewCommentForm pdfId={pdf.id} onCommentAdded={handleCommentAdded} />
               ) : (
@@ -456,7 +456,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
             <Separator />
 
             <section>
-              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-600 via-rose-600 to-emerald-600 bg-clip-text text-transparent">My Notes</h2>
+              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 bg-clip-text text-transparent">My Notes</h2>
               <NotesSection initialNotes={initialNotes} pdfId={pdf.id} />
             </section>
           </motion.div>
