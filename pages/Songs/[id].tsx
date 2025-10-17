@@ -610,27 +610,42 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
     if (isUpvoted) {
       switch (voteType) {
-        case 'Best Musically':
-          return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />; // Blue color
-        case 'Best Lyrically':
-          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />; // Green color, but using outlined icon
-        case 'Best Overall':
-          return <StarFilled {...iconProps} style={{ color: '#eab308' }} />; // Yellow color
+        case 'Best Musically': {
+          const filledProps = {
+            ...iconProps,
+            className: cn(iconProps.className, 'text-blue-600'),
+          };
+          return <MusicFilled {...filledProps} />;
+        }
+        case 'Best Lyrically': {
+          const filledProps = {
+            ...iconProps,
+            className: cn(iconProps.className, 'text-emerald-600'),
+          };
+          return <BookOpenFilled {...filledProps} />;
+        }
+        case 'Best Overall': {
+          const filledProps = {
+            ...iconProps,
+            className: cn(iconProps.className, 'text-amber-600'),
+          };
+          return <StarFilled {...filledProps} />;
+        }
         default:
           return null;
       }
-    } else {
-      // For downvotes or no votes, use the regular outlined icons
-      switch (voteType) {
-        case 'Best Musically':
-          return <Music {...iconProps} />;
-        case 'Best Lyrically':
-          return <BookOpen {...iconProps} />;
-        case 'Best Overall':
-          return <Star {...iconProps} />;
-        default:
-          return null;
-      }
+    }
+
+    // For downvotes or no votes, use the regular outlined icons
+    switch (voteType) {
+      case 'Best Musically':
+        return <Music {...iconProps} />;
+      case 'Best Lyrically':
+        return <BookOpen {...iconProps} />;
+      case 'Best Overall':
+        return <Star {...iconProps} />;
+      default:
+        return null;
     }
   };
 
@@ -1170,9 +1185,10 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                   <span>Likes</span>
                   <div className="flex items-center">
                     <Heart
-                      className={`h-6 w-6 mr-2 ${
-                        likeState ? 'fill-current text-red-500' : ''
-                      }`}
+                      className={cn(
+                        'h-6 w-6 mr-2',
+                        likeState && 'fill-current text-rose-600'
+                      )}
                     />
                     <span className="text-lg">{likeCount}</span>
                   </div>
