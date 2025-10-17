@@ -843,8 +843,8 @@ function ListenContent({
           <link rel="icon" href="/favicon.ico" />
         </Head>
 
-        <motion.div 
-          className="sticky top-0 z-20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border-b border-white/20 dark:border-slate-700/50 shadow-lg"
+        <motion.div
+          className="sticky top-16 lg:top-[4.5rem] z-20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border-b border-white/20 dark:border-slate-700/50 shadow-lg"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
