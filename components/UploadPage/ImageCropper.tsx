@@ -96,10 +96,13 @@ export function ImageCropper({
     } as Crop
     setCrop(newCrop)
 
-    const widthPx = (img.naturalWidth * widthPercent) / 100
-    const heightPx = (img.naturalHeight * heightPercent) / 100
-    const xPx = (img.naturalWidth * xPercent) / 100
-    const yPx = (img.naturalHeight * yPercent) / 100
+    const renderedWidth = img.width || img.naturalWidth
+    const renderedHeight = img.height || img.naturalHeight
+
+    const widthPx = (renderedWidth * widthPercent) / 100
+    const heightPx = (renderedHeight * heightPercent) / 100
+    const xPx = (renderedWidth * xPercent) / 100
+    const yPx = (renderedHeight * yPercent) / 100
 
     const requestedMinZoom = minZoomRef.current ?? 0.3
     const requestedMaxZoom = maxZoomRef.current ?? 1
