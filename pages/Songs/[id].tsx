@@ -35,9 +35,10 @@ import { BIBLE_BOOKS, BIBLE_TRANSLATIONS } from "@/lib/constants"
 import AsyncSelect from 'react-select/async'
 import { BOLLS_LIFE_API_BIBLE_TRANSLATIONS } from '@/lib/constants'
 import DOMPurify from 'isomorphic-dompurify';
-import { ImageCropper } from '@/components/UploadPage/ImageCropper'
+import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper'
 import { parsePostgresArray } from '@/lib/utils'; // Add a utility function to parse PostgreSQL arrays
 import { components } from 'react-select';
+import { extractFileExtension, getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils'
 import { MessageCircle } from 'lucide-react'; // Add this import
 import { CommentList } from '@/components/SongComments/CommentList'; // Add this import
 import { NewCommentForm } from '@/components/SongComments/NewCommentForm'; // Add this import
@@ -170,6 +171,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   // State variables for song art editing
   const [isEditArtDialogOpen, setIsEditArtDialogOpen] = useState(false)
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null)
   const [isImageCropperOpen, setIsImageCropperOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -799,10 +801,11 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       const imageUrl = URL.createObjectURL(file)
       setCropImageUrl(imageUrl)
       setIsImageCropperOpen(true)
+      setPendingImageFile(file)
     }
   }
 
-  const handleCropComplete = async (croppedImageBlob: Blob) => {
+  const handleCropComplete = async (croppedImageBlob: Blob, metadata?: CropResultMetadata) => {
     setIsImageCropperOpen(false);
     setIsEditArtDialogOpen(false);
 
@@ -814,9 +817,11 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
         await axios.post('/api/delete-file', { fileKey });
       }
 
-      const fileExtension = 'jpg'; // Adjust if necessary
-      const fileType = 'image/jpeg'; // Adjust if necessary
-      const title = song.title;
+      const fileType = metadata?.mimeType || croppedImageBlob.type || pendingImageFile?.type || 'image/jpeg';
+      const suggestedName = metadata?.suggestedFileName || pendingImageFile?.name;
+      const fallbackBase = pendingImageFile?.name ? stripFileExtension(pendingImageFile.name) : `song-art-${Date.now()}`;
+      const fileExtension = extractFileExtension(suggestedName) || getExtensionFromMimeType(fileType);
+      const fileName = suggestedName || `${fallbackBase}.${fileExtension}`;
       const userId = user?.id;
       const fileSize = croppedImageBlob.size.toString();
 
@@ -824,7 +829,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       const uploadUrlResponse = await axios.post('/api/upload-url', {
         fileType,
         fileExtension,
-        title,
+        title: fileName,
         userId,
         fileSize,
       });
@@ -859,11 +864,14 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       console.error('Error updating song art:', error);
       toast.error('Failed to update song art');
     }
+
+    setPendingImageFile(null)
   };
 
   const handleCropCancel = () => {
     setIsImageCropperOpen(false)
     setCropImageUrl(null)
+    setPendingImageFile(null)
   }
 
   const fetchComments = useCallback(async () => {
@@ -1915,6 +1923,9 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               onCropComplete={handleCropComplete}
               onCancel={handleCropCancel}
               maxHeight={cropperMaxHeight}
+              originalFileName={pendingImageFile?.name}
+              originalMimeType={pendingImageFile?.type}
+              desiredFileName={pendingImageFile?.name}
             />
           )}
         </DialogContent>

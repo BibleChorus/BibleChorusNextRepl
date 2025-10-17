@@ -10,13 +10,14 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
 import { CommentList } from '@/components/SongComments/CommentList' // Adjust the import path as needed
-import { ImageCropper } from '@/components/UploadPage/ImageCropper'
+import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper'
 import { Pencil, User } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { Music, MessageCircle, Upload, ArrowRight, Heart, ThumbsUp } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import DOMPurify from 'isomorphic-dompurify';
+import { extractFileExtension, getExtensionFromMimeType } from '@/lib/imageUtils'
 import {
   Pagination,
   PaginationContent,
@@ -119,6 +120,7 @@ export default function Profile() {
 
   const [isEditProfileImageDialogOpen, setIsEditProfileImageDialogOpen] = useState(false)
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null)
   const [isImageCropperOpen, setIsImageCropperOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0)
@@ -342,10 +344,11 @@ export default function Profile() {
       const imageUrl = URL.createObjectURL(file)
       setCropImageUrl(imageUrl)
       setIsImageCropperOpen(true)
+      setPendingImageFile(file)
     }
   }
 
-  const handleCropComplete = async (croppedImageBlob: Blob) => {
+  const handleCropComplete = async (croppedImageBlob: Blob, metadata?: CropResultMetadata) => {
     setIsImageCropperOpen(false);
     setIsEditProfileImageDialogOpen(false);
 
@@ -361,8 +364,9 @@ export default function Profile() {
         await axios.post('/api/delete-file', { fileKey });
       }
 
-      const fileExtension = 'jpg';
-      const fileType = 'image/jpeg';
+      const fileType = metadata?.mimeType || croppedImageBlob.type || pendingImageFile?.type || 'image/jpeg';
+      const suggestedName = metadata?.suggestedFileName || pendingImageFile?.name;
+      const fileExtension = extractFileExtension(suggestedName) || getExtensionFromMimeType(fileType);
       const userId = profileUser.id;
       const fileSize = croppedImageBlob.size.toString();
 
@@ -411,11 +415,14 @@ export default function Profile() {
       console.error('Error updating profile image:', error);
       toast.error('Failed to update profile image');
     }
+
+    setPendingImageFile(null);
   };
 
   const handleCropCancel = () => {
     setIsImageCropperOpen(false);
     setCropImageUrl(null);
+    setPendingImageFile(null);
   };
 
   // Add handleActivityClick inside the component
@@ -1002,6 +1009,9 @@ export default function Profile() {
                     onCropComplete={handleCropComplete}
                     onCancel={handleCropCancel}
                     maxHeight={cropperMaxHeight}
+                    originalFileName={pendingImageFile?.name}
+                    originalMimeType={pendingImageFile?.type}
+                    desiredFileName={pendingImageFile?.name}
                   />
                 )}
               </DialogContent>
