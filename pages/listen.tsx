@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils"
 import { TooltipProvider } from '@/components/ui/tooltip'; // Ensure the correct import path
 import SavePlaylistDialog from '@/components/ListenPage/SavePlaylistDialog'
 import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper';
+import { getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils'
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { uploadFile } from '@/lib/uploadUtils';
 import { useForm, UseFormReturn } from 'react-hook-form'; // Add this import
@@ -752,23 +753,18 @@ function ListenContent({
     setIsCropperOpen(true);
   };
 
-  const determineFileExtension = (mimeType: string) => {
-    const map: Record<string, string> = {
-      'image/jpeg': 'jpg',
-      'image/png': 'png',
-      'image/webp': 'webp',
-      'image/gif': 'gif',
-    };
-    return map[mimeType] || 'jpg';
-  };
-
   const buildFileFromCrop = (blob: Blob, metadata?: CropResultMetadata) => {
     const mimeType = metadata?.mimeType || blob.type || 'image/jpeg';
-    const extension = determineFileExtension(mimeType);
-    const originalName = metadata?.originalFileName?.replace(/\.[^/.]+$/, '');
+    const extension = getExtensionFromMimeType(mimeType);
     const fallbackName = `playlist-cover-${Date.now()}`;
-    const baseName = originalName && originalName.length > 0 ? originalName : fallbackName;
-    return new File([blob], `${baseName}.${extension}`, { type: mimeType });
+    const derivedBase = metadata?.suggestedFileName
+      ? stripFileExtension(metadata.suggestedFileName)
+      : metadata?.originalFileName
+        ? stripFileExtension(metadata.originalFileName)
+        : '';
+    const baseName = derivedBase && derivedBase.length > 0 ? derivedBase : fallbackName;
+    const fileName = metadata?.suggestedFileName || `${baseName}.${extension}`;
+    return new File([blob], fileName, { type: mimeType });
   };
 
   // Handler when cropping is complete

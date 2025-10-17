@@ -18,6 +18,7 @@ import { useRouter } from 'next/router';
 import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper';
 import { Trash2, ListMusic, Save } from 'lucide-react'; // Import ListMusic and Save icons
 import Image from 'next/image'; // Import Next.js Image component
+import { getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils';
 
 // Define the Song type
 type Song = {
@@ -197,20 +198,10 @@ export default function SavePlaylistDialog({
     }
   };
 
-  const determineFileExtension = (mimeType: string) => {
-    const map: Record<string, string> = {
-      'image/jpeg': 'jpg',
-      'image/png': 'png',
-      'image/webp': 'webp',
-      'image/gif': 'gif',
-    };
-    return map[mimeType] || 'jpg';
-  };
-
   const buildFileName = (originalName: string | undefined, mimeType: string) => {
-    const extension = determineFileExtension(mimeType);
+    const extension = getExtensionFromMimeType(mimeType);
     if (originalName && originalName.trim().length > 0) {
-      const base = originalName.replace(/\.[^/.]+$/, '');
+      const base = stripFileExtension(originalName);
       return `${base}.${extension}`;
     }
     return `playlist-cover-${Date.now()}.${extension}`;
@@ -219,7 +210,7 @@ export default function SavePlaylistDialog({
   const handleCropComplete = (blob: Blob, metadata?: CropResultMetadata) => {
     const mimeType = metadata?.mimeType || blob.type || pendingImageDetails?.type || 'image/jpeg';
     const originalName = metadata?.originalFileName || pendingImageDetails?.name;
-    const fileName = buildFileName(originalName, mimeType);
+    const fileName = metadata?.suggestedFileName || buildFileName(originalName, mimeType);
     const croppedFile = new File([blob], fileName, { type: mimeType });
 
     onImageCropComplete(croppedFile);
@@ -454,6 +445,7 @@ export default function SavePlaylistDialog({
               originalFileName={pendingImageDetails?.name}
               originalMimeType={pendingImageDetails?.type}
               outputMimeType={pendingImageDetails?.type}
+              desiredFileName={pendingImageDetails?.name}
             />
           )}
         </DialogContent>

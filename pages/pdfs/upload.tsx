@@ -21,8 +21,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Modal } from '@/components/Modal';
-import { ImageCropper } from '@/components/UploadPage/ImageCropper';
+import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper';
 import { uploadFile } from '@/lib/uploadUtils';
+import { extractFileExtension, getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils';
 
 const MAX_PDF_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -72,6 +73,7 @@ export default function UploadPdf() {
   const [imageUploadProgress, setImageUploadProgress] = useState(0);
   const [imageUploadStatus, setImageUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   const [isCropperOpen, setIsCropperOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -150,10 +152,16 @@ export default function UploadPdf() {
     const url = URL.createObjectURL(file);
     setCropImageUrl(url);
     setIsCropperOpen(true);
+    setPendingImageFile(file);
   };
 
-  const handleCropComplete = async (blob: Blob) => {
-    const croppedFile = new File([blob], 'pdf_image.jpg', { type: 'image/jpeg' });
+  const handleCropComplete = async (blob: Blob, metadata?: CropResultMetadata) => {
+    const mimeType = metadata?.mimeType || blob.type || pendingImageFile?.type || 'image/jpeg';
+    const suggestedName = metadata?.suggestedFileName || pendingImageFile?.name;
+    const fallbackBase = pendingImageFile?.name ? stripFileExtension(pendingImageFile.name) : `pdf-image-${Date.now()}`;
+    const extension = extractFileExtension(suggestedName) || getExtensionFromMimeType(mimeType);
+    const fileName = suggestedName || `${fallbackBase}.${extension}`;
+    const croppedFile = new File([blob], fileName, { type: mimeType });
     form.setValue('image_file', croppedFile);
     setIsCropperOpen(false);
     setImageUploadStatus('uploading');
@@ -167,11 +175,14 @@ export default function UploadPdf() {
       setImageUploadStatus('error');
       toast.error('Failed to upload image');
     }
+
+    setPendingImageFile(null);
   };
 
   const handleCropCancel = () => {
     setCropImageUrl(null);
     setIsCropperOpen(false);
+    setPendingImageFile(null);
   };
 
   const onSubmit = async (values: FormValues) => {
@@ -365,6 +376,9 @@ export default function UploadPdf() {
                 maxHeight={400}
                 aspectRatio={0.75}
                 quality={1}
+                originalFileName={pendingImageFile?.name}
+                originalMimeType={pendingImageFile?.type}
+                desiredFileName={pendingImageFile?.name}
               />
             )}
           </Modal>

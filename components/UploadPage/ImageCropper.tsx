@@ -3,10 +3,13 @@ import ReactCrop, { Crop, PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { Button } from "@/components/ui/button"
 import Image from 'next/image'
+import { getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils'
 
 export interface CropResultMetadata {
   originalFileName?: string
   mimeType: string
+  suggestedFileName?: string
+  hadTransparency?: boolean
 }
 
 interface ImageCropperProps {
@@ -21,6 +24,8 @@ interface ImageCropperProps {
   originalFileName?: string
   originalMimeType?: string
   outputMimeType?: string
+  desiredFileName?: string
+  backgroundFillColor?: string
 }
 
 type CropConstraints = {
@@ -42,6 +47,8 @@ export function ImageCropper({
   originalFileName,
   originalMimeType,
   outputMimeType,
+  desiredFileName,
+  backgroundFillColor = '#ffffff',
 }: ImageCropperProps) {
   const [crop, setCrop] = useState<Crop>({ unit: '%', width: 100, height: 100, x: 0, y: 0 })
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null)
@@ -117,35 +124,103 @@ export function ImageCropper({
     canvas.height = completedCrop.height * scaleY
     const ctx = canvas.getContext('2d')
 
-    if (ctx) {
-      const mimeType = outputMimeType || originalMimeType || 'image/jpeg'
-      ctx.drawImage(
-        imageRef,
-        completedCrop.x * scaleX,
-        completedCrop.y * scaleY,
-        completedCrop.width * scaleX,
-        completedCrop.height * scaleY,
-        0,
-        0,
-        completedCrop.width * scaleX,
-        completedCrop.height * scaleY
-      )
+    if (!ctx) {
+      return
+    }
+
+    const preferredMimeType = outputMimeType || originalMimeType || 'image/jpeg'
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(
+      imageRef,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0,
+      0,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY
+    )
+
+    let hadTransparency = false
+    try {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const { data } = imageData
+      for (let i = 3; i < data.length; i += 4) {
+        if (data[i] < 255) {
+          hadTransparency = true
+          break
+        }
+      }
+    } catch (error) {
+      console.warn('Unable to analyze image transparency', error)
+    }
+
+    const supportsTransparency = (mimeType?: string) => {
+      if (!mimeType) return false
+      const normalized = mimeType.toLowerCase()
+      return normalized.includes('png') || normalized.includes('webp') || normalized.includes('avif')
+    }
+
+    const baseNameSource = desiredFileName || originalFileName || 'cropped-image'
+    const baseName = stripFileExtension(baseNameSource).trim() || 'cropped-image'
+
+    let targetMimeType = preferredMimeType
+    if (hadTransparency && !supportsTransparency(preferredMimeType)) {
+      targetMimeType = 'image/png'
+    }
+
+    if (!supportsTransparency(targetMimeType)) {
+      ctx.globalCompositeOperation = 'destination-over'
+      ctx.fillStyle = backgroundFillColor
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.globalCompositeOperation = 'source-over'
+    }
+
+    const finalizeBlob = (mimeTypeToUse: string) => {
+      const shouldApplyQuality =
+        mimeTypeToUse.includes('jpeg') ||
+        mimeTypeToUse.includes('jpg') ||
+        mimeTypeToUse.includes('webp')
 
       canvas.toBlob(
         (blob) => {
-          if (blob) {
-            const providedMimeType = mimeType ?? blob.type ?? 'image/jpeg'
-            onCropComplete(blob, {
-              originalFileName,
-              mimeType: providedMimeType,
-            })
+          if (!blob) {
+            if (mimeTypeToUse !== 'image/png') {
+              finalizeBlob('image/png')
+            }
+            return
           }
+
+          const resultingMimeType = blob.type || mimeTypeToUse || 'image/png'
+          const extension = getExtensionFromMimeType(resultingMimeType)
+          const suggestedFileName = `${baseName}.${extension}`
+
+          onCropComplete(blob, {
+            originalFileName,
+            mimeType: resultingMimeType,
+            suggestedFileName,
+            hadTransparency,
+          })
         },
-        mimeType,
-        quality
+        mimeTypeToUse,
+        shouldApplyQuality ? quality : undefined
       )
     }
-  }, [completedCrop, imageRef, onCropComplete, quality, originalFileName, originalMimeType, outputMimeType])
+
+    finalizeBlob(targetMimeType)
+  }, [
+    completedCrop,
+    imageRef,
+    onCropComplete,
+    quality,
+    originalFileName,
+    originalMimeType,
+    outputMimeType,
+    desiredFileName,
+    backgroundFillColor,
+  ])
 
   return (
     <div className="p-4" style={{ maxHeight: `${maxHeight}px`, overflowY: 'auto' }}>

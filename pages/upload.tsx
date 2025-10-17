@@ -24,13 +24,14 @@ import axios from 'axios'
 import { toast } from "sonner";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Progress } from "@/components/ui/progress"
-import { ImageCropper } from '@/components/UploadPage/ImageCropper'
+import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper'
 import { useAuth } from '@/contexts/AuthContext';
 import { Modal } from '@/components/Modal'
 import UploadProgressBar from '@/components/UploadPage/UploadProgressBar';
 import GradientButton from '@/components/GradientButton'; // Import GradientButton
 import UploadInfoDialog from '@/components/UploadPage/UploadInfoDialog';
 import { useRouter } from 'next/router'
+import { extractFileExtension, getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils'
 
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -112,6 +113,7 @@ function UploadContent() {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   const [croppedImage, setCroppedImage] = useState<File | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0);
@@ -714,14 +716,20 @@ function UploadContent() {
       const imageUrl = URL.createObjectURL(file);
       setCropImageUrl(imageUrl);
       setIsModalOpen(true);
+      setPendingImageFile(file);
     }
   };
 
-  const handleCropComplete = async (croppedImageBlob: Blob) => {
-    const croppedFile = new File([croppedImageBlob], 'cropped_image.jpg', { type: 'image/jpeg' })
+  const handleCropComplete = async (croppedImageBlob: Blob, metadata?: CropResultMetadata) => {
+    const mimeType = metadata?.mimeType || croppedImageBlob.type || pendingImageFile?.type || 'image/jpeg'
+    const suggestedName = metadata?.suggestedFileName
+    const fallbackBase = pendingImageFile?.name ? stripFileExtension(pendingImageFile.name) : `cropped-image-${Date.now()}`
+    const extension = suggestedName ? extractFileExtension(suggestedName) ?? getExtensionFromMimeType(mimeType) : getExtensionFromMimeType(mimeType)
+    const fileName = suggestedName || `${fallbackBase}.${extension}`
+    const croppedFile = new File([croppedImageBlob], fileName, { type: mimeType })
     setCroppedImage(croppedFile)
     setIsModalOpen(false)
-    
+
     // Set the cropped image file in the form values
     form.setValue('song_art_file', croppedFile)
 
@@ -733,11 +741,14 @@ function UploadContent() {
     } catch (error) {
       setImageUploadStatus('error')
     }
+
+    setPendingImageFile(null)
   }
 
   const handleCropCancel = () => {
     setCropImageUrl(null)
     setIsModalOpen(false)
+    setPendingImageFile(null)
   }
 
   // Add this helper function to format the duration
@@ -1744,6 +1755,9 @@ function UploadContent() {
                       onCropComplete={handleCropComplete}
                       onCancel={handleCropCancel}
                       maxHeight={cropperMaxHeight}
+                      originalFileName={pendingImageFile?.name}
+                      originalMimeType={pendingImageFile?.type}
+                      desiredFileName={pendingImageFile?.name}
                     />
                   )}
                 </Modal>

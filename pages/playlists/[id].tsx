@@ -13,12 +13,13 @@ import EditPlaylistDialog from '@/components/PlaylistPage/EditPlaylistDialog';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth hook
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ImageCropper } from '@/components/UploadPage/ImageCropper';
+import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper';
 import axios from 'axios';
 import { toast } from "sonner";
 import { uploadFile } from '@/lib/uploadUtils'; // Import the uploadFile function
 import { User } from '@/types'; // Ensure User type is imported
 import { motion, AnimatePresence } from 'framer-motion';
+import { extractFileExtension, getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils';
 
 interface PlaylistPageProps {
   playlist: Playlist;
@@ -37,6 +38,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
   const { user } = useAuth(); // Use the useAuth hook
   const [isEditArtDialogOpen, setIsEditArtDialogOpen] = useState(false);
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   const [isImageCropperOpen, setIsImageCropperOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropperMaxHeight, setCropperMaxHeight] = useState<number>(0);
@@ -90,10 +92,11 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
       const imageUrl = URL.createObjectURL(file);
       setCropImageUrl(imageUrl);
       setIsImageCropperOpen(true);
+      setPendingImageFile(file);
     }
   };
 
-  const handleCropComplete = async (croppedImageBlob: Blob) => {
+  const handleCropComplete = async (croppedImageBlob: Blob, metadata?: CropResultMetadata) => {
     setIsImageCropperOpen(false);
     setIsEditArtDialogOpen(false);
 
@@ -110,7 +113,12 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
       }
 
       // Upload the new cover art
-      const file = new File([croppedImageBlob], 'cover_art.jpg', { type: 'image/jpeg' });
+      const mimeType = metadata?.mimeType || croppedImageBlob.type || pendingImageFile?.type || 'image/jpeg';
+      const suggestedName = metadata?.suggestedFileName || pendingImageFile?.name;
+      const fallbackBase = pendingImageFile?.name ? stripFileExtension(pendingImageFile.name) : `playlist-cover-${Date.now()}`;
+      const extension = extractFileExtension(suggestedName) || getExtensionFromMimeType(mimeType);
+      const fileName = suggestedName || `${fallbackBase}.${extension}`;
+      const file = new File([croppedImageBlob], fileName, { type: mimeType });
       const uploadResult = await uploadFile(file, 'image', Number(user.id));
 
       if (typeof uploadResult === 'string') {
@@ -132,11 +140,14 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
       console.error('Error updating cover art:', error);
       toast.error('Failed to update cover art');
     }
+
+    setPendingImageFile(null);
   };
 
   const handleCropCancel = () => {
     setIsImageCropperOpen(false);
     setCropImageUrl(null);
+    setPendingImageFile(null);
   };
 
   const handleShare = useCallback(async () => {
@@ -491,6 +502,9 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
               onCropComplete={handleCropComplete}
               onCancel={handleCropCancel}
               maxHeight={cropperMaxHeight}
+              originalFileName={pendingImageFile?.name}
+              originalMimeType={pendingImageFile?.type}
+              desiredFileName={pendingImageFile?.name}
             />
           )}
         </DialogContent>
