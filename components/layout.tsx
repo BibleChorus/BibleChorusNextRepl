@@ -41,8 +41,13 @@ export default function RootLayout({ children, className = '' }: LayoutProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const topBarHeight = isScrolled ? '3rem' : '4rem'
+
   return (
-    <div className={inter.className}>
+    <div
+      className={inter.className}
+      style={{ '--top-bar-height': topBarHeight } as React.CSSProperties}
+    >
       <div className="min-h-screen bg-background text-foreground">
         <Sidebar />
         <div className={`transition-all duration-300 ${isOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
