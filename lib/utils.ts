@@ -20,7 +20,11 @@ export function formatBibleVerses(verses: BibleVerse[]): string {
   }, {} as Record<string, number[]>);
 
   const formattedVerses = Object.entries(groupedVerses).map(([key, verses]) => {
-    const [book, chapter] = key.split(' ');
+    const lastSpaceIndex = key.lastIndexOf(' ');
+    const book = lastSpaceIndex === -1 ? key : key.slice(0, lastSpaceIndex);
+    const chapterString = lastSpaceIndex === -1 ? '' : key.slice(lastSpaceIndex + 1);
+    const chapterNumber = Number(chapterString);
+    const chapter = Number.isNaN(chapterNumber) ? chapterString : chapterNumber;
     const sortedVerses = verses.sort((a, b) => a - b);
     const ranges = sortedVerses.reduce((acc, verse, index, array) => {
       if (index === 0 || verse !== array[index - 1] + 1) {
