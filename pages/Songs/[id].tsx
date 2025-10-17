@@ -280,6 +280,55 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   }, [bibleInfoTranslation, song.bible_verses]);
 
   // Add these functions near the top of your component, after the state declarations
+  const areVersesContinuous = (verses: string[]) => {
+    if (verses.length === 0) return false;
+
+    const parseVerseReference = (reference: string) => {
+      const trimmedReference = reference.trim();
+      const lastSpaceIndex = trimmedReference.lastIndexOf(' ');
+
+      if (lastSpaceIndex === -1) {
+        return { book: trimmedReference, chapter: NaN, verse: NaN };
+      }
+
+      const book = trimmedReference.slice(0, lastSpaceIndex);
+      const chapterVerse = trimmedReference.slice(lastSpaceIndex + 1);
+      const [chapterStr, verseStr] = chapterVerse.split(':');
+
+      return {
+        book,
+        chapter: Number(chapterStr),
+        verse: Number(verseStr),
+      };
+    };
+
+    const sortedVerses = [...verses].sort((a, b) => {
+      const { book: bookA, chapter: chapterA, verse: verseA } = parseVerseReference(a);
+      const { book: bookB, chapter: chapterB, verse: verseB } = parseVerseReference(b);
+
+      if (bookA !== bookB) return bookA.localeCompare(bookB);
+      if (chapterA !== chapterB) return chapterA - chapterB;
+      return verseA - verseB;
+    });
+
+    let prevBook = '', prevChapter = 0, prevVerse = 0;
+    for (let i = 0; i < sortedVerses.length; i++) {
+      const { book, chapter, verse } = parseVerseReference(sortedVerses[i]);
+
+      if (i > 0) {
+        if (book !== prevBook) return false;
+        if (chapter === prevChapter && verse !== prevVerse + 1) return false;
+        if (chapter !== prevChapter && (chapter !== prevChapter + 1 || verse !== 1)) return false;
+      }
+
+      prevBook = book;
+      prevChapter = chapter;
+      prevVerse = verse;
+    }
+
+    return true;
+  };
+
   const loadBibleVerses = async (inputValue: string) => {
     if (!inputValue || inputValue.trim() === '') {
       return [];
@@ -301,10 +350,13 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     const verses = selectedOptions ? selectedOptions.map((option: any) => option.value) : [];
     const uniqueVerses = Array.from(new Set([...selectedBibleVerses, ...verses]));
     setSelectedBibleVerses(uniqueVerses);
+    setEditedIsContinuousPassage(areVersesContinuous(uniqueVerses));
   };
 
   const handleBibleVerseRemove = (verseToRemove: string) => {
-    setSelectedBibleVerses(selectedBibleVerses.filter(verse => verse !== verseToRemove));
+    const updatedVerses = selectedBibleVerses.filter(verse => verse !== verseToRemove);
+    setSelectedBibleVerses(updatedVerses);
+    setEditedIsContinuousPassage(areVersesContinuous(updatedVerses));
   };
 
   // Update the filteredTranslations function
