@@ -27,7 +27,7 @@ export const GENRES = [
   'Jazz', 'Blues', 'Classical', 'Electronic/Dance', 'Folk',
   'Reggae', 'Metal', 'Punk', 'Indie', 'Alternative',
   'Funk', 'Disco', 'World Music', 'Latin', 'Ska',
-  'Grunge', 'Techno', 'House', 'Ambient', 'Trance',
+  'Grunge', 'Techno', 'House', 'Ambient', 'Trance', 'Club',
   'Dubstep', 'Trap', 'Experimental', 'Bluegrass', 'Opera',
   'Symphonic', 'A Cappella', 'Baroque', 'Bossa Nova', 'Samba', 'Middle Eastern'
 ];
@@ -61,6 +61,7 @@ export const THEMES = [
 ];
 
 export const AI_MUSIC_MODELS = [
+  'Suno 5.0',
   'Suno 4.5',
   'Suno 4.0',
   'Suno 3.5',
