@@ -55,7 +55,7 @@ export default function RootLayout({ children, className = '' }: LayoutProps) {
                   variant="ghost"
                   size={isScrolled ? "sm" : "icon"}
                   onClick={toggleSidebar}
-                  className="lg:hidden"
+                  className={isOpen ? "lg:hidden" : ""}
                 >
                   <Menu className={`transition-all duration-300 ${isScrolled ? 'h-4 w-4' : 'h-6 w-6'}`} />
                 </Button>
