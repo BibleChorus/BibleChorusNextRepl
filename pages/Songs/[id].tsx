@@ -1071,7 +1071,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold mb-2 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                  <CardTitle className="text-2xl font-bold mb-2 text-primary">
                     Song Details
                   </CardTitle>
                   {isCreator && (
@@ -1155,7 +1155,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             {/* Votes and Likes Card */}
             <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
               <CardHeader>
-                <CardTitle className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent text-2xl font-bold">
+                <CardTitle className="text-2xl font-bold text-primary">
                   Votes & Likes
                 </CardTitle>
               </CardHeader>
@@ -1224,7 +1224,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                    <CardTitle className="text-2xl font-bold text-primary">
                       AI Information
                     </CardTitle>
                     {isCreator && (
@@ -1272,7 +1272,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             <Card className="md:col-span-2 xl:col-span-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                  <CardTitle className="text-2xl font-bold text-primary">
                     Bible Info
                   </CardTitle>
                   {isCreator && (
@@ -1379,7 +1379,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             <Card className="md:col-span-2 xl:col-span-12 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                  <CardTitle className="text-2xl font-bold text-primary">
                     Lyrics
                   </CardTitle>
                   {isCreator && (
