@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Play, Pause, MessageCircle } from 'lucide-react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
-import { cn, formatBibleVerses } from '@/lib/utils'
+import { formatBibleVerses } from '@/lib/utils'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -380,41 +380,26 @@ const SongListItem = React.memo(function SongListItem({
 
     if (isUpvoted) {
       switch (voteType) {
-        case 'Best Musically': {
-          const filledProps = {
-            ...iconProps,
-            className: cn(iconProps.className, 'text-blue-600'),
-          };
-          return <MusicFilled {...filledProps} />;
-        }
-        case 'Best Lyrically': {
-          const filledProps = {
-            ...iconProps,
-            className: cn(iconProps.className, 'text-emerald-600'),
-          };
-          return <BookOpenFilled {...filledProps} />;
-        }
-        case 'Best Overall': {
-          const filledProps = {
-            ...iconProps,
-            className: cn(iconProps.className, 'text-amber-600'),
-          };
-          return <StarFilled {...filledProps} />;
-        }
+        case 'Best Musically':
+          return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />;
+        case 'Best Lyrically':
+          return <BookOpenFilled {...iconProps} style={{ color: '#22c55e' }} />;
+        case 'Best Overall':
+          return <StarFilled {...iconProps} style={{ color: '#eab308' }} />;
         default:
           return null;
       }
-    }
-
-    switch (voteType) {
-      case 'Best Musically':
-        return <Music {...iconProps} />;
-      case 'Best Lyrically':
-        return <BookOpen {...iconProps} />;
-      case 'Best Overall':
-        return <Star {...iconProps} />;
-      default:
-        return null;
+    } else {
+      switch (voteType) {
+        case 'Best Musically':
+          return <Music {...iconProps} />;
+        case 'Best Lyrically':
+          return <BookOpen {...iconProps} />;
+        case 'Best Overall':
+          return <Star {...iconProps} />;
+        default:
+          return null;
+      }
     }
   };
 
@@ -588,10 +573,9 @@ const SongListItem = React.memo(function SongListItem({
             className="flex items-center text-slate-500 hover:text-red-500 transition-all duration-200 hover:scale-105"
           >
             <Heart
-              className={cn(
-                isNarrowView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1.5',
-                likeStates[song.id] && 'fill-current text-rose-600'
-              )}
+              className={`${isNarrowView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1.5'} ${
+                likeStates[song.id] ? 'fill-current text-red-500' : ''
+              }`}
             />
             <span className="font-medium">{likeCounts[song.id] || 0}</span>
           </button>
