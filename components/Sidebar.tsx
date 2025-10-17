@@ -51,7 +51,7 @@ const Sidebar: React.FC = () => {
           >
             {/* Glass morphism background with gradient overlay */}
             <div className="absolute inset-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border-r border-white/20 dark:border-slate-700/50"></div>
-            <div className="absolute inset-0 bg-muted-gradient-veil opacity-90 dark:opacity-70"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.08] via-purple-500/[0.06] to-pink-500/[0.08] dark:from-indigo-500/[0.15] dark:via-purple-500/[0.12] dark:to-pink-500/[0.15]"></div>
             
             <div className={`relative p-4 h-full overflow-y-auto ${isMobileOpen ? 'block' : 'hidden lg:block'}`}>
               {/* Close button for mobile view */}
@@ -84,7 +84,7 @@ const Sidebar: React.FC = () => {
               >
                 <Link href="/" className={`flex items-center py-3 px-3 mb-6 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white rounded-2xl cursor-pointer transition-all duration-300
                   ${isOpen ? 'lg:px-4' : 'lg:px-3 lg:justify-center'}
-                  h-12 overflow-hidden whitespace-nowrap bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg hover:shadow-[0_18px_40px_rgba(71,85,105,0.15)]`}>
+                  h-12 overflow-hidden whitespace-nowrap bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg hover:shadow-indigo-500/10`}>
                   <div className="w-6 h-6 flex items-center justify-center">
                     <Image
                       src="/biblechorus-icon.png"
@@ -96,7 +96,7 @@ const Sidebar: React.FC = () => {
                   </div>
                   <span className={`ml-4 font-semibold transition-all duration-300
                     ${isOpen ? 'opacity-100 lg:inline' : 'opacity-0 lg:hidden'}
-                    ${isMobileOpen ? 'inline' : 'hidden'} text-muted-gradient`}>
+                    ${isMobileOpen ? 'inline' : 'hidden'} bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent`}>
                     BibleChorus
                   </span>
                 </Link>
@@ -118,13 +118,13 @@ const Sidebar: React.FC = () => {
                     onClick={() => handleItemClick(item.href)}
                     className={`group flex items-center py-3 px-3 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white rounded-2xl cursor-pointer transition-all duration-300
                       ${isOpen ? 'lg:px-4' : 'lg:px-3 lg:justify-center'}
-                      h-12 overflow-hidden whitespace-nowrap bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg hover:shadow-[0_18px_40px_rgba(71,85,105,0.12)] hover:border-slate-400/40 dark:hover:border-slate-500/40 relative`}
+                      h-12 overflow-hidden whitespace-nowrap bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-500/20 dark:hover:border-indigo-400/20 relative`}
                   >
                     {/* Gradient accent line on hover */}
-                    <div className="absolute left-0 top-0 w-1 h-full bg-muted-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-l-2xl"></div>
+                    <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-l-2xl"></div>
                     
                     <div className="w-6 h-6 flex items-center justify-center relative z-10">
-                      <item.icon className="h-5 w-5 text-slate-500 dark:text-slate-300 flex-shrink-0 group-hover:text-muted-accent transition-colors duration-300" />
+                      <item.icon className="h-5 w-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors duration-300" />
                     </div>
                     <span className={`ml-4 transition-all duration-300 font-medium relative z-10
                       ${isOpen ? 'opacity-100 lg:inline' : 'opacity-0 lg:hidden'}

@@ -82,7 +82,7 @@ export function UserDropdown({ user }: UserDropdownProps) {
             </div>
           ) : (
             <div className="relative">
-              <div className="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-muted-gradient-strong">
+              <div className="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-gradient-to-br from-purple-600 to-pink-500">
                 {getInitial(user.username)}
               </div>
               {unreadCount > 0 && (

@@ -566,9 +566,9 @@ export default function Progress() {
                                   >
                                     <defs>
                                       <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
-                                        <stop offset="0%" stopColor="#5d8971" />
-                                        <stop offset="50%" stopColor="#6f9b87" />
-                                        <stop offset="100%" stopColor="#7aa6af" />
+                                        <stop offset="0%" stopColor="#10b981" />
+                                        <stop offset="50%" stopColor="#14b8a6" />
+                                        <stop offset="100%" stopColor="#06b6d4" />
                                       </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.3)" />
@@ -606,9 +606,9 @@ export default function Progress() {
                               >
                                 <defs>
                                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#5d8971" />
-                                    <stop offset="50%" stopColor="#6f9b87" />
-                                    <stop offset="100%" stopColor="#7aa6af" />
+                                    <stop offset="0%" stopColor="#10b981" />
+                                    <stop offset="50%" stopColor="#14b8a6" />
+                                    <stop offset="100%" stopColor="#06b6d4" />
                                   </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.3)" />

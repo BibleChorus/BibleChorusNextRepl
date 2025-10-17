@@ -611,11 +611,11 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     if (isUpvoted) {
       switch (voteType) {
         case 'Best Musically':
-          return <MusicFilled {...iconProps} style={{ color: '#5f7f9c' }} />; // Muted blue
+          return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />; // Blue color
         case 'Best Lyrically':
-          return <BookOpen {...iconProps} style={{ color: '#6f9b87' }} />; // Muted green tone, but using outlined icon
+          return <BookOpen {...iconProps} style={{ color: '#22c55e' }} />; // Green color, but using outlined icon
         case 'Best Overall':
-          return <StarFilled {...iconProps} style={{ color: '#c4a963' }} />; // Muted gold tone
+          return <StarFilled {...iconProps} style={{ color: '#eab308' }} />; // Yellow color
         default:
           return null;
       }

@@ -1,5 +1,4 @@
 const { fontFamily } = require("tailwindcss/defaultTheme")
-const colors = require("tailwindcss/colors")
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -24,22 +23,6 @@ module.exports = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        indigo: {
-          ...colors.indigo,
-          300: "#a2acc9",
-          400: "#8c97b5",
-          500: "#7581a0",
-          600: "#606c8b",
-          700: "#4c586f",
-        },
-        blue: {
-          ...colors.blue,
-          300: "#9fb6c9",
-          400: "#89a3b6",
-          500: "#748fa3",
-          600: "#5d798d",
-          700: "#4a6273",
-        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -73,39 +56,10 @@ module.exports = {
           100: 'hsl(var(--lavender-100))',
         },
         purple: {
-          ...colors.purple,
-          300: "#b0a8c4",
-          400: "#9a92af",
-          500: "#837c99",
-          600: "#6b6482",
+          500: '#8B5CF6', // Adjust this color as needed
         },
         pink: {
-          ...colors.pink,
-          300: "#deb3c2",
-          400: "#c89dad",
-          500: "#b08697",
-          600: "#966e7e",
-        },
-        cyan: {
-          ...colors.cyan,
-          300: "#a8d1d8",
-          400: "#93bcc4",
-          500: "#7aa6af",
-          600: "#628f99",
-        },
-        teal: {
-          ...colors.teal,
-          300: "#9bc5c0",
-          400: "#86b1ac",
-          500: "#6f9b96",
-          600: "#59847f",
-        },
-        emerald: {
-          ...colors.emerald,
-          300: "#a6cbb6",
-          400: "#8bb59d",
-          500: "#739f87",
-          600: "#5d8971",
+          500: '#EC4899', // Adjust this color as needed
         },
       },
       borderRadius: {
