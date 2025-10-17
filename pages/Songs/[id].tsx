@@ -1055,9 +1055,9 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             Back
           </Button>
 
-          <div className="flex flex-col md:flex-row md:items-start md:space-x-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-12">
             {song.song_art_url && (
-              <div className="w-full md:w-1/3 mb-4 md:mb-0">
+              <div className="md:col-span-2 xl:col-span-4">
                 <Image
                   src={song.song_art_url.startsWith('http') ? song.song_art_url : `${CDN_URL}${song.song_art_url}`}
                   alt={song.title}
@@ -1067,173 +1067,18 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                 />
               </div>
             )}
-            <div className="flex-1">
-              <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
-          {/* Song Info Card */}
-          <Card className="lg:col-span-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl font-bold mb-2 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
-                  Song Details
-                </CardTitle>
-                {isCreator && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsEditDialogOpen(true)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {song.genres && song.genres.map((genre, index) => (
-                  <Badge key={`${song.id}-${genre}-${index}`} variant="secondary">
-                    {genre}
-                  </Badge>
-                ))}
-                <Badge variant="outline">{song.bible_translation_used}</Badge>
-                <Badge variant="default" className="bg-primary text-primary-foreground">
-                  {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
-                </Badge>
-                <Badge variant="outline">
-                  {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
-                </Badge>
-                {song.ai_used_for_lyrics && <Badge variant="secondary">AI Lyrics</Badge>}
-                {song.music_ai_generated && <Badge variant="secondary">AI Music</Badge>}
-              </div>
-              <p><strong>Uploaded by:</strong> {song.username}</p>
-              <p><strong>Created at:</strong> {new Date(song.created_at).toLocaleString()}</p>
-            </CardContent>
-            <CardFooter className="flex flex-col space-y-2">
-              <Button
-                onClick={handlePlayClick}
-                className="w-full"
-              >
-                {currentSong?.id === song.id && isPlaying ? (
-                  <>
-                    <Pause className="mr-2" />
-                    Pause
-                  </>
-                ) : (
-                  <>
-                    <Play className="mr-2" />
-                    Play
-                  </>
-                )}
-              </Button>
-              <div className="flex w-full space-x-2">
-                <Button variant="outline" className="flex-1" onClick={handleShare}>
-                  <Share2 className="mr-2" />Share
-                </Button>
-                {isCreator && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" disabled={isDeleting} className="flex-1">
-                        <Trash2 className="mr-2" />
-                        {isDeleting ? 'Deleting...' : 'Delete'}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure you want to delete this song?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the song, its associated data, and remove the audio and artwork files from storage.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={deleteSong}>Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-              </div>
-            </CardFooter>
-          </Card>
-
-          {/* Votes and Likes Card */}
-          <Card className="lg:col-span-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
-            <CardHeader>
-              <CardTitle className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent text-2xl font-bold">
-                Votes & Likes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col space-y-4">
-                <button
-                  onClick={handleLike}
-                  className="flex items-center justify-between text-gray-500 hover:text-red-500 transition-colors duration-200"
-                >
-                  <span>Likes</span>
-                  <div className="flex items-center">
-                    <Heart
-                      className={`h-6 w-6 mr-2 ${
-                        likeState ? 'fill-current text-red-500' : ''
-                      }`}
-                    />
-                    <span className="text-lg">{likeCount}</span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleVoteClick('Best Musically')}
-                  className="flex items-center justify-between text-gray-500 hover:text-blue-500 transition-colors duration-200"
-                >
-                  <span>Best Musically</span>
-                  <div className="flex items-center">
-                    {getVoteIcon('Best Musically')}
-                    <span className="text-lg">{voteCounts['Best Musically'] || 0}</span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleVoteClick('Best Lyrically')}
-                  className="flex items-center justify-between text-gray-500 hover:text-green-500 transition-colors duration-200"
-                >
-                  <span>Best Lyrically</span>
-                  <div className="flex items-center">
-                    {getVoteIcon('Best Lyrically')}
-                    <span className="text-lg">{voteCounts['Best Lyrically'] || 0}</span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleVoteClick('Best Overall')}
-                  className="flex items-center justify-between text-gray-500 hover:text-yellow-500 transition-colors duration-200"
-                >
-                  <span>Best Overall</span>
-                  <div className="flex items-center">
-                    {getVoteIcon('Best Overall')}
-                    <span className="text-lg">{voteCounts['Best Overall'] || 0}</span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setIsCommentsDialogOpen(true)}
-                  className="flex items-center justify-between text-gray-500 hover:text-purple-500 transition-colors duration-200"
-                >
-                  <span>Comments</span>
-                  <div className="flex items-center">
-                    <MessageCircle className="h-6 w-6 mr-2" />
-                    <span className="text-lg">{commentsCount}</span>
-                  </div>
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* AI Info Card */}
-          {(song.ai_used_for_lyrics || song.music_ai_generated) && (
-            <Card className="lg:col-span-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
+            {/* Song Info Card */}
+            <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
-                  AI Information
-                </CardTitle>
+                  <CardTitle className="text-2xl font-bold mb-2 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                    Song Details
+                  </CardTitle>
                   {isCreator && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setIsAIEditDialogOpen(true)}
+                      onClick={() => setIsEditDialogOpen(true)}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -1241,175 +1086,326 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <Accordion type="multiple" defaultValue={['lyric-ai', 'music-ai']}>
-                  {song.ai_used_for_lyrics && (
-                    <AccordionItem value="lyric-ai">
-                      <AccordionTrigger>Lyric AI</AccordionTrigger>
-                      <AccordionContent>
-                        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                          <p className="mb-2"><strong>Prompt:</strong></p>
-                          <p>{song.lyric_ai_prompt}</p>
-                        </ScrollArea>
-                      </AccordionContent>
-                    </AccordionItem>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {song.genres && song.genres.map((genre, index) => (
+                    <Badge key={`${song.id}-${genre}-${index}`} variant="secondary">
+                      {genre}
+                    </Badge>
+                  ))}
+                  <Badge variant="outline">{song.bible_translation_used}</Badge>
+                  <Badge variant="default" className="bg-primary text-primary-foreground">
+                    {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
+                  </Badge>
+                  <Badge variant="outline">
+                    {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
+                  </Badge>
+                  {song.ai_used_for_lyrics && <Badge variant="secondary">AI Lyrics</Badge>}
+                  {song.music_ai_generated && <Badge variant="secondary">AI Music</Badge>}
+                </div>
+                <p><strong>Uploaded by:</strong> {song.username}</p>
+                <p><strong>Created at:</strong> {new Date(song.created_at).toLocaleString()}</p>
+              </CardContent>
+              <CardFooter className="flex flex-col space-y-2">
+                <Button
+                  onClick={handlePlayClick}
+                  className="w-full"
+                >
+                  {currentSong?.id === song.id && isPlaying ? (
+                    <>
+                      <Pause className="mr-2" />
+                      Pause
+                    </>
+                  ) : (
+                    <>
+                      <Play className="mr-2" />
+                      Play
+                    </>
                   )}
-                  {song.music_ai_generated && (
-                    <AccordionItem value="music-ai">
-                      <AccordionTrigger>Music AI</AccordionTrigger>
-                      <AccordionContent>
-                        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                          <p><strong>Model:</strong> {song.music_model_used}</p>
-                          <p className="mt-2"><strong>Prompt:</strong></p>
-                          <p>{song.music_ai_prompt}</p>
-                        </ScrollArea>
-                      </AccordionContent>
-                    </AccordionItem>
+                </Button>
+                <div className="flex w-full space-x-2">
+                  <Button variant="outline" className="flex-1" onClick={handleShare}>
+                    <Share2 className="mr-2" />Share
+                  </Button>
+                  {isCreator && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" disabled={isDeleting} className="flex-1">
+                          <Trash2 className="mr-2" />
+                          {isDeleting ? 'Deleting...' : 'Delete'}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure you want to delete this song?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the song, its associated data, and remove the audio and artwork files from storage.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={deleteSong}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
+                </div>
+              </CardFooter>
+            </Card>
+
+            {/* Votes and Likes Card */}
+            <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
+              <CardHeader>
+                <CardTitle className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent text-2xl font-bold">
+                  Votes & Likes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col space-y-4">
+                  <button
+                    onClick={handleLike}
+                    className="flex items-center justify-between text-gray-500 hover:text-red-500 transition-colors duration-200"
+                  >
+                    <span>Likes</span>
+                    <div className="flex items-center">
+                      <Heart
+                        className={`h-6 w-6 mr-2 ${
+                          likeState ? 'fill-current text-red-500' : ''
+                        }`}
+                      />
+                      <span className="text-lg">{likeCount}</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => handleVoteClick('Best Musically')}
+                    className="flex items-center justify-between text-gray-500 hover:text-blue-500 transition-colors duration-200"
+                  >
+                    <span>Best Musically</span>
+                    <div className="flex items-center">
+                      {getVoteIcon('Best Musically')}
+                      <span className="text-lg">{voteCounts['Best Musically'] || 0}</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => handleVoteClick('Best Lyrically')}
+                    className="flex items-center justify-between text-gray-500 hover:text-green-500 transition-colors duration-200"
+                  >
+                    <span>Best Lyrically</span>
+                    <div className="flex items-center">
+                      {getVoteIcon('Best Lyrically')}
+                      <span className="text-lg">{voteCounts['Best Lyrically'] || 0}</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => handleVoteClick('Best Overall')}
+                    className="flex items-center justify-between text-gray-500 hover:text-yellow-500 transition-colors duration-200"
+                  >
+                    <span>Best Overall</span>
+                    <div className="flex items-center">
+                      {getVoteIcon('Best Overall')}
+                      <span className="text-lg">{voteCounts['Best Overall'] || 0}</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setIsCommentsDialogOpen(true)}
+                    className="flex items-center justify-between text-gray-500 hover:text-purple-500 transition-colors duration-200"
+                  >
+                    <span>Comments</span>
+                    <div className="flex items-center">
+                      <MessageCircle className="h-6 w-6 mr-2" />
+                      <span className="text-lg">{commentsCount}</span>
+                    </div>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* AI Info Card */}
+            {(song.ai_used_for_lyrics || song.music_ai_generated) && (
+              <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                      AI Information
+                    </CardTitle>
+                    {isCreator && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsAIEditDialogOpen(true)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Accordion type="multiple" defaultValue={['lyric-ai', 'music-ai']}>
+                    {song.ai_used_for_lyrics && (
+                      <AccordionItem value="lyric-ai">
+                        <AccordionTrigger>Lyric AI</AccordionTrigger>
+                        <AccordionContent>
+                          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                            <p className="mb-2"><strong>Prompt:</strong></p>
+                            <p>{song.lyric_ai_prompt}</p>
+                          </ScrollArea>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+                    {song.music_ai_generated && (
+                      <AccordionItem value="music-ai">
+                        <AccordionTrigger>Music AI</AccordionTrigger>
+                        <AccordionContent>
+                          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                            <p><strong>Model:</strong> {song.music_model_used}</p>
+                            <p className="mt-2"><strong>Prompt:</strong></p>
+                            <p>{song.music_ai_prompt}</p>
+                          </ScrollArea>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+                  </Accordion>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Bible Info Card */}
+            <Card className="md:col-span-2 xl:col-span-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                    Bible Info
+                  </CardTitle>
+                  {isCreator && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsBibleInfoEditDialogOpen(true)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible defaultValue="verses">
+                  <AccordionItem value="verses">
+                    <AccordionTrigger>Bible Verses Covered</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="mb-4">
+                        <Popover open={openTranslation} onOpenChange={setOpenTranslation}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openTranslation}
+                              className="w-full justify-between"
+                            >
+                              {bibleInfoTranslation ? `${bibleInfoTranslation} - ${BOLLS_LIFE_API_BIBLE_TRANSLATIONS.find(t => t.shortName === bibleInfoTranslation)?.fullName}` : "Select Bible translation..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0 max-w-[90vw] sm:max-w-[300px]" ref={translationRef}>
+                            <div className="p-2">
+                              <div className="flex items-center justify-between pb-2">
+                                <Input
+                                  placeholder="Search translations..."
+                                  value={translationSearch}
+                                  onChange={(e) => setTranslationSearch(e.target.value)}
+                                  className="mr-2"
+                                />
+                                {bibleInfoTranslation && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setBibleInfoTranslation('NASB')
+                                      setTranslationSearch('')
+                                    }}
+                                  >
+                                    Clear
+                                  </Button>
+                                )}
+                              </div>
+                              <div className="max-h-[200px] overflow-y-auto">
+                                {filteredTranslations().map((translation) => (
+                                  <div
+                                    key={translation.shortName}
+                                    className={cn(
+                                      "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
+                                      bibleInfoTranslation === translation.shortName && "bg-accent"
+                                    )}
+                                    onClick={() => {
+                                      setBibleInfoTranslation(translation.shortName)
+                                      setOpenTranslation(false)
+                                    }}
+                                  >
+                                    <div className="mr-2 h-4 w-4 flex-shrink-0 border border-primary rounded flex items-center justify-center">
+                                      {bibleInfoTranslation === translation.shortName && <Check className="h-3 w-3" />}
+                                    </div>
+                                    <div className="flex-grow overflow-hidden">
+                                      <span className="font-semibold">{translation.shortName}</span> - <span className="text-sm break-words">{translation.fullName}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                        {isLoadingBibleInfoVerses ? (
+                          <div className="flex flex-col items-center justify-center h-40">
+                            <BookOpen className="h-12 w-12 animate-pulse text-primary" />
+                            <p className="mt-4 text-muted-foreground">Loading verses...</p>
+                          </div>
+                        ) : bibleInfoVerseError ? (
+                          <p className="text-red-500">{bibleInfoVerseError}</p>
+                        ) : (
+                          bibleInfoVerses.map((verse, index) => (
+                            <div key={index} className="mb-4">
+                              <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
+                              <div dangerouslySetInnerHTML={renderHTML(verse.text)} />
+                            </div>
+                          ))
+                        )}
+                      </ScrollArea>
+                    </AccordionContent>
+                  </AccordionItem>
                 </Accordion>
               </CardContent>
             </Card>
-          )}
 
-          {/* Bible Info Card */}
-          <Card className="lg:col-span-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
-                  Bible Info
-                </CardTitle>
-                {isCreator && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsBibleInfoEditDialogOpen(true)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible defaultValue="verses">
-                <AccordionItem value="verses">
-                  <AccordionTrigger>Bible Verses Covered</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="mb-4">
-                      <Popover open={openTranslation} onOpenChange={setOpenTranslation}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openTranslation}
-                            className="w-full justify-between"
-                          >
-                            {bibleInfoTranslation ? `${bibleInfoTranslation} - ${BOLLS_LIFE_API_BIBLE_TRANSLATIONS.find(t => t.shortName === bibleInfoTranslation)?.fullName}` : "Select Bible translation..."}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0 max-w-[90vw] sm:max-w-[300px]" ref={translationRef}>
-                          <div className="p-2">
-                            <div className="flex items-center justify-between pb-2">
-                              <Input
-                                placeholder="Search translations..."
-                                value={translationSearch}
-                                onChange={(e) => setTranslationSearch(e.target.value)}
-                                className="mr-2"
-                              />
-                              {bibleInfoTranslation && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setBibleInfoTranslation('NASB')
-                                    setTranslationSearch('')
-                                  }}
-                                >
-                                  Clear
-                                </Button>
-                              )}
-                            </div>
-                            <div className="max-h-[200px] overflow-y-auto">
-                              {filteredTranslations().map((translation) => (
-                                <div
-                                  key={translation.shortName}
-                                  className={cn(
-                                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                                    bibleInfoTranslation === translation.shortName && "bg-accent"
-                                  )}
-                                  onClick={() => {
-                                    setBibleInfoTranslation(translation.shortName)
-                                    setOpenTranslation(false)
-                                  }}
-                                >
-                                  <div className="mr-2 h-4 w-4 flex-shrink-0 border border-primary rounded flex items-center justify-center">
-                                    {bibleInfoTranslation === translation.shortName && <Check className="h-3 w-3" />}
-                                  </div>
-                                  <div className="flex-grow overflow-hidden">
-                                    <span className="font-semibold">{translation.shortName}</span> - <span className="text-sm break-words">{translation.fullName}</span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                      {isLoadingBibleInfoVerses ? (
-                        <div className="flex flex-col items-center justify-center h-40">
-                          <BookOpen className="h-12 w-12 animate-pulse text-primary" />
-                          <p className="mt-4 text-muted-foreground">Loading verses...</p>
-                        </div>
-                      ) : bibleInfoVerseError ? (
-                        <p className="text-red-500">{bibleInfoVerseError}</p>
-                      ) : (
-                        bibleInfoVerses.map((verse, index) => (
-                          <div key={index} className="mb-4">
-                            <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
-                            <div dangerouslySetInnerHTML={renderHTML(verse.text)} />
-                          </div>
-                        ))
-                      )}
-                    </ScrollArea>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-
-          {/* Lyrics Card */}
-          <Card className="lg:col-span-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
-                  Lyrics
-                </CardTitle>
-                {isCreator && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsLyricsEditDialogOpen(true)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible defaultValue="lyrics">
-                <AccordionItem value="lyrics">
-                  <AccordionTrigger>View Lyrics</AccordionTrigger>
-                  <AccordionContent>
-                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                      <p className="whitespace-pre-wrap">{song.lyrics}</p>
-                    </ScrollArea>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-              </div>
-            </div>
+            {/* Lyrics Card */}
+            <Card className="md:col-span-2 xl:col-span-12 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                    Lyrics
+                  </CardTitle>
+                  {isCreator && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsLyricsEditDialogOpen(true)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible defaultValue="lyrics">
+                  <AccordionItem value="lyrics">
+                    <AccordionTrigger>View Lyrics</AccordionTrigger>
+                    <AccordionContent>
+                      <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                        <p className="whitespace-pre-wrap">{song.lyrics}</p>
+                      </ScrollArea>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
           </div>
         </motion.div>
       </div>
