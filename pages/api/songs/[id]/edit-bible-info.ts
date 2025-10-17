@@ -25,13 +25,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Insert new song_verses entries
       const verseEntries = await Promise.all(bible_verses.map(async (verse: string) => {
-        const [book, chapterVerse] = verse.split(' ')
+        const trimmedVerse = verse.trim()
+        const lastSpaceIndex = trimmedVerse.lastIndexOf(' ')
+
+        if (lastSpaceIndex === -1) {
+          throw new Error(`Invalid verse format: ${verse}`)
+        }
+
+        const book = trimmedVerse.slice(0, lastSpaceIndex)
+        const chapterVerse = trimmedVerse.slice(lastSpaceIndex + 1)
         const [chapter, verseNumber] = chapterVerse.split(':')
+        const parsedChapter = parseInt(chapter, 10)
+        const parsedVerseNumber = parseInt(verseNumber, 10)
+
+        if (Number.isNaN(parsedChapter) || Number.isNaN(parsedVerseNumber)) {
+          throw new Error(`Invalid chapter or verse number: ${verse}`)
+        }
+
         const verseId = await trx('bible_verses')
           .where({
             book,
-            chapter: parseInt(chapter),
-            verse: parseInt(verseNumber)
+            chapter: parsedChapter,
+            verse: parsedVerseNumber
           })
           .select('id')
           .first()
