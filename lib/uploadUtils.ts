@@ -2,16 +2,23 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 export async function uploadFile(
-  file: File, 
-  type: 'image' | 'audio', 
-  userId: number, 
+  file: File,
+  type: 'image' | 'audio',
+  userId: number,
   uploadType: 'song_art' | 'playlist_cover' | 'pdf_image' = 'song_art' // Default to 'song_art'
 ) {
-  const response = await axios.post('/api/upload-url', { 
-    fileType: file.type, 
-    fileExtension: file.name.split('.').pop(), 
-    title: file.name, 
-    userId, 
+  if (typeof File === 'undefined' || !(file instanceof File)) {
+    const message = 'Upload failed: provided upload is not a File instance.';
+    console.error(message, file);
+    toast.error(message);
+    throw new Error(message);
+  }
+
+  const response = await axios.post('/api/upload-url', {
+    fileType: file.type,
+    fileExtension: file.name.split('.').pop(),
+    title: file.name,
+    userId,
     fileSize: file.size,
     uploadType, // Pass uploadType to the API
   });

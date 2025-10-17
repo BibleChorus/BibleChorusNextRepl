@@ -26,7 +26,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { TooltipProvider } from '@/components/ui/tooltip'; // Ensure the correct import path
 import SavePlaylistDialog from '@/components/ListenPage/SavePlaylistDialog'
-import { ImageCropper } from '@/components/UploadPage/ImageCropper';
+import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { uploadFile } from '@/lib/uploadUtils';
 import { useForm, UseFormReturn } from 'react-hook-form'; // Add this import
@@ -752,21 +752,57 @@ function ListenContent({
     setIsCropperOpen(true);
   };
 
+  const determineFileExtension = (mimeType: string) => {
+    const map: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    };
+    return map[mimeType] || 'jpg';
+  };
+
+  const buildFileFromCrop = (blob: Blob, metadata?: CropResultMetadata) => {
+    const mimeType = metadata?.mimeType || blob.type || 'image/jpeg';
+    const extension = determineFileExtension(mimeType);
+    const originalName = metadata?.originalFileName?.replace(/\.[^/.]+$/, '');
+    const fallbackName = `playlist-cover-${Date.now()}`;
+    const baseName = originalName && originalName.length > 0 ? originalName : fallbackName;
+    return new File([blob], `${baseName}.${extension}`, { type: mimeType });
+  };
+
   // Handler when cropping is complete
   const onImageCropComplete = async (croppedFile: File) => {
     // Handle the cropped image file
     // Upload the cropped file and update the form value in SavePlaylistDialog
     await uploadCoverArt(croppedFile);
     setIsCropperOpen(false);
+    setCropImageUrl(null);
+  };
+
+  const handleImageCropperComplete = (blob: Blob, metadata?: CropResultMetadata) => {
+    const file = buildFileFromCrop(blob, metadata);
+    onImageCropComplete(file);
   };
 
   // Function to upload the cover art
   const uploadCoverArt = async (file: File) => {
     if (!user) return;
+    if (!(file instanceof File)) {
+      toast.error('Invalid cover art file provided');
+      console.error('Expected File when uploading cover art but received', file);
+      return;
+    }
+
     try {
-      const fileKey = await uploadFile(file, 'image', Number(user.id));
-      // Update the form value in SavePlaylistDialog
+      const uploadResult = await uploadFile(file, 'image', Number(user.id), 'playlist_cover');
+      if (typeof uploadResult === 'string') {
+        throw new Error(uploadResult);
+      }
+
+      const { fileKey } = uploadResult;
       formRef.current?.setValue('cover_art_url', fileKey, { shouldValidate: true });
+      formRef.current?.setValue('coverArtFile', file, { shouldValidate: true });
       toast.success('Cover art uploaded');
     } catch (error) {
       console.error('Error uploading cover art:', error);
@@ -1421,13 +1457,24 @@ function ListenContent({
         />
 
         {/* Image Cropper Dialog */}
-        <Dialog open={isCropperOpen} onOpenChange={setIsCropperOpen}>
+        <Dialog
+          open={isCropperOpen}
+          onOpenChange={(open) => {
+            setIsCropperOpen(open);
+            if (!open) {
+              setCropImageUrl(null);
+            }
+          }}
+        >
           <DialogContent>
             {cropImageUrl && (
               <ImageCropper
                 imageUrl={cropImageUrl}
-                onCropComplete={onImageCropComplete}
-                onCancel={() => setIsCropperOpen(false)}
+                onCropComplete={handleImageCropperComplete}
+                onCancel={() => {
+                  setIsCropperOpen(false);
+                  setCropImageUrl(null);
+                }}
                 maxHeight={500} // Added maxHeight prop
               />
             )}

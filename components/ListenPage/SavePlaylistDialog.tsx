@@ -15,7 +15,7 @@ import {
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useRouter } from 'next/router';
-import { ImageCropper } from '@/components/UploadPage/ImageCropper';
+import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper';
 import { Trash2, ListMusic, Save } from 'lucide-react'; // Import ListMusic and Save icons
 import Image from 'next/image'; // Import Next.js Image component
 
@@ -67,8 +67,8 @@ export default function SavePlaylistDialog({
   const [isCropperOpen, setIsCropperOpen] = useState(false);
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
 
-  const [croppedImage, setCroppedImage] = useState<File | null>(null);
   const [croppedImageUrl, setCroppedImageUrl] = useState<string | null>(null);
+  const [pendingImageDetails, setPendingImageDetails] = useState<{ name?: string; type?: string } | null>(null);
   const [playlists, setPlaylists] = useState<any[]>(initialPlaylists);
 
   const form = useForm<FormValues>({
@@ -99,8 +99,23 @@ export default function SavePlaylistDialog({
         coverArtFile: undefined,
         cover_art_url: '',
       });
+      setCroppedImageUrl((currentUrl) => {
+        if (currentUrl) {
+          URL.revokeObjectURL(currentUrl);
+        }
+        return null;
+      });
+      setPendingImageDetails(null);
     }
   }, [isOpen, form]);
+
+  useEffect(() => {
+    return () => {
+      if (croppedImageUrl) {
+        URL.revokeObjectURL(croppedImageUrl);
+      }
+    };
+  }, [croppedImageUrl]);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -178,15 +193,47 @@ export default function SavePlaylistDialog({
         }
       };
       reader.readAsDataURL(file);
+      setPendingImageDetails({ name: file.name, type: file.type });
     }
   };
 
-  const handleCropComplete = (croppedFile: File) => {
+  const determineFileExtension = (mimeType: string) => {
+    const map: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    };
+    return map[mimeType] || 'jpg';
+  };
+
+  const buildFileName = (originalName: string | undefined, mimeType: string) => {
+    const extension = determineFileExtension(mimeType);
+    if (originalName && originalName.trim().length > 0) {
+      const base = originalName.replace(/\.[^/.]+$/, '');
+      return `${base}.${extension}`;
+    }
+    return `playlist-cover-${Date.now()}.${extension}`;
+  };
+
+  const handleCropComplete = (blob: Blob, metadata?: CropResultMetadata) => {
+    const mimeType = metadata?.mimeType || blob.type || pendingImageDetails?.type || 'image/jpeg';
+    const originalName = metadata?.originalFileName || pendingImageDetails?.name;
+    const fileName = buildFileName(originalName, mimeType);
+    const croppedFile = new File([blob], fileName, { type: mimeType });
+
     onImageCropComplete(croppedFile);
-    setCroppedImage(croppedFile);
-    setCroppedImageUrl(URL.createObjectURL(croppedFile));
+    setCroppedImageUrl((currentUrl) => {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+      }
+      return URL.createObjectURL(croppedFile);
+    });
+    setValue('coverArtFile', croppedFile, { shouldValidate: true });
     setValue('cover_art_url', '');
     setIsCropperOpen(false);
+    setCropImageUrl(null);
+    setPendingImageDetails(null);
   };
 
   const removeCoverArt = async () => {
@@ -194,10 +241,16 @@ export default function SavePlaylistDialog({
       await axios.post('/api/delete-file', {
         fileKey: form.getValues('cover_art_url'),
       });
-      setCroppedImage(null);
-      setCroppedImageUrl(null);
+      setCroppedImageUrl((currentUrl) => {
+        if (currentUrl) {
+          URL.revokeObjectURL(currentUrl);
+        }
+        return null;
+      });
       setValue('cover_art_url', '');
+      setValue('coverArtFile', undefined, { shouldValidate: true });
       toast.success('Cover art removed');
+      setPendingImageDetails(null);
     } catch (error) {
       console.error('Error removing cover art:', error);
       toast.error('Failed to remove cover art');
@@ -393,8 +446,14 @@ export default function SavePlaylistDialog({
             <ImageCropper
               imageUrl={cropImageUrl}
               onCropComplete={handleCropComplete}
-              onCancel={() => setIsCropperOpen(false)}
+              onCancel={() => {
+                setIsCropperOpen(false);
+                setCropImageUrl(null);
+              }}
               maxHeight={300} // Add this line with an appropriate value
+              originalFileName={pendingImageDetails?.name}
+              originalMimeType={pendingImageDetails?.type}
+              outputMimeType={pendingImageDetails?.type}
             />
           )}
         </DialogContent>

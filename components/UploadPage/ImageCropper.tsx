@@ -4,15 +4,23 @@ import 'react-image-crop/dist/ReactCrop.css'
 import { Button } from "@/components/ui/button"
 import Image from 'next/image'
 
+export interface CropResultMetadata {
+  originalFileName?: string
+  mimeType: string
+}
+
 interface ImageCropperProps {
   imageUrl: string
-  onCropComplete: (croppedImageBlob: Blob) => void
+  onCropComplete: (croppedImageBlob: Blob, metadata?: CropResultMetadata) => void
   onCancel: () => void
   maxHeight: number
   aspectRatio?: number
   quality?: number
   minZoom?: number
   maxZoom?: number
+  originalFileName?: string
+  originalMimeType?: string
+  outputMimeType?: string
 }
 
 type CropConstraints = {
@@ -31,6 +39,9 @@ export function ImageCropper({
   quality = 0.95,
   minZoom = 0.3,
   maxZoom = 1,
+  originalFileName,
+  originalMimeType,
+  outputMimeType,
 }: ImageCropperProps) {
   const [crop, setCrop] = useState<Crop>({ unit: '%', width: 100, height: 100, x: 0, y: 0 })
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null)
@@ -107,6 +118,7 @@ export function ImageCropper({
     const ctx = canvas.getContext('2d')
 
     if (ctx) {
+      const mimeType = outputMimeType || originalMimeType || 'image/jpeg'
       ctx.drawImage(
         imageRef,
         completedCrop.x * scaleX,
@@ -121,13 +133,19 @@ export function ImageCropper({
 
       canvas.toBlob(
         (blob) => {
-          if (blob) onCropComplete(blob)
+          if (blob) {
+            const providedMimeType = mimeType ?? blob.type ?? 'image/jpeg'
+            onCropComplete(blob, {
+              originalFileName,
+              mimeType: providedMimeType,
+            })
+          }
         },
-        'image/jpeg',
+        mimeType,
         quality
       )
     }
-  }, [completedCrop, imageRef, onCropComplete, quality])
+  }, [completedCrop, imageRef, onCropComplete, quality, originalFileName, originalMimeType, outputMimeType])
 
   return (
     <div className="p-4" style={{ maxHeight: `${maxHeight}px`, overflowY: 'auto' }}>
