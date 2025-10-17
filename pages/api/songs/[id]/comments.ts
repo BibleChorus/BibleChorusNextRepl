@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
-import { auth } from '@/auth';
 import sanitizeHtml from 'sanitize-html';
+import jwt from 'jsonwebtoken';
+import { getJwtSecret } from '@/lib/jwt';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
@@ -26,16 +27,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(500).json({ message: 'Error fetching comments' });
     }
   } else if (method === 'POST') {
-    // SECURITY: Authenticate user before allowing comment creation
-    const session = await auth(req, res);
-    
-    if (!session || !session.user) {
+    const authHeader = req.headers.authorization;
+    let token = req.cookies?.token;
+
+    if (!token && authHeader?.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
+
+    if (!token) {
       return res.status(401).json({ message: 'Authentication required to post comments' });
     }
 
-    // Extract comment data from request body (ignore any user_id - use authenticated user)
+    let authenticatedUserId: number;
+
+    try {
+      const decoded = jwt.verify(token, getJwtSecret()) as { userId: number };
+      authenticatedUserId = decoded.userId;
+    } catch (error) {
+      console.error('Invalid or expired token when adding song comment:', error);
+      return res.status(401).json({ message: 'Authentication required to post comments' });
+    }
+
     const { comment, parent_comment_id } = req.body;
-    
+
     if (!comment || typeof comment !== 'string' || comment.trim().length === 0) {
       return res.status(400).json({ message: 'Comment content is required' });
     }
@@ -45,9 +59,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
         allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, '*': ['class'] },
       });
-
-      // Use the authenticated user's ID from the session
-      const authenticatedUserId = session.user.id;
 
       const [newComment] = await db('song_comments')
         .insert({
@@ -59,13 +70,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
         .returning('*');
 
-      // Get user details for response
       const user = await db('users').where('id', authenticatedUserId).first();
 
-      res.status(201).json({ 
-        ...newComment, 
-        username: user?.username || session.user.username,
-        profile_image_url: user?.profile_image_url || session.user.profile_image_url
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.status(201).json({
+        ...newComment,
+        username: user.username,
+        profile_image_url: user.profile_image_url,
       });
     } catch (error) {
       console.error('Error adding comment:', error);
