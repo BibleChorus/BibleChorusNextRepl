@@ -943,7 +943,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
   }, [song]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50/60 via-white to-fuchsia-50/30 dark:from-violet-950/40 dark:via-slate-900 dark:to-fuchsia-950/30">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50/70 via-purple-50/60 to-pink-50/40 dark:from-indigo-950/40 dark:via-purple-950/50 dark:to-pink-950/30">
       <Head>
         <title>{`${song.title} by ${song.username} - BibleChorus`}</title>
         <meta property="og:title" content={`${song.title} by ${song.username}`} />
@@ -964,11 +964,11 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
         className="relative overflow-hidden pb-20 pt-12"
       >
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/60 via-fuchsia-500/40 to-indigo-500/60"></div>
-          <div className="absolute top-0 -left-8 w-96 h-96 bg-violet-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
-          <div className="absolute top-12 -right-8 w-80 h-80 bg-fuchsia-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-12 left-32 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(139,92,246,0.1),rgba(255,255,255,0))]"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/60 via-purple-500/40 to-pink-500/60"></div>
+          <div className="absolute top-0 -left-8 w-96 h-96 bg-indigo-300/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+          <div className="absolute top-12 -right-8 w-80 h-80 bg-pink-300/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-12 left-32 w-96 h-96 bg-purple-300/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+          <div className="absolute inset-0 bg-gradient-radial from-indigo-200/20 via-purple-100/10 to-transparent"></div>
         </div>
         <div className="relative z-10 container mx-auto px-4 text-center">
           <motion.div
@@ -977,9 +977,9 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             transition={{ duration: 0.8, delay: 0.1 }}
             className="mb-6"
           >
-            <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-indigo-500/10 dark:from-violet-500/20 dark:via-fuchsia-500/20 dark:to-indigo-500/20 backdrop-blur-md border border-violet-500/20 dark:border-violet-500/30 shadow-lg">
-              <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-              <span className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 dark:from-violet-400 dark:via-fuchsia-400 dark:to-indigo-400 bg-clip-text text-transparent font-semibold">
+            <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-500/20 dark:via-purple-500/20 dark:to-pink-500/20 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 shadow-lg">
+              <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-300 dark:via-purple-300 dark:to-pink-300 bg-clip-text text-transparent font-semibold">
                 Song Spotlight
               </span>
             </span>
@@ -991,10 +991,10 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             className="text-5xl md:text-6xl font-bold tracking-tight"
           >
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
                 {song.title}
               </span>
-              <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 rounded-full scale-x-0 animate-scale-x"></div>
+              <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-full scale-x-0 animate-scale-x"></div>
             </span>
           </motion.h1>
           <motion.p
