@@ -11,6 +11,15 @@ interface ImageCropperProps {
   maxHeight: number
   aspectRatio?: number
   quality?: number
+  minZoom?: number
+  maxZoom?: number
+}
+
+type CropConstraints = {
+  minWidth: number
+  minHeight: number
+  maxWidth: number
+  maxHeight: number
 }
 
 export function ImageCropper({
@@ -20,16 +29,33 @@ export function ImageCropper({
   maxHeight,
   aspectRatio = 1,
   quality = 0.95,
+  minZoom = 0.3,
+  maxZoom = 1,
 }: ImageCropperProps) {
   const [crop, setCrop] = useState<Crop>({ unit: '%', width: 100, height: 100, x: 0, y: 0 })
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null)
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null)
+  const [cropConstraints, setCropConstraints] = useState<CropConstraints | null>(null)
   const aspectRatioRef = useRef(aspectRatio)
+  const minZoomRef = useRef(minZoom)
+  const maxZoomRef = useRef(maxZoom)
+
+  useEffect(() => {
+    aspectRatioRef.current = aspectRatio
+  }, [aspectRatio])
+
+  useEffect(() => {
+    minZoomRef.current = minZoom
+  }, [minZoom])
+
+  useEffect(() => {
+    maxZoomRef.current = maxZoom
+  }, [maxZoom])
 
   const onLoad = useCallback((img: HTMLImageElement) => {
     setImageRef(img)
-    
-    const ratio = aspectRatioRef.current || 1
+
+    const ratio = aspectRatioRef.current && aspectRatioRef.current > 0 ? aspectRatioRef.current : 1
     let widthPercent = 100
     let heightPercent = 100
     if (ratio >= 1) {
@@ -38,14 +64,34 @@ export function ImageCropper({
     } else {
       widthPercent = 100 * ratio
     }
-    const newCrop = { unit: '%', width: widthPercent, height: heightPercent, x: 0, y: 0 } as Crop
+    const xPercent = (100 - widthPercent) / 2
+    const yPercent = (100 - heightPercent) / 2
+    const newCrop = { unit: '%', width: widthPercent, height: heightPercent, x: xPercent, y: yPercent } as Crop
     setCrop(newCrop)
+
+    const widthPx = (img.naturalWidth * widthPercent) / 100
+    const heightPx = (img.naturalHeight * heightPercent) / 100
+    const xPx = (img.naturalWidth * xPercent) / 100
+    const yPx = (img.naturalHeight * yPercent) / 100
+
+    const requestedMinZoom = minZoomRef.current ?? 0.3
+    const requestedMaxZoom = maxZoomRef.current ?? 1
+    const safeMaxZoom = Math.max(requestedMaxZoom, 0.01)
+    const safeMinZoom = Math.min(Math.max(requestedMinZoom, 0.01), safeMaxZoom)
+
     setCompletedCrop({
       unit: 'px',
-      width: (img.naturalWidth * widthPercent) / 100,
-      height: (img.naturalHeight * heightPercent) / 100,
-      x: 0,
-      y: 0,
+      width: widthPx,
+      height: heightPx,
+      x: xPx,
+      y: yPx,
+    })
+
+    setCropConstraints({
+      minWidth: widthPx * safeMinZoom,
+      minHeight: heightPx * safeMinZoom,
+      maxWidth: widthPx * safeMaxZoom,
+      maxHeight: heightPx * safeMaxZoom,
     })
   }, [])
 
@@ -90,8 +136,10 @@ export function ImageCropper({
         onChange={(c, percentCrop) => setCrop(percentCrop)}
         onComplete={(c) => setCompletedCrop(c)}
         aspect={aspectRatioRef.current}
-        maxWidth={1260}
-        maxHeight={1260}
+        minWidth={cropConstraints?.minWidth ?? undefined}
+        minHeight={cropConstraints?.minHeight ?? undefined}
+        maxWidth={cropConstraints?.maxWidth ?? undefined}
+        maxHeight={cropConstraints?.maxHeight ?? undefined}
       >
         <Image
           src={imageUrl}
