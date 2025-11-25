@@ -15,14 +15,19 @@ run = ["npm", "run", "start"]
 deploymentTarget = "cloudrun"
 
 [[ports]]
-localPort = 5000
+localPort = 3000
 externalPort = 80
 
 [[ports]]
-localPort = 3000
+localPort = 5000
+externalPort = 3000
 
 [[ports]]
 localPort = 36165
+
+[[ports]]
+localPort = 38965
+externalPort = 3001
 
 [agent]
 expertMode = true
