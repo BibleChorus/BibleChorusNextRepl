@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
 import Image from 'next/image';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SeasonEditorProps {
   seasons: Season[];
@@ -190,6 +191,7 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
   onSeasonsChange,
   onRefresh,
 }) => {
+  const { getAuthToken } = useAuth();
   const [expandedSeasons, setExpandedSeasons] = useState<number[]>([]);
   const [isAddingNewSeason, setIsAddingNewSeason] = useState(false);
   const [editingSeasonId, setEditingSeasonId] = useState<number | null>(null);
@@ -236,7 +238,10 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
 
     setIsSubmitting(true);
     try {
-      await axios.post('/api/journeys/seasons', formData);
+      const token = await getAuthToken();
+      await axios.post('/api/journeys/seasons', formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success('Season created successfully');
       resetForm();
       onRefresh();
@@ -246,12 +251,15 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, resetForm, onRefresh]);
+  }, [formData, resetForm, onRefresh, getAuthToken]);
 
   const handleUpdateSeason = useCallback(async (seasonId: number) => {
     setIsSubmitting(true);
     try {
-      await axios.put(`/api/journeys/seasons/${seasonId}`, formData);
+      const token = await getAuthToken();
+      await axios.put(`/api/journeys/seasons/${seasonId}`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success('Season updated successfully');
       resetForm();
       onRefresh();
@@ -261,43 +269,52 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, resetForm, onRefresh]);
+  }, [formData, resetForm, onRefresh, getAuthToken]);
 
   const handleDeleteSeason = useCallback(async (seasonId: number) => {
     if (!confirm('Are you sure you want to delete this season and all its songs?')) return;
 
     try {
-      await axios.delete(`/api/journeys/seasons/${seasonId}`);
+      const token = await getAuthToken();
+      await axios.delete(`/api/journeys/seasons/${seasonId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success('Season deleted');
       onRefresh();
     } catch (error) {
       console.error('Error deleting season:', error);
       toast.error('Failed to delete season');
     }
-  }, [onRefresh]);
+  }, [onRefresh, getAuthToken]);
 
   const handleToggleVisibility = useCallback(async (season: Season) => {
     try {
+      const token = await getAuthToken();
       await axios.put(`/api/journeys/seasons/${season.id}`, {
         is_visible: !season.is_visible,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       onRefresh();
     } catch (error) {
       console.error('Error toggling visibility:', error);
       toast.error('Failed to update visibility');
     }
-  }, [onRefresh]);
+  }, [onRefresh, getAuthToken]);
 
   const handleRemoveSong = useCallback(async (seasonId: number, songId: number) => {
     try {
-      await axios.delete(`/api/journeys/seasons/${seasonId}/songs/${songId}`);
+      const token = await getAuthToken();
+      await axios.delete(`/api/journeys/seasons/${seasonId}/songs/${songId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success('Song removed from season');
       onRefresh();
     } catch (error) {
       console.error('Error removing song:', error);
       toast.error('Failed to remove song');
     }
-  }, [onRefresh]);
+  }, [onRefresh, getAuthToken]);
 
   const startEditing = useCallback((season: Season) => {
     setFormData({

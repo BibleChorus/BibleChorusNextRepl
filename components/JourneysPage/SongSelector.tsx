@@ -11,6 +11,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Song {
   id: number;
@@ -36,6 +37,7 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
   onSongAdded,
   onClose,
 }) => {
+  const { getAuthToken } = useAuth();
   const [songs, setSongs] = useState<Song[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -70,9 +72,12 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
 
     setIsAdding(true);
     try {
+      const token = await getAuthToken();
       await axios.post(`/api/journeys/seasons/${seasonId}/songs`, {
         song_id: selectedSong.id,
         personal_note: personalNote || undefined,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       toast.success(`"${selectedSong.title}" added to season`);
       onSongAdded();

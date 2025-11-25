@@ -14,6 +14,7 @@ import { Save } from 'lucide-react';
 import { FaEye as Eye, FaEyeSlash as EyeOff, FaPalette as Palette, FaGlobe as Globe, FaCog as Settings } from 'react-icons/fa';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface JourneySettingsProps {
   profile: JourneyProfile;
@@ -39,6 +40,7 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
   profile,
   onProfileUpdate,
 }) => {
+  const { getAuthToken } = useAuth();
   const [formData, setFormData] = useState<UpdateJourneyProfileRequest>({
     title: profile.title || '',
     subtitle: profile.subtitle || '',
@@ -68,7 +70,10 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await axios.put('/api/journeys/profile', formData);
+      const token = await getAuthToken();
+      const response = await axios.put('/api/journeys/profile', formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       onProfileUpdate(response.data);
       toast.success('Settings saved successfully');
       setHasChanges(false);
