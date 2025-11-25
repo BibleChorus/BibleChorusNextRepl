@@ -67,7 +67,13 @@ Preferred communication style: Simple, everyday language.
 
 5. **Auto-Playlist System**: PostgreSQL functions and triggers automatically maintain playlists based on criteria stored in the `auto_criteria` JSONB column
 
-6. **Journeys System**: Users have personal journey profiles with customizable seasons. The `journey_profiles` table stores user preferences (theme color, layout style, visibility settings), while `journey_season_songs` links songs to seasons with ordering and personal notes. Seasons support date ranges, reflections, scripture references, and theme colors.
+6. **Journeys System**: Premium artistic portfolio pages where users create time-based "Seasons" to showcase scripture songs. Features include:
+   - **Premium Typography**: Playfair Display serif font for headings, Crimson Text for quotes, Inter for body text
+   - **Theme Colors**: 6 customizable color themes (indigo, purple, pink, amber, emerald, cyan) that apply to the entire page
+   - **Advanced Scroll Animations**: Parallax effects, staggered reveals, smooth spring-based transforms using Framer Motion
+   - **Glassmorphism Design**: Sophisticated blur effects, translucent cards, glowing accents
+   - **Timeline Layout**: Season info on left, songs on right, with animated connecting lines and glowing timeline nodes
+   - **Database**: `journey_profiles` stores user preferences, `journey_seasons` for time periods, `journey_season_songs` links songs with notes
 
 ### Authentication & Authorization
 
