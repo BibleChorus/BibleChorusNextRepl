@@ -46,26 +46,28 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
-    fetchSongs();
-  }, [searchQuery, seasonId]);
+    const fetchSongs = async () => {
+      setIsLoading(true);
+      try {
+        const token = await getAuthToken();
+        const response = await axios.get('/api/journeys/user-songs', {
+          params: {
+            search: searchQuery || undefined,
+            exclude_season: seasonId,
+          },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSongs(response.data);
+      } catch (error) {
+        console.error('Error fetching songs:', error);
+        toast.error('Failed to load songs');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const fetchSongs = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get('/api/journeys/user-songs', {
-        params: {
-          search: searchQuery || undefined,
-          exclude_season: seasonId,
-        },
-      });
-      setSongs(response.data);
-    } catch (error) {
-      console.error('Error fetching songs:', error);
-      toast.error('Failed to load songs');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    fetchSongs();
+  }, [searchQuery, seasonId, getAuthToken]);
 
   const handleAddSong = async () => {
     if (!selectedSong) return;
