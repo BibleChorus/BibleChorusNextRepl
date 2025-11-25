@@ -14,7 +14,7 @@ import { Pencil, Lock, ArrowLeft, Plus, Sparkles, Music, BookOpen } from 'lucide
 export default function JourneyPage() {
   const router = useRouter();
   const { username } = router.query;
-  const { user } = useAuth();
+  const { user, getAuthToken } = useAuth();
   const [journey, setJourney] = useState<JourneyWithSeasons | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,10 @@ export default function JourneyPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await axios.get(`/api/journeys/${username}`);
+        const token = await getAuthToken();
+        const response = await axios.get(`/api/journeys/${username}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         setJourney(response.data);
       } catch (err: any) {
         console.error('Error fetching journey:', err);
@@ -45,7 +48,7 @@ export default function JourneyPage() {
     };
 
     fetchJourney();
-  }, [username]);
+  }, [username, getAuthToken]);
 
   if (isLoading) {
     return (

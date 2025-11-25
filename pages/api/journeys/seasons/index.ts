@@ -33,11 +33,41 @@ export default async function handler(
         .orderBy('start_date', 'desc');
 
       for (const season of seasons) {
-        const songCount = await db('journey_season_songs')
+        const seasonSongs = await db('journey_season_songs')
           .where({ season_id: season.id })
-          .count('* as count')
-          .first();
-        season.song_count = parseInt(songCount?.count as string) || 0;
+          .join('songs', 'journey_season_songs.song_id', 'songs.id')
+          .select(
+            'journey_season_songs.*',
+            'songs.id as song_id',
+            'songs.title as song_title',
+            'songs.artist as song_artist',
+            'songs.audio_url as song_audio_url',
+            'songs.song_art_url as song_art_url',
+            'songs.duration as song_duration',
+            'songs.genres as song_genres'
+          )
+          .orderBy('journey_season_songs.display_order', 'asc');
+
+        season.songs = seasonSongs.map((ss: any) => ({
+          id: ss.id,
+          season_id: ss.season_id,
+          song_id: ss.song_id,
+          display_order: ss.display_order,
+          personal_note: ss.personal_note,
+          significance: ss.significance,
+          added_date: ss.added_date,
+          created_at: ss.created_at,
+          song: {
+            id: ss.song_id,
+            title: ss.song_title,
+            artist: ss.song_artist,
+            audio_url: ss.song_audio_url,
+            song_art_url: ss.song_art_url,
+            duration: ss.song_duration,
+            genres: ss.song_genres,
+          },
+        }));
+        season.song_count = seasonSongs.length;
       }
 
       return res.status(200).json(seasons);
