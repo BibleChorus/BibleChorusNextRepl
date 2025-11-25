@@ -1,7 +1,19 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
-import { auth } from '@/auth';
+import jwt from 'jsonwebtoken';
 import { JourneyWithSeasons } from '@/types/journey';
+
+function getUserIdFromRequest(req: NextApiRequest): number | null {
+  const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return null;
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+    return decoded.userId;
+  } catch (error) {
+    return null;
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -27,8 +39,8 @@ export default async function handler(
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const session = await auth(req, res);
-    const isOwner = session?.user?.id === String(user.id);
+    const currentUserId = getUserIdFromRequest(req);
+    const isOwner = currentUserId === user.id;
 
     let profile = await db('journey_profiles')
       .where({ user_id: user.id })

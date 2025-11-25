@@ -1,6 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
-import { auth } from '@/auth';
+import jwt from 'jsonwebtoken';
+
+function getUserIdFromRequest(req: NextApiRequest): number | null {
+  const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return null;
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+    return decoded.userId;
+  } catch (error) {
+    return null;
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,13 +22,12 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const session = await auth(req, res);
+  const userId = getUserIdFromRequest(req);
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const userId = parseInt(session.user.id);
   const { search, exclude_season } = req.query;
 
   try {

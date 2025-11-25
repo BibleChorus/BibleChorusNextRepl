@@ -1,19 +1,29 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
-import { auth } from '@/auth';
-import { JourneyProfile, UpdateJourneyProfileRequest } from '@/types/journey';
+import jwt from 'jsonwebtoken';
+import { UpdateJourneyProfileRequest } from '@/types/journey';
+
+function getUserIdFromRequest(req: NextApiRequest): number | null {
+  const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return null;
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+    return decoded.userId;
+  } catch (error) {
+    return null;
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const session = await auth(req, res);
+  const userId = getUserIdFromRequest(req);
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
-  const userId = parseInt(session.user.id);
 
   if (req.method === 'GET') {
     try {
