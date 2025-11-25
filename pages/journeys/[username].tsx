@@ -246,6 +246,17 @@ export default function JourneyPage() {
 
   const hasSeasons = journey.seasons && journey.seasons.length > 0;
 
+  const themeBackgrounds: Record<string, string> = {
+    indigo: 'from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30',
+    purple: 'from-slate-50 via-white to-purple-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950/30',
+    pink: 'from-slate-50 via-white to-pink-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-pink-950/30',
+    amber: 'from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-amber-950/30',
+    emerald: 'from-slate-50 via-white to-emerald-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950/30',
+    cyan: 'from-slate-50 via-white to-cyan-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-cyan-950/30',
+  };
+
+  const bgClass = themeBackgrounds[journey.theme_color || 'indigo'] || themeBackgrounds.indigo;
+
   return (
     <>
       <Head>
@@ -257,7 +268,7 @@ export default function JourneyPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30">
+      <div className={`min-h-screen bg-gradient-to-br ${bgClass}`}>
         {isOwner && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}

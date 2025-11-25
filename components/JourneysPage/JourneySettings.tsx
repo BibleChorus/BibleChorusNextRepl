@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save } from 'lucide-react';
 import { FaEye as Eye, FaEyeSlash as EyeOff, FaPalette as Palette, FaGlobe as Globe, FaCog as Settings } from 'react-icons/fa';
@@ -30,11 +29,6 @@ const themeColors = [
   { value: 'cyan', label: 'Cyan', gradient: 'from-cyan-500 to-sky-500' },
 ];
 
-const layoutStyles = [
-  { value: 'timeline', label: 'Timeline', description: 'Elegant vertical timeline with year markers' },
-  { value: 'grid', label: 'Grid', description: 'Modern grid layout with cards' },
-  { value: 'cards', label: 'Cards', description: 'Full-width season cards' },
-];
 
 export const JourneySettings: React.FC<JourneySettingsProps> = ({
   profile,
@@ -49,7 +43,6 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
     is_public: profile.is_public,
     show_song_dates: profile.show_song_dates,
     show_play_counts: profile.show_play_counts,
-    layout_style: profile.layout_style,
   });
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -62,8 +55,7 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
       formData.theme_color !== profile.theme_color ||
       formData.is_public !== profile.is_public ||
       formData.show_song_dates !== profile.show_song_dates ||
-      formData.show_play_counts !== profile.show_play_counts ||
-      formData.layout_style !== profile.layout_style;
+      formData.show_play_counts !== profile.show_play_counts;
     setHasChanges(changed);
   }, [formData, profile]);
 
@@ -173,29 +165,6 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Layout Style</Label>
-                <Select
-                  value={formData.layout_style}
-                  onValueChange={(value: 'timeline' | 'grid' | 'cards') => 
-                    setFormData(prev => ({ ...prev, layout_style: value }))
-                  }
-                >
-                  <SelectTrigger className="bg-white dark:bg-slate-800">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {layoutStyles.map((layout) => (
-                      <SelectItem key={layout.value} value={layout.value}>
-                        <div>
-                          <div className="font-medium">{layout.label}</div>
-                          <div className="text-xs text-slate-500">{layout.description}</div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </div>
 
