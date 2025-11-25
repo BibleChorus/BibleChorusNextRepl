@@ -100,7 +100,7 @@ export default async function handler(
         .returning('*');
 
       const fullSong = await db('journey_season_songs')
-        .where({ id: seasonSong.id })
+        .where({ 'journey_season_songs.id': seasonSong.id })
         .join('songs', 'journey_season_songs.song_id', 'songs.id')
         .select(
           'journey_season_songs.*',
