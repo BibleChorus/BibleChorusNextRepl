@@ -93,8 +93,8 @@ export const AmbientOrbs: React.FC = () => {
       <motion.div 
         className="fixed top-0 left-0 w-96 h-96 rounded-full pointer-events-none z-[-1]"
         style={{
-          background: 'rgba(88, 28, 135, 0.2)',
-          filter: 'blur(100px)'
+          background: 'rgba(212, 175, 55, 0.08)',
+          filter: 'blur(120px)'
         }}
         animate={{
           y: [0, -30, 0],
@@ -105,14 +105,26 @@ export const AmbientOrbs: React.FC = () => {
       <motion.div 
         className="fixed bottom-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none z-[-1]"
         style={{
-          background: 'rgba(30, 58, 138, 0.1)',
-          filter: 'blur(100px)'
+          background: 'rgba(160, 160, 160, 0.05)',
+          filter: 'blur(120px)'
         }}
         animate={{
           y: [0, 30, 0],
           x: [0, -20, 0],
         }}
         transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+      />
+      <motion.div 
+        className="fixed top-1/2 right-1/4 w-72 h-72 rounded-full pointer-events-none z-[-1]"
+        style={{
+          background: 'rgba(229, 229, 229, 0.03)',
+          filter: 'blur(100px)'
+        }}
+        animate={{
+          y: [0, 20, 0],
+          x: [0, -15, 0],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
       />
     </>
   );
