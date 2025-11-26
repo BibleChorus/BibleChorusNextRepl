@@ -97,6 +97,7 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
       id={`season-${season.id}`}
       ref={ref}
       className="relative min-h-screen border-b border-white/5 py-24 md:py-32 px-6 md:px-24"
+      style={{ scrollMarginTop: '64px' }}
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
         <div className="lg:col-span-3 relative">
