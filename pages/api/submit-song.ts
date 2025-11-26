@@ -151,7 +151,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const songId = insertedSong.id;
     console.log('Inserted song ID:', songId);
 
-    if (requiresBibleVerses && bible_verses) {
+    // Save Bible verse connections if provided (even for journey songs with optional verses)
+    if (bible_verses) {
       const verseReferences = bible_verses.split(',').map((v: string) => v.trim());
       console.log('Verse references:', verseReferences);
 
@@ -175,26 +176,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .first();
           console.log(`Query for ${verseRef}:`, result);
         }
-        throw new Error('No matching Bible verses found');
+        // Only throw error if Bible verses were required
+        if (requiresBibleVerses) {
+          throw new Error('No matching Bible verses found');
+        }
+        console.log('Bible verses not found, but not required for this song type. Continuing without verse connections.');
+      } else {
+        await trx('song_verses').insert(
+          verseData.map(verse => ({ 
+            song_id: songId,
+            verse_id: verse.id 
+          }))
+        );
+
+        await updateBibleVerses(trx, songId, {
+          ...req.body,
+          music_ai_generated: finalMusicAiGenerated,
+          lyrics_scripture_adherence: mappedAdherence,
+        });
       }
-
-      await trx('song_verses').insert(
-        verseData.map(verse => ({ 
-          song_id: songId,
-          verse_id: verse.id 
-        }))
-      );
-
-      await updateBibleVerses(trx, songId, {
-        ...req.body,
-        music_ai_generated: finalMusicAiGenerated,
-        lyrics_scripture_adherence: mappedAdherence,
-      });
     }
 
     await trx.commit();
     
-    if (requiresBibleVerses) {
+    // Refresh materialized view if any Bible verses were connected
+    if (bible_verses) {
       await refreshProgressMaterializedView();
     }
     
