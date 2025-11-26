@@ -17,7 +17,7 @@ import { Check, ChevronsUpDown, X, Trash2, File as FileIcon, AlertCircle, Calend
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Calendar } from "@/components/ui/calendar"
-import { format } from "date-fns"
+import { format, parse, isValid } from "date-fns"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
 import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
@@ -934,36 +934,55 @@ function UploadContent() {
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
                             <FormLabel>When did this song originate?</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
+                            <div className="flex gap-2">
+                              <Input
+                                type="text"
+                                placeholder="MM/DD/YYYY"
+                                value={journeyDate ? format(journeyDate, "MM/dd/yyyy") : ""}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (!value) {
+                                    setJourneyDate(undefined);
+                                    field.onChange(undefined);
+                                    return;
+                                  }
+                                  const parsed = parse(value, "MM/dd/yyyy", new Date());
+                                  if (isValid(parsed) && parsed <= new Date()) {
+                                    setJourneyDate(parsed);
+                                    field.onChange(format(parsed, 'yyyy-MM-dd'));
+                                  }
+                                }}
+                                className="flex-1"
+                              />
+                              <Popover>
+                                <PopoverTrigger asChild>
                                   <Button
                                     variant="outline"
-                                    className={cn(
-                                      "w-full pl-3 text-left font-normal",
-                                      !journeyDate && "text-muted-foreground"
-                                    )}
+                                    size="icon"
+                                    className="shrink-0"
                                   >
-                                    {journeyDate ? format(journeyDate, "PPP") : <span>Pick a date</span>}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    <CalendarIcon className="h-4 w-4" />
                                   </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={journeyDate}
-                                  onSelect={(date) => {
-                                    setJourneyDate(date);
-                                    field.onChange(date ? format(date, 'yyyy-MM-dd') : undefined);
-                                  }}
-                                  disabled={(date) => date > new Date()}
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                  <Calendar
+                                    mode="single"
+                                    selected={journeyDate}
+                                    onSelect={(date) => {
+                                      setJourneyDate(date);
+                                      field.onChange(date ? format(date, 'yyyy-MM-dd') : undefined);
+                                    }}
+                                    disabled={(date) => date > new Date()}
+                                    captionLayout="dropdown-buttons"
+                                    fromYear={1950}
+                                    toYear={new Date().getFullYear()}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
                             <FormDescription>
-                              The date when this song was first created or when the inspiration occurred.
+                              Type a date (MM/DD/YYYY) or use the calendar. Pick when this song was first created or when the inspiration occurred.
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
