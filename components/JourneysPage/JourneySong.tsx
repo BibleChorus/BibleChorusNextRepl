@@ -181,11 +181,13 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         {song.duration > 0 ? formatDuration(song.duration) : '--:--'}
       </span>
 
-      <LyricsBibleComparisonDialog
-        isOpen={showLyrics}
-        onClose={() => setShowLyrics(false)}
-        song={songAny}
-      />
+      <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+        <LyricsBibleComparisonDialog
+          isOpen={showLyrics}
+          onClose={() => setShowLyrics(false)}
+          song={songAny}
+        />
+      </div>
     </motion.div>
   );
 };
