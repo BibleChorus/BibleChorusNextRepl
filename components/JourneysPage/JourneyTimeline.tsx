@@ -101,26 +101,26 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
         <div className="lg:col-span-3 relative">
           <div className="lg:sticky lg:top-32">
-            <motion.div 
-              className="absolute -left-4 md:-left-12 top-0 select-none pointer-events-none"
-              initial={{ opacity: 0 }}
-              animate={isInView ? { opacity: 0.1 } : { opacity: 0 }}
-              transition={{ duration: 1.5, ease: easeOutExpo }}
-            >
-              <span 
-                className="text-8xl md:text-[10rem] font-serif text-silk"
-                style={{ fontFamily: "'Italiana', serif" }}
-              >
-                {year}
-              </span>
-            </motion.div>
-
             <motion.div
               variants={staggerContainer}
               initial="hidden"
               animate={isInView ? "visible" : "hidden"}
-              className="relative z-10 pt-20 md:pt-28"
+              className="relative z-10"
             >
+              <motion.div 
+                className="mb-6 select-none"
+                initial={{ opacity: 0 }}
+                animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ duration: 1.5, ease: easeOutExpo }}
+              >
+                <span 
+                  className="text-6xl md:text-8xl font-serif text-silk/20"
+                  style={{ fontFamily: "'Italiana', serif" }}
+                >
+                  {year}
+                </span>
+              </motion.div>
+
               <motion.span
                 variants={revealVariants}
                 className="text-gold text-xs tracking-[0.3em] font-light uppercase block mb-4"

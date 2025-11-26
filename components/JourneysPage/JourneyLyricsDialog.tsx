@@ -71,6 +71,7 @@ const JourneyLyricsDialog: React.FC<JourneyLyricsDialogProps> = ({ isOpen, onClo
             transition={{ duration: 0.3 }}
             className="fixed inset-0 bg-void/90 backdrop-blur-xl z-[100]"
             onClick={onClose}
+            data-journey-dialog
           />
           
           <motion.div
@@ -80,6 +81,7 @@ const JourneyLyricsDialog: React.FC<JourneyLyricsDialogProps> = ({ isOpen, onClo
             transition={{ duration: 0.5, ease: easeOutExpo }}
             className="fixed inset-4 md:inset-12 lg:inset-20 bg-[#0a0a0a] border border-white/10 z-[101] overflow-hidden flex flex-col"
             style={{ fontFamily: "'Manrope', sans-serif" }}
+            data-journey-dialog
           >
             <div className="flex items-center justify-between px-6 md:px-10 py-6 border-b border-white/10">
               <div>

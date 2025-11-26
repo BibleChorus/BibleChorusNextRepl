@@ -68,8 +68,12 @@ export const CustomCursor: React.FC = () => {
     <>
       <style jsx global>{`
         .journey-cursor-active,
-        .journey-cursor-active * {
+        .journey-cursor-active *:not([data-journey-dialog]):not([data-journey-dialog] *) {
           cursor: none !important;
+        }
+        [data-journey-dialog],
+        [data-journey-dialog] * {
+          cursor: auto !important;
         }
       `}</style>
       <motion.div
