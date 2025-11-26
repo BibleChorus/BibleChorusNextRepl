@@ -15,15 +15,21 @@ export const FilmGrain: React.FC = () => {
 };
 
 export const CustomCursor: React.FC = () => {
-  const [position, setPosition] = useState({ x: -100, y: -100 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     setIsTouchDevice(isTouch);
     
     if (isTouch) return;
+
+    setPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    
+    document.body.classList.add('journey-cursor-active');
 
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
@@ -49,35 +55,43 @@ export const CustomCursor: React.FC = () => {
     document.addEventListener('mouseout', handleHoverEnd);
 
     return () => {
+      document.body.classList.remove('journey-cursor-active');
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseover', handleHoverStart);
       document.removeEventListener('mouseout', handleHoverEnd);
     };
   }, []);
 
-  if (isTouchDevice) return null;
+  if (!isClient || isTouchDevice) return null;
 
   return (
     <>
       <style jsx global>{`
+        .journey-cursor-active,
         .journey-cursor-active * {
           cursor: none !important;
         }
       `}</style>
       <motion.div
-        className="fixed top-0 left-0 w-3 h-3 bg-gold rounded-full pointer-events-none z-[9999] mix-blend-difference"
-        animate={{ x: position.x - 6, y: position.y - 6 }}
+        className="fixed top-0 left-0 w-3 h-3 bg-gold rounded-full pointer-events-none z-[9999]"
+        initial={false}
+        animate={{ 
+          x: position.x - 6, 
+          y: position.y - 6,
+          opacity: 1
+        }}
         transition={{ type: 'spring', stiffness: 800, damping: 35, mass: 0.3 }}
       />
       <motion.div
-        className="fixed top-0 left-0 rounded-full pointer-events-none z-[9998]"
+        className="fixed top-0 left-0 rounded-full pointer-events-none z-[9998] border"
+        initial={false}
         animate={{ 
           x: position.x - (isHovering ? 30 : 18), 
           y: position.y - (isHovering ? 30 : 18),
           width: isHovering ? 60 : 36,
           height: isHovering ? 60 : 36,
+          opacity: 1,
           backgroundColor: isHovering ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
-          borderWidth: 1,
           borderColor: isHovering ? 'rgba(212, 175, 55, 0.5)' : 'rgba(229, 229, 229, 0.3)'
         }}
         transition={{ type: 'spring', stiffness: 200, damping: 20 }}
@@ -164,8 +178,7 @@ export const JourneyLayoutWrapper: React.FC<JourneyLayoutWrapperProps> = ({ chil
       ref={containerRef}
       className="min-h-screen bg-[#050505] text-silk font-sans antialiased selection:bg-white selection:text-black"
       style={{ 
-        fontFamily: "'Manrope', sans-serif",
-        cursor: 'none'
+        fontFamily: "'Manrope', sans-serif"
       }}
     >
       <style jsx global>{`

@@ -358,7 +358,7 @@ export default function JourneyPage() {
 
       <div 
         ref={containerRef}
-        className="min-h-screen selection:bg-white selection:text-black relative fixed inset-0 overflow-y-auto overflow-x-hidden journey-cursor-active"
+        className="min-h-screen selection:bg-white selection:text-black relative fixed inset-0 overflow-y-auto overflow-x-hidden"
         style={{ 
           backgroundColor: '#050505',
           color: '#e5e5e5',
