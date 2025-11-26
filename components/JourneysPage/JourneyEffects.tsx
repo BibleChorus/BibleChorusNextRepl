@@ -15,21 +15,19 @@ export const FilmGrain: React.FC = () => {
 };
 
 export const CustomCursor: React.FC = () => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: -100, y: -100 });
   const [isHovering, setIsHovering] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(true);
 
   useEffect(() => {
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if (isTouchDevice) return;
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(isTouch);
+    
+    if (isTouch) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
-      setIsVisible(true);
     };
-
-    const handleMouseEnter = () => setIsVisible(true);
-    const handleMouseLeave = () => setIsVisible(false);
 
     const handleHoverStart = (e: Event) => {
       const target = e.target as HTMLElement;
@@ -47,41 +45,42 @@ export const CustomCursor: React.FC = () => {
     const handleHoverEnd = () => setIsHovering(false);
 
     document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseenter', handleMouseEnter);
-    document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseover', handleHoverStart);
     document.addEventListener('mouseout', handleHoverEnd);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseenter', handleMouseEnter);
-      document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('mouseover', handleHoverStart);
       document.removeEventListener('mouseout', handleHoverEnd);
     };
   }, []);
 
-  if (!isVisible) return null;
+  if (isTouchDevice) return null;
 
   return (
     <>
+      <style jsx global>{`
+        .journey-cursor-active * {
+          cursor: none !important;
+        }
+      `}</style>
       <motion.div
-        className="fixed top-0 left-0 w-2 h-2 bg-white rounded-full pointer-events-none z-[9999]"
-        animate={{ x: position.x - 4, y: position.y - 4 }}
-        transition={{ type: 'spring', stiffness: 500, damping: 28, mass: 0.5 }}
+        className="fixed top-0 left-0 w-3 h-3 bg-gold rounded-full pointer-events-none z-[9999] mix-blend-difference"
+        animate={{ x: position.x - 6, y: position.y - 6 }}
+        transition={{ type: 'spring', stiffness: 800, damping: 35, mass: 0.3 }}
       />
       <motion.div
-        className="fixed top-0 left-0 rounded-full pointer-events-none z-[9998] border border-white/50"
+        className="fixed top-0 left-0 rounded-full pointer-events-none z-[9998]"
         animate={{ 
-          x: position.x - (isHovering ? 30 : 20), 
-          y: position.y - (isHovering ? 30 : 20),
-          width: isHovering ? 60 : 40,
-          height: isHovering ? 60 : 40,
-          backgroundColor: isHovering ? 'rgba(255,255,255,0.1)' : 'transparent',
-          borderColor: isHovering ? 'transparent' : 'rgba(255,255,255,0.5)'
+          x: position.x - (isHovering ? 30 : 18), 
+          y: position.y - (isHovering ? 30 : 18),
+          width: isHovering ? 60 : 36,
+          height: isHovering ? 60 : 36,
+          backgroundColor: isHovering ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
+          borderWidth: 1,
+          borderColor: isHovering ? 'rgba(212, 175, 55, 0.5)' : 'rgba(229, 229, 229, 0.3)'
         }}
-        transition={{ type: 'spring', stiffness: 150, damping: 15 }}
-        style={{ backdropFilter: isHovering ? 'blur(2px)' : 'none' }}
+        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
       />
     </>
   );

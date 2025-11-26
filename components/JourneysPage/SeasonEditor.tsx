@@ -7,11 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { SongSelector } from './SongSelector';
 import { 
-  Plus, Pencil, Trash2, Music, GripVertical, ChevronDown, ChevronUp, 
+  Plus, Pencil, Trash2, Music, ChevronDown, ChevronUp, 
   Calendar, Save, X, Sparkles 
 } from 'lucide-react';
 import { FaEye as Eye, FaEyeSlash as EyeOff } from 'react-icons/fa';
@@ -27,14 +26,6 @@ interface SeasonEditorProps {
   onRefresh: () => void;
 }
 
-const themeColors = [
-  { value: 'indigo', label: 'Indigo', color: 'bg-indigo-500' },
-  { value: 'purple', label: 'Purple', color: 'bg-purple-500' },
-  { value: 'pink', label: 'Pink', color: 'bg-pink-500' },
-  { value: 'amber', label: 'Amber', color: 'bg-amber-500' },
-  { value: 'emerald', label: 'Emerald', color: 'bg-emerald-500' },
-  { value: 'cyan', label: 'Cyan', color: 'bg-cyan-500' },
-];
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -78,38 +69,15 @@ const SeasonForm = memo(function SeasonForm({
       exit={{ opacity: 0, height: 0 }}
       className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 space-y-4"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="title">Season Title *</Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={(e) => handleChange('title', e.target.value)}
-            placeholder="e.g., Season of Growth"
-            className="bg-white dark:bg-slate-800"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="theme">Theme Color</Label>
-          <Select
-            value={formData.theme_color}
-            onValueChange={(value) => handleChange('theme_color', value)}
-          >
-            <SelectTrigger className="bg-white dark:bg-slate-800">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {themeColors.map(color => (
-                <SelectItem key={color.value} value={color.value}>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${color.color}`} />
-                    {color.label}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="title">Season Title *</Label>
+        <Input
+          id="title"
+          value={formData.title}
+          onChange={(e) => handleChange('title', e.target.value)}
+          placeholder="e.g., Season of Growth"
+          className="bg-white dark:bg-slate-800"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -372,10 +340,6 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
             } overflow-hidden`}
           >
             <div className="p-4 flex items-center gap-4">
-              <div className="cursor-grab">
-                <GripVertical className="w-5 h-5 text-slate-400" />
-              </div>
-
               <div 
                 className="flex-1 cursor-pointer"
                 onClick={() => toggleExpanded(season.id)}

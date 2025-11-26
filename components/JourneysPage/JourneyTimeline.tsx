@@ -84,7 +84,7 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   
   const year = season.year || new Date(season.start_date).getFullYear();
-  const seasonNumber = totalSeasons - index;
+  const seasonNumber = index + 1;
 
   const formatDateRange = () => {
     const start = format(parseISO(season.start_date), 'MMMM yyyy');

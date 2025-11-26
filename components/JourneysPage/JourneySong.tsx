@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { SeasonSong } from '@/types/journey';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { format, parseISO } from 'date-fns';
+import { BookOpen } from 'lucide-react';
+import JourneyLyricsDialog from './JourneyLyricsDialog';
 
 interface JourneySongProps {
   seasonSong: SeasonSong;
@@ -22,9 +24,14 @@ export const JourneySong: React.FC<JourneySongProps> = ({
   trackNumber = 1,
 }) => {
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
+  const [showLyrics, setShowLyrics] = useState(false);
   const song = seasonSong.song;
   
   if (!song) return null;
+  
+  const songAny = song as any;
+  const hasLyricsOrVerses = (songAny.lyrics && songAny.lyrics.trim().length > 0) || 
+                            (songAny.bible_verses && songAny.bible_verses.length > 0);
 
   const isCurrentSong = currentSong?.id === song.id;
   const isCurrentlyPlaying = isCurrentSong && isPlaying;
@@ -150,6 +157,19 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         </div>
       </div>
 
+      {hasLyricsOrVerses && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowLyrics(true);
+          }}
+          className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:border-gold/50 hover:bg-gold/5"
+          aria-label="View lyrics and scripture"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-mist group-hover:text-gold transition-colors" />
+        </button>
+      )}
+
       <span 
         className={`text-xs font-mono flex-shrink-0 transition-colors duration-300 ${
           isCurrentSong ? 'text-gold' : 'text-mist'
@@ -157,6 +177,12 @@ export const JourneySong: React.FC<JourneySongProps> = ({
       >
         {song.duration > 0 ? formatDuration(song.duration) : '--:--'}
       </span>
+
+      <JourneyLyricsDialog
+        isOpen={showLyrics}
+        onClose={() => setShowLyrics(false)}
+        song={song}
+      />
     </motion.div>
   );
 };

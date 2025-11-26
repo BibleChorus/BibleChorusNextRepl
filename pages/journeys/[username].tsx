@@ -358,12 +358,11 @@ export default function JourneyPage() {
 
       <div 
         ref={containerRef}
-        className="min-h-screen selection:bg-white selection:text-black relative fixed inset-0 overflow-y-auto overflow-x-hidden"
+        className="min-h-screen selection:bg-white selection:text-black relative fixed inset-0 overflow-y-auto overflow-x-hidden journey-cursor-active"
         style={{ 
           backgroundColor: '#050505',
           color: '#e5e5e5',
-          fontFamily: "'Manrope', sans-serif",
-          cursor: 'none'
+          fontFamily: "'Manrope', sans-serif"
         }}
       >
         <style jsx global>{`
@@ -391,7 +390,7 @@ export default function JourneyPage() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="fixed top-20 right-4 z-50"
+            className="fixed top-28 right-8 z-50"
           >
             <Link href="/journeys/edit">
               <Button
@@ -404,15 +403,15 @@ export default function JourneyPage() {
           </motion.div>
         )}
 
-        <nav className="fixed top-0 w-full p-8 flex justify-between items-center z-40 mix-blend-difference">
+        <nav className="fixed top-16 w-full px-8 py-4 flex justify-between items-center z-40 pointer-events-none">
           <Link 
             href="/journeys" 
-            className="text-xl tracking-widest hover-trigger"
+            className="text-xl tracking-widest hover-trigger pointer-events-auto text-silk/80 hover:text-silk transition-colors"
             style={{ fontFamily: "'Italiana', serif" }}
           >
             JOURNEYS.
           </Link>
-          <div className="hidden md:flex gap-8 items-center">
+          <div className="hidden md:flex gap-8 items-center pointer-events-auto">
             <SeasonsDropdown seasons={journey.seasons || []} />
           </div>
         </nav>

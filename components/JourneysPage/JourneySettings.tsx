@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save } from 'lucide-react';
-import { FaEye as Eye, FaEyeSlash as EyeOff, FaPalette as Palette, FaGlobe as Globe, FaCog as Settings } from 'react-icons/fa';
+import { FaEye as Eye, FaEyeSlash as EyeOff, FaGlobe as Globe, FaCog as Settings } from 'react-icons/fa';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,14 +20,6 @@ interface JourneySettingsProps {
   onProfileUpdate: (profile: JourneyProfile) => void;
 }
 
-const themeColors = [
-  { value: 'indigo', label: 'Indigo', gradient: 'from-indigo-500 to-blue-500' },
-  { value: 'purple', label: 'Purple', gradient: 'from-purple-500 to-pink-500' },
-  { value: 'pink', label: 'Pink', gradient: 'from-pink-500 to-rose-500' },
-  { value: 'amber', label: 'Amber', gradient: 'from-amber-500 to-orange-500' },
-  { value: 'emerald', label: 'Emerald', gradient: 'from-emerald-500 to-teal-500' },
-  { value: 'cyan', label: 'Cyan', gradient: 'from-cyan-500 to-sky-500' },
-];
 
 
 export const JourneySettings: React.FC<JourneySettingsProps> = ({
@@ -77,14 +69,13 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
     }
   };
 
-  const currentTheme = themeColors.find(t => t.value === formData.theme_color) || themeColors[0];
 
   return (
     <div className="space-y-6">
       <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border-white/20 dark:border-slate-700/40">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl bg-gradient-to-r ${currentTheme.gradient}`}>
+            <div className="p-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500">
               <Settings className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -133,38 +124,6 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
                   className="bg-white dark:bg-slate-800 min-h-[120px]"
                 />
               </div>
-            </div>
-          </div>
-
-          <div className="border-t border-slate-200/60 dark:border-slate-700/60 pt-6 space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-              <Palette className="w-4 h-4" />
-              Appearance
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Theme Color</Label>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {themeColors.map((color) => (
-                    <button
-                      key={color.value}
-                      onClick={() => setFormData(prev => ({ ...prev, theme_color: color.value }))}
-                      className={`relative p-3 rounded-xl transition-all ${
-                        formData.theme_color === color.value 
-                          ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white scale-105' 
-                          : 'hover:scale-105'
-                      }`}
-                    >
-                      <div className={`h-8 rounded-lg bg-gradient-to-r ${color.gradient}`} />
-                      <span className="block text-xs mt-1 text-slate-600 dark:text-slate-400">
-                        {color.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
             </div>
           </div>
 
