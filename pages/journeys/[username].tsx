@@ -29,15 +29,27 @@ const SeasonsDropdown: React.FC<{ seasons: Season[] }> = ({ seasons }) => {
   });
 
   const scrollToSeason = (seasonId: number) => {
-    const element = document.getElementById(`season-${seasonId}`);
-    if (element) {
-      const topBarHeight = 64;
-      const elementRect = element.getBoundingClientRect();
-      const absoluteElementTop = elementRect.top + window.pageYOffset;
-      const scrollPosition = absoluteElementTop - topBarHeight;
-      window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
-    }
     setIsOpen(false);
+    
+    // Small delay to ensure dropdown closes and layout is stable
+    requestAnimationFrame(() => {
+      const element = document.getElementById(`season-${seasonId}`);
+      if (element) {
+        const topBarHeight = 64;
+        // Get the current scroll position and element position
+        const rect = element.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        // Calculate where the top of the element is in document coordinates
+        const elementTop = rect.top + scrollTop;
+        // Scroll so element top aligns with bottom of top bar
+        const targetScroll = elementTop - topBarHeight;
+        
+        window.scrollTo({ 
+          top: Math.max(0, targetScroll), 
+          behavior: 'smooth' 
+        });
+      }
+    });
   };
 
   if (seasons.length === 0) return null;
