@@ -11,6 +11,24 @@ export interface Playlist {
   song_count?: number;
 }
 
+export type ScriptureAdherence = 
+  | 'word_for_word' 
+  | 'close_paraphrase' 
+  | 'creative_inspiration' 
+  | 'somewhat_connected' 
+  | 'no_connection';
+
+export type MusicOrigin = 'human' | 'ai' | 'ai_cover_of_human';
+
+export type JourneySongOrigin = 
+  | 'prior_recording' 
+  | 'journal_entry' 
+  | 'dream' 
+  | 'testimony' 
+  | 'life_milestone' 
+  | 'prophetic_word' 
+  | 'other';
+
 export interface Song {
   id: number;
   title: string;
@@ -22,19 +40,23 @@ export interface Song {
   created_at: string;
   song_art_url?: string;
   bible_translation_used?: string;
-  lyrics_scripture_adherence?: string;
+  lyrics_scripture_adherence?: ScriptureAdherence;
   is_continuous_passage?: boolean;
   bible_verses?: { book: string; chapter: number; verse: number }[];
-  duration: number; // Duration of the song in seconds
-  lyrics?: string; // Full lyrics of the song
-  lyric_ai_prompt?: string; // AI prompt used for generating lyrics (if applicable)
-  music_ai_prompt?: string; // AI prompt used for generating music (if applicable)
-  music_model_used?: string; // AI model used for music generation (if applicable)
-  ai_used_for_lyrics?: boolean; // Indicates if AI was used to generate lyrics
-  music_ai_generated?: boolean; // Indicates if AI was used to generate music
-  play_count?: number; // Number of times the song has been played
-  is_new?: boolean; // Indicates if the song is unread by relevant users
+  duration: number;
+  lyrics?: string;
+  lyric_ai_prompt?: string;
+  music_ai_prompt?: string;
+  music_model_used?: string;
+  ai_used_for_lyrics?: boolean;
+  music_ai_generated?: boolean; // Legacy field, use music_origin instead
+  music_origin?: MusicOrigin;
+  play_count?: number;
+  is_new?: boolean;
   comments_count?: number;
+  journey_date?: string;
+  is_journey_song?: boolean;
+  journey_song_origin?: JourneySongOrigin;
 }
 
 export interface User {
