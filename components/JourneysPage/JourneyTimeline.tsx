@@ -96,105 +96,119 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
     <section 
       id={`season-${season.id}`}
       ref={ref}
-      className="relative min-h-screen border-b border-white/5 py-24 md:py-32 px-6 md:px-24"
+      className="relative border-b border-white/5"
       style={{ scrollMarginTop: '64px' }}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-        <div className="lg:col-span-3 relative">
-          <div className="lg:sticky lg:top-32">
-            <motion.div
-              variants={staggerContainer}
-              initial="hidden"
-              animate={isInView ? "visible" : "hidden"}
-              className="relative z-10"
+      {/* Season content wrapper with proper padding */}
+      <div className="py-16 md:py-24 px-6 md:px-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+          {/* Sticky sidebar - pinned to top bar */}
+          <div className="lg:col-span-3 relative">
+            <div 
+              className="lg:sticky"
+              style={{ top: '80px' }}
             >
-              <motion.div 
-                className="mb-6 select-none"
-                initial={{ opacity: 0 }}
-                animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-                transition={{ duration: 1.5, ease: easeOutExpo }}
+              <motion.div
+                variants={staggerContainer}
+                initial="hidden"
+                animate={isInView ? "visible" : "hidden"}
+                className="relative z-10"
               >
-                <span 
-                  className="text-6xl md:text-8xl font-serif text-silk/20"
-                  style={{ fontFamily: "'Italiana', serif" }}
+                {/* Year - large watermark */}
+                <motion.div 
+                  className="mb-4 select-none"
+                  initial={{ opacity: 0 }}
+                  animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+                  transition={{ duration: 1.5, ease: easeOutExpo }}
                 >
-                  {year}
-                </span>
-              </motion.div>
-
-              <motion.span
-                variants={revealVariants}
-                className="text-gold text-xs tracking-[0.3em] font-light uppercase block mb-4"
-                style={{ fontFamily: "'Manrope', sans-serif" }}
-              >
-                SEASON {toRomanNumeral(seasonNumber)}
-              </motion.span>
-
-              <motion.h2
-                variants={revealVariants}
-                className="text-4xl md:text-5xl font-serif italic text-silk mb-6"
-                style={{ fontFamily: "'Italiana', serif" }}
-              >
-                {season.title}
-              </motion.h2>
-
-              <motion.span
-                variants={revealVariants}
-                className="text-mist text-xs tracking-widest uppercase block mb-6"
-                style={{ fontFamily: "'Manrope', sans-serif" }}
-              >
-                {formatDateRange()}
-              </motion.span>
-
-              {season.description && (
-                <motion.p
-                  variants={revealVariants}
-                  className="text-sm font-light text-mist leading-7 mb-8"
-                  style={{ fontFamily: "'Manrope', sans-serif" }}
-                >
-                  {season.description}
-                </motion.p>
-              )}
-
-              {season.scripture_reference && (
-                <motion.div
-                  variants={revealVariants}
-                  className="flex items-start gap-3 mb-8"
-                >
-                  <BookOpen className="w-4 h-4 text-gold mt-0.5 flex-shrink-0" />
                   <span 
-                    className="text-sm font-light text-gold/80 tracking-wide"
-                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                    className="text-5xl md:text-7xl lg:text-8xl font-serif text-silk/15"
+                    style={{ fontFamily: "'Italiana', serif" }}
                   >
-                    {season.scripture_reference}
+                    {year}
                   </span>
                 </motion.div>
-              )}
 
-              {season.cover_image_url && (
-                <motion.div
+                {/* Season number */}
+                <motion.span
                   variants={revealVariants}
-                  className="relative overflow-hidden rounded-sm group"
+                  className="text-gold text-[10px] tracking-[0.3em] font-light uppercase block mb-3"
+                  style={{ fontFamily: "'Manrope', sans-serif" }}
                 >
-                  <motion.img
-                    src={season.cover_image_url}
-                    alt={season.title}
-                    className="w-full h-48 md:h-64 object-cover grayscale hover:grayscale-0 transition-all duration-700"
-                    variants={imageRevealVariants}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-void/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                </motion.div>
-              )}
-            </motion.div>
-          </div>
-        </div>
+                  SEASON {toRomanNumeral(seasonNumber)}
+                </motion.span>
 
-        <motion.div 
-          className="lg:col-span-9 lg:pl-8"
-          variants={staggerContainer}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-        >
+                {/* Season title */}
+                <motion.h2
+                  variants={revealVariants}
+                  className="text-3xl md:text-4xl lg:text-5xl font-serif italic text-silk mb-4"
+                  style={{ fontFamily: "'Italiana', serif" }}
+                >
+                  {season.title}
+                </motion.h2>
+
+                {/* Date range */}
+                <motion.span
+                  variants={revealVariants}
+                  className="text-mist text-[10px] tracking-widest uppercase block mb-6"
+                  style={{ fontFamily: "'Manrope', sans-serif" }}
+                >
+                  {formatDateRange()}
+                </motion.span>
+
+                {/* Description */}
+                {season.description && (
+                  <motion.p
+                    variants={revealVariants}
+                    className="text-sm font-light text-mist/80 leading-7 mb-6 max-w-xs"
+                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                  >
+                    {season.description}
+                  </motion.p>
+                )}
+
+                {/* Scripture reference */}
+                {season.scripture_reference && (
+                  <motion.div
+                    variants={revealVariants}
+                    className="flex items-start gap-3 mb-6"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-gold mt-0.5 flex-shrink-0" />
+                    <span 
+                      className="text-xs font-light text-gold/70 tracking-wide"
+                      style={{ fontFamily: "'Manrope', sans-serif" }}
+                    >
+                      {season.scripture_reference}
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* Cover image */}
+                {season.cover_image_url && (
+                  <motion.div
+                    variants={revealVariants}
+                    className="relative overflow-hidden rounded-sm group max-w-[280px]"
+                  >
+                    <motion.img
+                      src={season.cover_image_url}
+                      alt={season.title}
+                      className="w-full h-40 md:h-48 object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                      variants={imageRevealVariants}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-void/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </motion.div>
+                )}
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Songs column - scrolls naturally */}
+          <motion.div 
+            className="lg:col-span-9 lg:pl-8"
+            variants={staggerContainer}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+          >
           {season.reflection && (
             <motion.div
               variants={revealVariants}
@@ -252,6 +266,7 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
             </motion.div>
           )}
         </motion.div>
+        </div>
       </div>
     </section>
   );
