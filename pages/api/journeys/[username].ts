@@ -88,9 +88,18 @@ export default async function handler(
           'songs.duration as song_duration',
           'songs.play_count as song_play_count',
           'songs.created_at as song_created_at',
-          'songs.genres as song_genres'
+          'songs.genres as song_genres',
+          'songs.lyrics as song_lyrics',
+          'songs.bible_translation_used as song_bible_translation_used'
         )
         .orderBy('journey_season_songs.display_order', 'asc');
+
+      for (const ss of seasonSongs) {
+        const bibleVerses = await db('bible_verses')
+          .whereRaw('? = ANY(ai_lyrics_song_ids) OR ? = ANY(human_lyrics_song_ids)', [ss.song_id, ss.song_id])
+          .select('book', 'chapter', 'verse');
+        ss.bible_verses = bibleVerses;
+      }
 
       season.songs = seasonSongs.map((ss: any) => ({
         id: ss.id,
@@ -111,6 +120,9 @@ export default async function handler(
           play_count: profile.show_play_counts ? ss.song_play_count : undefined,
           created_at: profile.show_song_dates ? ss.song_created_at : undefined,
           genres: ss.song_genres,
+          lyrics: ss.song_lyrics,
+          bible_translation_used: ss.song_bible_translation_used,
+          bible_verses: ss.bible_verses,
         },
       }));
     }

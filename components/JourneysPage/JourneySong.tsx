@@ -141,7 +141,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         <div className="flex items-center gap-3 mt-1">
           {showDate && song.created_at && (
             <span className="text-[10px] text-mist uppercase tracking-widest">
-              {format(parseISO(song.created_at), 'MMMM do')}
+              {format(parseISO(song.created_at), 'MMMM do, yyyy')}
             </span>
           )}
           {seasonSong.personal_note && (
