@@ -149,19 +149,19 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5, duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4"
+        className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center"
       >
-        <span 
-          className="text-[10px] tracking-[0.3em] uppercase text-silk/60"
-          style={{ fontFamily: "'Manrope', sans-serif" }}
-        >
-          Begin
-        </span>
         <motion.div
-          animate={{ opacity: [0.3, 0.7, 0.3] }}
+          animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="w-[1px] h-16 bg-gradient-to-b from-transparent via-white to-transparent opacity-50"
-        />
+          className="w-5 h-8 border border-white/20 rounded-full flex items-start justify-center pt-1.5"
+        >
+          <motion.div 
+            className="w-1 h-1.5 bg-white/40 rounded-full"
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </motion.div>
       </motion.div>
     </motion.div>
   );

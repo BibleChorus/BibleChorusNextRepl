@@ -2,9 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import { JourneyWithSeasons } from '@/types/journey';
+import { JourneyWithSeasons, Season } from '@/types/journey';
 import { JourneyHero } from '@/components/JourneysPage/JourneyHero';
 import { JourneyTimeline } from '@/components/JourneysPage/JourneyTimeline';
 import { 
@@ -14,19 +14,127 @@ import {
   ScrollProgress 
 } from '@/components/JourneysPage/JourneyEffects';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSidebar } from '@/contexts/SidebarContext';
 import { Button } from '@/components/ui/button';
-import { Pencil, Lock, ArrowLeft, Plus, Music } from 'lucide-react';
+import { Pencil, Lock, ArrowLeft, Plus, Music, ChevronDown, Calendar } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+
+const SeasonsDropdown: React.FC<{ seasons: Season[] }> = ({ seasons }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const sortedSeasons = [...seasons].sort((a, b) => {
+    const dateA = new Date(a.start_date).getTime();
+    const dateB = new Date(b.start_date).getTime();
+    return dateA - dateB;
+  });
+
+  const scrollToSeason = (seasonId: number) => {
+    const element = document.getElementById(`season-${seasonId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setIsOpen(false);
+  };
+
+  if (seasons.length === 0) return null;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase font-light hover:text-mist transition-colors hover-trigger"
+      >
+        <Calendar className="w-3 h-3" />
+        <span>Seasons</span>
+        <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40"
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute right-0 top-full mt-4 z-50 min-w-[280px] bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-none overflow-hidden"
+            >
+              <div className="py-2">
+                {sortedSeasons.map((season, index) => {
+                  const year = new Date(season.start_date).getFullYear();
+                  return (
+                    <button
+                      key={season.id}
+                      onClick={() => scrollToSeason(season.id)}
+                      className="w-full px-5 py-4 flex items-center gap-4 hover:bg-white/5 transition-colors text-left group"
+                    >
+                      <span 
+                        className="text-gold/60 text-sm font-light min-w-[50px]"
+                        style={{ fontFamily: "'Italiana', serif" }}
+                      >
+                        {year}
+                      </span>
+                      <div className="flex-1">
+                        <span 
+                          className="text-silk text-sm font-light block group-hover:text-white transition-colors"
+                          style={{ fontFamily: "'Italiana', serif" }}
+                        >
+                          {season.title}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 export default function JourneyPage() {
   const router = useRouter();
   const { username } = router.query;
   const { user, getAuthToken } = useAuth();
+  const { setIsOpen } = useSidebar();
   const [journey, setJourney] = useState<JourneyWithSeasons | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const isOwner = user?.username === username;
+
+  useEffect(() => {
+    setIsOpen(false);
+    
+    const style = document.createElement('style');
+    style.id = 'journey-fullscreen-style';
+    style.textContent = `
+      body, html { background-color: #050505 !important; }
+      .lg\\:ml-16, .lg\\:ml-64, [class*="lg:ml-"] { margin-left: 0 !important; }
+      .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+      .pt-20 { padding-top: 0 !important; }
+      .pb-8 { padding-bottom: 0 !important; }
+      .min-h-screen.bg-background { background-color: #050505 !important; }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      const existingStyle = document.getElementById('journey-fullscreen-style');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+    };
+  }, [setIsOpen]);
 
   useEffect(() => {
     if (!username) return;
@@ -64,7 +172,7 @@ export default function JourneyPage() {
           <title>Loading Journey... | BibleChorus</title>
         </Head>
         <div 
-          className="min-h-screen flex items-center justify-center"
+          className="min-h-screen flex items-center justify-center fixed inset-0"
           style={{ 
             backgroundColor: '#050505', 
             fontFamily: "'Manrope', sans-serif" 
@@ -90,7 +198,7 @@ export default function JourneyPage() {
           <title>{error} | BibleChorus</title>
         </Head>
         <div 
-          className="min-h-screen flex items-center justify-center"
+          className="min-h-screen flex items-center justify-center fixed inset-0"
           style={{ 
             backgroundColor: '#050505', 
             fontFamily: "'Manrope', sans-serif" 
@@ -145,7 +253,7 @@ export default function JourneyPage() {
           <title>Start Your Journey | BibleChorus</title>
         </Head>
         <div 
-          className="min-h-screen relative overflow-hidden"
+          className="min-h-screen relative overflow-hidden fixed inset-0"
           style={{ 
             backgroundColor: '#050505', 
             fontFamily: "'Manrope', sans-serif" 
@@ -250,7 +358,7 @@ export default function JourneyPage() {
 
       <div 
         ref={containerRef}
-        className="min-h-screen selection:bg-white selection:text-black relative"
+        className="min-h-screen selection:bg-white selection:text-black relative fixed inset-0 overflow-y-auto overflow-x-hidden"
         style={{ 
           backgroundColor: '#050505',
           color: '#e5e5e5',
@@ -259,6 +367,9 @@ export default function JourneyPage() {
         }}
       >
         <style jsx global>{`
+          html, body {
+            background-color: #050505 !important;
+          }
           .journey-page ::-webkit-scrollbar {
             width: 6px;
           }
@@ -301,8 +412,8 @@ export default function JourneyPage() {
           >
             JOURNEYS.
           </Link>
-          <div className="hidden md:flex gap-8 text-xs tracking-[0.2em] font-light">
-            <a href="#seasons" className="hover:text-mist transition-colors hover-trigger">SEASONS</a>
+          <div className="hidden md:flex gap-8 items-center">
+            <SeasonsDropdown seasons={journey.seasons || []} />
           </div>
         </nav>
 

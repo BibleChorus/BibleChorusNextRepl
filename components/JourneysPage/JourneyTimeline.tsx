@@ -94,6 +94,7 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
 
   return (
     <section 
+      id={`season-${season.id}`}
       ref={ref}
       className="relative min-h-screen border-b border-white/5 py-24 md:py-32 px-6 md:px-24"
     >
@@ -188,11 +189,28 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
         </div>
 
         <motion.div 
-          className="lg:col-span-9"
+          className="lg:col-span-9 lg:pl-8"
           variants={staggerContainer}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
+          {season.reflection && (
+            <motion.div
+              variants={revealVariants}
+              className="relative mb-12"
+            >
+              <div className="relative py-8 px-6 border-l-2 border-gold/20">
+                <Quote className="w-5 h-5 text-gold/30 mb-4" />
+                <p 
+                  className="text-lg md:text-xl font-serif italic text-mist leading-relaxed"
+                  style={{ fontFamily: "'Italiana', serif" }}
+                >
+                  "{season.reflection}"
+                </p>
+              </div>
+            </motion.div>
+          )}
+
           {season.songs && season.songs.length > 0 ? (
             <div className="space-y-3">
               {season.songs.map((seasonSong, songIndex) => (
@@ -232,51 +250,6 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
               </div>
             </motion.div>
           )}
-
-          {season.reflection && (
-            <motion.div
-              variants={revealVariants}
-              className="relative mt-16"
-            >
-              {season.cover_image_url && (
-                <div className="relative h-64 md:h-80 overflow-hidden rounded-sm mb-0">
-                  <motion.img
-                    src={season.cover_image_url}
-                    alt={`${season.title} atmosphere`}
-                    className="w-full h-full object-cover"
-                    initial={{ scale: 1.1 }}
-                    whileInView={{ scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1.5, ease: easeOutExpo }}
-                  />
-                  <div className="absolute inset-0 bg-void/70" />
-                  <div className="absolute inset-0 flex items-center justify-center p-8 md:p-16">
-                    <div className="max-w-2xl text-center">
-                      <Quote className="w-6 h-6 text-gold/50 mx-auto mb-6" />
-                      <p 
-                        className="text-lg md:text-xl font-serif italic text-silk/90 leading-relaxed"
-                        style={{ fontFamily: "'Italiana', serif" }}
-                      >
-                        "{season.reflection}"
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {!season.cover_image_url && (
-                <div className="relative py-12 px-8 border-l-2 border-gold/20">
-                  <Quote className="w-5 h-5 text-gold/30 mb-4" />
-                  <p 
-                    className="text-lg md:text-xl font-serif italic text-mist leading-relaxed"
-                    style={{ fontFamily: "'Italiana', serif" }}
-                  >
-                    "{season.reflection}"
-                  </p>
-                </div>
-              )}
-            </motion.div>
-          )}
         </motion.div>
       </div>
     </section>
@@ -286,7 +259,13 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
 export const JourneyTimeline: React.FC<JourneyTimelineProps> = ({ journey, isPreview }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  if (journey.seasons.length === 0) {
+  const sortedSeasons = [...journey.seasons].sort((a, b) => {
+    const dateA = new Date(a.start_date).getTime();
+    const dateB = new Date(b.start_date).getTime();
+    return dateA - dateB;
+  });
+
+  if (sortedSeasons.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -325,14 +304,14 @@ export const JourneyTimeline: React.FC<JourneyTimelineProps> = ({ journey, isPre
 
   return (
     <div ref={containerRef} className="relative bg-transparent">
-      {journey.seasons.map((season, index) => (
+      {sortedSeasons.map((season, index) => (
         <SeasonSection
           key={season.id}
           season={season}
           index={index}
           showPlayCounts={journey.show_play_counts}
           showDates={journey.show_song_dates}
-          totalSeasons={journey.seasons.length}
+          totalSeasons={sortedSeasons.length}
         />
       ))}
       
