@@ -77,6 +77,14 @@ Preferred communication style: Simple, everyday language.
    - **Database**: `journey_profiles` stores user preferences, `journey_seasons` for time periods, `journey_season_songs` links songs with notes
    - **Components**: JourneyEffects.tsx (shared visual primitives), JourneyHero.tsx, JourneyTimeline.tsx, JourneySong.tsx
 
+7. **Song Type Distinction (Scripture vs Journey Songs)**:
+   - **Scripture Songs**: Bible-based songs that closely follow scripture (word_for_word, close_paraphrase, creative_inspiration adherence). Require Bible verse metadata and translation. Displayed by default on Listen page.
+   - **Journey Songs**: Personal Christian journey recordings (prior_recording, journal_entry, dream, testimony, life_milestone, prophetic_word, other origins). Can have somewhat_connected or no_connection scripture adherence. Bible fields optional for journey-only songs.
+   - **Music Origin**: Tracks how music was created (human, ai, ai_cover_of_human) replacing boolean music_ai_generated
+   - **Journey Date**: Optional date field for when the song moment occurred, with fallback to created_at. Used in Journeys timeline display.
+   - **Listen Page Filtering**: Default shows scripture songs only; toggle to include journey songs
+   - **Database Fields**: `is_journey_song` (boolean), `journey_date` (timestamp), `journey_song_origin` (enum), `music_origin` (enum)
+
 ### Authentication & Authorization
 
 **Provider**: NextAuth.js v5 (migrated from v4)
