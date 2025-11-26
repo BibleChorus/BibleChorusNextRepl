@@ -1,0 +1,161 @@
+> my-app@0.1.0 dev
+> next dev --port 5000 --hostname 0.0.0.0
+
+   ▲ Next.js 15.5.6
+   - Local:        http://localhost:5000
+   - Network:      http://0.0.0.0:5000
+
+ ✓ Starting...
+ ✓ Ready in 2.1s
+ ○ Compiling / ...
+ ✓ Compiled / in 14.3s (1252 modules)
+ GET / 200 in 16566ms
+ ⚠ Cross origin request detected from 8d2dbd28-ad6a-4cad-bb08-a5f28cba3f15-00-3s9gaxv7s30v8.worf.replit.dev to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ ✓ Compiled /api/stats in 443ms (276 modules)
+ GET /api/stats 304 in 1001ms
+ GET /api/stats 304 in 117ms
+ GET / 200 in 720ms
+ GET /api/stats 304 in 127ms
+ ○ Compiling /_error ...
+ ✓ Compiled /playlists in 3.4s (1511 modules)
+ GET /manifest.webmanifest 404 in 3900ms
+ ✓ Compiled /api/playlists in 169ms (498 modules)
+ GET /api/stats 304 in 4025ms
+ GET /api/users/1/unread-activities-count 304 in 4279ms
+ GET /api/playlists 304 in 538ms
+ GET /api/users/1/unread-activities-count 304 in 369ms
+ GET /api/playlists 304 in 83ms
+ GET /api/users/1/unread-activities-count 304 in 155ms
+ GET /api/users/1/unread-activities-count 304 in 152ms
+ ○ Compiling /upload ...
+ ✓ Compiled /upload in 3.9s (2559 modules)
+ GET /api/users/1/unread-activities-count 304 in 414ms
+ GET /api/users/1/unread-activities-count 304 in 176ms
+ GET /api/users/1/unread-activities-count 304 in 145ms
+ GET /api/users/1/unread-activities-count 304 in 144ms
+ ○ Compiling /api/chapters ...
+ ✓ Compiled /api/chapters in 545ms (411 modules)
+ GET /api/chapters?books=John 200 in 916ms
+ ○ Compiling /api/bible-verses ...
+ ✓ Compiled /api/bible-verses in 591ms (414 modules)
+ GET /api/bible-verses?book=John&chapter=15 200 in 959ms
+ GET /api/bible-verses?book=John&chapter=15 304 in 73ms
+ GET /api/chapters?books=John 304 in 275ms
+ ✓ Compiled /api/upload-url in 146ms (420 modules)
+Received fileType: image/jpeg
+Received fileExtension: jpg
+Received title: 2011-07-12 I Remember the Purple Flower (Cover)
+Received userId: 1
+ POST /api/upload-url 200 in 552ms
+ GET /api/users/1/unread-activities-count 304 in 412ms
+Received fileType: audio/wav
+Received fileExtension: wav
+Received title: 2011-07-12 I Remember the Purple Flower (Cover)
+Received userId: 1
+ POST /api/upload-url 200 in 19ms
+ GET /api/chapters?books=John 304 in 293ms
+ GET /api/bible-verses?book=John&chapter=15 304 in 356ms
+ ✓ Compiled /api/submit-song in 227ms (423 modules)
+Received request body: {
+  ai_used_for_lyrics: false,
+  music_ai_generated: true,
+  music_origin: 'ai_cover_of_human',
+  is_continuous_passage: true,
+  music_model_used: 'Suno 5.0',
+  music_ai_prompt: 'Deep bass synths, emotional reverb delay vocals, bare, high fidelity instrumentation',
+  title: '2011-07-12 I Remember the Purple Flower (Cover)',
+  artist: 'JESUS & me',
+  lyrics: '[Verse 1]\n' +
+    'I remember \n' +
+    'the purple flower \n' +
+    'in the yard\n' +
+    'On that day\n' +
+    'Walking in your love\n' +
+    'Feelings from above\n' +
+    'Knowing where I want to stay\n' +
+    '\n' +
+    '[Bridge]\n' +
+    'Here in your grace \n' +
+    "I know I don't deserve it \n" +
+    'but your love is beyond compare\n' +
+    'Here in your grace \n' +
+    "I know I don't deserve it \n" +
+    'but your love is beyond compare\n' +
+    '\n' +
+    '[Chorus]\n' +
+    'Oh, you love me\n' +
+    'You love me\n' +
+    'Oh, you love me\n' +
+    'You love me\n' +
+    'Oh, you love me\n' +
+    'You love me\n' +
+    'Oh, you love me\n' +
+    'You love me\n' +
+    'Oh, you love me\n' +
+    '\n' +
+    '[Verse 2]\n' +
+    'I remember \n' +
+    'the purple flower \n' +
+    'in the yard\n' +
+    'On that day\n' +
+    'Walking in your love\n' +
+    'Feelings from above\n' +
+    'Knowing where I want to stay\n' +
+    '\n' +
+    '[Bridge]\n' +
+    'Here in your grace \n' +
+    "I know I don't deserve it \n" +
+    'but your love is beyond compare\n' +
+    'Here in your grace \n' +
+    "I know I don't deserve it \n" +
+    'but your love is beyond compare\n' +
+    '\n' +
+    '[Chorus]\n' +
+    'Oh, you love me\n' +
+    'You love me\n' +
+    'Oh, you love me\n' +
+    'You love me\n' +
+    'Oh, you love me\n' +
+    'You love me\n' +
+    'Oh, you love me\n' +
+    'You love me\n' +
+    'Oh, you love me',
+  genres: [ 'Electronic/Dance', 'Indie', 'Pop', 'Rock' ],
+  duration: 206,
+  is_journey_song: true,
+  journey_date: '2011-07-12',
+  journey_song_origin: 'prior_recording',
+  lyrics_scripture_adherence: 'somewhat_connected',
+  lyric_ai_prompt: '',
+  bible_books: 'John',
+  bible_verses: 'John 15:9',
+  bible_translation_used: 'NASB',
+  song_art_url: 'uploads/1/song_art/20251126065611.2011-07-12_I_Remember_the_Purple_Flower_Cover.jpg',
+  audio_url: 'uploads/1/audio/20251126065629.2011-07-12_I_Remember_the_Purple_Flower_Cover.wav',
+  uploaded_by: 1
+}
+Error submitting song: [error: insert into "songs" ("ai_used_for_lyrics", "artist", "audio_url", "bible_translation_used", "duration", "genres", "is_continuous_passage", "is_journey_song", "journey_date", "journey_song_origin", "lyric_ai_prompt", "lyrics", "lyrics_scripture_adherence", "music_ai_generated", "music_ai_prompt", "music_model_used", "music_origin", "song_art_url", "title", "uploaded_by") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) returning "id" - new row for relation "songs" violates check constraint "songs_lyrics_scripture_adherence_check"] {
+  length: 848,
+  severity: 'ERROR',
+  code: '23514',
+  detail: 'Failing row contains (185, 2011-07-12 I Remember the Purple Flower (Cover), JESUS & me, https://d1yqavyzu1pe5v.cloudfront.net/uploads/1/audio/2025112606..., 1, 2025-11-26 06:57:02.879713+00, f, t, NASB, somewhat_connected, t, [Verse 1]\n' +
+    'I remember \n' +
+    'the purple flower \n' +
+    'in the yard\n' +
+    "On that day..., null, Deep bass synths, emotional reverb delay vocals, bare, high fide..., Suno 5.0, https://d1yqavyzu1pe5v.cloudfront.net/uploads/1/song_art/2025112..., {Electronic/Dance,Indie,Pop,Rock}, '-07':2A '-12':3A '1':11B '2':105B '2011':1A 'bare':204C 'bass':..., null, 206, 0, t, 2011-07-12 00:00:00+00, t, prior_recording, ai_cover_of_human).",
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'songs',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'songs_lyrics_scripture_adherence_check',
+  file: 'execMain.c',
+  line: '2073',
+  routine: 'ExecConstraints'
+}
+ POST /api/submit-song 500 in 676ms
