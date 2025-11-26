@@ -15,6 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     uploaded_by,
     ai_used_for_lyrics,
     music_ai_generated,
+    music_origin,
     bible_translation_used,
     lyrics_scripture_adherence,
     is_continuous_passage,
@@ -25,51 +26,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     song_art_url,
     bible_verses,
     duration,
+    is_journey_song,
+    journey_date,
+    journey_song_origin,
   } = req.body;
 
   console.log('Received request body:', req.body);
 
-  // Get the CDN URL from environment variables
   const cdnUrl = process.env.CDN_URL || '';
-
-  // Prepend CDN URL to audio_url and song_art_url
   const fullAudioUrl = audio_url ? `${cdnUrl}${audio_url}` : null;
   const fullSongArtUrl = song_art_url ? `${cdnUrl}${song_art_url}` : null;
 
-  // Validate required fields
-  const missingFields: string[] = [];
-  if (!title) missingFields.push('title');
-  if (!fullAudioUrl) missingFields.push('audio_url');
-  if (!uploaded_by) missingFields.push('uploaded_by');
-  if (!bible_translation_used) missingFields.push('bible_translation_used');
-  if (!lyrics_scripture_adherence) missingFields.push('lyrics_scripture_adherence');
-  if (!lyrics) missingFields.push('lyrics');
-  if (!bible_verses) missingFields.push('bible_verses');
-  if (duration === undefined || duration === null) missingFields.push('duration');
-
-  // Ensure genres is an array
-  const genres = Array.isArray(req.body.genres) ? req.body.genres : [];
-
-  // Validate genres
-  if (genres.length === 0) {
-    missingFields.push('genres');
-  }
-
-  if (missingFields.length > 0) {
-    console.log('Missing required fields:', missingFields);
-    return res.status(400).json({ message: 'Missing required fields', missingFields });
-  }
-
-  // Validate duration
-  const durationInSeconds = Math.round(Number(duration)); // Round to nearest integer
-  if (isNaN(durationInSeconds) || durationInSeconds <= 0) {
-    console.log('Invalid duration value:', duration);
-    return res.status(400).json({ message: 'Invalid duration value' });
-  }
-
-  // Validate lyrics_scripture_adherence
-  const validAdherenceOptions = ['word_for_word', 'close_paraphrase', 'creative_inspiration'];
-  const adherenceMapping = {
+  const validAdherenceOptions = ['word_for_word', 'close_paraphrase', 'creative_inspiration', 'somewhat_connected', 'no_connection'];
+  const adherenceMapping: Record<string, string> = {
     'The lyrics follow the scripture word-for-word': 'word_for_word',
     'The lyrics closely follow the scripture passage': 'close_paraphrase',
     'The lyrics are creatively inspired by the scripture passage': 'creative_inspiration'
@@ -81,7 +50,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log(`Mapped lyrics_scripture_adherence from "${lyrics_scripture_adherence}" to "${mappedAdherence}"`);
   }
 
-  if (!validAdherenceOptions.includes(mappedAdherence)) {
+  const isNoScriptureConnection = mappedAdherence === 'no_connection';
+  const isLooseScriptureConnection = mappedAdherence === 'somewhat_connected' || isNoScriptureConnection;
+  const isJourneyOnlySong = is_journey_song === true && isLooseScriptureConnection;
+  const requiresBibleVerses = !isNoScriptureConnection && !isJourneyOnlySong;
+
+  const missingFields: string[] = [];
+  if (!title) missingFields.push('title');
+  if (!fullAudioUrl) missingFields.push('audio_url');
+  if (!uploaded_by) missingFields.push('uploaded_by');
+  if (!lyrics) missingFields.push('lyrics');
+  if (duration === undefined || duration === null) missingFields.push('duration');
+
+  if (requiresBibleVerses) {
+    if (!bible_translation_used) missingFields.push('bible_translation_used');
+    if (!lyrics_scripture_adherence) missingFields.push('lyrics_scripture_adherence');
+    if (!bible_verses) missingFields.push('bible_verses');
+  }
+
+  const genres = Array.isArray(req.body.genres) ? req.body.genres : [];
+  if (genres.length === 0) {
+    missingFields.push('genres');
+  }
+
+  if (missingFields.length > 0) {
+    console.log('Missing required fields:', missingFields);
+    return res.status(400).json({ message: 'Missing required fields', missingFields });
+  }
+
+  const durationInSeconds = Math.round(Number(duration));
+  if (isNaN(durationInSeconds) || durationInSeconds <= 0) {
+    console.log('Invalid duration value:', duration);
+    return res.status(400).json({ message: 'Invalid duration value' });
+  }
+
+  if (mappedAdherence && !validAdherenceOptions.includes(mappedAdherence)) {
     console.log('Invalid lyrics_scripture_adherence:', lyrics_scripture_adherence);
     return res.status(400).json({ 
       message: 'Invalid lyrics_scripture_adherence value', 
@@ -91,28 +94,54 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 
+  const validMusicOrigins = ['human', 'ai', 'ai_cover_of_human'];
+  const finalMusicOrigin = music_origin || (music_ai_generated ? 'ai' : 'human');
+  if (!validMusicOrigins.includes(finalMusicOrigin)) {
+    console.log('Invalid music_origin:', music_origin);
+    return res.status(400).json({ 
+      message: 'Invalid music_origin value', 
+      receivedValue: music_origin,
+      validOptions: validMusicOrigins 
+    });
+  }
+
+  const validJourneyOrigins = ['prior_recording', 'journal_entry', 'dream', 'testimony', 'life_milestone', 'prophetic_word', 'other'];
+  if (journey_song_origin && !validJourneyOrigins.includes(journey_song_origin)) {
+    console.log('Invalid journey_song_origin:', journey_song_origin);
+    return res.status(400).json({ 
+      message: 'Invalid journey_song_origin value', 
+      receivedValue: journey_song_origin,
+      validOptions: validJourneyOrigins 
+    });
+  }
+
   const trx = await db.transaction();
   let songId: { id: number } | undefined;
 
   try {
-    // Insert into songs table
+    const finalMusicAiGenerated = finalMusicOrigin === 'ai' || finalMusicOrigin === 'ai_cover_of_human';
+
     const [insertedSong] = await trx('songs').insert({
       title,
       artist: artist || null,
       audio_url: fullAudioUrl,
       uploaded_by,
       ai_used_for_lyrics: ai_used_for_lyrics || false,
-      music_ai_generated: music_ai_generated || false,
-      bible_translation_used,
-      genres, // Use the genres array directly
-      lyrics_scripture_adherence: mappedAdherence,
+      music_ai_generated: finalMusicAiGenerated,
+      music_origin: finalMusicOrigin,
+      bible_translation_used: bible_translation_used || null,
+      genres,
+      lyrics_scripture_adherence: mappedAdherence || 'no_connection',
       is_continuous_passage: is_continuous_passage || false,
       lyrics,
       lyric_ai_prompt: lyric_ai_prompt || null,
       music_ai_prompt: music_ai_prompt || null,
       music_model_used: music_model_used || null,
       song_art_url: fullSongArtUrl,
-      duration: durationInSeconds, // Use the rounded integer value
+      duration: durationInSeconds,
+      is_journey_song: is_journey_song || false,
+      journey_date: journey_date ? new Date(journey_date) : null,
+      journey_song_origin: journey_song_origin || null,
     }).returning('id');
 
     if (!insertedSong || typeof insertedSong.id !== 'number') {
@@ -120,50 +149,54 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const songId = insertedSong.id;
-
     console.log('Inserted song ID:', songId);
 
-    // Query the bible_verses table and insert into song_verses table
-    const verseReferences = bible_verses.split(',').map(v => v.trim());
-    console.log('Verse references:', verseReferences);
+    if (requiresBibleVerses && bible_verses) {
+      const verseReferences = bible_verses.split(',').map((v: string) => v.trim());
+      console.log('Verse references:', verseReferences);
 
-    console.log('Knex query:', trx('bible_verses')
-      .whereRaw(`CONCAT(book, ' ', chapter, ':', verse) IN (${verseReferences.map(() => '?').join(',')})`, verseReferences)
-      .select('id', 'book', 'chapter', 'verse').toString());
+      console.log('Knex query:', trx('bible_verses')
+        .whereRaw(`CONCAT(book, ' ', chapter, ':', verse) IN (${verseReferences.map(() => '?').join(',')})`, verseReferences)
+        .select('id', 'book', 'chapter', 'verse').toString());
 
-    const verseData = await trx('bible_verses')
-      .whereRaw(`CONCAT(book, ' ', chapter, ':', verse) IN (${verseReferences.map(() => '?').join(',')})`, verseReferences)
-      .select('id', 'book', 'chapter', 'verse');
+      const verseData = await trx('bible_verses')
+        .whereRaw(`CONCAT(book, ' ', chapter, ':', verse) IN (${verseReferences.map(() => '?').join(',')})`, verseReferences)
+        .select('id', 'book', 'chapter', 'verse');
 
-    console.log('Verse data:', verseData);
+      console.log('Verse data:', verseData);
 
-    if (verseData.length === 0) {
-      console.log('No matching verses found. Attempting individual queries...');
-      for (const verseRef of verseReferences) {
-        const [book, chapterVerse] = verseRef.split(' ');
-        const [chapter, verse] = chapterVerse.split(':');
-        const result = await trx('bible_verses')
-          .where({ book, chapter, verse })
-          .first();
-        console.log(`Query for ${verseRef}:`, result);
+      if (verseData.length === 0) {
+        console.log('No matching verses found. Attempting individual queries...');
+        for (const verseRef of verseReferences) {
+          const [book, chapterVerse] = verseRef.split(' ');
+          const [chapter, verse] = chapterVerse.split(':');
+          const result = await trx('bible_verses')
+            .where({ book, chapter, verse })
+            .first();
+          console.log(`Query for ${verseRef}:`, result);
+        }
+        throw new Error('No matching Bible verses found');
       }
-      throw new Error('No matching Bible verses found');
+
+      await trx('song_verses').insert(
+        verseData.map(verse => ({ 
+          song_id: songId,
+          verse_id: verse.id 
+        }))
+      );
+
+      await updateBibleVerses(trx, songId, {
+        ...req.body,
+        music_ai_generated: finalMusicAiGenerated,
+        lyrics_scripture_adherence: mappedAdherence,
+      });
     }
-
-    await trx('song_verses').insert(
-      verseData.map(verse => ({ 
-        song_id: songId,
-        verse_id: verse.id 
-      }))
-    );
-
-    // Update bible_verses table
-    await updateBibleVerses(trx, songId, req.body);
 
     await trx.commit();
     
-    // Refresh the materialized view after successful insertion
-    await refreshProgressMaterializedView();
+    if (requiresBibleVerses) {
+      await refreshProgressMaterializedView();
+    }
     
     res.status(200).json({ message: 'Song submitted successfully', songId: songId });
   } catch (error) {
@@ -175,11 +208,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         error: error.message, 
         stack: error.stack,
         verseReferences: bible_verses,
-        query: trx('bible_verses')
-          .whereRaw(`CONCAT(book, ' ', chapter, ':', verse) IN (${bible_verses.split(',').map(() => '?').join(',')})`, bible_verses.split(',').map(v => v.trim()))
+        query: bible_verses ? trx('bible_verses')
+          .whereRaw(`CONCAT(book, ' ', chapter, ':', verse) IN (${bible_verses.split(',').map(() => '?').join(',')})`, bible_verses.split(',').map((v: string) => v.trim()))
           .select('id', 'book', 'chapter', 'verse')
-          .toString(),
-        songId: songId // This will be undefined if insertion failed
+          .toString() : null,
+        songId: songId
       });
     } else {
       res.status(500).json({ message: 'Error submitting song', error: 'An unknown error occurred' });
@@ -193,6 +226,16 @@ async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData
     .pluck('verse_id');
 
   const genres = songData.genres;
+  const adherence = songData.lyrics_scripture_adherence;
+  const adherenceColumn = `${adherence}_song_ids`;
+
+  const validAdherenceColumns = [
+    'word_for_word_song_ids',
+    'close_paraphrase_song_ids', 
+    'creative_inspiration_song_ids',
+    'somewhat_connected_song_ids',
+    'no_connection_song_ids'
+  ];
 
   for (const verseId of verseIds) {
     const updateObj: any = {
@@ -203,7 +246,6 @@ async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData
       human_music_song_ids: !songData.music_ai_generated ? trx.raw('array_append(human_music_song_ids, ?)', [songId]) : trx.raw('human_music_song_ids'),
       continuous_passage_song_ids: songData.is_continuous_passage ? trx.raw('array_append(continuous_passage_song_ids, ?)', [songId]) : trx.raw('continuous_passage_song_ids'),
       non_continuous_passage_song_ids: !songData.is_continuous_passage ? trx.raw('array_append(non_continuous_passage_song_ids, ?)', [songId]) : trx.raw('non_continuous_passage_song_ids'),
-      [songData.lyrics_scripture_adherence + '_song_ids']: trx.raw(`array_append(${songData.lyrics_scripture_adherence}_song_ids, ?)`, [songId]),
       translation_song_ids: trx.raw(`
         jsonb_set(
           COALESCE(translation_song_ids, '{}'::jsonb),
@@ -213,11 +255,14 @@ async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData
       `, [songData.bible_translation_used, songData.bible_translation_used, JSON.stringify([songId])])
     };
 
+    if (validAdherenceColumns.includes(adherenceColumn)) {
+      updateObj[adherenceColumn] = trx.raw(`array_append(${adherenceColumn}, ?)`, [songId]);
+    }
+
     await trx('bible_verses')
       .where('id', verseId)
       .update(updateObj);
 
-    // Update genre_song_ids for each genre
     for (const genre of genres) {
       await trx('bible_verses')
         .where('id', verseId)

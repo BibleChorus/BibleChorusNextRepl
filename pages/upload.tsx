@@ -13,8 +13,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, X, Trash2, File as FileIcon } from "lucide-react"
+import { Check, ChevronsUpDown, X, Trash2, File as FileIcon, AlertCircle, CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
 import { BIBLE_BOOKS, GENRES, AI_MUSIC_MODELS, BIBLE_TRANSLATIONS } from "@/lib/constants"
 import { cn } from "@/lib/utils"
@@ -36,11 +40,12 @@ import { extractFileExtension, getExtensionFromMimeType, stripFileExtension } fr
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
-// Update the form schema to include duration
+// Update the form schema to include duration and journey fields
 const formSchema = z.object({
   // Step 1: AI Info
   ai_used_for_lyrics: z.boolean(),
   music_ai_generated: z.boolean(),
+  music_origin: z.enum(['human', 'ai', 'ai_cover_of_human']),
   lyric_ai_prompt: z.string().optional(),
   music_model_used: z.string().optional(),
   music_ai_prompt: z.string().optional(),
@@ -51,17 +56,24 @@ const formSchema = z.object({
   genres: z.array(z.string()).min(1, "At least one genre is required"),
   lyrics: z.string().min(1, "Lyrics are required"),
 
+  // Journey Song Fields
+  is_journey_song: z.boolean(),
+  journey_date: z.string().optional(),
+  journey_song_origin: z.enum(['prior_recording', 'journal_entry', 'dream', 'testimony', 'life_milestone', 'prophetic_word', 'other']).optional(),
+
   // Step 3: Bible Info
-  bible_translation_used: z.string().min(1, "Bible translation is required"),
+  bible_translation_used: z.string().optional(),
   lyrics_scripture_adherence: z.enum([
     "word_for_word",
     "close_paraphrase",
-    "creative_inspiration"
+    "creative_inspiration",
+    "somewhat_connected",
+    "no_connection"
   ]),
   is_continuous_passage: z.boolean(),
-  bible_books: z.string().min(1, "At least one Bible book is required"),
+  bible_books: z.string().optional(),
   bible_chapters: z.record(z.string(), z.array(z.number())).optional(),
-  bible_verses: z.string().min(1, "At least one Bible verse is required"),
+  bible_verses: z.string().optional(),
 
   // Step 4: Upload
   audio_file: z.instanceof(File).optional(),
@@ -73,12 +85,13 @@ const formSchema = z.object({
 
   // Added uploaded_by field
   uploaded_by: z.union([z.string(), z.number()]).optional(),
-  duration: z.number().optional(), // Add this line
+  duration: z.number().optional(),
 }).refine((data) => {
   if (data.ai_used_for_lyrics && (!data.lyric_ai_prompt || data.lyric_ai_prompt.trim().length === 0)) {
     return false;
   }
-  if (data.music_ai_generated) {
+  const musicOrigin = data.music_origin;
+  if (musicOrigin === 'ai' || musicOrigin === 'ai_cover_of_human') {
     if (!data.music_model_used || data.music_model_used.trim().length === 0) {
       return false;
     }
@@ -90,6 +103,22 @@ const formSchema = z.object({
 }, {
   message: "Required fields are missing",
   path: ["lyric_ai_prompt", "music_model_used", "music_ai_prompt"],
+}).refine((data) => {
+  if (data.lyrics_scripture_adherence !== 'no_connection') {
+    if (!data.bible_translation_used || data.bible_translation_used.trim().length === 0) {
+      return false;
+    }
+    if (!data.bible_books || data.bible_books.trim().length === 0) {
+      return false;
+    }
+    if (!data.bible_verses || data.bible_verses.trim().length === 0) {
+      return false;
+    }
+  }
+  return true;
+}, {
+  message: "Bible information is required for scripture-connected songs",
+  path: ["bible_translation_used", "bible_books", "bible_verses"],
 });
 
 // Create a client
@@ -146,6 +175,10 @@ function UploadContent() {
   const [selectedBibleBooks, setSelectedBibleBooks] = useState<string[]>([]);
   const [selectedChapters, setSelectedChapters] = useState<{[book: string]: number[]}>({});
 
+  // Song type state for journey songs
+  const [songType, setSongType] = useState<'scripture' | 'journey' | 'both'>('scripture');
+  const [journeyDate, setJourneyDate] = useState<Date | undefined>(new Date());
+
   // Refs
   const genreRef = useRef<HTMLDivElement>(null);
   const translationRef = useRef<HTMLDivElement>(null);
@@ -157,6 +190,7 @@ function UploadContent() {
     defaultValues: {
       ai_used_for_lyrics: true,
       music_ai_generated: true,
+      music_origin: 'ai',
       is_continuous_passage: false,
       music_model_used: undefined,
       music_ai_prompt: undefined,
@@ -165,6 +199,10 @@ function UploadContent() {
       lyrics: "",
       genres: [],
       duration: undefined,
+      is_journey_song: false,
+      journey_date: undefined,
+      journey_song_origin: undefined,
+      lyrics_scripture_adherence: undefined,
     },
     mode: "onBlur",
   });
@@ -172,6 +210,7 @@ function UploadContent() {
   // Form watchers
   const watchAiUsedForLyrics = form.watch("ai_used_for_lyrics");
   const watchScriptureAdherence = form.watch("lyrics_scripture_adherence");
+  const watchMusicOrigin = form.watch("music_origin");
 
   // Move useMemo hooks here, outside of any conditional statements
   const filteredGenres = useMemo(() => {
@@ -600,6 +639,17 @@ function UploadContent() {
         toast.error('User not authenticated. Please log in and try again.');
         return;
       }
+
+      // Set is_journey_song based on songType
+      formData.is_journey_song = songType === 'journey' || songType === 'both';
+      
+      // Include journey date if set
+      if (journeyDate && (songType === 'journey' || songType === 'both')) {
+        formData.journey_date = format(journeyDate, 'yyyy-MM-dd');
+      }
+      
+      // Keep music_ai_generated for backward compatibility (derive from music_origin)
+      formData.music_ai_generated = formData.music_origin === 'ai' || formData.music_origin === 'ai_cover_of_human';
       
       console.log("Submitting form data:", formData);
       setIsSubmitting(true);
@@ -634,7 +684,7 @@ function UploadContent() {
     }
   };
 
-  const steps = ["AI Info", "Song Info", "Bible Info", "Upload"]
+  const steps = ["Song Type", "AI Info", "Song Info", "Bible Info", "Upload"]
 
   const handleAILyricsChange = (checked: boolean) => {
     if (watchScriptureAdherence === "word_for_word") {
@@ -807,17 +857,149 @@ function UploadContent() {
             <UploadProgressBar onProgressChange={setProgress} />
             
             <Tabs value={steps[currentStep]} className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 {steps.map((step, index) => (
                   <TabsTrigger
                     key={step}
                     value={step}
                     onClick={() => setCurrentStep(index)}
+                    className="text-xs sm:text-sm"
                   >
                     {step}
                   </TabsTrigger>
                 ))}
               </TabsList>
+
+              <TabsContent value="Song Type">
+                <div className="space-y-4">
+                  <div className="rounded-lg border p-4">
+                    <FormLabel className="form-label text-base mb-4 block">What type of song is this?</FormLabel>
+                    <RadioGroup
+                      value={songType}
+                      onValueChange={(value: 'scripture' | 'journey' | 'both') => {
+                        setSongType(value);
+                        form.setValue('is_journey_song', value === 'journey' || value === 'both');
+                        if (value === 'journey') {
+                          form.setValue('lyrics_scripture_adherence', 'no_connection');
+                        }
+                      }}
+                      className="space-y-4"
+                    >
+                      <div className={cn(
+                        "flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors",
+                        songType === 'scripture' && "border-primary bg-primary/5"
+                      )}>
+                        <RadioGroupItem value="scripture" id="scripture" className="mt-1" />
+                        <label htmlFor="scripture" className="cursor-pointer flex-1">
+                          <div className="font-medium">Scripture Song</div>
+                          <div className="text-sm text-muted-foreground">
+                            A song directly based on Bible verses. The lyrics are derived from or closely follow specific scripture passages.
+                          </div>
+                        </label>
+                      </div>
+                      <div className={cn(
+                        "flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors",
+                        songType === 'journey' && "border-primary bg-primary/5"
+                      )}>
+                        <RadioGroupItem value="journey" id="journey" className="mt-1" />
+                        <label htmlFor="journey" className="cursor-pointer flex-1">
+                          <div className="font-medium">Journey Song</div>
+                          <div className="text-sm text-muted-foreground">
+                            A song from your Christian journey that may or may not have a direct scripture connection. This could be inspired by a dream, testimony, life milestone, or personal experience.
+                          </div>
+                        </label>
+                      </div>
+                      <div className={cn(
+                        "flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors",
+                        songType === 'both' && "border-primary bg-primary/5"
+                      )}>
+                        <RadioGroupItem value="both" id="both" className="mt-1" />
+                        <label htmlFor="both" className="cursor-pointer flex-1">
+                          <div className="font-medium">Both Scripture & Journey</div>
+                          <div className="text-sm text-muted-foreground">
+                            A song that is both scripture-based and part of your personal journey. It combines Biblical text with your testimony or life experience.
+                          </div>
+                        </label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {(songType === 'journey' || songType === 'both') && (
+                    <div className="rounded-lg border p-4 space-y-4">
+                      <FormLabel className="form-label text-base block">Journey Details</FormLabel>
+                      
+                      <FormField
+                        control={form.control}
+                        name="journey_date"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>When did this song originate?</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full pl-3 text-left font-normal",
+                                      !journeyDate && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {journeyDate ? format(journeyDate, "PPP") : <span>Pick a date</span>}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={journeyDate}
+                                  onSelect={(date) => {
+                                    setJourneyDate(date);
+                                    field.onChange(date ? format(date, 'yyyy-MM-dd') : undefined);
+                                  }}
+                                  disabled={(date) => date > new Date()}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormDescription>
+                              The date when this song was first created or when the inspiration occurred.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="journey_song_origin"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>What inspired this song?</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select the inspiration for this song" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="prior_recording">A prior recording</SelectItem>
+                                <SelectItem value="journal_entry">A journal entry</SelectItem>
+                                <SelectItem value="dream">A dream</SelectItem>
+                                <SelectItem value="testimony">A testimony</SelectItem>
+                                <SelectItem value="life_milestone">A life milestone</SelectItem>
+                                <SelectItem value="prophetic_word">A prophetic word received from God</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
 
               <TabsContent value="AI Info">
                 <FormField
@@ -884,33 +1066,47 @@ function UploadContent() {
                 />
                 <FormField
                   control={form.control}
-                  name="music_ai_generated"
+                  name="music_origin"
                   render={({ field }) => (
                     <FormItem className="flex flex-col space-y-4 rounded-lg border p-4">
-                      <div className="flex flex-row items-center justify-between">
-                        <div className="space-y-0.5">
-                          <FormLabel className="form-label text-base">AI Generated Music</FormLabel>
-                          <FormDescription>
-                            Was the music generated by AI?
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={(checked) => {
-                              field.onChange(checked);
-                              if (!checked) {
-                                form.setValue("music_model_used", "", { shouldValidate: true });
-                                form.setValue("music_ai_prompt", "", { shouldValidate: true });
-                              } else {
-                                form.trigger("music_model_used");
-                                form.trigger("music_ai_prompt");
-                              }
-                            }}
-                          />
-                        </FormControl>
+                      <div className="space-y-2">
+                        <FormLabel className="form-label text-base">Music Origin</FormLabel>
+                        <FormDescription>
+                          How was the music for this song created?
+                        </FormDescription>
                       </div>
-                      {field.value && (
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            const isAI = value === 'ai' || value === 'ai_cover_of_human';
+                            form.setValue("music_ai_generated", isAI, { shouldValidate: true });
+                            if (!isAI) {
+                              form.setValue("music_model_used", "", { shouldValidate: true });
+                              form.setValue("music_ai_prompt", "", { shouldValidate: true });
+                            } else {
+                              form.trigger("music_model_used");
+                              form.trigger("music_ai_prompt");
+                            }
+                          }}
+                          value={field.value}
+                          className="space-y-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="human" id="music-human" />
+                            <label htmlFor="music-human" className="cursor-pointer">Human Performance</label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="ai" id="music-ai" />
+                            <label htmlFor="music-ai" className="cursor-pointer">AI Generated</label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="ai_cover_of_human" id="music-ai-cover" />
+                            <label htmlFor="music-ai-cover" className="cursor-pointer">AI Cover of Human Original</label>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
+                      {(watchMusicOrigin === 'ai' || watchMusicOrigin === 'ai_cover_of_human') && (
                         <>
                           <FormField
                             control={form.control}
@@ -973,7 +1169,6 @@ function UploadContent() {
                     </FormItem>
                   )}
                 />
-                {/* Add more AI-related fields here */}
               </TabsContent>
 
               <TabsContent value="Song Info">
@@ -1488,7 +1683,7 @@ function UploadContent() {
                     />
                   </div>
 
-                  <div className="flex flex-col rounded-lg border p-4">
+                  <div className="flex flex-col rounded-lg border p-4 space-y-4">
                     <FormField
                       control={form.control}
                       name="lyrics_scripture_adherence"
@@ -1510,6 +1705,7 @@ function UploadContent() {
                               }
                             }} 
                             defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -1526,12 +1722,26 @@ function UploadContent() {
                               <SelectItem value="creative_inspiration">
                                 Creative inspiration
                               </SelectItem>
+                              <SelectItem value="somewhat_connected">
+                                Somewhat Connected
+                              </SelectItem>
+                              <SelectItem value="no_connection">
+                                No Scripture Connection
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage className="form-message" />
                         </FormItem>
                       )}
                     />
+                    {(watchScriptureAdherence === 'somewhat_connected' || watchScriptureAdherence === 'no_connection') && (
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          Songs with limited or no scripture connection will not appear on the main Listen page by default, but can be added to your Journey page.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
 
                   <div className="flex flex-col rounded-lg border p-4">

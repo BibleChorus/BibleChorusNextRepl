@@ -76,7 +76,8 @@ export type FilterOptions = {
   showBestOverall: boolean;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
-  showMySongs: boolean; // Add this line
+  showMySongs: boolean;
+  includeJourneySongs: boolean;
 };
 
 export default function Listen() {
@@ -90,7 +91,7 @@ export default function Listen() {
     isContinuous: "all",
     aiMusic: "all",
     genres: [],
-    aiUsedForLyrics: 'all',  // Updated from false
+    aiUsedForLyrics: 'all',
     musicModelUsed: "",
     title: "",
     artist: "",
@@ -103,9 +104,10 @@ export default function Listen() {
     showBestMusically: false,
     showBestLyrically: false,
     showBestOverall: false,
-    sortBy: 'mostRecent',     // Default sorting criterion
-    sortOrder: 'desc',        // Default sorting order
-    showMySongs: false, // Add this line
+    sortBy: 'mostRecent',
+    sortOrder: 'desc',
+    showMySongs: false,
+    includeJourneySongs: false,
   })
 
   useEffect(() => {
@@ -291,6 +293,10 @@ function ListenContent({
 
     if (filters.showMySongs && user) {
       params.append('showMySongs', 'true');
+    }
+
+    if (filters.includeJourneySongs) {
+      params.append('includeJourneySongs', 'true');
     }
 
     return params.toString()
@@ -1245,6 +1251,7 @@ function ListenContent({
                       sortBy: 'mostRecent',
                       sortOrder: 'desc',
                       showMySongs: false,
+                      includeJourneySongs: false,
                     })}
                     className="h-8 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
@@ -1427,6 +1434,7 @@ function ListenContent({
                       sortBy: 'mostRecent',
                       sortOrder: 'desc',
                       showMySongs: false,
+                      includeJourneySongs: false,
                     })}
                     className="h-12 px-6 border-2 hover:scale-105 transition-all duration-300 rounded-xl"
                   >

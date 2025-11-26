@@ -29,6 +29,7 @@ interface SongsQuery {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   showMySongs?: string;
+  includeJourneySongs?: string;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -61,6 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         sortBy = 'mostRecent',
         sortOrder = 'desc',
         showMySongs,
+        includeJourneySongs,
       }: SongsQuery = req.query;
 
       // Adjust limit and offset for infinite scroll
@@ -107,10 +109,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'songs.is_continuous_passage',
           'songs.ai_used_for_lyrics',
           'songs.music_ai_generated',
+          'songs.music_origin',
           'songs.music_model_used',
           'songs.duration',
           'songs.play_count',
           'songs.lyrics',
+          'songs.is_journey_song',
+          'songs.journey_date',
+          'songs.journey_song_origin',
           // Include these columns conditionally
           ...(sortBy === 'firstBibleVerse'
             ? [
@@ -149,6 +155,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'songs.id',
           'like_counts.likeable_id'
         );
+
+      // By default, exclude journey-only songs (songs with loose/no scripture connection)
+      // Journey-only songs are: is_journey_song = true AND adherence is 'somewhat_connected' or 'no_connection'
+      // Include them only if includeJourneySongs is explicitly set to 'true'
+      if (includeJourneySongs !== 'true') {
+        query = query.where(function() {
+          this.where('songs.is_journey_song', false)
+            .orWhereNotIn('songs.lyrics_scripture_adherence', ['somewhat_connected', 'no_connection']);
+        });
+      }
 
       // Handle user-specific filters
       if (userId) {

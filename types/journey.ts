@@ -49,9 +49,15 @@ export interface SeasonSong {
     audio_url: string;
     song_art_url: string | null;
     duration: number;
-    play_count: number;
-    created_at: string;
+    play_count?: number;
+    created_at?: string;
+    journey_date?: string;
+    is_journey_song?: boolean;
+    journey_song_origin?: 'prior_recording' | 'journal_entry' | 'dream' | 'testimony' | 'life_milestone' | 'prophetic_word' | 'other';
     genres: string[];
+    lyrics?: string;
+    bible_translation_used?: string;
+    bible_verses?: Array<{ book: string; chapter: number; verse: number }>;
   };
 }
 
