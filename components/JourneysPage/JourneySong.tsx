@@ -38,8 +38,28 @@ export const JourneySong: React.FC<JourneySongProps> = ({
   const isCurrentSong = currentSong?.id === song.id;
   const isCurrentlyPlaying = isCurrentSong && isPlaying;
   const hasPersonalNote = seasonSong.personal_note && seasonSong.personal_note.trim().length > 0;
+  const journeySongOrigin = songAny.journey_song_origin;
   
+  const formatJourneySongOrigin = (origin: string): string => {
+    const originMap: { [key: string]: string } = {
+      'prior_recording': 'Previously Written Song',
+      'prophetic_word': 'Prayer or Prophetic Utterance',
+      'personal_experience': 'Personal Experience',
+      'scripture_meditation': 'Scripture Meditation',
+      'worship_session': 'Worship Session',
+      'dream_vision': 'Dream or Vision',
+      'testimony': 'Testimony',
+      'prayer': 'Prayer',
+      'other': 'Other',
+    };
+    return originMap[origin] || origin?.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ') || '';
+  };
+
+  const hasOrigin = journeySongOrigin && journeySongOrigin.trim().length > 0;
   const showNote = hasPersonalNote && (isHovered || isTouched || isCurrentSong);
+  const showOrigin = hasOrigin && (isHovered || isTouched || isCurrentSong);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -191,6 +211,37 @@ export const JourneySong: React.FC<JourneySongProps> = ({
           {song.duration > 0 ? formatDuration(song.duration) : '--:--'}
         </span>
       </motion.div>
+
+      <AnimatePresence>
+        {showOrigin && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ 
+              duration: 0.5, 
+              ease: easeOutExpo,
+              opacity: { duration: 0.3 }
+            }}
+            className="overflow-hidden"
+          >
+            <motion.div 
+              initial={{ y: -10 }}
+              animate={{ y: 0 }}
+              exit={{ y: -10 }}
+              transition={{ duration: 0.4, ease: easeOutExpo }}
+              className="pt-2 pb-2 pl-[52px] md:pl-[68px] pr-4"
+            >
+              <span 
+                className="text-[11px] text-gold/60 uppercase tracking-widest"
+                style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 400 }}
+              >
+                Origin: {formatJourneySongOrigin(journeySongOrigin)}
+              </span>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showNote && (

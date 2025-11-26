@@ -4,7 +4,7 @@ import React, { Dispatch, SetStateAction, useState, useCallback, useEffect } fro
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark, Heart, Star, User, Filter } from "lucide-react"
+import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark, Heart, Star, User, Filter, Route } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
@@ -40,6 +40,7 @@ export interface FilterOptions {
   sortBy: string;
   sortOrder: 'asc' | 'desc';
   showMySongs: boolean;
+  includeJourneySongs?: boolean;
 }
 
 interface FiltersProps {
@@ -124,6 +125,8 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
     { value: "word_for_word", label: "Word for Word" },
     { value: "close_paraphrase", label: "Close Paraphrase" },
     { value: "creative_inspiration", label: "Creative Inspiration" },
+    { value: "somewhat_connected", label: "Somewhat Connected" },
+    { value: "no_connection", label: "No Connection" },
   ]
 
   const toggleLyricsAdherence = (value: string) => {
@@ -192,6 +195,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       sortBy: 'mostRecent',
       sortOrder: 'desc',
       showMySongs: false,
+      includeJourneySongs: false,
     })
   }
 
@@ -502,6 +506,23 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               <p className="text-xs">My Songs</p>
             </TooltipContent>
           </Tooltip>
+
+          {/* Include Journey Songs Filter Icon */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={filterOptions.includeJourneySongs ? "secondary" : "outline"}
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => toggleUserFilter('includeJourneySongs')}
+              >
+                <Route className="h-3 w-3" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Include Journey Songs</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Clear Filters Button (visible on larger screens) */}
@@ -554,6 +575,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               { value: "all", label: "All Music Sources" },
               { value: "true", label: "AI Generated" },
               { value: "false", label: "Human Composed" },
+              { value: "ai_cover_of_human", label: "AI Cover of Human" },
             ]}
             icon={<Music className="h-4 w-4 mr-2" />}
           />

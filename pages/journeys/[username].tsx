@@ -31,7 +31,7 @@ const SeasonsDropdown: React.FC<{ seasons: Season[] }> = ({ seasons }) => {
   const scrollToSeason = (seasonId: number) => {
     const element = document.getElementById(`season-${seasonId}`);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     setIsOpen(false);
   };
