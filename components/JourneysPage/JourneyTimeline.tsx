@@ -101,12 +101,11 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
     >
       {/* Season content wrapper with proper padding */}
       <div className="py-16 md:py-24 px-6 md:px-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
           {/* Sticky sidebar - pinned to top bar */}
-          <div className="lg:col-span-3 relative">
+          <div className="lg:w-[280px] xl:w-[320px] flex-shrink-0">
             <div 
-              className="lg:sticky"
-              style={{ top: '80px' }}
+              className="lg:sticky lg:top-20 lg:self-start"
             >
               <motion.div
                 variants={staggerContainer}
@@ -204,7 +203,7 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
 
           {/* Songs column - scrolls naturally */}
           <motion.div 
-            className="lg:col-span-9 lg:pl-8"
+            className="flex-1 min-w-0"
             variants={staggerContainer}
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
