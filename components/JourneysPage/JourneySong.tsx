@@ -210,18 +210,18 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               animate={{ y: 0 }}
               exit={{ y: -10 }}
               transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pb-6 pl-[52px] md:pl-[68px] pr-4"
+              className="pt-2 pb-6 pl-[52px] md:pl-[68px] pr-4"
             >
               <div className="relative pl-6 border-l border-gold/20">
                 <span 
-                  className="absolute -left-3 -top-2 text-2xl text-gold/30 select-none"
-                  style={{ fontFamily: "'Italiana', serif" }}
+                  className="absolute -left-3 -top-1 text-xl text-gold/40 select-none"
+                  style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 300 }}
                 >
                   "
                 </span>
                 <p 
-                  className="text-sm text-mist/80 italic leading-relaxed"
-                  style={{ fontFamily: "'Italiana', serif" }}
+                  className="text-[13px] text-mist/70 leading-relaxed tracking-wide"
+                  style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 300, fontStyle: 'italic' }}
                 >
                   {seasonSong.personal_note}
                 </p>
