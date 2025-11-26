@@ -151,11 +151,8 @@ interface ScrollProgressProps {
   containerRef?: React.RefObject<HTMLElement>;
 }
 
-export const ScrollProgress: React.FC<ScrollProgressProps> = ({ containerRef }) => {
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"]
-  });
+export const ScrollProgress: React.FC<ScrollProgressProps> = () => {
+  const { scrollYProgress } = useScroll();
 
   const height = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
   const smoothHeight = useSpring(height, { stiffness: 100, damping: 30 });
