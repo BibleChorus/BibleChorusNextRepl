@@ -231,7 +231,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       if (aiMusic && aiMusic !== 'all') {
-        query = query.where('songs.music_ai_generated', aiMusic === 'true');
+        if (aiMusic === 'ai_cover_of_human') {
+          query = query.where('songs.music_origin', 'ai_cover_of_human');
+        } else {
+          query = query.where('songs.music_ai_generated', aiMusic === 'true');
+        }
       }
 
       if (genres) {

@@ -31,7 +31,11 @@ const SeasonsDropdown: React.FC<{ seasons: Season[] }> = ({ seasons }) => {
   const scrollToSeason = (seasonId: number) => {
     const element = document.getElementById(`season-${seasonId}`);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const topBarHeight = 64;
+      const elementRect = element.getBoundingClientRect();
+      const absoluteElementTop = elementRect.top + window.pageYOffset;
+      const scrollPosition = absoluteElementTop - topBarHeight;
+      window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
     }
     setIsOpen(false);
   };

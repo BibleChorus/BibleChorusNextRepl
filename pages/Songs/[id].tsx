@@ -1181,7 +1181,12 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                   <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg">
                     <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">Journey Song Details</p>
                     {song.journey_date && (
-                      <p className="text-sm"><strong>Originating Date:</strong> {new Date(song.journey_date + 'T12:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                      <p className="text-sm"><strong>Originating Date:</strong> {(() => {
+                        const dateStr = song.journey_date;
+                        const datePart = dateStr.split('T')[0].split(' ')[0];
+                        const [year, month, day] = datePart.split('-').map(Number);
+                        return new Date(year, month - 1, day).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                      })()}</p>
                     )}
                     {song.journey_song_origin && (
                       <p className="text-sm"><strong>Origin:</strong> {formatJourneySongOrigin(song.journey_song_origin)}</p>
