@@ -184,7 +184,12 @@ export const JourneySong: React.FC<JourneySongProps> = ({
           <div className="flex items-center gap-3 mt-1">
             {showDate && (song.journey_date || song.created_at) && (
               <span className="text-[10px] text-mist uppercase tracking-widest">
-                {format(parseISO(song.journey_date || song.created_at!), 'MMMM do, yyyy')}
+                {(() => {
+                  const dateStr = song.journey_date || song.created_at!;
+                  const datePart = dateStr.split('T')[0].split(' ')[0];
+                  const [year, month, day] = datePart.split('-').map(Number);
+                  return format(new Date(year, month - 1, day), 'MMMM do, yyyy');
+                })()}
               </span>
             )}
           </div>

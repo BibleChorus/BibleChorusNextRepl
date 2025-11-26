@@ -48,6 +48,19 @@ import { useMusicPlayer } from '@/contexts/MusicPlayerContext'
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
+const formatJourneySongOrigin = (origin: string): string => {
+  const originLabels: Record<string, string> = {
+    'prior_recording': 'Previously Written Song',
+    'journal_entry': 'Journal Entry',
+    'dream': 'Dream',
+    'testimony': 'Testimony',
+    'life_milestone': 'Life Milestone',
+    'prophetic_word': 'Prayer or Prophetic Utterance',
+    'other': 'Other'
+  };
+  return originLabels[origin] || origin.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+};
+
 interface Song {
   id: number
   title: string
@@ -56,9 +69,10 @@ interface Song {
   uploaded_by: number
   ai_used_for_lyrics: boolean
   music_ai_generated: boolean
+  music_origin?: 'human' | 'ai' | 'ai_cover_of_human'
   bible_translation_used: string
   genres: string[]
-  lyrics_scripture_adherence: 'word_for_word' | 'close_paraphrase' | 'creative_inspiration'
+  lyrics_scripture_adherence: 'word_for_word' | 'close_paraphrase' | 'creative_inspiration' | 'somewhat_connected' | 'no_connection'
   is_continuous_passage: boolean
   lyrics: string
   lyric_ai_prompt?: string
@@ -68,7 +82,10 @@ interface Song {
   created_at: string
   username: string
   bible_verses?: { book: string; chapter: number; verse: number; text: string }[]
-  duration: number // Added duration field
+  duration: number
+  is_journey_song?: boolean
+  journey_date?: string
+  journey_song_origin?: 'prior_recording' | 'journal_entry' | 'dream' | 'testimony' | 'life_milestone' | 'prophetic_word' | 'other'
 }
 
 interface SongPageProps {
@@ -1155,9 +1172,22 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                   </Badge>
                   {song.ai_used_for_lyrics && <Badge variant="secondary">AI Lyrics</Badge>}
                   {song.music_ai_generated && <Badge variant="secondary">AI Music</Badge>}
+                  {song.music_origin === 'ai_cover_of_human' && <Badge variant="secondary">AI Cover</Badge>}
+                  {song.is_journey_song && <Badge variant="default" className="bg-amber-500 text-white">Journey Song</Badge>}
                 </div>
                 <p><strong>Uploaded by:</strong> {song.username}</p>
                 <p><strong>Created at:</strong> {new Date(song.created_at).toLocaleString()}</p>
+                {song.is_journey_song && (
+                  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg">
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">Journey Song Details</p>
+                    {song.journey_date && (
+                      <p className="text-sm"><strong>Originating Date:</strong> {new Date(song.journey_date + 'T12:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    )}
+                    {song.journey_song_origin && (
+                      <p className="text-sm"><strong>Origin:</strong> {formatJourneySongOrigin(song.journey_song_origin)}</p>
+                    )}
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="flex flex-col space-y-2">
                 <Button

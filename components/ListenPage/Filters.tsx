@@ -4,7 +4,7 @@ import React, { Dispatch, SetStateAction, useState, useCallback, useEffect } fro
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark, Heart, Star, User, Filter, Route } from "lucide-react"
+import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark, Heart, Star, User, Filter, Map } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
@@ -516,7 +516,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 className="h-6 w-6"
                 onClick={() => toggleUserFilter('includeJourneySongs')}
               >
-                <Route className="h-3 w-3" />
+                <Map className="h-3 w-3" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
