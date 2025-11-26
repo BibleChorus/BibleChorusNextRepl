@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { BIBLE_BOOKS, BOLLS_LIFE_API_BIBLE_TRANSLATIONS } from '@/lib/constants';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
-import { BookOpen, Music } from 'lucide-react';
+import { BookOpen, Music, GripVertical } from 'lucide-react';
 import axios from 'axios';
 import { Skeleton } from '@/components/ui/skeleton';
 import DOMPurify from 'isomorphic-dompurify';
@@ -195,28 +196,37 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
 
         <div className="flex-1 overflow-hidden">
           {viewOption === 'both' && hasLyrics && hasVerses ? (
-            <div className="h-[400px] grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
-              <ScrollArea className="h-full">
-                <div className="p-6 md:p-10">
-                  <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
-                    <Music className="w-3 h-3" />
-                    Lyrics
-                  </h3>
-                  <p className="text-foreground/90 whitespace-pre-wrap leading-8 font-light text-sm md:text-base">
-                    {song.lyrics}
-                  </p>
+            <ResizablePanelGroup direction="horizontal" className="h-[400px]">
+              <ResizablePanel defaultSize={50} minSize={25} maxSize={75}>
+                <ScrollArea className="h-full">
+                  <div className="p-6 md:p-10">
+                    <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
+                      <Music className="w-3 h-3" />
+                      Lyrics
+                    </h3>
+                    <p className="text-foreground/90 whitespace-pre-wrap leading-8 font-light text-sm md:text-base">
+                      {song.lyrics}
+                    </p>
+                  </div>
+                </ScrollArea>
+              </ResizablePanel>
+              <ResizableHandle withHandle className="bg-border hover:bg-amber-600/50 dark:hover:bg-amber-400/50 transition-colors">
+                <div className="flex h-full items-center justify-center">
+                  <GripVertical className="h-4 w-4 text-muted-foreground" />
                 </div>
-              </ScrollArea>
-              <ScrollArea className="h-full">
-                <div className="p-6 md:p-10">
-                  <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
-                    <BookOpen className="w-3 h-3" />
-                    Scripture
-                  </h3>
-                  {renderVerseContent()}
-                </div>
-              </ScrollArea>
-            </div>
+              </ResizableHandle>
+              <ResizablePanel defaultSize={50} minSize={25} maxSize={75}>
+                <ScrollArea className="h-full">
+                  <div className="p-6 md:p-10">
+                    <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
+                      <BookOpen className="w-3 h-3" />
+                      Scripture
+                    </h3>
+                    {renderVerseContent()}
+                  </div>
+                </ScrollArea>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           ) : viewOption === 'lyrics' ? (
             <ScrollArea className="h-[400px]">
               <div className="p-6 md:p-10">

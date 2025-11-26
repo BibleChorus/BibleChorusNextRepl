@@ -64,6 +64,9 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         coverArtUrl: song.song_art_url || undefined,
         duration: song.duration,
         uploaded_by: 0,
+        lyrics: songAny.lyrics,
+        bible_verses: songAny.bible_verses,
+        bible_translation_used: songAny.bible_translation_used,
       });
     }
   };
