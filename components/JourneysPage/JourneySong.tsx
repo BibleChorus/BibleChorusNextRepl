@@ -6,7 +6,7 @@ import { SeasonSong } from '@/types/journey';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { format, parseISO } from 'date-fns';
 import { BookOpen } from 'lucide-react';
-import JourneyLyricsDialog from './JourneyLyricsDialog';
+import LyricsBibleComparisonDialog from '@/components/ListenPage/LyricsBibleComparisonDialog';
 
 interface JourneySongProps {
   seasonSong: SeasonSong;
@@ -178,10 +178,10 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         {song.duration > 0 ? formatDuration(song.duration) : '--:--'}
       </span>
 
-      <JourneyLyricsDialog
+      <LyricsBibleComparisonDialog
         isOpen={showLyrics}
         onClose={() => setShowLyrics(false)}
-        song={song}
+        song={songAny}
       />
     </motion.div>
   );
