@@ -67,13 +67,15 @@ Preferred communication style: Simple, everyday language.
 
 5. **Auto-Playlist System**: PostgreSQL functions and triggers automatically maintain playlists based on criteria stored in the `auto_criteria` JSONB column
 
-6. **Journeys System**: Premium artistic portfolio pages where users create time-based "Seasons" to showcase scripture songs. Features include:
-   - **Premium Typography**: Playfair Display serif font for headings, Crimson Text for quotes, Inter for body text
-   - **Theme Colors**: 6 customizable color themes (indigo, purple, pink, amber, emerald, cyan) that apply to the entire page
-   - **Advanced Scroll Animations**: Parallax effects, staggered reveals, smooth spring-based transforms using Framer Motion
-   - **Glassmorphism Design**: Sophisticated blur effects, translucent cards, glowing accents
-   - **Timeline Layout**: Season info on left, songs on right, with animated connecting lines and glowing timeline nodes
+6. **Journeys System**: Premium artistic portfolio pages where users create time-based "Seasons" to showcase scripture songs. Features a dark editorial magazine-style aesthetic:
+   - **Premium Typography**: Italiana serif font for headings, Manrope sans-serif for body text
+   - **Dark Color Palette**: Void (#050505) background, silk (#e5e5e5) text, mist (#a0a0a0) secondary text, gold (#d4af37) accents
+   - **Visual Effects**: Film grain overlay, custom animated cursor, ambient orbs (gold/mist tints), scroll progress indicator
+   - **Advanced Scroll Animations**: Staggered reveals with cubic-bezier(0.16, 1, 0.3, 1) easing, Framer Motion transforms
+   - **Timeline Layout**: Sticky sidebar with giant year watermark (10% opacity), minimal track rows for songs
+   - **Track Rows**: Minimal design (number, play button, title, date, duration) instead of card-based layout
    - **Database**: `journey_profiles` stores user preferences, `journey_seasons` for time periods, `journey_season_songs` links songs with notes
+   - **Components**: JourneyEffects.tsx (shared visual primitives), JourneyHero.tsx, JourneyTimeline.tsx, JourneySong.tsx
 
 ### Authentication & Authorization
 
