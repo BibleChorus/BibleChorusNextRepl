@@ -1,15 +1,127 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import axios from 'axios';
 import { JourneyWithSeasons } from '@/types/journey';
 import { JourneyHero } from '@/components/JourneysPage/JourneyHero';
 import { JourneyTimeline } from '@/components/JourneysPage/JourneyTimeline';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Pencil, Lock, ArrowLeft, Plus, Sparkles, Music, BookOpen } from 'lucide-react';
+import { Pencil, Lock, ArrowLeft, Plus, Music } from 'lucide-react';
+
+const FilmGrain: React.FC = () => (
+  <div 
+    className="fixed inset-0 pointer-events-none z-50 opacity-[0.04]"
+    style={{
+      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+    }}
+  />
+);
+
+const CustomCursor: React.FC = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+      setIsVisible(true);
+    };
+
+    const handleMouseEnter = () => setIsVisible(true);
+    const handleMouseLeave = () => setIsVisible(false);
+
+    const handleHoverStart = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.closest('button') ||
+        target.closest('a') ||
+        target.closest('[data-hover]') ||
+        target.closest('.track-row') ||
+        target.closest('.hover-trigger')
+      ) {
+        setIsHovering(true);
+      }
+    };
+
+    const handleHoverEnd = () => setIsHovering(false);
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseenter', handleMouseEnter);
+    document.addEventListener('mouseleave', handleMouseLeave);
+    document.addEventListener('mouseover', handleHoverStart);
+    document.addEventListener('mouseout', handleHoverEnd);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseenter', handleMouseEnter);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('mouseover', handleHoverStart);
+      document.removeEventListener('mouseout', handleHoverEnd);
+    };
+  }, []);
+
+  if (!isVisible) return null;
+
+  return (
+    <>
+      <motion.div
+        className="fixed top-0 left-0 w-2 h-2 bg-white rounded-full pointer-events-none z-[9999]"
+        animate={{ x: position.x - 4, y: position.y - 4 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 28, mass: 0.5 }}
+      />
+      <motion.div
+        className="fixed top-0 left-0 rounded-full pointer-events-none z-[9998] border border-white/50"
+        animate={{ 
+          x: position.x - (isHovering ? 30 : 20), 
+          y: position.y - (isHovering ? 30 : 20),
+          width: isHovering ? 60 : 40,
+          height: isHovering ? 60 : 40,
+          backgroundColor: isHovering ? 'rgba(255,255,255,0.1)' : 'transparent',
+          borderColor: isHovering ? 'transparent' : 'rgba(255,255,255,0.5)'
+        }}
+        transition={{ type: 'spring', stiffness: 150, damping: 15 }}
+        style={{ backdropFilter: isHovering ? 'blur(2px)' : 'none' }}
+      />
+    </>
+  );
+};
+
+const AmbientOrbs: React.FC = () => (
+  <>
+    <motion.div 
+      className="fixed top-0 left-0 w-96 h-96 rounded-full pointer-events-none z-[-1]"
+      style={{ background: 'rgba(88, 28, 135, 0.2)', filter: 'blur(100px)' }}
+      animate={{ y: [0, -30, 0], x: [0, 20, 0] }}
+      transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+    />
+    <motion.div 
+      className="fixed bottom-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none z-[-1]"
+      style={{ background: 'rgba(30, 58, 138, 0.1)', filter: 'blur(100px)' }}
+      animate={{ y: [0, 30, 0], x: [0, -20, 0] }}
+      transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+    />
+  </>
+);
+
+const ScrollProgress: React.FC = () => {
+  const { scrollYProgress } = useScroll();
+  const height = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+  const smoothHeight = useSpring(height, { stiffness: 100, damping: 30 });
+
+  return (
+    <div className="fixed left-8 top-1/2 -translate-y-1/2 h-64 w-[1px] bg-white/10 hidden lg:block z-30">
+      <motion.div className="w-full bg-white origin-top" style={{ height: smoothHeight }} />
+    </div>
+  );
+};
 
 export default function JourneyPage() {
   const router = useRouter();
@@ -18,6 +130,7 @@ export default function JourneyPage() {
   const [journey, setJourney] = useState<JourneyWithSeasons | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const isOwner = user?.username === username;
 
@@ -56,14 +169,20 @@ export default function JourneyPage() {
         <Head>
           <title>Loading Journey... | BibleChorus</title>
         </Head>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30 flex items-center justify-center">
+        <div 
+          className="min-h-screen flex items-center justify-center"
+          style={{ 
+            backgroundColor: '#050505', 
+            fontFamily: "'Manrope', sans-serif" 
+          }}
+        >
           <div className="text-center">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="w-16 h-16 mx-auto mb-6 rounded-full border-4 border-slate-200 dark:border-slate-700 border-t-indigo-500"
+              className="w-16 h-16 mx-auto mb-6 rounded-full border-2 border-white/10 border-t-gold"
             />
-            <p className="text-slate-600 dark:text-slate-400">Loading journey...</p>
+            <p className="text-mist text-sm tracking-widest uppercase">Loading journey...</p>
           </div>
         </div>
       </>
@@ -76,32 +195,45 @@ export default function JourneyPage() {
         <Head>
           <title>{error} | BibleChorus</title>
         </Head>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30 flex items-center justify-center">
+        <div 
+          className="min-h-screen flex items-center justify-center"
+          style={{ 
+            backgroundColor: '#050505', 
+            fontFamily: "'Manrope', sans-serif" 
+          }}
+        >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-md mx-auto px-4"
           >
-            <div className="mb-6">
-              <div className="w-20 h-20 mx-auto bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
-                <Lock className="w-10 h-10 text-slate-400" />
+            <div className="mb-8">
+              <div className="w-20 h-20 mx-auto rounded-full border border-white/10 flex items-center justify-center">
+                <Lock className="w-8 h-8 text-mist" />
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4">
+            <h1 
+              className="text-3xl text-silk mb-4"
+              style={{ fontFamily: "'Italiana', serif" }}
+            >
               {error}
             </h1>
-            <p className="text-slate-600 dark:text-slate-400 mb-8">
+            <p className="text-mist mb-8 font-light">
               {error === 'This journey is private' 
                 ? 'The owner has not made this journey public yet.'
                 : 'We could not find the journey you are looking for.'}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button variant="outline" onClick={() => router.back()}>
+              <Button 
+                variant="outline" 
+                onClick={() => router.back()}
+                className="border-white/20 text-silk hover:bg-white/5 hover:text-white"
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Go Back
               </Button>
               <Link href="/journeys">
-                <Button className="bg-gradient-to-r from-indigo-500 to-purple-500">
+                <Button className="bg-gold hover:bg-gold/90 text-void">
                   Explore Journeys
                 </Button>
               </Link>
@@ -118,66 +250,47 @@ export default function JourneyPage() {
         <Head>
           <title>Start Your Journey | BibleChorus</title>
         </Head>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30">
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/[0.08] via-purple-400/[0.06] to-pink-400/[0.08] dark:from-indigo-400/[0.13] dark:via-purple-400/[0.1] dark:to-pink-400/[0.13]"></div>
-            <motion.div 
-              animate={{ 
-                x: [0, 30, 0],
-                y: [0, -50, 0],
-                scale: [1, 1.1, 1]
-              }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute top-0 -left-20 w-[500px] h-[500px] bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl"
-            />
-            <motion.div 
-              animate={{ 
-                x: [0, -20, 0],
-                y: [0, 30, 0],
-                scale: [1, 1.15, 1]
-              }}
-              transition={{ duration: 25, repeat: Infinity, ease: "linear", delay: 5 }}
-              className="absolute top-20 -right-20 w-[400px] h-[400px] bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl"
-            />
-          </div>
-
-          <div className="relative z-10 container mx-auto px-4 py-24">
+        <div 
+          className="min-h-screen relative overflow-hidden"
+          style={{ 
+            backgroundColor: '#050505', 
+            fontFamily: "'Manrope', sans-serif" 
+          }}
+        >
+          <FilmGrain />
+          <AmbientOrbs />
+          
+          <div className="relative z-10 container mx-auto px-4 py-24 flex items-center justify-center min-h-screen">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              className="max-w-3xl mx-auto text-center"
+              className="max-w-2xl mx-auto text-center"
             >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="mb-8"
+                className="text-xs tracking-[0.5em] text-gold mb-8 uppercase"
               >
-                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-400/12 via-purple-400/12 to-pink-400/12 backdrop-blur-md border border-indigo-400/14 shadow-lg">
-                  <Sparkles className="w-4 h-4 text-indigo-500" />
-                  <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 bg-clip-text text-transparent font-semibold">
-                    Your Musical Journey Awaits
-                  </span>
-                </span>
-              </motion.div>
+                Your Sonic Archive Awaits
+              </motion.p>
 
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-5xl md:text-6xl font-bold text-slate-800 dark:text-slate-100 mb-6"
+                className="text-5xl md:text-7xl text-silk mb-6 tracking-tight"
+                style={{ fontFamily: "'Italiana', serif" }}
               >
-                Welcome to Your
-                <span className="block bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 bg-clip-text text-transparent">
-                  Journey
-                </span>
+                Begin Your<br />
+                <span className="italic font-light">Journey</span>
               </motion.h1>
 
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-xl text-slate-600 dark:text-slate-400 mb-12 max-w-xl mx-auto"
+                className="text-lg text-mist mb-12 max-w-md mx-auto font-light leading-relaxed"
               >
                 This is your personal space to showcase your musical testimony. 
                 Create seasons, add your songs, and share your story of faith.
@@ -189,35 +302,19 @@ export default function JourneyPage() {
                 transition={{ delay: 0.4 }}
                 className="grid md:grid-cols-3 gap-6 mb-12"
               >
-                <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-white/20 dark:border-slate-700/40">
-                  <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
-                    <Music className="w-6 h-6 text-white" />
+                {[
+                  { title: 'Create Seasons', desc: 'Organize songs into meaningful chapters' },
+                  { title: 'Add Reflections', desc: 'Share testimonies and scripture' },
+                  { title: 'Share Your Story', desc: 'Inspire others with your journey' },
+                ].map((item, i) => (
+                  <div 
+                    key={item.title}
+                    className="p-6 border border-white/5 rounded-none"
+                  >
+                    <h3 className="text-silk mb-2 text-sm tracking-wide">{item.title}</h3>
+                    <p className="text-xs text-mist font-light">{item.desc}</p>
                   </div>
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">Create Seasons</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Organize your songs into meaningful chapters of your journey.
-                  </p>
-                </div>
-
-                <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-white/20 dark:border-slate-700/40">
-                  <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                    <BookOpen className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">Add Reflections</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Share testimonies and scripture references for each season.
-                  </p>
-                </div>
-
-                <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-white/20 dark:border-slate-700/40">
-                  <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">Share Your Story</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Inspire others with your musical journey of faith.
-                  </p>
-                </div>
+                ))}
               </motion.div>
 
               <motion.div
@@ -228,10 +325,10 @@ export default function JourneyPage() {
                 <Link href="/journeys/edit">
                   <Button 
                     size="lg"
-                    className="h-14 px-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-semibold text-lg"
+                    className="h-14 px-10 bg-gold hover:bg-gold/90 text-void font-medium text-sm tracking-widest uppercase rounded-none"
                   >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Start Creating Your Journey
+                    <Plus className="w-4 h-4 mr-3" />
+                    Begin
                   </Button>
                 </Link>
               </motion.div>
@@ -246,17 +343,6 @@ export default function JourneyPage() {
 
   const hasSeasons = journey.seasons && journey.seasons.length > 0;
 
-  const themeBackgrounds: Record<string, string> = {
-    indigo: 'from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30',
-    purple: 'from-slate-50 via-white to-purple-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950/30',
-    pink: 'from-slate-50 via-white to-pink-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-pink-950/30',
-    amber: 'from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-amber-950/30',
-    emerald: 'from-slate-50 via-white to-emerald-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950/30',
-    cyan: 'from-slate-50 via-white to-cyan-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-cyan-950/30',
-  };
-
-  const bgClass = themeBackgrounds[journey.theme_color || 'indigo'] || themeBackgrounds.indigo;
-
   return (
     <>
       <Head>
@@ -268,7 +354,34 @@ export default function JourneyPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className={`min-h-screen bg-gradient-to-br ${bgClass}`}>
+      <div 
+        ref={containerRef}
+        className="min-h-screen selection:bg-white selection:text-black"
+        style={{ 
+          backgroundColor: '#050505',
+          color: '#e5e5e5',
+          fontFamily: "'Manrope', sans-serif",
+          cursor: 'none'
+        }}
+      >
+        <style jsx global>{`
+          .journey-page ::-webkit-scrollbar {
+            width: 6px;
+          }
+          .journey-page ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+          }
+          .journey-page ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+          }
+        `}</style>
+
+        <FilmGrain />
+        <CustomCursor />
+        <AmbientOrbs />
+        <ScrollProgress />
+
         {isOwner && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -277,65 +390,83 @@ export default function JourneyPage() {
           >
             <Link href="/journeys/edit">
               <Button
-                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/20 dark:border-slate-700/40 text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 shadow-lg"
+                className="bg-ash/80 backdrop-blur-xl border border-white/10 text-silk hover:bg-ash hover:text-white rounded-none text-xs tracking-widest uppercase px-6"
               >
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit Journey
+                <Pencil className="w-3 h-3 mr-2" />
+                Edit
               </Button>
             </Link>
           </motion.div>
         )}
 
-        <JourneyHero journey={journey} />
-        
-        <div className="container mx-auto px-4 py-16 lg:py-24">
-          {hasSeasons ? (
-            <JourneyTimeline journey={journey} isPreview={isOwner} />
-          ) : isOwner ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-16"
-            >
-              <div className="relative mb-8 inline-block">
-                <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-full blur-2xl" />
-                <div className="relative p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/20 dark:border-slate-700/40">
-                  <Sparkles className="w-16 h-16 text-indigo-500" />
+        <nav className="fixed top-0 w-full p-8 flex justify-between items-center z-40 mix-blend-difference">
+          <Link 
+            href="/journeys" 
+            className="text-xl tracking-widest hover-trigger"
+            style={{ fontFamily: "'Italiana', serif" }}
+          >
+            JOURNEYS.
+          </Link>
+          <div className="hidden md:flex gap-8 text-xs tracking-[0.2em] font-light">
+            <a href="#seasons" className="hover:text-mist transition-colors hover-trigger">SEASONS</a>
+          </div>
+        </nav>
+
+        <div className="journey-page">
+          <JourneyHero journey={journey} />
+          
+          <main id="seasons" className="relative pb-32">
+            {hasSeasons ? (
+              <JourneyTimeline journey={journey} isPreview={isOwner} />
+            ) : isOwner ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-32"
+              >
+                <div className="w-20 h-20 mx-auto mb-8 rounded-full border border-white/10 flex items-center justify-center">
+                  <Music className="w-8 h-8 text-mist" />
                 </div>
-              </div>
-              <h2 className="text-3xl font-bold text-slate-700 dark:text-slate-300 mb-4">
-                Your Journey Awaits
-              </h2>
-              <p className="text-lg text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
-                Start by creating your first season to showcase your musical testimony.
-              </p>
-              <Link href="/journeys/edit">
-                <Button 
-                  size="lg"
-                  className="h-12 px-6 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 rounded-xl font-semibold"
+                <h2 
+                  className="text-3xl text-silk mb-4"
+                  style={{ fontFamily: "'Italiana', serif" }}
                 >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Create Your First Season
-                </Button>
-              </Link>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-16"
-            >
-              <div className="w-16 h-16 mx-auto mb-6 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
-                <Music className="w-8 h-8 text-slate-400" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-300 mb-4">
-                No Seasons Yet
-              </h2>
-              <p className="text-slate-500 dark:text-slate-400">
-                This journey doesn't have any seasons to display yet.
-              </p>
-            </motion.div>
-          )}
+                  Your Journey Awaits
+                </h2>
+                <p className="text-mist mb-8 max-w-md mx-auto font-light">
+                  Start by creating your first season to showcase your musical testimony.
+                </p>
+                <Link href="/journeys/edit">
+                  <Button 
+                    size="lg"
+                    className="h-12 px-8 bg-gold hover:bg-gold/90 text-void rounded-none text-xs tracking-widest uppercase"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create First Season
+                  </Button>
+                </Link>
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-32"
+              >
+                <div className="w-16 h-16 mx-auto mb-6 rounded-full border border-white/10 flex items-center justify-center">
+                  <Music className="w-6 h-6 text-mist" />
+                </div>
+                <h2 
+                  className="text-2xl text-silk mb-4"
+                  style={{ fontFamily: "'Italiana', serif" }}
+                >
+                  No Seasons Yet
+                </h2>
+                <p className="text-mist font-light">
+                  This journey doesn't have any seasons to display yet.
+                </p>
+              </motion.div>
+            )}
+          </main>
         </div>
       </div>
     </>

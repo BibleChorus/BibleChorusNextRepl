@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOURNEYS | The Music Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Italiana&family=Manrope:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Italiana', 'serif'],
+                        sans: ['Manrope', 'sans-serif'],
+                    },
+                    colors: {
+                        void: '#0a0a0a',
+                        ash: '#1a1a1a',
+                        mist: '#888888',
+                        silk: '#e5e5e5',
+                        gold: '#d4af37'
+                    },
+                    animation: {
+                        'float': 'float 10s ease-in-out infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom High-End Reset & Utilities */
+        body {
+            background-color: #050505;
+            color: #e5e5e5;
+            cursor: none; /* Hiding default cursor for custom one */
+            overflow-x: hidden;
+        }
+
+        /* Smooth Scroll Behavior Enhancement */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        /* Film Grain Overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Custom Cursor */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: white;
+        }
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        
+        /* Hover state for cursor */
+        body.hovering .cursor-outline {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: transparent;
+            backdrop-filter: blur(2px);
+        }
+
+        /* Reveal Animation Classes */
+        .reveal-text {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal-text.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-image-container {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .reveal-image {
+            transform: scale(1.1);
+            transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal-image-container.visible .reveal-image {
+            transform: scale(1);
+        }
+
+        /* Ambient Orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            z-index: -1;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        /* Audio Player Styling */
+        .track-row {
+            transition: background-color 0.3s ease, padding 0.3s ease;
+        }
+        .track-row:hover {
+            background-color: rgba(255,255,255,0.03);
+            padding-left: 10px;
+        }
+        .playing-indicator span {
+            display: inline-block;
+            width: 3px;
+            background-color: #d4af37;
+            animation: sound-wave 1s infinite ease-in-out;
+        }
+        .playing-indicator span:nth-child(2) { animation-delay: 0.2s; height: 15px; }
+        .playing-indicator span:nth-child(1), 
+        .playing-indicator span:nth-child(3) { height: 8px; }
+
+        @keyframes sound-wave {
+            0%, 100% { height: 8px; }
+            50% { height: 20px; }
+        }
+
+        /* Sticky Season Year logic */
+        .season-trigger {
+            position: relative;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-white selection:text-black">
+
+    <!-- Film Grain -->
+    <div class="noise-overlay"></div>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-outline" id="cursor-outline"></div>
+
+    <!-- Ambient Background -->
+    <div class="orb w-96 h-96 bg-purple-900/20 top-0 left-0"></div>
+    <div class="orb w-[500px] h-[500px] bg-blue-900/10 bottom-0 right-0 animation-delay-2000"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-40 mix-blend-difference">
+        <div class="text-xl font-serif tracking-widest hover-trigger">JOURNEYS.</div>
+        <div class="hidden md:flex gap-8 text-xs tracking-[0.2em] font-light">
+            <a href="#about" class="hover:text-mist transition-colors hover-trigger">ABOUT</a>
+            <a href="#seasons" class="hover:text-mist transition-colors hover-trigger">SEASONS</a>
+            <a href="#contact" class="hover:text-mist transition-colors hover-trigger">CONNECT</a>
+        </div>
+        <div class="md:hidden text-xs tracking-widest hover-trigger">MENU</div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="h-screen w-full flex flex-col justify-center items-center relative overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <!-- Abstract darker hero image -->
+            <img src="https://images.unsplash.com/photo-1444723121867-2605d1ce2719?q=80&w=2832&auto=format&fit=crop" 
+                 class="w-full h-full object-cover opacity-30 grayscale" alt="Atmospheric Texture">
+            <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
+        </div>
+
+        <div class="z-10 text-center px-4">
+            <p class="text-xs md:text-sm tracking-[0.5em] text-mist mb-6 reveal-text">A SONIC ARCHIVE</p>
+            <h1 class="text-6xl md:text-9xl font-serif tracking-tighter leading-none mb-8 mix-blend-overlay reveal-text" style="transition-delay: 100ms;">
+                The<br><span class="italic font-light">Journeys</span>
+            </h1>
+            <p class="max-w-md mx-auto text-sm md:text-base font-light text-silk/80 leading-relaxed reveal-text" style="transition-delay: 200ms;">
+                A chronological exploration of sound, emotion, and the seasons of a life lived in music.
+            </p>
+        </div>
+
+        <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 reveal-text" style="transition-delay: 500ms;">
+            <div class="w-[1px] h-16 bg-gradient-to-b from-transparent via-white to-transparent opacity-50"></div>
+            <span class="text-[10px] tracking-[0.3em] uppercase opacity-60">Begin</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="seasons" class="relative pb-32">
+
+        <!-- Progress Line (Fixed on left) -->
+        <div class="fixed left-8 top-1/2 -translate-y-1/2 h-64 w-[1px] bg-white/10 hidden lg:block z-30">
+            <div id="progress-indicator" class="w-full bg-white transition-all duration-300" style="height: 0%;"></div>
+        </div>
+
+        <!-- SEASON 1 -->
+        <section class="season-section min-h-screen w-full py-24 md:py-32 px-6 md:px-24 border-b border-white/5" data-year="2021">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
+                
+                <!-- Sticky Sidebar (Year) -->
+                <div class="lg:col-span-3 relative">
+                    <div class="lg:sticky lg:top-32">
+                        <h2 class="text-8xl md:text-[10rem] font-serif leading-none opacity-10 select-none absolute -left-4 -top-8 lg:-left-12 lg:-top-12 z-0">2021</h2>
+                        <div class="relative z-10">
+                            <span class="block text-gold text-xs tracking-[0.3em] mb-2 reveal-text">SEASON I</span>
+                            <h3 class="text-4xl md:text-5xl font-serif italic mb-6 reveal-text">The Awakening</h3>
+                            <p class="text-sm font-light text-mist leading-7 reveal-text mb-8">
+                                The winter of 2021 was quiet. The world stood still, and in that silence, I found the first notes. This season represents isolation, introspection, and the first fragile steps towards a new sound.
+                            </p>
+                            
+                            <!-- Season Cover Art -->
+                            <div class="reveal-image-container aspect-[3/4] w-full max-w-[200px] mb-8 lg:mb-0 grayscale hover:grayscale-0 transition-all duration-700">
+                                <img src="https://images.unsplash.com/photo-1515155075601-23009d0cb6d4?q=80&w=1000&auto=format&fit=crop" 
+                                     class="reveal-image w-full h-full object-cover" alt="Album Art 2021">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content (Tracks) -->
+                <div class="lg:col-span-9 pt-12 lg:pt-32">
+                    <div class="space-y-1">
+                        
+                        <!-- Track 1 -->
+                        <div class="track-row group flex items-center justify-between py-6 border-b border-white/10 cursor-pointer hover-trigger reveal-text" onclick="togglePlay(this)">
+                            <div class="flex items-center gap-6">
+                                <span class="text-xs text-mist font-mono">01</span>
+                                <div class="play-btn w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white transition-colors">
+                                    <svg class="w-3 h-3 fill-current play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <div class="pause-icon hidden h-3 w-3 gap-1 flex justify-center items-end playing-indicator">
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg md:text-xl font-light tracking-wide group-hover:translate-x-2 transition-transform duration-300">Winter's Breath</h4>
+                                    <span class="text-[10px] text-mist uppercase tracking-widest">January 14th</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-mist font-mono">03:42</span>
+                        </div>
+
+                        <!-- Track 2 -->
+                        <div class="track-row group flex items-center justify-between py-6 border-b border-white/10 cursor-pointer hover-trigger reveal-text" style="transition-delay: 100ms;" onclick="togglePlay(this)">
+                            <div class="flex items-center gap-6">
+                                <span class="text-xs text-mist font-mono">02</span>
+                                <div class="play-btn w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white transition-colors">
+                                    <svg class="w-3 h-3 fill-current play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <div class="pause-icon hidden h-3 w-3 gap-1 flex justify-center items-end playing-indicator">
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg md:text-xl font-light tracking-wide group-hover:translate-x-2 transition-transform duration-300">Glass Houses</h4>
+                                    <span class="text-[10px] text-mist uppercase tracking-widest">March 02nd</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-mist font-mono">04:15</span>
+                        </div>
+
+                         <!-- Track 3 -->
+                         <div class="track-row group flex items-center justify-between py-6 border-b border-white/10 cursor-pointer hover-trigger reveal-text" style="transition-delay: 200ms;" onclick="togglePlay(this)">
+                            <div class="flex items-center gap-6">
+                                <span class="text-xs text-mist font-mono">03</span>
+                                <div class="play-btn w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white transition-colors">
+                                    <svg class="w-3 h-3 fill-current play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <div class="pause-icon hidden h-3 w-3 gap-1 flex justify-center items-end playing-indicator">
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg md:text-xl font-light tracking-wide group-hover:translate-x-2 transition-transform duration-300">Echoes in the Hall</h4>
+                                    <span class="text-[10px] text-mist uppercase tracking-widest">May 21st</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-mist font-mono">02:58</span>
+                        </div>
+
+                    </div>
+                    
+                    <!-- Atmospheric Image Insert -->
+                    <div class="mt-16 w-full h-[300px] md:h-[500px] reveal-image-container relative">
+                        <div class="absolute inset-0 bg-black/20 z-10"></div>
+                        <img src="https://images.unsplash.com/photo-1483086431486-31e654cd30f5?q=80&w=2600&auto=format&fit=crop" class="reveal-image w-full h-full object-cover" alt="Atmosphere">
+                        <div class="absolute bottom-8 right-8 z-20 text-right">
+                            <p class="font-serif italic text-2xl">"Silence is the loudest sound."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEASON 2 -->
+        <section class="season-section min-h-screen w-full py-24 md:py-32 px-6 md:px-24 border-b border-white/5" data-year="2022">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
+                
+                <div class="lg:col-span-3 relative">
+                    <div class="lg:sticky lg:top-32">
+                        <h2 class="text-8xl md:text-[10rem] font-serif leading-none opacity-10 select-none absolute -left-4 -top-8 lg:-left-12 lg:-top-12 z-0">2022</h2>
+                        <div class="relative z-10">
+                            <span class="block text-gold text-xs tracking-[0.3em] mb-2 reveal-text">SEASON II</span>
+                            <h3 class="text-4xl md:text-5xl font-serif italic mb-6 reveal-text">Static & Bloom</h3>
+                            <p class="text-sm font-light text-mist leading-7 reveal-text mb-8">
+                                Chaos entered the frame. 2022 was about friction, electronic distortion, and finding beauty in the noise. The acoustic piano was replaced by synthesizers and field recordings.
+                            </p>
+                            <div class="reveal-image-container aspect-[3/4] w-full max-w-[200px] mb-8 lg:mb-0 grayscale hover:grayscale-0 transition-all duration-700">
+                                <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=1000&auto=format&fit=crop" 
+                                     class="reveal-image w-full h-full object-cover" alt="Album Art 2022">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-9 pt-12 lg:pt-32">
+                    <div class="space-y-1">
+                        
+                        <!-- Track 1 -->
+                        <div class="track-row group flex items-center justify-between py-6 border-b border-white/10 cursor-pointer hover-trigger reveal-text" onclick="togglePlay(this)">
+                            <div class="flex items-center gap-6">
+                                <span class="text-xs text-mist font-mono">04</span>
+                                <div class="play-btn w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white transition-colors">
+                                    <svg class="w-3 h-3 fill-current play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <div class="pause-icon hidden h-3 w-3 gap-1 flex justify-center items-end playing-indicator">
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg md:text-xl font-light tracking-wide group-hover:translate-x-2 transition-transform duration-300">Voltage</h4>
+                                    <span class="text-[10px] text-mist uppercase tracking-widest">February 11th</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-mist font-mono">03:12</span>
+                        </div>
+
+                        <!-- Track 2 -->
+                        <div class="track-row group flex items-center justify-between py-6 border-b border-white/10 cursor-pointer hover-trigger reveal-text" style="transition-delay: 100ms;" onclick="togglePlay(this)">
+                            <div class="flex items-center gap-6">
+                                <span class="text-xs text-mist font-mono">05</span>
+                                <div class="play-btn w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white transition-colors">
+                                    <svg class="w-3 h-3 fill-current play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <div class="pause-icon hidden h-3 w-3 gap-1 flex justify-center items-end playing-indicator">
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg md:text-xl font-light tracking-wide group-hover:translate-x-2 transition-transform duration-300">City Lights Blurring</h4>
+                                    <span class="text-[10px] text-mist uppercase tracking-widest">July 19th</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-mist font-mono">04:44</span>
+                        </div>
+
+                        <!-- Track 3 -->
+                        <div class="track-row group flex items-center justify-between py-6 border-b border-white/10 cursor-pointer hover-trigger reveal-text" style="transition-delay: 200ms;" onclick="togglePlay(this)">
+                            <div class="flex items-center gap-6">
+                                <span class="text-xs text-mist font-mono">06</span>
+                                <div class="play-btn w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white transition-colors">
+                                    <svg class="w-3 h-3 fill-current play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <div class="pause-icon hidden h-3 w-3 gap-1 flex justify-center items-end playing-indicator">
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg md:text-xl font-light tracking-wide group-hover:translate-x-2 transition-transform duration-300">Neon Rain</h4>
+                                    <span class="text-[10px] text-mist uppercase tracking-widest">November 05th</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-mist font-mono">03:33</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-16 w-full h-[300px] md:h-[500px] reveal-image-container relative">
+                         <div class="absolute inset-0 bg-indigo-900/20 z-10 mix-blend-overlay"></div>
+                        <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2600&auto=format&fit=crop" class="reveal-image w-full h-full object-cover" alt="Atmosphere">
+                         <div class="absolute bottom-8 left-8 z-20">
+                            <p class="font-serif italic text-2xl">"Motion over emotion."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEASON 3 -->
+        <section class="season-section min-h-screen w-full py-24 md:py-32 px-6 md:px-24" data-year="2023">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
+                
+                <div class="lg:col-span-3 relative">
+                    <div class="lg:sticky lg:top-32">
+                        <h2 class="text-8xl md:text-[10rem] font-serif leading-none opacity-10 select-none absolute -left-4 -top-8 lg:-left-12 lg:-top-12 z-0">2023</h2>
+                        <div class="relative z-10">
+                            <span class="block text-gold text-xs tracking-[0.3em] mb-2 reveal-text">SEASON III</span>
+                            <h3 class="text-4xl md:text-5xl font-serif italic mb-6 reveal-text">Golden Hour</h3>
+                            <p class="text-sm font-light text-mist leading-7 reveal-text mb-8">
+                                Returning to the roots, but with new eyes. 2023 was warm, orchestral, and vast. The journey led me to a place of resolution.
+                            </p>
+                            <div class="reveal-image-container aspect-[3/4] w-full max-w-[200px] mb-8 lg:mb-0 grayscale hover:grayscale-0 transition-all duration-700">
+                                <img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=1000&auto=format&fit=crop" 
+                                     class="reveal-image w-full h-full object-cover" alt="Album Art 2023">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-9 pt-12 lg:pt-32">
+                    <div class="space-y-1">
+                        <!-- Track 1 -->
+                         <div class="track-row group flex items-center justify-between py-6 border-b border-white/10 cursor-pointer hover-trigger reveal-text" onclick="togglePlay(this)">
+                            <div class="flex items-center gap-6">
+                                <span class="text-xs text-mist font-mono">07</span>
+                                <div class="play-btn w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white transition-colors">
+                                    <svg class="w-3 h-3 fill-current play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <div class="pause-icon hidden h-3 w-3 gap-1 flex justify-center items-end playing-indicator">
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg md:text-xl font-light tracking-wide group-hover:translate-x-2 transition-transform duration-300">Sun Bleached</h4>
+                                    <span class="text-[10px] text-mist uppercase tracking-widest">April 10th</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-mist font-mono">03:50</span>
+                        </div>
+
+                        <!-- Track 2 -->
+                        <div class="track-row group flex items-center justify-between py-6 border-b border-white/10 cursor-pointer hover-trigger reveal-text" style="transition-delay: 100ms;" onclick="togglePlay(this)">
+                            <div class="flex items-center gap-6">
+                                <span class="text-xs text-mist font-mono">08</span>
+                                <div class="play-btn w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white transition-colors">
+                                    <svg class="w-3 h-3 fill-current play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <div class="pause-icon hidden h-3 w-3 gap-1 flex justify-center items-end playing-indicator">
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                        <span class="w-[2px] bg-white h-full"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg md:text-xl font-light tracking-wide group-hover:translate-x-2 transition-transform duration-300">Arrival</h4>
+                                    <span class="text-[10px] text-mist uppercase tracking-widest">September 22nd</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-mist font-mono">05:12</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer id="contact" class="w-full py-24 border-t border-white/5 bg-ash relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 md:px-24 flex flex-col items-center justify-center text-center relative z-10">
+            <h2 class="text-4xl md:text-6xl font-serif italic mb-12 hover-trigger">The Journey Continues</h2>
+            
+            <div class="flex gap-8 mb-16">
+                <a href="#" class="text-xs tracking-widest uppercase hover:text-gold transition-colors hover-trigger">Spotify</a>
+                <a href="#" class="text-xs tracking-widest uppercase hover:text-gold transition-colors hover-trigger">Apple Music</a>
+                <a href="#" class="text-xs tracking-widest uppercase hover:text-gold transition-colors hover-trigger">Instagram</a>
+            </div>
+            
+            <p class="text-xs text-mist font-mono">&copy; 2024 Journeys. Crafted for the Sound.</p>
+        </div>
+        
+        <!-- Footer bg decoration -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-gold/5 blur-[120px] rounded-full pointer-events-none"></div>
+    </footer>
+
+    <script>
+        // --- Custom Cursor Logic ---
+        const cursorDot = document.querySelector('#cursor-dot');
+        const cursorOutline = document.querySelector('#cursor-outline');
+        
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            // Dot follows instantly
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            // Outline follows with slight delay (simulated via CSS transition, we just update pos)
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        // Hover Effect for interactive elements
+        const hoverTriggers = document.querySelectorAll('.hover-trigger');
+        hoverTriggers.forEach(trigger => {
+            trigger.addEventListener('mouseenter', () => {
+                document.body.classList.add('hovering');
+            });
+            trigger.addEventListener('mouseleave', () => {
+                document.body.classList.remove('hovering');
+            });
+        });
+
+        // --- Intersection Observer for Reveals ---
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    // Optional: Stop observing once revealed
+                    // observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-text, .reveal-image-container').forEach(el => {
+            observer.observe(el);
+        });
+
+
+        // --- Audio Player Simulation ---
+        let currentPlaying = null;
+
+        function togglePlay(element) {
+            const playIcon = element.querySelector('.play-icon');
+            const pauseIcon = element.querySelector('.pause-icon');
+            
+            // If clicking the same track that is playing
+            if (currentPlaying === element) {
+                // Pause it
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none'; // Use flex in CSS, but here we toggle hidden
+                pauseIcon.classList.add('hidden');
+                element.classList.remove('bg-white/5');
+                currentPlaying = null;
+                return;
+            }
+
+            // If another track is playing, reset it
+            if (currentPlaying) {
+                const prevPlay = currentPlaying.querySelector('.play-icon');
+                const prevPause = currentPlaying.querySelector('.pause-icon');
+                prevPlay.style.display = 'block';
+                prevPause.classList.add('hidden');
+                currentPlaying.classList.remove('bg-white/5');
+            }
+
+            // Play new track
+            playIcon.style.display = 'none';
+            pauseIcon.classList.remove('hidden');
+            pauseIcon.style.display = 'flex';
+            element.classList.add('bg-white/5');
+            currentPlaying = element;
+        }
+
+        // --- Scroll Progress Indicator ---
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById("progress-indicator").style.height = scrolled + "%";
+        });
+
+        // --- Parallax Effect on Images ---
+        // Simple parallax logic to give that "floating" high-end feel
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const images = document.querySelectorAll('.reveal-image');
+            
+            images.forEach((img) => {
+                const speed = 0.05;
+                const limit = img.parentElement.offsetTop;
+                if (scrolled > limit - window.innerHeight && scrolled < limit + img.parentElement.offsetHeight) {
+                    const yPos = (scrolled - limit) * speed;
+                    img.style.transform = `scale(1.1) translateY(${yPos}px)`;
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>

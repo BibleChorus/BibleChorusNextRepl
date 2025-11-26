@@ -188,6 +188,7 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
                           showPlayCount={showPlayCounts}
                           showDate={showDates}
                           themeColor={season.theme_color || 'indigo'}
+                          trackNumber={index + 1}
                         />
                       </motion.div>
                     ))}

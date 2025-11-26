@@ -51,6 +51,11 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        void: '#0a0a0a',
+        ash: '#1a1a1a',
+        mist: '#888888',
+        silk: '#e5e5e5',
+        gold: '#d4af37',
         lavender: {
           50: "hsl(var(--lavender-50))",
           100: "hsl(var(--lavender-100))",
@@ -186,6 +191,22 @@ module.exports = {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-20px)" },
         },
+        "float-slow": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-30px)" },
+        },
+        "reveal-up": {
+          "0%": { opacity: "0", transform: "translateY(30px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "reveal-scale": {
+          "0%": { transform: "scale(1.1)" },
+          "100%": { transform: "scale(1)" },
+        },
+        "sound-wave": {
+          "0%, 100%": { height: "8px" },
+          "50%": { height: "20px" },
+        },
         "gradient-x": {
           "0%, 100%": {
             "background-size": "200% 200%",
@@ -207,8 +228,12 @@ module.exports = {
         'fadeIn': 'fadeIn 0.5s ease-in',
         blob: "blob 7s infinite",
         float: "float 3s ease-in-out infinite",
+        "float-slow": "float-slow 15s ease-in-out infinite",
         "gradient-x": "gradient-x 15s ease infinite",
         "scale-x": "scale-x 1s ease-out forwards",
+        "reveal-up": "reveal-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "reveal-scale": "reveal-scale 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "sound-wave": "sound-wave 1s infinite ease-in-out",
       },
     },
   },

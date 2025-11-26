@@ -29,6 +29,10 @@ localPort = 36165
 localPort = 36709
 externalPort = 3001
 
+[[ports]]
+localPort = 37135
+externalPort = 3002
+
 [agent]
 expertMode = true
 
