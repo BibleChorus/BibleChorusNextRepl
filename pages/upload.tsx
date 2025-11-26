@@ -178,6 +178,7 @@ function UploadContent() {
   // Song type state for journey songs
   const [songType, setSongType] = useState<'scripture' | 'journey' | 'both'>('scripture');
   const [journeyDate, setJourneyDate] = useState<Date | undefined>(new Date());
+  const [journeyDateInput, setJourneyDateInput] = useState<string>(format(new Date(), "MM/dd/yyyy"));
 
   // Refs
   const genreRef = useRef<HTMLDivElement>(null);
@@ -938,18 +939,29 @@ function UploadContent() {
                               <Input
                                 type="text"
                                 placeholder="MM/DD/YYYY"
-                                value={journeyDate ? format(journeyDate, "MM/dd/yyyy") : ""}
+                                value={journeyDateInput}
                                 onChange={(e) => {
+                                  setJourneyDateInput(e.target.value);
+                                }}
+                                onBlur={(e) => {
                                   const value = e.target.value;
                                   if (!value) {
                                     setJourneyDate(undefined);
+                                    setJourneyDateInput("");
                                     field.onChange(undefined);
                                     return;
                                   }
                                   const parsed = parse(value, "MM/dd/yyyy", new Date());
-                                  if (isValid(parsed) && parsed <= new Date()) {
+                                  if (isValid(parsed) && parsed <= new Date() && parsed.getFullYear() >= 1950) {
                                     setJourneyDate(parsed);
+                                    setJourneyDateInput(format(parsed, "MM/dd/yyyy"));
                                     field.onChange(format(parsed, 'yyyy-MM-dd'));
+                                  } else {
+                                    if (journeyDate) {
+                                      setJourneyDateInput(format(journeyDate, "MM/dd/yyyy"));
+                                    } else {
+                                      setJourneyDateInput("");
+                                    }
                                   }
                                 }}
                                 className="flex-1"
@@ -970,6 +982,7 @@ function UploadContent() {
                                     selected={journeyDate}
                                     onSelect={(date) => {
                                       setJourneyDate(date);
+                                      setJourneyDateInput(date ? format(date, "MM/dd/yyyy") : "");
                                       field.onChange(date ? format(date, 'yyyy-MM-dd') : undefined);
                                     }}
                                     disabled={(date) => date > new Date()}
@@ -1002,12 +1015,12 @@ function UploadContent() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="prior_recording">A prior recording</SelectItem>
+                                <SelectItem value="prior_recording">A previously written song</SelectItem>
                                 <SelectItem value="journal_entry">A journal entry</SelectItem>
                                 <SelectItem value="dream">A dream</SelectItem>
                                 <SelectItem value="testimony">A testimony</SelectItem>
                                 <SelectItem value="life_milestone">A life milestone</SelectItem>
-                                <SelectItem value="prophetic_word">A prophetic word received from God</SelectItem>
+                                <SelectItem value="prophetic_word">A prayer or prophetic utterance</SelectItem>
                                 <SelectItem value="other">Other</SelectItem>
                               </SelectContent>
                             </Select>
