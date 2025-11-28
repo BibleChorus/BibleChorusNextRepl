@@ -335,6 +335,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
             initial={{ opacity: 0 }}
             animate={{ 
               opacity: isHovered || isTouched || isCurrentSong ? 1 : 0,
+              marginRight: showArt && songArtUrl ? '120px' : '0px',
               borderColor: isHovered ? `${theme.accent}80` : theme.border,
               backgroundColor: isHovered ? `${theme.accent}0d` : 'transparent'
             }}

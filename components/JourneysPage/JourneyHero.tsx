@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { JourneyWithSeasons } from '@/types/journey';
 import Image from 'next/image';
@@ -18,13 +18,30 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   const [mounted, setMounted] = useState(false);
   const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
 
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"]
-  });
+  const { scrollY } = useScroll();
+  const [scrollFade, setScrollFade] = useState(1);
 
-  const scrollOpacity = useTransform(scrollYProgress, [0, 0.4, 0.8], [1, 0.6, 0]);
-  const scrollY = useTransform(scrollYProgress, [0, 0.8], [0, -80]);
+  useEffect(() => {
+    const updateScrollFade = () => {
+      if (!heroRef.current || !hasAnimatedIn) return;
+      const heroHeight = heroRef.current.offsetHeight;
+      const scrolled = window.scrollY;
+      const fadeStart = heroHeight * 0.1;
+      const fadeEnd = heroHeight * 0.7;
+      
+      if (scrolled <= fadeStart) {
+        setScrollFade(1);
+      } else if (scrolled >= fadeEnd) {
+        setScrollFade(0);
+      } else {
+        const progress = (scrolled - fadeStart) / (fadeEnd - fadeStart);
+        setScrollFade(1 - progress);
+      }
+    };
+
+    window.addEventListener('scroll', updateScrollFade, { passive: true });
+    return () => window.removeEventListener('scroll', updateScrollFade);
+  }, [hasAnimatedIn]);
 
   useEffect(() => {
     setMounted(true);
@@ -97,7 +114,11 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
       
       <motion.div 
         className="relative z-10 container mx-auto px-6 text-center pt-24"
-        style={hasAnimatedIn ? { opacity: scrollOpacity, y: scrollY } : undefined}
+        style={{ 
+          opacity: hasAnimatedIn ? scrollFade : 1,
+          transform: hasAnimatedIn ? `translateY(${(1 - scrollFade) * -50}px)` : 'translateY(0px)',
+          transition: 'opacity 0.15s ease-out, transform 0.15s ease-out'
+        }}
       >
         <motion.div 
           className="mb-8"
@@ -198,7 +219,10 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
       
       <motion.div 
         className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center"
-        style={hasAnimatedIn ? { opacity: scrollOpacity } : undefined}
+        style={{ 
+          opacity: hasAnimatedIn ? scrollFade : 0,
+          transition: 'opacity 0.15s ease-out'
+        }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.8 }}
