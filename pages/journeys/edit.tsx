@@ -136,6 +136,8 @@ export default function EditJourneyPage() {
         >
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/[0.08] via-purple-400/[0.06] to-pink-400/[0.08] dark:from-indigo-400/[0.13] dark:via-purple-400/[0.1] dark:to-pink-400/[0.13]"></div>
+            <div className="absolute top-0 -left-8 w-96 h-96 bg-indigo-400/14 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+            <div className="absolute top-12 -right-8 w-80 h-80 bg-purple-400/14 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
           </div>
           
           <div className="relative z-10 container mx-auto px-4">
