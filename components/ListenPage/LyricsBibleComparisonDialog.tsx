@@ -194,22 +194,18 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
           </div>
         )}
 
-        <div className="flex-1 overflow-hidden min-h-0">
+        <div className="flex-1 min-h-0 h-[400px]">
           {viewOption === 'both' && hasLyrics && hasVerses ? (
-            <ResizablePanelGroup direction="horizontal" className="h-[400px] min-h-0">
-              <ResizablePanel defaultSize={50} minSize={25} maxSize={75} className="min-h-0">
-                <div className="flex flex-col h-full min-h-0">
-                  <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
-                    <div className="p-6 md:p-10">
-                      <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
-                        <Music className="w-3 h-3" />
-                        Lyrics
-                      </h3>
-                      <p className="text-foreground/90 whitespace-pre-wrap leading-8 font-light text-sm md:text-base">
-                        {song.lyrics}
-                      </p>
-                    </div>
-                  </div>
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              <ResizablePanel defaultSize={50} minSize={25} maxSize={75} className="!overflow-y-auto">
+                <div className="p-6 md:p-10">
+                  <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
+                    <Music className="w-3 h-3" />
+                    Lyrics
+                  </h3>
+                  <p className="text-foreground/90 whitespace-pre-wrap leading-8 font-light text-sm md:text-base">
+                    {song.lyrics}
+                  </p>
                 </div>
               </ResizablePanel>
               <ResizableHandle withHandle className="bg-border hover:bg-amber-600/50 dark:hover:bg-amber-400/50 transition-colors">
@@ -217,17 +213,13 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
                   <GripVertical className="h-4 w-4 text-muted-foreground" />
                 </div>
               </ResizableHandle>
-              <ResizablePanel defaultSize={50} minSize={25} maxSize={75} className="min-h-0">
-                <div className="flex flex-col h-full min-h-0">
-                  <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
-                    <div className="p-6 md:p-10">
-                      <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
-                        <BookOpen className="w-3 h-3" />
-                        Scripture
-                      </h3>
-                      {renderVerseContent()}
-                    </div>
-                  </div>
+              <ResizablePanel defaultSize={50} minSize={25} maxSize={75} className="!overflow-y-auto">
+                <div className="p-6 md:p-10">
+                  <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
+                    <BookOpen className="w-3 h-3" />
+                    Scripture
+                  </h3>
+                  {renderVerseContent()}
                 </div>
               </ResizablePanel>
             </ResizablePanelGroup>
