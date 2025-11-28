@@ -227,7 +227,6 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         className="flex items-center gap-4 md:gap-6 py-6 px-3 relative z-10"
         animate={{ 
           x: isHovered ? 8 : 0,
-          paddingRight: showArt && songArtUrl ? '140px' : '12px',
           transition: springTransition
         }}
       >
@@ -316,35 +315,6 @@ export const JourneySong: React.FC<JourneySongProps> = ({
           </div>
         </div>
 
-        {hasLyricsOrVerses && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowLyrics(true);
-            }}
-            className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300"
-            style={{ 
-              borderColor: theme.border,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = `${theme.accent}80`;
-              e.currentTarget.style.backgroundColor = `${theme.accent}0d`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = theme.border;
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-            aria-label="View lyrics and scripture"
-          >
-            <BookOpen 
-              className="w-3.5 h-3.5 transition-colors" 
-              style={{ color: theme.textSecondary }}
-              onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-              onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
-            />
-          </button>
-        )}
-
         <motion.span 
           className="text-xs font-mono flex-shrink-0"
           animate={{ 
@@ -354,6 +324,36 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         >
           {song.duration > 0 ? formatDuration(song.duration) : '--:--'}
         </motion.span>
+
+        {hasLyricsOrVerses && (
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowLyrics(true);
+            }}
+            className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0 z-20"
+            initial={{ opacity: 0 }}
+            animate={{ 
+              opacity: isHovered || isTouched || isCurrentSong ? 1 : 0,
+              borderColor: isHovered ? `${theme.accent}80` : theme.border,
+              backgroundColor: isHovered ? `${theme.accent}0d` : 'transparent'
+            }}
+            whileHover={{
+              borderColor: theme.accent,
+              backgroundColor: `${theme.accent}1a`
+            }}
+            transition={{ duration: 0.3 }}
+            aria-label="View lyrics and scripture"
+          >
+            <motion.div
+              animate={{ color: isHovered ? theme.accent : theme.textSecondary }}
+              whileHover={{ color: theme.accent }}
+              transition={{ duration: 0.2 }}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+            </motion.div>
+          </motion.button>
+        )}
       </motion.div>
 
       <AnimatePresence>
@@ -374,8 +374,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               animate={{ y: 0 }}
               exit={{ y: -10 }}
               transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-2 pb-2 pl-[52px] md:pl-[68px]"
-              style={{ paddingRight: showArt && songArtUrl ? '140px' : '16px' }}
+              className="pt-2 pb-2 pl-[52px] md:pl-[68px] pr-4"
             >
               <span 
                 className="text-[11px] uppercase tracking-widest"
@@ -406,8 +405,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               animate={{ y: 0 }}
               exit={{ y: -10 }}
               transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-2 pb-6 pl-[52px] md:pl-[68px]"
-              style={{ paddingRight: showArt && songArtUrl ? '140px' : '16px' }}
+              className="pt-2 pb-6 pl-[52px] md:pl-[68px] pr-4"
             >
               <div 
                 className="relative pl-6"

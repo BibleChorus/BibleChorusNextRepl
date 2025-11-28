@@ -23,8 +23,8 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
     offset: ["start start", "end start"]
   });
 
-  const scrollOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const scrollY = useTransform(scrollYProgress, [0, 0.5], [0, -50]);
+  const scrollOpacity = useTransform(scrollYProgress, [0, 0.4, 0.8], [1, 0.6, 0]);
+  const scrollY = useTransform(scrollYProgress, [0, 0.8], [0, -80]);
 
   useEffect(() => {
     setMounted(true);
