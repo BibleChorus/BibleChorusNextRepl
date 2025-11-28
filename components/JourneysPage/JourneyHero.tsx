@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { useTheme } from 'next-themes';
 import { JourneyWithSeasons } from '@/types/journey';
 import Image from 'next/image';
 
@@ -13,6 +14,9 @@ const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
 export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   const heroRef = useRef<HTMLDivElement>(null);
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"]
@@ -26,6 +30,25 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   const smoothContentOpacity = useSpring(contentOpacity, { stiffness: 100, damping: 30 });
   const smoothContentY = useSpring(contentY, { stiffness: 100, damping: 30 });
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgAlt: isDark ? '#0a0a0a' : '#f0ede6',
+    bgCard: isDark ? '#0f0f0f' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    borderHover: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+  };
+
   const totalSongs = journey.seasons.reduce((acc, season) => acc + (season.songs?.length || 0), 0);
   const totalSeasons = journey.seasons.length;
 
@@ -37,10 +60,20 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   const firstWord = titleWords.length > 1 ? titleWords[0] : 'The';
   const restWords = titleWords.length > 1 ? titleWords.slice(1).join(' ') : journey.title;
 
+  if (!mounted) {
+    return (
+      <div 
+        className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+        style={{ backgroundColor: '#050505' }}
+      />
+    );
+  }
+
   return (
     <motion.div 
       ref={heroRef}
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#050505]"
+      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      style={{ backgroundColor: theme.bg }}
     >
       {backgroundImageUrl && (
         <motion.div 
@@ -57,8 +90,14 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
         </motion.div>
       )}
       
-      <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/50 via-transparent to-transparent" />
+      <div 
+        className="absolute inset-0" 
+        style={{ background: `linear-gradient(to top, ${theme.bg}, transparent, transparent)` }} 
+      />
+      <div 
+        className="absolute inset-0" 
+        style={{ background: `linear-gradient(to bottom, ${theme.bg}80, transparent, transparent)` }} 
+      />
       
       <motion.div 
         style={{ y: smoothContentY, opacity: smoothContentOpacity }}
@@ -71,8 +110,8 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
           className="mb-8"
         >
           <span 
-            className="text-xs md:text-sm tracking-[0.5em] uppercase text-mist"
-            style={{ fontFamily: "'Manrope', sans-serif" }}
+            className="text-xs md:text-sm tracking-[0.5em] uppercase"
+            style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
           >
             A Sonic Archive
           </span>
@@ -85,14 +124,14 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
           className="mb-10"
         >
           <span 
-            className="block text-6xl md:text-9xl text-silk tracking-tight"
-            style={{ fontFamily: "'Italiana', serif" }}
+            className="block text-6xl md:text-9xl tracking-tight"
+            style={{ fontFamily: "'Italiana', serif", color: theme.text }}
           >
             {firstWord}
           </span>
           <span 
-            className="block text-6xl md:text-9xl text-silk tracking-tight italic"
-            style={{ fontFamily: "'Italiana', serif" }}
+            className="block text-6xl md:text-9xl tracking-tight italic"
+            style={{ fontFamily: "'Italiana', serif", color: theme.text }}
           >
             {restWords}
           </span>
@@ -103,8 +142,8 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="text-sm md:text-base font-light text-silk/80 max-w-xl mx-auto leading-relaxed mb-10"
-            style={{ fontFamily: "'Manrope', sans-serif" }}
+            className="text-sm md:text-base font-light max-w-xl mx-auto leading-relaxed mb-10"
+            style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.text}cc` }}
           >
             {journey.subtitle}
           </motion.p>
@@ -114,19 +153,19 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="flex items-center justify-center gap-8 text-mist"
-          style={{ fontFamily: "'Manrope', sans-serif" }}
+          className="flex items-center justify-center gap-8"
+          style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
         >
           <div className="flex items-center gap-2">
-            <span className="text-gold text-sm">{totalSongs}</span>
+            <span className="text-sm" style={{ color: theme.accent }}>{totalSongs}</span>
             <span className="text-xs tracking-[0.2em] uppercase">Songs</span>
           </div>
-          <div className="w-px h-4 bg-mist/30" />
+          <div className="w-px h-4" style={{ backgroundColor: `${theme.textSecondary}4d` }} />
           <div className="flex items-center gap-2">
-            <span className="text-gold text-sm">{totalSeasons}</span>
+            <span className="text-sm" style={{ color: theme.accent }}>{totalSeasons}</span>
             <span className="text-xs tracking-[0.2em] uppercase">Seasons</span>
           </div>
-          <div className="w-px h-4 bg-mist/30" />
+          <div className="w-px h-4" style={{ backgroundColor: `${theme.textSecondary}4d` }} />
           <div className="flex items-center gap-2">
             <span className="text-xs tracking-[0.2em] uppercase">By {journey.username}</span>
           </div>
@@ -137,8 +176,8 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, delay: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-12 text-sm text-mist/70 max-w-md mx-auto leading-relaxed"
-            style={{ fontFamily: "'Manrope', sans-serif" }}
+            className="mt-12 text-sm max-w-md mx-auto leading-relaxed"
+            style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.textSecondary}b3` }}
           >
             {journey.bio}
           </motion.p>
@@ -154,10 +193,12 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="w-5 h-8 border border-white/20 rounded-full flex items-start justify-center pt-1.5"
+          className="w-5 h-8 rounded-full flex items-start justify-center pt-1.5"
+          style={{ border: `1px solid ${theme.borderHover}` }}
         >
           <motion.div 
-            className="w-1 h-1.5 bg-white/40 rounded-full"
+            className="w-1 h-1.5 rounded-full"
+            style={{ backgroundColor: `${theme.text}66` }}
             animate={{ opacity: [0.4, 0.8, 0.4] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />

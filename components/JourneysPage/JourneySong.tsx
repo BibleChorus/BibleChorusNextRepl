@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from 'next-themes';
 import { SeasonSong } from '@/types/journey';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { format, parseISO } from 'date-fns';
@@ -24,10 +25,33 @@ export const JourneySong: React.FC<JourneySongProps> = ({
   trackNumber = 1,
 }) => {
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isTouched, setIsTouched] = useState(false);
   const song = seasonSong.song;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgAlt: isDark ? '#0a0a0a' : '#f0ede6',
+    bgCard: isDark ? '#0f0f0f' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    borderHover: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
+    activeBg: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+  };
   
   if (!song) return null;
   
@@ -104,40 +128,45 @@ export const JourneySong: React.FC<JourneySongProps> = ({
     setTimeout(() => setIsTouched(false), 3000);
   };
 
+  if (!mounted) {
+    return <div className="py-6 px-3" />;
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: easeOutExpo }}
-      className={`track-row group border-b border-white/10 cursor-pointer transition-all duration-300 ${
-        isCurrentSong ? 'bg-white/[0.02]' : ''
-      }`}
+      className="track-row group cursor-pointer transition-all duration-300"
+      style={{ 
+        borderBottom: `1px solid ${theme.border}`,
+        backgroundColor: isCurrentSong ? theme.activeBg : 'transparent',
+        fontFamily: "'Manrope', sans-serif"
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onClick={handlePlay}
-      style={{ fontFamily: "'Manrope', sans-serif" }}
     >
       <motion.div 
         className="flex items-center gap-4 md:gap-6 py-6 px-3"
-        whileHover={{ x: -4, backgroundColor: 'rgba(255,255,255,0.03)' }}
+        whileHover={{ x: -4, backgroundColor: theme.hoverBg }}
       >
         <span 
-          className={`text-xs font-mono w-6 flex-shrink-0 transition-colors duration-300 ${
-            isCurrentSong ? 'text-gold' : 'text-mist'
-          }`}
+          className="text-xs font-mono w-6 flex-shrink-0 transition-colors duration-300"
+          style={{ color: isCurrentSong ? theme.accent : theme.textSecondary }}
         >
           {formatTrackNumber(trackNumber)}
         </span>
 
         <button
           onClick={handlePlay}
-          className={`w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
-            isCurrentlyPlaying 
-              ? 'border-gold bg-gold/10' 
-              : 'border-white/20 hover:border-white bg-transparent'
-          }`}
+          className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0 transition-all duration-300"
+          style={{ 
+            borderColor: isCurrentlyPlaying ? theme.accent : theme.borderHover,
+            backgroundColor: isCurrentlyPlaying ? `${theme.accent}1a` : 'transparent'
+          }}
           aria-label={isCurrentlyPlaying ? 'Pause' : 'Play'}
         >
           {isCurrentlyPlaying ? (
@@ -154,16 +183,15 @@ export const JourneySong: React.FC<JourneySongProps> = ({
                     ease: "easeInOut",
                     delay: i * 0.1
                   }}
-                  className="w-[2px] bg-gold rounded-full"
-                  style={{ height: '8px' }}
+                  className="w-[2px] rounded-full"
+                  style={{ height: '8px', backgroundColor: theme.accent }}
                 />
               ))}
             </div>
           ) : (
             <svg 
-              className={`w-3 h-3 ml-0.5 transition-colors duration-300 ${
-                isCurrentSong ? 'text-gold' : 'text-silk'
-              }`}
+              className="w-3 h-3 ml-0.5 transition-colors duration-300"
+              style={{ color: isCurrentSong ? theme.accent : theme.text }}
               viewBox="0 0 24 24" 
               fill="currentColor"
             >
@@ -174,16 +202,18 @@ export const JourneySong: React.FC<JourneySongProps> = ({
 
         <div className="flex-1 min-w-0">
           <h4 
-            className={`text-lg md:text-xl font-light tracking-wide truncate transition-all duration-300 group-hover:translate-x-2 ${
-              isCurrentSong ? 'text-gold' : 'text-silk'
-            }`}
+            className="text-lg md:text-xl font-light tracking-wide truncate transition-all duration-300 group-hover:translate-x-2"
+            style={{ color: isCurrentSong ? theme.accent : theme.text }}
           >
             {song.title}
           </h4>
           
           <div className="flex items-center gap-3 mt-1">
             {showDate && (song.journey_date || song.created_at) && (
-              <span className="text-[10px] text-mist uppercase tracking-widest">
+              <span 
+                className="text-[10px] uppercase tracking-widest"
+                style={{ color: theme.textSecondary }}
+              >
                 {(() => {
                   const dateStr = song.journey_date || song.created_at!;
                   const datePart = dateStr.split('T')[0].split(' ')[0];
@@ -201,17 +231,32 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               e.stopPropagation();
               setShowLyrics(true);
             }}
-            className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:border-gold/50 hover:bg-gold/5"
+            className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300"
+            style={{ 
+              borderColor: theme.border,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = `${theme.accent}80`;
+              e.currentTarget.style.backgroundColor = `${theme.accent}0d`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = theme.border;
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
             aria-label="View lyrics and scripture"
           >
-            <BookOpen className="w-3.5 h-3.5 text-mist group-hover:text-gold transition-colors" />
+            <BookOpen 
+              className="w-3.5 h-3.5 transition-colors" 
+              style={{ color: theme.textSecondary }}
+              onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+              onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+            />
           </button>
         )}
 
         <span 
-          className={`text-xs font-mono flex-shrink-0 transition-colors duration-300 ${
-            isCurrentSong ? 'text-gold' : 'text-mist'
-          }`}
+          className="text-xs font-mono flex-shrink-0 transition-colors duration-300"
+          style={{ color: isCurrentSong ? theme.accent : theme.textSecondary }}
         >
           {song.duration > 0 ? formatDuration(song.duration) : '--:--'}
         </span>
@@ -238,8 +283,8 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               className="pt-2 pb-2 pl-[52px] md:pl-[68px] pr-4"
             >
               <span 
-                className="text-[11px] text-gold/60 uppercase tracking-widest"
-                style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 400 }}
+                className="text-[11px] uppercase tracking-widest"
+                style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 400, color: `${theme.accent}99` }}
               >
                 Origin: {formatJourneySongOrigin(journeySongOrigin)}
               </span>
@@ -268,16 +313,19 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               transition={{ duration: 0.4, ease: easeOutExpo }}
               className="pt-2 pb-6 pl-[52px] md:pl-[68px] pr-4"
             >
-              <div className="relative pl-6 border-l border-gold/20">
+              <div 
+                className="relative pl-6"
+                style={{ borderLeft: `1px solid ${theme.accent}33` }}
+              >
                 <span 
-                  className="absolute -left-3 -top-1 text-xl text-gold/40 select-none"
-                  style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 300 }}
+                  className="absolute -left-3 -top-1 text-xl select-none"
+                  style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 300, color: `${theme.accent}66` }}
                 >
                   "
                 </span>
                 <p 
-                  className="text-[13px] text-mist/70 leading-relaxed tracking-wide"
-                  style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 300, fontStyle: 'italic' }}
+                  className="text-[13px] leading-relaxed tracking-wide"
+                  style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 300, fontStyle: 'italic', color: `${theme.textSecondary}b3` }}
                 >
                   {seasonSong.personal_note}
                 </p>

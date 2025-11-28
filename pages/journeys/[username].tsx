@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { useTheme } from 'next-themes';
 import { JourneyWithSeasons, Season } from '@/types/journey';
 import { JourneyHero } from '@/components/JourneysPage/JourneyHero';
 import { JourneyTimeline } from '@/components/JourneysPage/JourneyTimeline';
@@ -19,7 +20,24 @@ import { Button } from '@/components/ui/button';
 import { Pencil, Lock, ArrowLeft, Plus, Music, ChevronDown, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
-const SeasonsDropdown: React.FC<{ seasons: Season[]; isMobile?: boolean }> = ({ seasons, isMobile = false }) => {
+interface SeasonsDropdownProps {
+  seasons: Season[];
+  isMobile?: boolean;
+  theme: {
+    bg: string;
+    bgAlt: string;
+    bgCard: string;
+    text: string;
+    textSecondary: string;
+    textMuted: string;
+    accent: string;
+    accentHover: string;
+    border: string;
+    borderHover: string;
+  };
+}
+
+const SeasonsDropdown: React.FC<SeasonsDropdownProps> = ({ seasons, isMobile = false, theme }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const sortedSeasons = [...seasons].sort((a, b) => {
@@ -30,19 +48,18 @@ const SeasonsDropdown: React.FC<{ seasons: Season[]; isMobile?: boolean }> = ({ 
 
   const scrollToSeason = (seasonId: number) => {
     setIsOpen(false);
-    // Use native anchor navigation - browser handles scroll with CSS scroll-margin-top
     window.location.hash = `season-${seasonId}`;
   };
 
   if (seasons.length === 0) return null;
 
-  // Mobile floating button version
   if (isMobile) {
     return (
       <>
         <motion.button
           onClick={() => setIsOpen(!isOpen)}
-          className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-gold text-void flex items-center justify-center shadow-lg md:hidden"
+          className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg md:hidden"
+          style={{ backgroundColor: theme.accent, color: theme.bg }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -66,15 +83,16 @@ const SeasonsDropdown: React.FC<{ seasons: Season[]; isMobile?: boolean }> = ({ 
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: '100%' }}
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0a] border-t border-white/10 rounded-t-2xl max-h-[70vh] overflow-hidden md:hidden"
+                className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl max-h-[70vh] overflow-hidden md:hidden"
+                style={{ backgroundColor: theme.bgAlt, borderTop: `1px solid ${theme.border}` }}
               >
                 <div className="flex items-center justify-center py-3">
-                  <div className="w-10 h-1 bg-white/20 rounded-full" />
+                  <div className="w-10 h-1 rounded-full" style={{ backgroundColor: theme.border }} />
                 </div>
                 <div className="px-4 pb-2">
                   <h3 
-                    className="text-sm tracking-[0.2em] uppercase text-mist mb-4"
-                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                    className="text-sm tracking-[0.2em] uppercase mb-4"
+                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
                   >
                     Jump to Season
                   </h3>
@@ -86,23 +104,28 @@ const SeasonsDropdown: React.FC<{ seasons: Season[]; isMobile?: boolean }> = ({ 
                       <button
                         key={season.id}
                         onClick={() => scrollToSeason(season.id)}
-                        className="w-full px-6 py-4 flex items-center gap-4 hover:bg-white/5 active:bg-white/10 transition-colors text-left"
+                        className="w-full px-6 py-4 flex items-center gap-4 transition-colors text-left"
+                        style={{ 
+                          ['--hover-bg' as string]: theme.border
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.border}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
                         <span 
-                          className="text-gold text-lg font-light min-w-[60px]"
-                          style={{ fontFamily: "'Italiana', serif" }}
+                          className="text-lg font-light min-w-[60px]"
+                          style={{ fontFamily: "'Italiana', serif", color: theme.accent }}
                         >
                           {year}
                         </span>
                         <div className="flex-1">
                           <span 
-                            className="text-silk text-base font-light block"
-                            style={{ fontFamily: "'Italiana', serif" }}
+                            className="text-base font-light block"
+                            style={{ fontFamily: "'Italiana', serif", color: theme.text }}
                           >
                             {season.title}
                           </span>
                         </div>
-                        <ChevronDown className="w-4 h-4 text-mist -rotate-90" />
+                        <ChevronDown className="w-4 h-4 -rotate-90" style={{ color: theme.textSecondary }} />
                       </button>
                     );
                   })}
@@ -115,12 +138,14 @@ const SeasonsDropdown: React.FC<{ seasons: Season[]; isMobile?: boolean }> = ({ 
     );
   }
 
-  // Desktop dropdown version
   return (
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase font-light hover:text-mist transition-colors hover-trigger"
+        className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase font-light transition-colors hover-trigger"
+        style={{ color: theme.text }}
+        onMouseEnter={(e) => e.currentTarget.style.color = theme.textSecondary}
+        onMouseLeave={(e) => e.currentTarget.style.color = theme.text}
       >
         <Calendar className="w-3 h-3" />
         <span>Seasons</span>
@@ -142,7 +167,8 @@ const SeasonsDropdown: React.FC<{ seasons: Season[]; isMobile?: boolean }> = ({ 
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute right-0 top-full mt-4 z-50 min-w-[280px] bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-none overflow-hidden"
+              className="absolute right-0 top-full mt-4 z-50 min-w-[280px] backdrop-blur-xl rounded-none overflow-hidden"
+              style={{ backgroundColor: `${theme.bgAlt}f2`, border: `1px solid ${theme.border}` }}
             >
               <div className="py-2">
                 {sortedSeasons.map((season, index) => {
@@ -151,18 +177,20 @@ const SeasonsDropdown: React.FC<{ seasons: Season[]; isMobile?: boolean }> = ({ 
                     <button
                       key={season.id}
                       onClick={() => scrollToSeason(season.id)}
-                      className="w-full px-5 py-4 flex items-center gap-4 hover:bg-white/5 transition-colors text-left group"
+                      className="w-full px-5 py-4 flex items-center gap-4 transition-colors text-left group"
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.border}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       <span 
-                        className="text-gold/60 text-sm font-light min-w-[50px]"
-                        style={{ fontFamily: "'Italiana', serif" }}
+                        className="text-sm font-light min-w-[50px]"
+                        style={{ fontFamily: "'Italiana', serif", color: `${theme.accent}99` }}
                       >
                         {year}
                       </span>
                       <div className="flex-1">
                         <span 
-                          className="text-silk text-sm font-light block group-hover:text-white transition-colors"
-                          style={{ fontFamily: "'Italiana', serif" }}
+                          className="text-sm font-light block transition-colors"
+                          style={{ fontFamily: "'Italiana', serif", color: theme.text }}
                         >
                           {season.title}
                         </span>
@@ -184,6 +212,8 @@ export default function JourneyPage() {
   const { username } = router.query;
   const { user, getAuthToken } = useAuth();
   const { setIsOpen } = useSidebar();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [journey, setJourney] = useState<JourneyWithSeasons | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -192,17 +222,36 @@ export default function JourneyPage() {
   const isOwner = user?.username === username;
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgAlt: isDark ? '#0a0a0a' : '#f0ede6',
+    bgCard: isDark ? '#0f0f0f' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    borderHover: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+  };
+
+  useEffect(() => {
     setIsOpen(false);
     
     const style = document.createElement('style');
     style.id = 'journey-fullscreen-style';
     style.textContent = `
-      body, html { background-color: #050505 !important; }
+      body, html { background-color: ${theme.bg} !important; }
       .lg\\:ml-16, .lg\\:ml-64, [class*="lg:ml-"] { margin-left: 0 !important; }
       .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
       .pt-20 { padding-top: 0 !important; }
       .pb-8 { padding-bottom: 0 !important; }
-      .min-h-screen.bg-background { background-color: #050505 !important; }
+      .min-h-screen.bg-background { background-color: ${theme.bg} !important; }
     `;
     document.head.appendChild(style);
 
@@ -212,7 +261,7 @@ export default function JourneyPage() {
         existingStyle.remove();
       }
     };
-  }, [setIsOpen]);
+  }, [setIsOpen, theme.bg]);
 
   useEffect(() => {
     if (!username) return;
@@ -243,6 +292,15 @@ export default function JourneyPage() {
     fetchJourney();
   }, [username, getAuthToken]);
 
+  if (!mounted) {
+    return (
+      <div 
+        className="min-h-screen"
+        style={{ backgroundColor: '#050505', fontFamily: "'Manrope', sans-serif" }}
+      />
+    );
+  }
+
   if (isLoading) {
     return (
       <>
@@ -252,7 +310,7 @@ export default function JourneyPage() {
         <div 
           className="min-h-screen flex items-center justify-center fixed inset-0"
           style={{ 
-            backgroundColor: '#050505', 
+            backgroundColor: theme.bg, 
             fontFamily: "'Manrope', sans-serif" 
           }}
         >
@@ -260,9 +318,10 @@ export default function JourneyPage() {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="w-16 h-16 mx-auto mb-6 rounded-full border-2 border-white/10 border-t-gold"
+              className="w-16 h-16 mx-auto mb-6 rounded-full border-2"
+              style={{ borderColor: theme.border, borderTopColor: theme.accent }}
             />
-            <p className="text-mist text-sm tracking-widest uppercase">Loading journey...</p>
+            <p className="text-sm tracking-widest uppercase" style={{ color: theme.textSecondary }}>Loading journey...</p>
           </div>
         </div>
       </>
@@ -278,7 +337,7 @@ export default function JourneyPage() {
         <div 
           className="min-h-screen flex items-center justify-center fixed inset-0"
           style={{ 
-            backgroundColor: '#050505', 
+            backgroundColor: theme.bg, 
             fontFamily: "'Manrope', sans-serif" 
           }}
         >
@@ -288,17 +347,20 @@ export default function JourneyPage() {
             className="text-center max-w-md mx-auto px-4"
           >
             <div className="mb-8">
-              <div className="w-20 h-20 mx-auto rounded-full border border-white/10 flex items-center justify-center">
-                <Lock className="w-8 h-8 text-mist" />
+              <div 
+                className="w-20 h-20 mx-auto rounded-full flex items-center justify-center"
+                style={{ border: `1px solid ${theme.border}` }}
+              >
+                <Lock className="w-8 h-8" style={{ color: theme.textSecondary }} />
               </div>
             </div>
             <h1 
-              className="text-3xl text-silk mb-4"
-              style={{ fontFamily: "'Italiana', serif" }}
+              className="text-3xl mb-4"
+              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
             >
               {error}
             </h1>
-            <p className="text-mist mb-8 font-light">
+            <p className="mb-8 font-light" style={{ color: theme.textSecondary }}>
               {error === 'This journey is private' 
                 ? 'The owner has not made this journey public yet.'
                 : 'We could not find the journey you are looking for.'}
@@ -307,13 +369,18 @@ export default function JourneyPage() {
               <Button 
                 variant="outline" 
                 onClick={() => router.back()}
-                className="border-white/20 text-silk hover:bg-white/5 hover:text-white"
+                style={{ 
+                  borderColor: theme.borderHover, 
+                  color: theme.text,
+                  backgroundColor: 'transparent'
+                }}
+                className="hover:bg-opacity-5"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Go Back
               </Button>
               <Link href="/journeys">
-                <Button className="bg-gold hover:bg-gold/90 text-void">
+                <Button style={{ backgroundColor: theme.accent, color: theme.bg }}>
                   Explore Journeys
                 </Button>
               </Link>
@@ -333,7 +400,7 @@ export default function JourneyPage() {
         <div 
           className="min-h-screen relative overflow-hidden fixed inset-0"
           style={{ 
-            backgroundColor: '#050505', 
+            backgroundColor: theme.bg, 
             fontFamily: "'Manrope', sans-serif" 
           }}
         >
@@ -350,7 +417,8 @@ export default function JourneyPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-xs tracking-[0.5em] text-gold mb-8 uppercase"
+                className="text-xs tracking-[0.5em] mb-8 uppercase"
+                style={{ color: theme.accent }}
               >
                 Your Sonic Archive Awaits
               </motion.p>
@@ -359,8 +427,8 @@ export default function JourneyPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-5xl md:text-7xl text-silk mb-6 tracking-tight"
-                style={{ fontFamily: "'Italiana', serif" }}
+                className="text-5xl md:text-7xl mb-6 tracking-tight"
+                style={{ fontFamily: "'Italiana', serif", color: theme.text }}
               >
                 Begin Your<br />
                 <span className="italic font-light">Journey</span>
@@ -370,7 +438,8 @@ export default function JourneyPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-lg text-mist mb-12 max-w-md mx-auto font-light leading-relaxed"
+                className="text-lg mb-12 max-w-md mx-auto font-light leading-relaxed"
+                style={{ color: theme.textSecondary }}
               >
                 This is your personal space to showcase your musical testimony. 
                 Create seasons, add your songs, and share your story of faith.
@@ -389,10 +458,11 @@ export default function JourneyPage() {
                 ].map((item, i) => (
                   <div 
                     key={item.title}
-                    className="p-6 border border-white/5 rounded-none"
+                    className="p-6 rounded-none"
+                    style={{ border: `1px solid ${theme.border}` }}
                   >
-                    <h3 className="text-silk mb-2 text-sm tracking-wide">{item.title}</h3>
-                    <p className="text-xs text-mist font-light">{item.desc}</p>
+                    <h3 className="mb-2 text-sm tracking-wide" style={{ color: theme.text }}>{item.title}</h3>
+                    <p className="text-xs font-light" style={{ color: theme.textSecondary }}>{item.desc}</p>
                   </div>
                 ))}
               </motion.div>
@@ -405,7 +475,8 @@ export default function JourneyPage() {
                 <Link href="/journeys/edit">
                   <Button 
                     size="lg"
-                    className="h-14 px-10 bg-gold hover:bg-gold/90 text-void font-medium text-sm tracking-widest uppercase rounded-none"
+                    className="h-14 px-10 font-medium text-sm tracking-widest uppercase rounded-none"
+                    style={{ backgroundColor: theme.accent, color: theme.bg }}
                   >
                     <Plus className="w-4 h-4 mr-3" />
                     Begin
@@ -438,23 +509,23 @@ export default function JourneyPage() {
         ref={containerRef}
         className="min-h-screen selection:bg-white selection:text-black relative"
         style={{ 
-          backgroundColor: '#050505',
-          color: '#e5e5e5',
+          backgroundColor: theme.bg,
+          color: theme.text,
           fontFamily: "'Manrope', sans-serif"
         }}
       >
         <style jsx global>{`
           html, body {
-            background-color: #050505 !important;
+            background-color: ${theme.bg} !important;
           }
           .journey-page ::-webkit-scrollbar {
             width: 6px;
           }
           .journey-page ::-webkit-scrollbar-track {
-            background: #0a0a0a;
+            background: ${theme.bgAlt};
           }
           .journey-page ::-webkit-scrollbar-thumb {
-            background: #333;
+            background: ${isDark ? '#333' : '#ccc'};
             border-radius: 3px;
           }
         `}</style>
@@ -472,7 +543,12 @@ export default function JourneyPage() {
           >
             <Link href="/journeys/edit">
               <Button
-                className="bg-ash/80 backdrop-blur-xl border border-white/10 text-silk hover:bg-ash hover:text-white rounded-none text-xs tracking-widest uppercase px-6"
+                className="backdrop-blur-xl rounded-none text-xs tracking-widest uppercase px-6"
+                style={{ 
+                  backgroundColor: `${theme.bgCard}cc`,
+                  border: `1px solid ${theme.border}`,
+                  color: theme.text
+                }}
               >
                 <Pencil className="w-3 h-3 mr-2" />
                 Edit
@@ -484,18 +560,19 @@ export default function JourneyPage() {
         <nav className="fixed top-16 w-full px-8 py-4 flex justify-between items-center z-40 pointer-events-none">
           <Link 
             href="/journeys" 
-            className="text-xl tracking-widest hover-trigger pointer-events-auto text-silk/80 hover:text-silk transition-colors"
-            style={{ fontFamily: "'Italiana', serif" }}
+            className="text-xl tracking-widest hover-trigger pointer-events-auto transition-colors"
+            style={{ fontFamily: "'Italiana', serif", color: `${theme.text}cc` }}
+            onMouseEnter={(e) => e.currentTarget.style.color = theme.text}
+            onMouseLeave={(e) => e.currentTarget.style.color = `${theme.text}cc`}
           >
             JOURNEYS.
           </Link>
           <div className="hidden md:flex gap-8 items-center pointer-events-auto">
-            <SeasonsDropdown seasons={journey.seasons || []} />
+            <SeasonsDropdown seasons={journey.seasons || []} theme={theme} />
           </div>
         </nav>
 
-        {/* Mobile floating seasons button */}
-        <SeasonsDropdown seasons={journey.seasons || []} isMobile={true} />
+        <SeasonsDropdown seasons={journey.seasons || []} isMobile={true} theme={theme} />
 
         <div className="journey-page">
           <JourneyHero journey={journey} />
@@ -509,22 +586,26 @@ export default function JourneyPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center py-32"
               >
-                <div className="w-20 h-20 mx-auto mb-8 rounded-full border border-white/10 flex items-center justify-center">
-                  <Music className="w-8 h-8 text-mist" />
+                <div 
+                  className="w-20 h-20 mx-auto mb-8 rounded-full flex items-center justify-center"
+                  style={{ border: `1px solid ${theme.border}` }}
+                >
+                  <Music className="w-8 h-8" style={{ color: theme.textSecondary }} />
                 </div>
                 <h2 
-                  className="text-3xl text-silk mb-4"
-                  style={{ fontFamily: "'Italiana', serif" }}
+                  className="text-3xl mb-4"
+                  style={{ fontFamily: "'Italiana', serif", color: theme.text }}
                 >
                   Your Journey Awaits
                 </h2>
-                <p className="text-mist mb-8 max-w-md mx-auto font-light">
+                <p className="mb-8 max-w-md mx-auto font-light" style={{ color: theme.textSecondary }}>
                   Start by creating your first season to showcase your musical testimony.
                 </p>
                 <Link href="/journeys/edit">
                   <Button 
                     size="lg"
-                    className="h-12 px-8 bg-gold hover:bg-gold/90 text-void rounded-none text-xs tracking-widest uppercase"
+                    className="h-12 px-8 rounded-none text-xs tracking-widest uppercase"
+                    style={{ backgroundColor: theme.accent, color: theme.bg }}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Create First Season
@@ -537,16 +618,19 @@ export default function JourneyPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center py-32"
               >
-                <div className="w-16 h-16 mx-auto mb-6 rounded-full border border-white/10 flex items-center justify-center">
-                  <Music className="w-6 h-6 text-mist" />
+                <div 
+                  className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center"
+                  style={{ border: `1px solid ${theme.border}` }}
+                >
+                  <Music className="w-6 h-6" style={{ color: theme.textSecondary }} />
                 </div>
                 <h2 
-                  className="text-2xl text-silk mb-4"
-                  style={{ fontFamily: "'Italiana', serif" }}
+                  className="text-2xl mb-4"
+                  style={{ fontFamily: "'Italiana', serif", color: theme.text }}
                 >
                   No Seasons Yet
                 </h2>
-                <p className="text-mist font-light">
+                <p className="font-light" style={{ color: theme.textSecondary }}>
                   This journey doesn't have any seasons to display yet.
                 </p>
               </motion.div>
