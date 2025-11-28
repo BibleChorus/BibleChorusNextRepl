@@ -99,7 +99,6 @@ export default async function handler(
           end_date: data.end_date || null,
           year: data.year || new Date(data.start_date).getFullYear(),
           cover_image_url: data.cover_image_url || null,
-          theme_color: data.theme_color || null,
           reflection: data.reflection || null,
           scripture_reference: data.scripture_reference || null,
           display_order: (maxOrder?.max || 0) + 1,

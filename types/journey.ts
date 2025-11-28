@@ -5,7 +5,6 @@ export interface JourneyProfile {
   subtitle: string | null;
   bio: string | null;
   cover_image_url: string | null;
-  theme_color: string;
   is_public: boolean;
   show_song_dates: boolean;
   show_play_counts: boolean;
@@ -20,7 +19,6 @@ export interface PublicJourneyListItem {
   title: string;
   subtitle: string | null;
   cover_image_url: string | null;
-  theme_color: string;
   likes_count: number;
   song_count: number;
   username: string;
@@ -37,7 +35,6 @@ export interface Season {
   end_date: string | null;
   year: number | null;
   cover_image_url: string | null;
-  theme_color: string | null;
   display_order: number;
   is_visible: boolean;
   reflection: string | null;
@@ -88,7 +85,6 @@ export interface CreateSeasonRequest {
   end_date?: string;
   year?: number;
   cover_image_url?: string;
-  theme_color?: string;
   reflection?: string;
   scripture_reference?: string;
 }
@@ -110,7 +106,6 @@ export interface UpdateJourneyProfileRequest {
   subtitle?: string;
   bio?: string;
   cover_image_url?: string;
-  theme_color?: string;
   is_public?: boolean;
   show_song_dates?: boolean;
   show_play_counts?: boolean;

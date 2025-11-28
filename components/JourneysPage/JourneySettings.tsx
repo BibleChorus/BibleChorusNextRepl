@@ -31,7 +31,6 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
     title: profile.title || '',
     subtitle: profile.subtitle || '',
     bio: profile.bio || '',
-    theme_color: profile.theme_color || 'indigo',
     is_public: profile.is_public,
     show_song_dates: profile.show_song_dates,
     show_play_counts: profile.show_play_counts,
@@ -44,7 +43,6 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
       formData.title !== profile.title ||
       formData.subtitle !== (profile.subtitle || '') ||
       formData.bio !== (profile.bio || '') ||
-      formData.theme_color !== profile.theme_color ||
       formData.is_public !== profile.is_public ||
       formData.show_song_dates !== profile.show_song_dates ||
       formData.show_play_counts !== profile.show_play_counts;

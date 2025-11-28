@@ -85,16 +85,26 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
       />
       
       <div className="relative z-10 container mx-auto px-6 text-center pt-24">
-        <div className="mb-8">
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.1 }}
+        >
           <span 
             className="text-xs md:text-sm tracking-[0.5em] uppercase transition-colors duration-300"
             style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
           >
             A Sonic Archive
           </span>
-        </div>
+        </motion.div>
         
-        <h1 className="mb-10">
+        <motion.h1 
+          className="mb-10"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.2, ease: easeOutExpo, delay: 0.2 }}
+        >
           <span 
             className="block text-6xl md:text-9xl tracking-tight transition-colors duration-300"
             style={{ fontFamily: "'Italiana', serif", color: theme.text }}
@@ -107,9 +117,14 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
           >
             {restWords}
           </span>
-        </h1>
+        </motion.h1>
         
-        <div className="flex justify-center mb-8">
+        <motion.div 
+          className="flex justify-center mb-8"
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, ease: easeOutExpo, delay: 0.4 }}
+        >
           <motion.div
             className="w-3 h-3 rounded-full"
             style={{ backgroundColor: theme.accent }}
@@ -128,43 +143,68 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
               ease: "easeInOut"
             }}
           />
-        </div>
+        </motion.div>
         
         {journey.subtitle && (
-          <p 
+          <motion.p 
             className="text-sm md:text-base font-light max-w-xl mx-auto leading-relaxed mb-10 transition-colors duration-300"
             style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.text}cc` }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.5 }}
           >
             {journey.subtitle}
-          </p>
+          </motion.p>
         )}
         
-        <div 
+        <motion.div 
           className="flex items-center justify-center gap-8 transition-colors duration-300"
           style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.6 }}
         >
           <div className="flex items-center gap-2">
-            <span className="text-sm" style={{ color: theme.accent }}>{totalSongs}</span>
+            <motion.span 
+              className="text-sm" 
+              style={{ color: theme.accent }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.8, type: "spring", stiffness: 300, damping: 20 }}
+            >
+              {totalSongs}
+            </motion.span>
             <span className="text-xs tracking-[0.2em] uppercase">Songs</span>
           </div>
           <div className="w-px h-4" style={{ backgroundColor: `${theme.textSecondary}4d` }} />
           <div className="flex items-center gap-2">
-            <span className="text-sm" style={{ color: theme.accent }}>{totalSeasons}</span>
+            <motion.span 
+              className="text-sm" 
+              style={{ color: theme.accent }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.9, type: "spring", stiffness: 300, damping: 20 }}
+            >
+              {totalSeasons}
+            </motion.span>
             <span className="text-xs tracking-[0.2em] uppercase">Seasons</span>
           </div>
           <div className="w-px h-4" style={{ backgroundColor: `${theme.textSecondary}4d` }} />
           <div className="flex items-center gap-2">
             <span className="text-xs tracking-[0.2em] uppercase">By {journey.username}</span>
           </div>
-        </div>
+        </motion.div>
         
         {journey.bio && (
-          <p
+          <motion.p
             className="mt-12 text-sm max-w-md mx-auto leading-relaxed transition-colors duration-300"
             style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.textSecondary}b3` }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.7 }}
           >
             {journey.bio}
-          </p>
+          </motion.p>
         )}
       </div>
       

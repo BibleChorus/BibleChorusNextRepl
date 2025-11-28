@@ -93,7 +93,7 @@ export default async function handler(
 
       const allowedFields = [
         'title', 'description', 'start_date', 'end_date', 'year',
-        'cover_image_url', 'theme_color', 'display_order', 'is_visible',
+        'cover_image_url', 'display_order', 'is_visible',
         'reflection', 'scripture_reference'
       ];
 

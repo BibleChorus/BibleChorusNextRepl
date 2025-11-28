@@ -34,7 +34,6 @@ interface SeasonFormData {
   description: string;
   start_date: string;
   end_date: string;
-  theme_color: string;
   reflection: string;
   scripture_reference: string;
 }
@@ -171,7 +170,6 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
     description: '',
     start_date: '',
     end_date: '',
-    theme_color: 'indigo',
     reflection: '',
     scripture_reference: '',
   });
@@ -190,7 +188,6 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
       description: '',
       start_date: '',
       end_date: '',
-      theme_color: 'indigo',
       reflection: '',
       scripture_reference: '',
     });
@@ -290,7 +287,6 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
       description: season.description || '',
       start_date: season.start_date?.split('T')[0] || '',
       end_date: season.end_date?.split('T')[0] || '',
-      theme_color: season.theme_color || 'indigo',
       reflection: season.reflection || '',
       scripture_reference: season.scripture_reference || '',
     });
@@ -345,7 +341,7 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
                 onClick={() => toggleExpanded(season.id)}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full bg-${season.theme_color || 'indigo'}-500`} />
+                  <div className="w-3 h-3 rounded-full bg-indigo-500" />
                   <h3 className="font-semibold text-slate-800 dark:text-slate-200">
                     {season.title}
                   </h3>
