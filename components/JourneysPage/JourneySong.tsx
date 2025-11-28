@@ -120,7 +120,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
       <motion.div 
-        className="flex items-center gap-4 md:gap-6 py-6"
+        className="flex items-center gap-4 md:gap-6 py-6 px-3"
         whileHover={{ x: -4, backgroundColor: 'rgba(255,255,255,0.03)' }}
       >
         <span 

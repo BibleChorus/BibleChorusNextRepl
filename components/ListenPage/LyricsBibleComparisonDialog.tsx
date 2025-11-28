@@ -194,19 +194,21 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
           </div>
         )}
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden min-h-0">
           {viewOption === 'both' && hasLyrics && hasVerses ? (
-            <ResizablePanelGroup direction="horizontal" className="h-[400px]">
-              <ResizablePanel defaultSize={50} minSize={25} maxSize={75}>
-                <div className="h-full overflow-y-auto overflow-x-hidden">
-                  <div className="p-6 md:p-10">
-                    <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
-                      <Music className="w-3 h-3" />
-                      Lyrics
-                    </h3>
-                    <p className="text-foreground/90 whitespace-pre-wrap leading-8 font-light text-sm md:text-base">
-                      {song.lyrics}
-                    </p>
+            <ResizablePanelGroup direction="horizontal" className="h-[400px] min-h-0">
+              <ResizablePanel defaultSize={50} minSize={25} maxSize={75} className="min-h-0">
+                <div className="flex flex-col h-full min-h-0">
+                  <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+                    <div className="p-6 md:p-10">
+                      <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
+                        <Music className="w-3 h-3" />
+                        Lyrics
+                      </h3>
+                      <p className="text-foreground/90 whitespace-pre-wrap leading-8 font-light text-sm md:text-base">
+                        {song.lyrics}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </ResizablePanel>
@@ -215,14 +217,16 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
                   <GripVertical className="h-4 w-4 text-muted-foreground" />
                 </div>
               </ResizableHandle>
-              <ResizablePanel defaultSize={50} minSize={25} maxSize={75}>
-                <div className="h-full overflow-y-auto overflow-x-hidden">
-                  <div className="p-6 md:p-10">
-                    <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
-                      <BookOpen className="w-3 h-3" />
-                      Scripture
-                    </h3>
-                    {renderVerseContent()}
+              <ResizablePanel defaultSize={50} minSize={25} maxSize={75} className="min-h-0">
+                <div className="flex flex-col h-full min-h-0">
+                  <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+                    <div className="p-6 md:p-10">
+                      <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
+                        <BookOpen className="w-3 h-3" />
+                        Scripture
+                      </h3>
+                      {renderVerseContent()}
+                    </div>
                   </div>
                 </div>
               </ResizablePanel>
