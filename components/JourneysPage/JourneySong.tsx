@@ -18,6 +18,7 @@ interface JourneySongProps {
 }
 
 const easeOutExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const springTransition = { type: "spring" as const, stiffness: 400, damping: 30 };
 
 export const JourneySong: React.FC<JourneySongProps> = ({
   seasonSong,
@@ -137,10 +138,9 @@ export const JourneySong: React.FC<JourneySongProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: easeOutExpo }}
-      className="track-row group cursor-pointer transition-all duration-300"
+      className="track-row group cursor-pointer relative overflow-hidden"
       style={{ 
         borderBottom: `1px solid ${theme.border}`,
-        backgroundColor: isCurrentSong ? theme.activeBg : 'transparent',
         fontFamily: "'Manrope', sans-serif"
       }}
       onMouseEnter={() => setIsHovered(true)}
@@ -150,23 +150,56 @@ export const JourneySong: React.FC<JourneySongProps> = ({
       onClick={handlePlay}
     >
       <motion.div 
-        className="flex items-center gap-4 md:gap-6 py-6 px-3"
-        whileHover={{ x: -4, backgroundColor: theme.hoverBg }}
+        className="absolute inset-0 pointer-events-none"
+        initial={{ opacity: 0, x: '-100%' }}
+        animate={{ 
+          opacity: isHovered ? 1 : isCurrentSong ? 0.5 : 0,
+          x: isHovered ? '0%' : isCurrentSong ? '0%' : '-100%'
+        }}
+        transition={{ duration: 0.5, ease: easeOutExpo }}
+        style={{ 
+          background: `linear-gradient(90deg, ${theme.accent}08 0%, ${theme.accent}03 50%, transparent 100%)`
+        }}
+      />
+      
+      <motion.div 
+        className="absolute left-0 top-0 bottom-0 w-[2px] pointer-events-none"
+        initial={{ scaleY: 0 }}
+        animate={{ 
+          scaleY: isHovered || isCurrentSong ? 1 : 0,
+          backgroundColor: isCurrentSong ? theme.accent : `${theme.accent}80`
+        }}
+        transition={{ duration: 0.3, ease: easeOutExpo }}
+        style={{ originY: 0.5 }}
+      />
+
+      <motion.div 
+        className="flex items-center gap-4 md:gap-6 py-6 px-3 relative z-10"
+        animate={{ 
+          x: isHovered ? 8 : 0,
+          transition: springTransition
+        }}
       >
-        <span 
-          className="text-xs font-mono w-6 flex-shrink-0 transition-colors duration-300"
-          style={{ color: isCurrentSong ? theme.accent : theme.textSecondary }}
+        <motion.span 
+          className="text-xs font-mono w-6 flex-shrink-0"
+          animate={{ 
+            color: isCurrentSong ? theme.accent : isHovered ? theme.text : theme.textSecondary 
+          }}
+          transition={{ duration: 0.3 }}
         >
           {formatTrackNumber(trackNumber)}
-        </span>
+        </motion.span>
 
-        <button
+        <motion.button
           onClick={handlePlay}
-          className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0 transition-all duration-300"
-          style={{ 
-            borderColor: isCurrentlyPlaying ? theme.accent : theme.borderHover,
-            backgroundColor: isCurrentlyPlaying ? `${theme.accent}1a` : 'transparent'
+          className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0"
+          animate={{
+            borderColor: isCurrentlyPlaying ? theme.accent : isHovered ? theme.accent : theme.borderHover,
+            backgroundColor: isCurrentlyPlaying ? `${theme.accent}1a` : isHovered ? `${theme.accent}0d` : 'rgba(0, 0, 0, 0)',
+            scale: isHovered && !isCurrentlyPlaying ? 1.1 : 1
           }}
+          transition={{ duration: 0.3, ease: easeOutExpo }}
+          whileTap={{ scale: 0.95 }}
           aria-label={isCurrentlyPlaying ? 'Pause' : 'Play'}
         >
           {isCurrentlyPlaying ? (
@@ -189,30 +222,37 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               ))}
             </div>
           ) : (
-            <svg 
-              className="w-3 h-3 ml-0.5 transition-colors duration-300"
-              style={{ color: isCurrentSong ? theme.accent : theme.text }}
+            <motion.svg 
+              className="w-3 h-3 ml-0.5"
+              animate={{ color: isCurrentSong ? theme.accent : isHovered ? theme.accent : theme.text }}
+              transition={{ duration: 0.3 }}
               viewBox="0 0 24 24" 
               fill="currentColor"
             >
               <path d="M8 5v14l11-7z" />
-            </svg>
+            </motion.svg>
           )}
-        </button>
+        </motion.button>
 
         <div className="flex-1 min-w-0">
-          <h4 
-            className="text-lg md:text-xl font-light tracking-wide truncate transition-all duration-300 group-hover:translate-x-2"
-            style={{ color: isCurrentSong ? theme.accent : theme.text }}
+          <motion.h4 
+            className="text-lg md:text-xl font-light tracking-wide truncate"
+            animate={{ 
+              color: isCurrentSong ? theme.accent : isHovered ? theme.accent : theme.text 
+            }}
+            transition={{ duration: 0.3, ease: easeOutExpo }}
           >
             {song.title}
-          </h4>
+          </motion.h4>
           
           <div className="flex items-center gap-3 mt-1">
             {showDate && (song.journey_date || song.created_at) && (
-              <span 
+              <motion.span 
                 className="text-[10px] uppercase tracking-widest"
-                style={{ color: theme.textSecondary }}
+                animate={{ 
+                  color: isHovered ? theme.text : theme.textSecondary 
+                }}
+                transition={{ duration: 0.3 }}
               >
                 {(() => {
                   const dateStr = song.journey_date || song.created_at!;
@@ -220,7 +260,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
                   const [year, month, day] = datePart.split('-').map(Number);
                   return format(new Date(year, month - 1, day), 'MMMM do, yyyy');
                 })()}
-              </span>
+              </motion.span>
             )}
           </div>
         </div>
@@ -254,12 +294,15 @@ export const JourneySong: React.FC<JourneySongProps> = ({
           </button>
         )}
 
-        <span 
-          className="text-xs font-mono flex-shrink-0 transition-colors duration-300"
-          style={{ color: isCurrentSong ? theme.accent : theme.textSecondary }}
+        <motion.span 
+          className="text-xs font-mono flex-shrink-0"
+          animate={{ 
+            color: isCurrentSong ? theme.accent : isHovered ? theme.text : theme.textSecondary 
+          }}
+          transition={{ duration: 0.3 }}
         >
           {song.duration > 0 ? formatDuration(song.duration) : '--:--'}
-        </span>
+        </motion.span>
       </motion.div>
 
       <AnimatePresence>

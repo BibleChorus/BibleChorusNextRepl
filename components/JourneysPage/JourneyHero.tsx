@@ -10,6 +10,8 @@ interface JourneyHeroProps {
   journey: JourneyWithSeasons;
 }
 
+const easeOutExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
 export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   const heroRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
@@ -106,6 +108,27 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
             {restWords}
           </span>
         </h1>
+        
+        <div className="flex justify-center mb-8">
+          <motion.div
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: theme.accent }}
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.7, 1, 0.7],
+              boxShadow: [
+                `0 0 20px ${theme.accent}40`,
+                `0 0 30px ${theme.accent}60`,
+                `0 0 20px ${theme.accent}40`
+              ]
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        </div>
         
         {journey.subtitle && (
           <p 
