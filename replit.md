@@ -74,7 +74,8 @@ Preferred communication style: Simple, everyday language.
      - Light mode: Porcelain (#f8f5f0) background, onyx (#161616) text, pewter (#4a4a4a) secondary, antique gold (#bfa130) accents
    - **Theme Integration**: Uses next-themes with useTheme hook, mounted state check for SSR hydration safety
    - **Visual Effects**: Film grain overlay, custom animated cursor (adapts to theme), ambient orbs (gold/mist tints that adjust per theme), scroll progress indicator
-   - **Hero Animations**: Smooth fade-in/slide-up animations using framer-motion with staggered timing (0.1s-0.9s delays) and easeOutExpo [0.16, 1, 0.3, 1] easing
+   - **Hero Animations**: Smooth fade-in/slide-up animations using framer-motion with staggered timing (0.1s-0.9s delays) and easeOutExpo [0.16, 1, 0.3, 1] easing. Hero content fades out with parallax effect when scrolling down.
+   - **Song Art Reveal**: Song artwork appears on hover/touch/play with grayscale-to-color transition effect. Art slides in from the right with gradient fade edge.
    - **Advanced Scroll Animations**: Staggered reveals with cubic-bezier(0.16, 1, 0.3, 1) easing, Framer Motion transforms
    - **Timeline Layout**: Sticky sidebar with giant year watermark (10% opacity), minimal track rows for songs
    - **Track Rows**: Minimal design (number, play button, title, date, duration) instead of card-based layout

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { JourneyWithSeasons } from '@/types/journey';
 import Image from 'next/image';
@@ -16,6 +16,14 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   const heroRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
+
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const contentY = useTransform(scrollYProgress, [0, 0.5], [0, -50]);
 
   useEffect(() => {
     setMounted(true);
@@ -84,7 +92,10 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
         style={{ background: `linear-gradient(to bottom, ${theme.bg}80, transparent, transparent)` }} 
       />
       
-      <div className="relative z-10 container mx-auto px-6 text-center pt-24">
+      <motion.div 
+        className="relative z-10 container mx-auto px-6 text-center pt-24"
+        style={{ opacity: contentOpacity, y: contentY }}
+      >
         <motion.div 
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -119,39 +130,13 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
           </span>
         </motion.h1>
         
-        <motion.div 
-          className="flex justify-center mb-8"
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: easeOutExpo, delay: 0.4 }}
-        >
-          <motion.div
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: theme.accent }}
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.7, 1, 0.7],
-              boxShadow: [
-                `0 0 20px ${theme.accent}40`,
-                `0 0 30px ${theme.accent}60`,
-                `0 0 20px ${theme.accent}40`
-              ]
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-        </motion.div>
-        
         {journey.subtitle && (
           <motion.p 
             className="text-sm md:text-base font-light max-w-xl mx-auto leading-relaxed mb-10 transition-colors duration-300"
             style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.text}cc` }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.5 }}
+            transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.4 }}
           >
             {journey.subtitle}
           </motion.p>
@@ -162,7 +147,7 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
           style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.6 }}
+          transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.5 }}
         >
           <div className="flex items-center gap-2">
             <motion.span 
@@ -170,7 +155,7 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
               style={{ color: theme.accent }}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.8, type: "spring", stiffness: 300, damping: 20 }}
+              transition={{ delay: 0.7, type: "spring", stiffness: 300, damping: 20 }}
             >
               {totalSongs}
             </motion.span>
@@ -183,7 +168,7 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
               style={{ color: theme.accent }}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.9, type: "spring", stiffness: 300, damping: 20 }}
+              transition={{ delay: 0.8, type: "spring", stiffness: 300, damping: 20 }}
             >
               {totalSeasons}
             </motion.span>
@@ -201,14 +186,17 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
             style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.textSecondary}b3` }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.7 }}
+            transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.6 }}
           >
             {journey.bio}
           </motion.p>
         )}
-      </div>
+      </motion.div>
       
-      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center">
+      <motion.div 
+        className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center"
+        style={{ opacity: contentOpacity }}
+      >
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -222,7 +210,7 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
         </motion.div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 };

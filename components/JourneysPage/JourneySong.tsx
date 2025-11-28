@@ -6,8 +6,11 @@ import { useTheme } from 'next-themes';
 import { SeasonSong } from '@/types/journey';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { format, parseISO } from 'date-fns';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Music } from 'lucide-react';
 import LyricsBibleComparisonDialog from '@/components/ListenPage/LyricsBibleComparisonDialog';
+import Image from 'next/image';
+
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
 interface JourneySongProps {
   seasonSong: SeasonSong;
@@ -64,6 +67,9 @@ export const JourneySong: React.FC<JourneySongProps> = ({
   const isCurrentlyPlaying = isCurrentSong && isPlaying;
   const hasPersonalNote = seasonSong.personal_note && seasonSong.personal_note.trim().length > 0;
   const journeySongOrigin = songAny.journey_song_origin;
+  
+  const showArt = isHovered || isTouched || isCurrentSong;
+  const songArtUrl = song.song_art_url ? `${CDN_URL}${song.song_art_url}` : null;
   
   const formatJourneySongOrigin = (origin: string): string => {
     const originMap: { [key: string]: string } = {
@@ -172,6 +178,50 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         transition={{ duration: 0.3, ease: easeOutExpo }}
         style={{ originY: 0.5 }}
       />
+
+      <AnimatePresence>
+        {showArt && songArtUrl && (
+          <motion.div
+            className="absolute right-0 top-0 bottom-0 w-24 md:w-32 pointer-events-none overflow-hidden"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.5, ease: easeOutExpo }}
+          >
+            <div className="absolute inset-0 z-10" style={{ 
+              background: `linear-gradient(to right, ${theme.bg}, transparent 30%)` 
+            }} />
+            <motion.div
+              className="absolute inset-0"
+              initial={{ filter: 'grayscale(100%)' }}
+              animate={{ filter: isCurrentlyPlaying ? 'grayscale(0%)' : 'grayscale(100%)' }}
+              whileHover={{ filter: 'grayscale(0%)' }}
+              transition={{ duration: 0.8, ease: easeOutExpo }}
+            >
+              <Image
+                src={songArtUrl}
+                alt={song.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 96px, 128px"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {showArt && !songArtUrl && (
+        <motion.div
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-lg pointer-events-none flex items-center justify-center"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 0.3, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.4, ease: easeOutExpo }}
+          style={{ backgroundColor: theme.bgAlt, border: `1px solid ${theme.border}` }}
+        >
+          <Music className="w-5 h-5 md:w-6 md:h-6" style={{ color: theme.textMuted }} />
+        </motion.div>
+      )}
 
       <motion.div 
         className="flex items-center gap-4 md:gap-6 py-6 px-3 relative z-10"
