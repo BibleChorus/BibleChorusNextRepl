@@ -28,7 +28,7 @@ interface PublicJourneysResponse {
 const FilmGrainOverlay: React.FC = () => {
   return (
     <div 
-      className="fixed inset-0 pointer-events-none opacity-0 dark:opacity-[0.015]"
+      className="fixed inset-0 pointer-events-none opacity-[0.015]"
       style={{
         zIndex: 1,
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
@@ -43,6 +43,7 @@ const AmbientOrbsOverlay: React.FC = () => {
       <motion.div 
         className="absolute top-0 left-0 w-96 h-96 rounded-full"
         style={{
+          background: 'rgba(212, 175, 55, 0.06)',
           filter: 'blur(120px)'
         }}
         animate={{
@@ -50,12 +51,11 @@ const AmbientOrbsOverlay: React.FC = () => {
           x: [0, 20, 0],
         }}
         transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <div className="w-full h-full rounded-full bg-indigo-400/20 dark:bg-gold/[0.06]" />
-      </motion.div>
+      />
       <motion.div 
         className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full"
         style={{
+          background: 'rgba(160, 160, 160, 0.04)',
           filter: 'blur(120px)'
         }}
         animate={{
@@ -63,12 +63,11 @@ const AmbientOrbsOverlay: React.FC = () => {
           x: [0, -20, 0],
         }}
         transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-      >
-        <div className="w-full h-full rounded-full bg-purple-400/20 dark:bg-mist/[0.04]" />
-      </motion.div>
+      />
       <motion.div 
         className="absolute top-1/2 right-1/4 w-72 h-72 rounded-full"
         style={{
+          background: 'rgba(229, 229, 229, 0.02)',
           filter: 'blur(100px)'
         }}
         animate={{
@@ -76,9 +75,7 @@ const AmbientOrbsOverlay: React.FC = () => {
           x: [0, -15, 0],
         }}
         transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
-      >
-        <div className="w-full h-full rounded-full bg-pink-400/15 dark:bg-silk/[0.02]" />
-      </motion.div>
+      />
     </div>
   );
 };
@@ -186,7 +183,7 @@ export default function JourneysIndex() {
         <Link href="/login">
           <Button 
             size="lg"
-            className="h-12 px-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 dark:from-gold dark:to-gold dark:hover:from-gold/90 dark:hover:to-gold/90 text-white dark:text-void rounded-xl dark:rounded-none text-xs tracking-[0.15em] dark:tracking-[0.2em] uppercase font-medium"
+            className="h-12 px-8 bg-gold hover:bg-gold/90 text-void rounded-none text-xs tracking-[0.2em] uppercase font-medium"
           >
             Sign In to Start
             <ArrowRight className="w-4 h-4 ml-3" />
@@ -201,7 +198,7 @@ export default function JourneysIndex() {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-5 h-5 rounded-full border border-indigo-200 dark:border-white/10 border-t-indigo-500 dark:border-t-gold"
+            className="w-5 h-5 rounded-full border border-white/10 border-t-gold"
           />
         </div>
       );
@@ -212,7 +209,7 @@ export default function JourneysIndex() {
         <Link href="/journeys/edit">
           <Button 
             size="lg"
-            className="h-12 px-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 dark:from-gold dark:to-gold dark:hover:from-gold/90 dark:hover:to-gold/90 text-white dark:text-void rounded-xl dark:rounded-none text-xs tracking-[0.15em] dark:tracking-[0.2em] uppercase font-medium"
+            className="h-12 px-8 bg-gold hover:bg-gold/90 text-void rounded-none text-xs tracking-[0.2em] uppercase font-medium"
           >
             <Plus className="w-4 h-4 mr-3" />
             Create Your Journey
@@ -226,7 +223,7 @@ export default function JourneysIndex() {
         <Link href="/journeys/edit">
           <Button 
             size="lg"
-            className="h-12 px-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 dark:from-gold dark:to-gold dark:hover:from-gold/90 dark:hover:to-gold/90 text-white dark:text-void rounded-xl dark:rounded-none text-xs tracking-[0.15em] dark:tracking-[0.2em] uppercase font-medium"
+            className="h-12 px-8 bg-gold hover:bg-gold/90 text-void rounded-none text-xs tracking-[0.2em] uppercase font-medium"
           >
             <Edit className="w-4 h-4 mr-3" />
             Edit Journey
@@ -236,7 +233,7 @@ export default function JourneysIndex() {
           <Button 
             variant="outline"
             size="lg"
-            className="h-12 px-8 rounded-xl dark:rounded-none text-xs tracking-[0.15em] dark:tracking-[0.2em] uppercase font-medium border-2 border-indigo-200 dark:border-white/20 text-slate-700 dark:text-silk hover:bg-indigo-50 dark:hover:bg-white/5 hover:text-indigo-600 dark:hover:text-white"
+            className="h-12 px-8 rounded-none text-xs tracking-[0.2em] uppercase font-medium border-white/20 text-silk hover:bg-white/5 hover:text-white"
           >
             View Your Journey
             <ArrowRight className="w-4 h-4 ml-3" />
@@ -254,7 +251,20 @@ export default function JourneysIndex() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="min-h-screen relative selection:bg-indigo-500 dark:selection:bg-white selection:text-white dark:selection:text-black bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#050505] dark:via-[#050505] dark:to-[#050505]">
+      <div 
+        className="min-h-screen relative selection:bg-white selection:text-black"
+        style={{ 
+          backgroundColor: '#050505',
+          color: '#e5e5e5',
+          fontFamily: "'Manrope', sans-serif"
+        }}
+      >
+        <style jsx global>{`
+          html, body {
+            background-color: #050505 !important;
+          }
+        `}</style>
+
         <AmbientOrbsOverlay />
         <FilmGrainOverlay />
 
@@ -283,8 +293,10 @@ export default function JourneysIndex() {
                   transition={{ duration: 0.8, delay: 0.1 }}
                   className="mb-8"
                 >
-                  <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full dark:rounded-none text-xs tracking-[0.3em] dark:tracking-[0.5em] uppercase font-medium bg-gradient-to-r from-indigo-400/10 via-purple-400/10 to-pink-400/10 dark:from-transparent dark:via-transparent dark:to-transparent backdrop-blur-md dark:backdrop-blur-none border border-indigo-200/50 dark:border-transparent text-indigo-600 dark:text-gold">
-                    <Sparkles className="w-4 h-4 dark:hidden" />
+                  <span 
+                    className="text-xs tracking-[0.5em] uppercase text-gold"
+                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                  >
                     Musical Portfolios of Faith
                   </span>
                 </motion.div>
@@ -296,13 +308,13 @@ export default function JourneysIndex() {
                   className="mb-8"
                 >
                   <span 
-                    className="block text-6xl md:text-7xl lg:text-8xl font-bold dark:font-normal tracking-tight mb-2 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 dark:from-silk dark:via-silk dark:to-silk bg-clip-text text-transparent"
+                    className="block text-6xl md:text-7xl lg:text-8xl text-silk tracking-tight mb-2"
                     style={{ fontFamily: "'Italiana', serif" }}
                   >
                     Discover
                   </span>
                   <span 
-                    className="block text-6xl md:text-7xl lg:text-8xl font-bold dark:font-light italic bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-silk/90 dark:via-silk/90 dark:to-silk/90 bg-clip-text text-transparent"
+                    className="block text-6xl md:text-7xl lg:text-8xl italic font-light text-silk/90"
                     style={{ fontFamily: "'Italiana', serif" }}
                   >
                     Journeys
@@ -313,7 +325,7 @@ export default function JourneysIndex() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.3 }}
-                  className="text-lg md:text-xl text-slate-600 dark:text-mist max-w-2xl mx-auto leading-relaxed font-light"
+                  className="text-lg md:text-xl text-mist max-w-2xl mx-auto leading-relaxed font-light"
                 >
                   Explore musical portfolios that tell stories of faith through scripture songs. 
                   Each journey is a testimony of God's faithfulness through seasons of life.
@@ -328,66 +340,63 @@ export default function JourneysIndex() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
             >
-              <div className="grid md:grid-cols-3 gap-6 dark:gap-px max-w-5xl mx-auto dark:border dark:border-white/10">
+              <div className="grid md:grid-cols-3 gap-px max-w-5xl mx-auto border border-white/10">
                 <motion.div
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  className="group relative p-8 md:p-10 text-center transition-all duration-500 bg-white/70 dark:bg-transparent backdrop-blur-xl dark:backdrop-blur-none rounded-2xl dark:rounded-none border border-slate-200/50 dark:border-r dark:border-white/10 dark:border-y-0 dark:border-l-0 hover:shadow-xl dark:hover:shadow-none dark:hover:bg-white/[0.02]"
+                  whileHover={{ backgroundColor: 'rgba(255,255,255,0.02)' }}
+                  className="group relative p-8 md:p-10 text-center transition-all duration-500 border-r border-white/10"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/5 to-transparent rounded-2xl dark:rounded-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="relative mb-6">
-                    <div className="w-14 h-14 mx-auto bg-gradient-to-br from-indigo-500 to-purple-500 dark:from-transparent dark:to-transparent rounded-xl dark:rounded-none dark:border dark:border-white/10 flex items-center justify-center shadow-lg dark:shadow-none">
-                      <Music className="w-6 h-6 text-white dark:text-gold" />
+                    <div className="w-14 h-14 mx-auto border border-white/10 flex items-center justify-center">
+                      <Music className="w-6 h-6 text-gold" />
                     </div>
                   </div>
                   <h3 
-                    className="relative text-lg font-semibold dark:font-normal text-slate-800 dark:text-silk mb-3 tracking-wide"
+                    className="relative text-lg text-silk mb-3 tracking-wide"
                     style={{ fontFamily: "'Italiana', serif" }}
                   >
                     Curate Your Songs
                   </h3>
-                  <p className="relative text-sm text-slate-600 dark:text-mist font-light leading-relaxed">
+                  <p className="relative text-sm text-mist font-light leading-relaxed">
                     Organize your scripture songs into meaningful seasons that tell your story.
                   </p>
                 </motion.div>
 
                 <motion.div
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  className="group relative p-8 md:p-10 text-center transition-all duration-500 bg-white/70 dark:bg-transparent backdrop-blur-xl dark:backdrop-blur-none rounded-2xl dark:rounded-none border border-slate-200/50 dark:border-r dark:border-white/10 dark:border-y-0 dark:border-l-0 hover:shadow-xl dark:hover:shadow-none dark:hover:bg-white/[0.02]"
+                  whileHover={{ backgroundColor: 'rgba(255,255,255,0.02)' }}
+                  className="group relative p-8 md:p-10 text-center transition-all duration-500 border-r border-white/10"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400/5 to-transparent rounded-2xl dark:rounded-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="relative mb-6">
-                    <div className="w-14 h-14 mx-auto bg-gradient-to-br from-purple-500 to-pink-500 dark:from-transparent dark:to-transparent rounded-xl dark:rounded-none dark:border dark:border-white/10 flex items-center justify-center shadow-lg dark:shadow-none">
-                      <BookOpen className="w-6 h-6 text-white dark:text-gold" />
+                    <div className="w-14 h-14 mx-auto border border-white/10 flex items-center justify-center">
+                      <BookOpen className="w-6 h-6 text-gold" />
                     </div>
                   </div>
                   <h3 
-                    className="relative text-lg font-semibold dark:font-normal text-slate-800 dark:text-silk mb-3 tracking-wide"
+                    className="relative text-lg text-silk mb-3 tracking-wide"
                     style={{ fontFamily: "'Italiana', serif" }}
                   >
                     Share Your Story
                   </h3>
-                  <p className="relative text-sm text-slate-600 dark:text-mist font-light leading-relaxed">
+                  <p className="relative text-sm text-mist font-light leading-relaxed">
                     Add reflections, testimonies, and scripture references to each season.
                   </p>
                 </motion.div>
 
                 <motion.div
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  className="group relative p-8 md:p-10 text-center transition-all duration-500 bg-white/70 dark:bg-transparent backdrop-blur-xl dark:backdrop-blur-none rounded-2xl dark:rounded-none border border-slate-200/50 dark:border-0 hover:shadow-xl dark:hover:shadow-none dark:hover:bg-white/[0.02]"
+                  whileHover={{ backgroundColor: 'rgba(255,255,255,0.02)' }}
+                  className="group relative p-8 md:p-10 text-center transition-all duration-500"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-pink-400/5 to-transparent rounded-2xl dark:rounded-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="relative mb-6">
-                    <div className="w-14 h-14 mx-auto bg-gradient-to-br from-pink-500 to-rose-500 dark:from-transparent dark:to-transparent rounded-xl dark:rounded-none dark:border dark:border-white/10 flex items-center justify-center shadow-lg dark:shadow-none">
-                      <Sparkles className="w-6 h-6 text-white dark:text-gold" />
+                    <div className="w-14 h-14 mx-auto border border-white/10 flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-gold" />
                     </div>
                   </div>
                   <h3 
-                    className="relative text-lg font-semibold dark:font-normal text-slate-800 dark:text-silk mb-3 tracking-wide"
+                    className="relative text-lg text-silk mb-3 tracking-wide"
                     style={{ fontFamily: "'Italiana', serif" }}
                   >
                     Inspire Others
                   </h3>
-                  <p className="relative text-sm text-slate-600 dark:text-mist font-light leading-relaxed">
+                  <p className="relative text-sm text-mist font-light leading-relaxed">
                     Let others walk through your journey and be encouraged by God's faithfulness.
                   </p>
                 </motion.div>
@@ -402,10 +411,12 @@ export default function JourneysIndex() {
               transition={{ duration: 0.8, delay: 0.7 }}
             >
               <div className="flex items-center gap-4 mb-12">
-                <Users className="w-5 h-5 text-indigo-500 dark:text-gold" />
-                <h2 className="text-2xl md:text-3xl font-bold dark:font-normal text-slate-800 dark:text-mist dark:text-xs dark:tracking-[0.3em] dark:uppercase">
-                  <span className="dark:hidden">Public Journeys</span>
-                  <span className="hidden dark:inline">Public Journeys</span>
+                <Users className="w-5 h-5 text-gold" />
+                <h2 
+                  className="text-xs tracking-[0.3em] uppercase text-mist"
+                  style={{ fontFamily: "'Manrope', sans-serif" }}
+                >
+                  Public Journeys
                 </h2>
               </div>
 
@@ -414,57 +425,56 @@ export default function JourneysIndex() {
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="w-12 h-12 rounded-full border-2 dark:border border-indigo-200 dark:border-white/10 border-t-indigo-500 dark:border-t-gold"
+                    className="w-12 h-12 rounded-full border border-white/10 border-t-gold"
                   />
                 </div>
               ) : publicJourneys.length === 0 ? (
-                <div className="text-center py-24 bg-white/50 dark:bg-transparent rounded-2xl dark:rounded-none border border-slate-200/50 dark:border-white/10">
-                  <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-indigo-500 to-purple-500 dark:from-transparent dark:to-transparent rounded-xl dark:rounded-none dark:border dark:border-white/10 flex items-center justify-center shadow-lg dark:shadow-none">
-                    <Music className="w-6 h-6 text-white dark:text-mist" />
+                <div className="text-center py-24 border border-white/10">
+                  <div className="w-16 h-16 mx-auto mb-6 border border-white/10 flex items-center justify-center">
+                    <Music className="w-6 h-6 text-mist" />
                   </div>
                   <p 
-                    className="text-xl font-semibold dark:font-normal text-slate-800 dark:text-silk mb-3"
+                    className="text-xl text-silk mb-3"
                     style={{ fontFamily: "'Italiana', serif" }}
                   >
                     No Public Journeys Yet
                   </p>
-                  <p className="text-sm text-slate-600 dark:text-mist font-light">
+                  <p className="text-sm text-mist font-light">
                     Be the first to share your musical journey!
                   </p>
                 </div>
               ) : (
-                <div className="grid gap-6 dark:gap-px md:grid-cols-2 lg:grid-cols-3 dark:border dark:border-white/10 dark:bg-white/[0.02]">
+                <div className="grid gap-px md:grid-cols-2 lg:grid-cols-3 border border-white/10 bg-white/[0.02]">
                   {publicJourneys.map((journey, index) => (
                     <motion.div
                       key={journey.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 0.05 * Math.min(index, 6) }}
-                      whileHover={{ y: -5, scale: 1.02 }}
-                      className="group relative bg-white dark:bg-[#050505] rounded-2xl dark:rounded-none shadow-lg dark:shadow-none border border-slate-200/50 dark:border-b dark:border-r dark:border-white/[0.05] dark:last:border-r-0 md:dark:[&:nth-child(2n)]:border-r-0 lg:dark:[&:nth-child(2n)]:border-r lg:dark:[&:nth-child(3n)]:border-r-0 overflow-hidden hover:shadow-xl dark:hover:shadow-none transition-all duration-300"
+                      className="group relative bg-[#050505] border-b border-r border-white/[0.05] last:border-r-0 md:[&:nth-child(2n)]:border-r-0 lg:[&:nth-child(2n)]:border-r lg:[&:nth-child(3n)]:border-r-0"
                     >
                       <Link href={`/journeys/${journey.username}`} className="block">
-                        <div className="p-6 md:p-8 transition-colors duration-500 dark:group-hover:bg-white/[0.02]">
+                        <div className="p-6 md:p-8 transition-colors duration-500 group-hover:bg-white/[0.02]">
                           <div className="flex items-start justify-between mb-6">
                             <div className="flex items-center gap-3">
-                              <div className="relative w-10 h-10 overflow-hidden rounded-full dark:rounded-none border-2 dark:border border-slate-200 dark:border-white/10 flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-500 dark:from-[#0a0a0a] dark:to-[#0a0a0a]">
+                              <div className="relative w-10 h-10 overflow-hidden border border-white/10 flex items-center justify-center bg-[#0a0a0a]">
                                 {journey.profile_image_url ? (
                                   <Image
                                     src={journey.profile_image_url}
                                     alt={journey.username}
                                     fill
-                                    className="object-cover dark:grayscale dark:opacity-80 dark:group-hover:opacity-100 dark:group-hover:grayscale-0 transition-all duration-500"
+                                    className="object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-500"
                                   />
                                 ) : (
                                   <span 
-                                    className="text-white dark:text-gold/80 text-sm font-medium dark:font-normal"
+                                    className="text-gold/80 text-sm"
                                     style={{ fontFamily: "'Italiana', serif" }}
                                   >
                                     {journey.username.charAt(0).toUpperCase()}
                                   </span>
                                 )}
                               </div>
-                              <span className="text-xs tracking-wide dark:tracking-[0.15em] uppercase text-slate-500 dark:text-mist group-hover:text-indigo-500 dark:group-hover:text-silk transition-colors duration-300">
+                              <span className="text-xs tracking-[0.15em] uppercase text-mist group-hover:text-silk transition-colors duration-300">
                                 @{journey.username}
                               </span>
                             </div>
@@ -476,14 +486,14 @@ export default function JourneysIndex() {
                                 handleLikeJourney(journey.id, journey.is_liked);
                               }}
                               disabled={likingJourneyId === journey.id}
-                              className={`flex items-center gap-2 px-3 py-1.5 text-xs tracking-wider dark:tracking-[0.15em] uppercase transition-all duration-300 rounded-full dark:rounded-none border ${
+                              className={`flex items-center gap-2 px-3 py-1.5 text-[10px] tracking-[0.15em] uppercase transition-all duration-300 border ${
                                 journey.is_liked
-                                  ? 'border-pink-200 dark:border-gold/40 text-pink-500 dark:text-gold bg-pink-50 dark:bg-gold/[0.08]'
-                                  : 'border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-mist/60 hover:border-pink-200 dark:hover:border-white/20 hover:text-pink-500 dark:hover:text-mist'
+                                  ? 'border-gold/40 text-gold bg-gold/[0.08]'
+                                  : 'border-white/[0.08] text-mist/60 hover:border-white/20 hover:text-mist'
                               }`}
                             >
                               <Heart
-                                className={`w-3.5 h-3.5 ${journey.is_liked ? 'fill-current' : ''} ${
+                                className={`w-3 h-3 ${journey.is_liked ? 'fill-current' : ''} ${
                                   likingJourneyId === journey.id ? 'animate-pulse' : ''
                                 }`}
                               />
@@ -492,18 +502,18 @@ export default function JourneysIndex() {
                           </div>
 
                           <h3 
-                            className="text-xl font-semibold dark:font-normal text-slate-800 dark:text-silk mb-2 group-hover:text-indigo-600 dark:group-hover:text-white transition-colors duration-300 line-clamp-1"
+                            className="text-xl text-silk mb-2 group-hover:text-white transition-colors duration-300 line-clamp-1"
                             style={{ fontFamily: "'Italiana', serif" }}
                           >
                             {journey.title}
                           </h3>
                           {journey.subtitle && (
-                            <p className="text-sm text-slate-600 dark:text-mist/80 mb-6 line-clamp-2 font-light leading-relaxed">
+                            <p className="text-sm text-mist/80 mb-6 line-clamp-2 font-light leading-relaxed">
                               {journey.subtitle}
                             </p>
                           )}
 
-                          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-mist/70 tracking-wide dark:tracking-[0.15em] uppercase">
+                          <div className="flex items-center gap-2 text-xs text-mist/70 tracking-[0.15em] uppercase">
                             <Music className="w-3.5 h-3.5" />
                             <span>{journey.song_count} {journey.song_count === 1 ? 'song' : 'songs'}</span>
                           </div>
