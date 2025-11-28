@@ -115,19 +115,6 @@ export default function AuthenticationPage() {
             <ScriptureScroll />
           </div>
 
-          {/* Floating Elements */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.5 }}
-            className="absolute top-16 right-16 w-20 h-20 bg-gradient-to-br from-indigo-400/16 to-purple-400/16 rounded-2xl backdrop-blur-sm animate-float shadow-xl"
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.7 }}
-            className="absolute bottom-20 left-16 w-16 h-16 bg-gradient-to-br from-purple-400/16 to-pink-400/16 rounded-xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"
-          />
         </motion.div>
 
         {/* Right Panel - Auth Form */}

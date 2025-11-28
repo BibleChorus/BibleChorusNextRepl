@@ -230,23 +230,6 @@ export default function Home() {
               </div>
             </motion.div>
             
-            {/* Enhanced Floating Elements */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.7 }}
-              className="absolute top-16 right-16 hidden xl:block"
-            >
-              <div className="w-24 h-24 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl backdrop-blur-sm animate-float shadow-xl"></div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.9 }}
-              className="absolute bottom-16 left-16 hidden xl:block"
-            >
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"></div>
-            </motion.div>
           </div>
         </motion.div>
 

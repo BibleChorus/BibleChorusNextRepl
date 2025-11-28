@@ -153,23 +153,6 @@ export default function PlaylistsPage() {
                 <span className="font-semibold text-slate-900 dark:text-white"> testament and theme</span>
               </motion.p>
               
-              {/* Enhanced Floating Elements */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1, delay: 0.5 }}
-                className="absolute top-16 right-16 hidden xl:block"
-              >
-                <div className="w-24 h-24 bg-gradient-to-br from-violet-400/16 to-fuchsia-400/16 rounded-3xl backdrop-blur-sm animate-float shadow-xl"></div>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1, delay: 0.7 }}
-                className="absolute bottom-16 left-16 hidden xl:block"
-              >
-                <div className="w-20 h-20 bg-gradient-to-br from-indigo-400/16 to-violet-400/16 rounded-2xl backdrop-blur-sm animate-float animation-delay-2000 shadow-xl"></div>
-              </motion.div>
             </div>
           </div>
         </motion.div>
