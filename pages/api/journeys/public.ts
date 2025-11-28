@@ -32,6 +32,7 @@ export default async function handler(
       .where('journey_profiles.is_public', true)
       .select(
         'journey_profiles.id',
+        'journey_profiles.user_id',
         'journey_profiles.title',
         'journey_profiles.subtitle',
         'journey_profiles.cover_image_url',
@@ -46,21 +47,28 @@ export default async function handler(
       .limit(Number(limit))
       .offset(Number(offset));
 
-    const journeyIds = journeys.map((j: any) => j.id);
+    const journeyUserIds = journeys.map((j: any) => ({ id: j.id, user_id: j.user_id }));
+    const userIds = journeys.map((j: any) => j.user_id);
     
     const songCounts = await db('journey_season_songs')
       .join('seasons', 'journey_season_songs.season_id', 'seasons.id')
-      .join('journey_profiles', 'seasons.user_id', 'journey_profiles.user_id')
-      .whereIn('journey_profiles.id', journeyIds)
+      .whereIn('seasons.user_id', userIds)
       .where('seasons.is_visible', true)
-      .select('journey_profiles.id as journey_id')
+      .select('seasons.user_id')
       .count('journey_season_songs.id as count')
-      .groupBy('journey_profiles.id');
+      .groupBy('seasons.user_id');
+
+    const userSongCountMap = new Map<number, number>();
+    for (const sc of songCounts) {
+      userSongCountMap.set(Number(sc.user_id), Number(sc.count));
+    }
 
     const songCountMap = new Map<number, number>();
-    for (const sc of songCounts) {
-      songCountMap.set(Number(sc.journey_id), Number(sc.count));
+    for (const j of journeyUserIds) {
+      songCountMap.set(j.id, userSongCountMap.get(j.user_id) || 0);
     }
+    
+    const journeyIds = journeys.map((j: any) => j.id);
 
     let userLikedJourneyIds: number[] = [];
     if (currentUserId) {

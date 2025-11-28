@@ -74,8 +74,14 @@ Preferred communication style: Simple, everyday language.
    - **Advanced Scroll Animations**: Staggered reveals with cubic-bezier(0.16, 1, 0.3, 1) easing, Framer Motion transforms
    - **Timeline Layout**: Sticky sidebar with giant year watermark (10% opacity), minimal track rows for songs
    - **Track Rows**: Minimal design (number, play button, title, date, duration) instead of card-based layout
-   - **Database**: `journey_profiles` stores user preferences, `journey_seasons` for time periods, `journey_season_songs` links songs with notes
+   - **Database**: `journey_profiles` stores user preferences (including `likes_count` for denormalized like counting), `seasons` for time periods, `journey_season_songs` links songs with notes
    - **Components**: JourneyEffects.tsx (shared visual primitives), JourneyHero.tsx, JourneyTimeline.tsx, JourneySong.tsx
+   - **Public Journeys Discovery**: The `/journeys` page displays all public journeys sorted by likes, showing creator info, title, subtitle, song count, and like count
+   - **Journey Likes**: Users can like public journeys using the polymorphic `likes` table with `likeable_type='journey'`
+   - **API Endpoints**:
+     - `/api/journeys/public.ts` - Lists public journeys with song/like counts
+     - `/api/journeys/like.ts` - Like/unlike journeys (POST/DELETE with transaction handling)
+     - `/api/journeys/check.ts` - Checks if user has created a journey with content
 
 7. **Song Type Distinction (Scripture vs Journey Songs)**:
    - **Scripture Songs**: Bible-based songs that closely follow scripture (word_for_word, close_paraphrase, creative_inspiration adherence). Require Bible verse metadata and translation. Displayed by default on Listen page.

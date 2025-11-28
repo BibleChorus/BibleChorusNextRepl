@@ -41,38 +41,45 @@ export default async function handler(
 
   if (req.method === 'POST') {
     try {
-      const existingLike = await db('likes')
-        .where({
+      const result = await db.transaction(async (trx) => {
+        const existingLike = await trx('likes')
+          .where({
+            user_id: userId,
+            likeable_type: 'journey',
+            likeable_id: journeyId,
+          })
+          .first();
+
+        if (existingLike) {
+          throw new Error('ALREADY_LIKED');
+        }
+
+        await trx('likes').insert({
           user_id: userId,
           likeable_type: 'journey',
           likeable_id: journeyId,
-        })
-        .first();
+        });
 
-      if (existingLike) {
-        return res.status(400).json({ error: 'Already liked this journey' });
-      }
+        await trx('journey_profiles')
+          .where({ id: journeyId })
+          .increment('likes_count', 1);
 
-      await db('likes').insert({
-        user_id: userId,
-        likeable_type: 'journey',
-        likeable_id: journeyId,
+        const updated = await trx('journey_profiles')
+          .where({ id: journeyId })
+          .select('likes_count')
+          .first();
+
+        return updated;
       });
-
-      await db('journey_profiles')
-        .where({ id: journeyId })
-        .increment('likes_count', 1);
-
-      const updated = await db('journey_profiles')
-        .where({ id: journeyId })
-        .select('likes_count')
-        .first();
 
       return res.status(201).json({
         liked: true,
-        likes_count: updated.likes_count,
+        likes_count: result.likes_count || 0,
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === 'ALREADY_LIKED') {
+        return res.status(400).json({ error: 'Already liked this journey' });
+      }
       console.error('Error liking journey:', error);
       return res.status(500).json({ error: 'Failed to like journey' });
     }
@@ -80,28 +87,41 @@ export default async function handler(
 
   if (req.method === 'DELETE') {
     try {
-      const deleted = await db('likes')
-        .where({
-          user_id: userId,
-          likeable_type: 'journey',
-          likeable_id: journeyId,
-        })
-        .del();
+      const result = await db.transaction(async (trx) => {
+        const existingLike = await trx('likes')
+          .where({
+            user_id: userId,
+            likeable_type: 'journey',
+            likeable_id: journeyId,
+          })
+          .first();
 
-      if (deleted > 0) {
-        await db('journey_profiles')
+        if (existingLike) {
+          await trx('likes')
+            .where({
+              user_id: userId,
+              likeable_type: 'journey',
+              likeable_id: journeyId,
+            })
+            .del();
+
+          await trx('journey_profiles')
+            .where({ id: journeyId })
+            .whereRaw('likes_count > 0')
+            .decrement('likes_count', 1);
+        }
+
+        const updated = await trx('journey_profiles')
           .where({ id: journeyId })
-          .decrement('likes_count', 1);
-      }
+          .select('likes_count')
+          .first();
 
-      const updated = await db('journey_profiles')
-        .where({ id: journeyId })
-        .select('likes_count')
-        .first();
+        return updated;
+      });
 
       return res.status(200).json({
         liked: false,
-        likes_count: Math.max(0, updated.likes_count),
+        likes_count: Math.max(0, result.likes_count || 0),
       });
     } catch (error) {
       console.error('Error unliking journey:', error);
