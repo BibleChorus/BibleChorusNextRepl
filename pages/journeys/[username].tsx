@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Pencil, Lock, ArrowLeft, Plus, Music, ChevronDown, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
-const SeasonsDropdown: React.FC<{ seasons: Season[] }> = ({ seasons }) => {
+const SeasonsDropdown: React.FC<{ seasons: Season[]; isMobile?: boolean }> = ({ seasons, isMobile = false }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const sortedSeasons = [...seasons].sort((a, b) => {
@@ -36,6 +36,86 @@ const SeasonsDropdown: React.FC<{ seasons: Season[] }> = ({ seasons }) => {
 
   if (seasons.length === 0) return null;
 
+  // Mobile floating button version
+  if (isMobile) {
+    return (
+      <>
+        <motion.button
+          onClick={() => setIsOpen(!isOpen)}
+          className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-gold text-void flex items-center justify-center shadow-lg md:hidden"
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+        >
+          <Calendar className="w-5 h-5" />
+        </motion.button>
+
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden"
+                onClick={() => setIsOpen(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: '100%' }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: '100%' }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0a] border-t border-white/10 rounded-t-2xl max-h-[70vh] overflow-hidden md:hidden"
+              >
+                <div className="flex items-center justify-center py-3">
+                  <div className="w-10 h-1 bg-white/20 rounded-full" />
+                </div>
+                <div className="px-4 pb-2">
+                  <h3 
+                    className="text-sm tracking-[0.2em] uppercase text-mist mb-4"
+                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                  >
+                    Jump to Season
+                  </h3>
+                </div>
+                <div className="overflow-y-auto max-h-[calc(70vh-80px)] pb-8">
+                  {sortedSeasons.map((season) => {
+                    const year = new Date(season.start_date).getFullYear();
+                    return (
+                      <button
+                        key={season.id}
+                        onClick={() => scrollToSeason(season.id)}
+                        className="w-full px-6 py-4 flex items-center gap-4 hover:bg-white/5 active:bg-white/10 transition-colors text-left"
+                      >
+                        <span 
+                          className="text-gold text-lg font-light min-w-[60px]"
+                          style={{ fontFamily: "'Italiana', serif" }}
+                        >
+                          {year}
+                        </span>
+                        <div className="flex-1">
+                          <span 
+                            className="text-silk text-base font-light block"
+                            style={{ fontFamily: "'Italiana', serif" }}
+                          >
+                            {season.title}
+                          </span>
+                        </div>
+                        <ChevronDown className="w-4 h-4 text-mist -rotate-90" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
+
+  // Desktop dropdown version
   return (
     <div className="relative">
       <button
@@ -413,6 +493,9 @@ export default function JourneyPage() {
             <SeasonsDropdown seasons={journey.seasons || []} />
           </div>
         </nav>
+
+        {/* Mobile floating seasons button */}
+        <SeasonsDropdown seasons={journey.seasons || []} isMobile={true} />
 
         <div className="journey-page">
           <JourneyHero journey={journey} />
