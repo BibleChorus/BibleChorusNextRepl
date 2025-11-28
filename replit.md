@@ -67,13 +67,14 @@ Preferred communication style: Simple, everyday language.
 
 5. **Auto-Playlist System**: PostgreSQL functions and triggers automatically maintain playlists based on criteria stored in the `auto_criteria` JSONB column
 
-6. **Journeys System**: Premium artistic portfolio pages where users create time-based "Seasons" to showcase scripture songs. Features an editorial magazine-style aesthetic with dark/light theme support:
+6. **Journeys System**: Premium artistic portfolio pages where users create time-based "Seasons" to showcase scripture songs. Features an editorial magazine-style aesthetic with global dark/light theme support (uses system-wide next-themes, no per-journey theming):
    - **Premium Typography**: Italiana serif font for headings, Manrope sans-serif for body text
    - **Theme-Responsive Color Palettes**:
      - Dark mode: Void (#050505) background, silk (#e5e5e5) text, mist (#a0a0a0) secondary, gold (#d4af37) accents
      - Light mode: Porcelain (#f8f5f0) background, onyx (#161616) text, pewter (#4a4a4a) secondary, antique gold (#bfa130) accents
    - **Theme Integration**: Uses next-themes with useTheme hook, mounted state check for SSR hydration safety
    - **Visual Effects**: Film grain overlay, custom animated cursor (adapts to theme), ambient orbs (gold/mist tints that adjust per theme), scroll progress indicator
+   - **Hero Animations**: Smooth fade-in/slide-up animations using framer-motion with staggered timing (0.1s-0.9s delays) and easeOutExpo [0.16, 1, 0.3, 1] easing
    - **Advanced Scroll Animations**: Staggered reveals with cubic-bezier(0.16, 1, 0.3, 1) easing, Framer Motion transforms
    - **Timeline Layout**: Sticky sidebar with giant year watermark (10% opacity), minimal track rows for songs
    - **Track Rows**: Minimal design (number, play button, title, date, duration) instead of card-based layout
