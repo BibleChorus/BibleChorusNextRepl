@@ -194,10 +194,10 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
           </div>
         )}
 
-        <div className="flex-1 min-h-0 h-[400px]">
+        <div style={{ height: '400px' }}>
           {viewOption === 'both' && hasLyrics && hasVerses ? (
-            <ResizablePanelGroup direction="horizontal" className="h-full">
-              <ResizablePanel defaultSize={50} minSize={25} maxSize={75} className="!overflow-y-auto">
+            <div className="flex h-full">
+              <div className="flex-1 overflow-y-auto border-r border-border">
                 <div className="p-6 md:p-10">
                   <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
                     <Music className="w-3 h-3" />
@@ -207,13 +207,8 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
                     {song.lyrics}
                   </p>
                 </div>
-              </ResizablePanel>
-              <ResizableHandle withHandle className="bg-border hover:bg-amber-600/50 dark:hover:bg-amber-400/50 transition-colors">
-                <div className="flex h-full items-center justify-center">
-                  <GripVertical className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </ResizableHandle>
-              <ResizablePanel defaultSize={50} minSize={25} maxSize={75} className="!overflow-y-auto">
+              </div>
+              <div className="flex-1 overflow-y-auto">
                 <div className="p-6 md:p-10">
                   <h3 className="text-xs tracking-[0.2em] text-amber-600 dark:text-amber-400 uppercase mb-6 flex items-center gap-2">
                     <BookOpen className="w-3 h-3" />
@@ -221,8 +216,8 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
                   </h3>
                   {renderVerseContent()}
                 </div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
+              </div>
+            </div>
           ) : viewOption === 'lyrics' ? (
             <ScrollArea className="h-[400px]">
               <div className="p-6 md:p-10">
