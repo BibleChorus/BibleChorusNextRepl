@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { JourneyWithSeasons } from '@/types/journey';
 import Image from 'next/image';
@@ -16,17 +16,20 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   const heroRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"]
   });
 
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const contentY = useTransform(scrollYProgress, [0, 0.5], [0, -50]);
+  const scrollOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const scrollY = useTransform(scrollYProgress, [0, 0.5], [0, -50]);
 
   useEffect(() => {
     setMounted(true);
+    const timer = setTimeout(() => setHasAnimatedIn(true), 1200);
+    return () => clearTimeout(timer);
   }, []);
 
   const isDark = resolvedTheme === 'dark';
@@ -94,7 +97,7 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
       
       <motion.div 
         className="relative z-10 container mx-auto px-6 text-center pt-24"
-        style={{ opacity: contentOpacity, y: contentY }}
+        style={hasAnimatedIn ? { opacity: scrollOpacity, y: scrollY } : undefined}
       >
         <motion.div 
           className="mb-8"
@@ -195,7 +198,10 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
       
       <motion.div 
         className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center"
-        style={{ opacity: contentOpacity }}
+        style={hasAnimatedIn ? { opacity: scrollOpacity } : undefined}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.8 }}
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}

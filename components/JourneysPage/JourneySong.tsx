@@ -227,6 +227,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         className="flex items-center gap-4 md:gap-6 py-6 px-3 relative z-10"
         animate={{ 
           x: isHovered ? 8 : 0,
+          paddingRight: showArt && songArtUrl ? '140px' : '12px',
           transition: springTransition
         }}
       >
@@ -373,7 +374,8 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               animate={{ y: 0 }}
               exit={{ y: -10 }}
               transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-2 pb-2 pl-[52px] md:pl-[68px] pr-4"
+              className="pt-2 pb-2 pl-[52px] md:pl-[68px]"
+              style={{ paddingRight: showArt && songArtUrl ? '140px' : '16px' }}
             >
               <span 
                 className="text-[11px] uppercase tracking-widest"
@@ -404,7 +406,8 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               animate={{ y: 0 }}
               exit={{ y: -10 }}
               transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-2 pb-6 pl-[52px] md:pl-[68px] pr-4"
+              className="pt-2 pb-6 pl-[52px] md:pl-[68px]"
+              style={{ paddingRight: showArt && songArtUrl ? '140px' : '16px' }}
             >
               <div 
                 className="relative pl-6"
