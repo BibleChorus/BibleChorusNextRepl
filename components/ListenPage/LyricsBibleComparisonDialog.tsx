@@ -108,8 +108,8 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-4xl w-[95vw] max-h-[85vh] p-0 overflow-hidden bg-background border-border">
-        <DialogHeader className="px-6 md:px-10 py-6 border-b border-border">
+      <DialogContent className="sm:max-w-4xl w-[95vw] max-h-[85vh] p-0 overflow-hidden bg-background border-border flex flex-col">
+        <DialogHeader className="px-6 md:px-10 py-6 border-b border-border flex-shrink-0">
           <DialogTitle className="text-2xl md:text-3xl font-normal">
             {song?.title}
           </DialogTitle>
@@ -118,7 +118,7 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
           </p>
         </DialogHeader>
 
-        <div className="flex items-center justify-center gap-1 py-4 border-b border-border/50">
+        <div className="flex items-center justify-center gap-1 py-4 border-b border-border/50 flex-shrink-0">
           {hasLyrics && (
             <button
               onClick={() => setViewOption('lyrics')}
@@ -160,7 +160,7 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
         </div>
 
         {hasVerses && viewOption !== 'lyrics' && (
-          <div className="flex items-center justify-center gap-3 py-3 border-b border-border/50">
+          <div className="flex items-center justify-center gap-3 py-3 border-b border-border/50 flex-shrink-0">
             <span className="text-xs text-muted-foreground/60 tracking-wide">Translation:</span>
             <Select
               value={translation}
