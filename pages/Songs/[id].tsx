@@ -1034,9 +1034,6 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       >
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/60 via-purple-500/40 to-pink-500/60"></div>
-          <div className="absolute top-0 -left-8 w-96 h-96 bg-indigo-300/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
-          <div className="absolute top-12 -right-8 w-80 h-80 bg-pink-300/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-12 left-32 w-96 h-96 bg-purple-300/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
           <div className="absolute inset-0 bg-gradient-radial from-indigo-200/20 via-purple-100/10 to-transparent"></div>
         </div>
         <div className="relative z-10 container mx-auto px-4 text-center">
