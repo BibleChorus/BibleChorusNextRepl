@@ -290,14 +290,20 @@ export default function JourneyPage() {
     };
 
     fetchJourney();
-  }, [username, getAuthToken]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username]);
 
   if (!mounted) {
     return (
-      <div 
-        className="min-h-screen"
-        style={{ backgroundColor: '#050505', fontFamily: "'Manrope', sans-serif" }}
-      />
+      <>
+        <Head>
+          <title>Journey | BibleChorus</title>
+        </Head>
+        <div 
+          className="min-h-screen opacity-0"
+          style={{ fontFamily: "'Manrope', sans-serif" }}
+        />
+      </>
     );
   }
 

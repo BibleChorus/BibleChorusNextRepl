@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { JourneyWithSeasons } from '@/types/journey';
 import Image from 'next/image';
@@ -10,25 +10,10 @@ interface JourneyHeroProps {
   journey: JourneyWithSeasons;
 }
 
-const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
-
 export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   const heroRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"]
-  });
-
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const contentY = useTransform(scrollYProgress, [0, 0.5], ['0%', '15%']);
-  
-  const smoothBackgroundY = useSpring(backgroundY, { stiffness: 100, damping: 30 });
-  const smoothContentOpacity = useSpring(contentOpacity, { stiffness: 100, damping: 30 });
-  const smoothContentY = useSpring(contentY, { stiffness: 100, damping: 30 });
 
   useEffect(() => {
     setMounted(true);
@@ -63,6 +48,7 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   if (!mounted) {
     return (
       <div 
+        ref={heroRef}
         className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
         style={{ backgroundColor: '#050505' }}
       />
@@ -72,14 +58,11 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   return (
     <motion.div 
       ref={heroRef}
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden transition-colors duration-300"
       style={{ backgroundColor: theme.bg }}
     >
       {backgroundImageUrl && (
-        <motion.div 
-          style={{ y: smoothBackgroundY }}
-          className="absolute inset-0"
-        >
+        <div className="absolute inset-0">
           <Image
             src={backgroundImageUrl}
             alt={journey.title}
@@ -87,7 +70,7 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
             className="object-cover grayscale opacity-30"
             priority
           />
-        </motion.div>
+        </div>
       )}
       
       <div 
@@ -99,61 +82,42 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
         style={{ background: `linear-gradient(to bottom, ${theme.bg}80, transparent, transparent)` }} 
       />
       
-      <motion.div 
-        style={{ y: smoothContentY, opacity: smoothContentOpacity }}
-        className="relative z-10 container mx-auto px-6 text-center"
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-8"
-        >
+      <div className="relative z-10 container mx-auto px-6 text-center pt-24">
+        <div className="mb-8">
           <span 
-            className="text-xs md:text-sm tracking-[0.5em] uppercase"
+            className="text-xs md:text-sm tracking-[0.5em] uppercase transition-colors duration-300"
             style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
           >
             A Sonic Archive
           </span>
-        </motion.div>
+        </div>
         
-        <motion.h1 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-10"
-        >
+        <h1 className="mb-10">
           <span 
-            className="block text-6xl md:text-9xl tracking-tight"
+            className="block text-6xl md:text-9xl tracking-tight transition-colors duration-300"
             style={{ fontFamily: "'Italiana', serif", color: theme.text }}
           >
             {firstWord}
           </span>
           <span 
-            className="block text-6xl md:text-9xl tracking-tight italic"
+            className="block text-6xl md:text-9xl tracking-tight italic transition-colors duration-300"
             style={{ fontFamily: "'Italiana', serif", color: theme.text }}
           >
             {restWords}
           </span>
-        </motion.h1>
+        </h1>
         
         {journey.subtitle && (
-          <motion.p 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="text-sm md:text-base font-light max-w-xl mx-auto leading-relaxed mb-10"
+          <p 
+            className="text-sm md:text-base font-light max-w-xl mx-auto leading-relaxed mb-10 transition-colors duration-300"
             style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.text}cc` }}
           >
             {journey.subtitle}
-          </motion.p>
+          </p>
         )}
         
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="flex items-center justify-center gap-8"
+        <div 
+          className="flex items-center justify-center gap-8 transition-colors duration-300"
           style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
         >
           <div className="flex items-center gap-2">
@@ -169,41 +133,33 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
           <div className="flex items-center gap-2">
             <span className="text-xs tracking-[0.2em] uppercase">By {journey.username}</span>
           </div>
-        </motion.div>
+        </div>
         
         {journey.bio && (
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, delay: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-12 text-sm max-w-md mx-auto leading-relaxed"
+          <p
+            className="mt-12 text-sm max-w-md mx-auto leading-relaxed transition-colors duration-300"
             style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.textSecondary}b3` }}
           >
             {journey.bio}
-          </motion.p>
+          </p>
         )}
-      </motion.div>
+      </div>
       
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5, duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center"
-      >
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center">
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="w-5 h-8 rounded-full flex items-start justify-center pt-1.5"
-          style={{ border: `1px solid ${theme.borderHover}` }}
+          className="w-5 h-8 rounded-full flex items-start justify-center pt-1.5 transition-colors duration-300"
+          style={{ border: `1px solid ${theme.border}` }}
         >
           <motion.div 
-            className="w-1 h-1.5 rounded-full"
+            className="w-1 h-1.5 rounded-full transition-colors duration-300"
             style={{ backgroundColor: `${theme.text}66` }}
             animate={{ opacity: [0.4, 0.8, 0.4] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
         </motion.div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 };
