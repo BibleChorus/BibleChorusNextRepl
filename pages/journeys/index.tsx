@@ -2,14 +2,201 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Music, ArrowRight, Plus, BookOpen } from 'lucide-react';
+import { Sparkles, Music, ArrowRight, Plus, BookOpen, Heart, Edit, Users } from 'lucide-react';
+import { PublicJourneyListItem } from '@/types/journey';
+
+interface JourneyCheckResponse {
+  hasJourney: boolean;
+  hasContent: boolean;
+  profile: {
+    id: number;
+    title: string;
+    subtitle: string | null;
+    is_public: boolean;
+  } | null;
+}
+
+interface PublicJourneysResponse {
+  journeys: (PublicJourneyListItem & { is_liked: boolean })[];
+  total: number;
+}
 
 export default function JourneysIndex() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, getAuthToken } = useAuth();
+  const [journeyStatus, setJourneyStatus] = useState<JourneyCheckResponse | null>(null);
+  const [publicJourneys, setPublicJourneys] = useState<(PublicJourneyListItem & { is_liked: boolean })[]>([]);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+  const [loadingJourneys, setLoadingJourneys] = useState(true);
+  const [likingJourneyId, setLikingJourneyId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const checkUserJourney = async () => {
+      if (!user) {
+        setLoadingStatus(false);
+        setJourneyStatus(null);
+        return;
+      }
+
+      try {
+        const token = await getAuthToken();
+        const response = await fetch('/api/journeys/check', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setJourneyStatus(data);
+        }
+      } catch (error) {
+        console.error('Error checking journey status:', error);
+      } finally {
+        setLoadingStatus(false);
+      }
+    };
+
+    checkUserJourney();
+  }, [user, getAuthToken]);
+
+  useEffect(() => {
+    const fetchPublicJourneys = async () => {
+      try {
+        const token = user ? await getAuthToken() : null;
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
+        const response = await fetch('/api/journeys/public?limit=20', { headers });
+        if (response.ok) {
+          const data: PublicJourneysResponse = await response.json();
+          setPublicJourneys(data.journeys);
+        }
+      } catch (error) {
+        console.error('Error fetching public journeys:', error);
+      } finally {
+        setLoadingJourneys(false);
+      }
+    };
+
+    fetchPublicJourneys();
+  }, [user, getAuthToken]);
+
+  const handleLikeJourney = async (journeyId: number, isCurrentlyLiked: boolean) => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    setLikingJourneyId(journeyId);
+    try {
+      const token = await getAuthToken();
+      const response = await fetch('/api/journeys/like', {
+        method: isCurrentlyLiked ? 'DELETE' : 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ journey_id: journeyId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPublicJourneys((prev) =>
+          prev.map((j) =>
+            j.id === journeyId
+              ? { ...j, is_liked: data.liked, likes_count: data.likes_count }
+              : j
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error liking journey:', error);
+    } finally {
+      setLikingJourneyId(null);
+    }
+  };
+
+  const renderUserButtons = () => {
+    if (!user) {
+      return (
+        <Link href="/login">
+          <Button 
+            size="lg"
+            className="h-14 px-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-semibold text-lg"
+          >
+            Sign In to Start
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </Link>
+      );
+    }
+
+    if (loadingStatus) {
+      return (
+        <div className="h-14 px-8 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500"></div>
+        </div>
+      );
+    }
+
+    if (!journeyStatus?.hasContent) {
+      return (
+        <Link href="/journeys/edit">
+          <Button 
+            size="lg"
+            className="h-14 px-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-semibold text-lg"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Create Your Journey
+          </Button>
+        </Link>
+      );
+    }
+
+    return (
+      <>
+        <Link href="/journeys/edit">
+          <Button 
+            size="lg"
+            className="h-14 px-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-semibold text-lg"
+          >
+            <Edit className="w-5 h-5 mr-2" />
+            Edit Journey
+          </Button>
+        </Link>
+        <Link href={`/journeys/${user.username}`}>
+          <Button 
+            variant="outline"
+            size="lg"
+            className="h-14 px-8 rounded-xl font-semibold text-lg border-2"
+          >
+            View Your Journey
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </Link>
+      </>
+    );
+  };
+
+  const getThemeColorClasses = (themeColor: string) => {
+    const colors: Record<string, string> = {
+      indigo: 'from-indigo-500 to-purple-500',
+      purple: 'from-purple-500 to-pink-500',
+      pink: 'from-pink-500 to-rose-500',
+      blue: 'from-blue-500 to-indigo-500',
+      teal: 'from-teal-500 to-cyan-500',
+      green: 'from-green-500 to-teal-500',
+      amber: 'from-amber-500 to-orange-500',
+      rose: 'from-rose-500 to-pink-500',
+    };
+    return colors[themeColor] || colors.indigo;
+  };
 
   return (
     <>
@@ -58,6 +245,17 @@ export default function JourneysIndex() {
           </div>
           
           <div className="relative z-10 container mx-auto px-4">
+            <div className="flex justify-end mb-6">
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="flex flex-wrap items-center gap-3"
+              >
+                {renderUserButtons()}
+              </motion.div>
+            </div>
+
             <div className="text-center max-w-4xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -97,52 +295,11 @@ export default function JourneysIndex() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
-                className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-12"
+                className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8"
               >
                 Explore musical portfolios that tell stories of faith through scripture songs. 
                 Each journey is a testimony of God's faithfulness through seasons of life.
               </motion.p>
-              
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                className="flex flex-wrap items-center justify-center gap-4"
-              >
-                {user ? (
-                  <>
-                    <Link href="/journeys/edit">
-                      <Button 
-                        size="lg"
-                        className="h-14 px-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-semibold text-lg"
-                      >
-                        <Plus className="w-5 h-5 mr-2" />
-                        Create Your Journey
-                      </Button>
-                    </Link>
-                    <Link href={`/journeys/${user.username}`}>
-                      <Button 
-                        variant="outline"
-                        size="lg"
-                        className="h-14 px-8 rounded-xl font-semibold text-lg border-2"
-                      >
-                        View Your Journey
-                        <ArrowRight className="w-5 h-5 ml-2" />
-                      </Button>
-                    </Link>
-                  </>
-                ) : (
-                  <Link href="/login">
-                    <Button 
-                      size="lg"
-                      className="h-14 px-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-semibold text-lg"
-                    >
-                      Sign In to Start
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
-                  </Link>
-                )}
-              </motion.div>
             </div>
           </div>
           
@@ -164,7 +321,7 @@ export default function JourneysIndex() {
           </motion.div>
         </motion.div>
 
-        <div className="container mx-auto px-4 -mt-8 pb-24">
+        <div className="container mx-auto px-4 -mt-8 pb-12">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -225,6 +382,107 @@ export default function JourneysIndex() {
                 </p>
               </motion.div>
             </div>
+          </motion.div>
+        </div>
+
+        <div className="container mx-auto px-4 pb-24">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.7 }}
+          >
+            <div className="flex items-center gap-3 mb-8">
+              <Users className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
+                Public Journeys
+              </h2>
+            </div>
+
+            {loadingJourneys ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+              </div>
+            ) : publicJourneys.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-slate-600 dark:text-slate-400 text-lg">
+                  No public journeys yet. Be the first to share your musical journey!
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {publicJourneys.map((journey, index) => (
+                  <motion.div
+                    key={journey.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 * index }}
+                    whileHover={{ y: -5 }}
+                    className="group relative bg-white dark:bg-slate-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-200/50 dark:border-slate-700/50"
+                  >
+                    <div className={`h-2 bg-gradient-to-r ${getThemeColorClasses(journey.theme_color)}`} />
+                    
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <Link href={`/journeys/${journey.username}`} className="flex items-center gap-3 group/user">
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                            {journey.profile_image_url ? (
+                              <Image
+                                src={journey.profile_image_url}
+                                alt={journey.username}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <span className="text-white font-semibold text-sm">
+                                {journey.username.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover/user:text-indigo-500 transition-colors">
+                            @{journey.username}
+                          </span>
+                        </Link>
+                        
+                        <button
+                          onClick={() => handleLikeJourney(journey.id, journey.is_liked)}
+                          disabled={likingJourneyId === journey.id}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                            journey.is_liked
+                              ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400'
+                              : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:text-pink-500'
+                          }`}
+                        >
+                          <Heart
+                            className={`w-4 h-4 ${journey.is_liked ? 'fill-current' : ''} ${
+                              likingJourneyId === journey.id ? 'animate-pulse' : ''
+                            }`}
+                          />
+                          <span>{journey.likes_count}</span>
+                        </button>
+                      </div>
+
+                      <Link href={`/journeys/${journey.username}`}>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-1 group-hover:text-indigo-500 transition-colors line-clamp-1">
+                          {journey.title}
+                        </h3>
+                        {journey.subtitle && (
+                          <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">
+                            {journey.subtitle}
+                          </p>
+                        )}
+                      </Link>
+
+                      <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-500">
+                        <div className="flex items-center gap-1.5">
+                          <Music className="w-4 h-4" />
+                          <span>{journey.song_count} {journey.song_count === 1 ? 'song' : 'songs'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
       </div>

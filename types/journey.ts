@@ -10,8 +10,22 @@ export interface JourneyProfile {
   show_song_dates: boolean;
   show_play_counts: boolean;
   layout_style: 'timeline' | 'grid' | 'cards';
+  likes_count: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface PublicJourneyListItem {
+  id: number;
+  title: string;
+  subtitle: string | null;
+  cover_image_url: string | null;
+  theme_color: string;
+  likes_count: number;
+  song_count: number;
+  username: string;
+  profile_image_url: string | null;
+  created_at: string;
 }
 
 export interface Season {
