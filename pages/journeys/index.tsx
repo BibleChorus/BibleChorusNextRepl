@@ -303,7 +303,16 @@ export default function JourneysIndex() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[#050505]" style={{ fontFamily: "'Manrope', sans-serif" }} />
+      <>
+        <Head>
+          <title>Journeys | BibleChorus</title>
+          <meta name="description" content="Discover musical journeys of faith through scripture songs" />
+        </Head>
+        <div 
+          className="min-h-screen opacity-0" 
+          style={{ fontFamily: "'Manrope', sans-serif" }} 
+        />
+      </>
     );
   }
 
