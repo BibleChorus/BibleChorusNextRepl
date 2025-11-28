@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { useTheme } from 'next-themes';
 
 export const FilmGrain: React.FC = () => {
   return (
@@ -15,10 +16,15 @@ export const FilmGrain: React.FC = () => {
 };
 
 export const CustomCursor: React.FC = () => {
+  const { resolvedTheme } = useTheme();
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  const isDark = resolvedTheme === 'dark';
+  const accentColor = isDark ? '#d4af37' : '#bfa130';
+  const borderColor = isDark ? 'rgba(229, 229, 229, 0.3)' : 'rgba(22, 22, 22, 0.3)';
 
   useEffect(() => {
     setIsClient(true);
@@ -77,7 +83,8 @@ export const CustomCursor: React.FC = () => {
         }
       `}</style>
       <motion.div
-        className="fixed top-0 left-0 w-3 h-3 bg-gold rounded-full pointer-events-none z-[9999]"
+        className="fixed top-0 left-0 w-3 h-3 rounded-full pointer-events-none z-[9999]"
+        style={{ backgroundColor: accentColor }}
         initial={false}
         animate={{ 
           x: position.x - 6, 
@@ -95,8 +102,8 @@ export const CustomCursor: React.FC = () => {
           width: isHovering ? 60 : 36,
           height: isHovering ? 60 : 36,
           opacity: 1,
-          backgroundColor: isHovering ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
-          borderColor: isHovering ? 'rgba(212, 175, 55, 0.5)' : 'rgba(229, 229, 229, 0.3)'
+          backgroundColor: isHovering ? `${accentColor}26` : 'transparent',
+          borderColor: isHovering ? `${accentColor}80` : borderColor
         }}
         transition={{ type: 'spring', stiffness: 200, damping: 20 }}
       />
@@ -105,12 +112,29 @@ export const CustomCursor: React.FC = () => {
 };
 
 export const AmbientOrbs: React.FC = () => {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = resolvedTheme === 'dark';
+  
+  const orbColors = {
+    primary: isDark ? 'rgba(212, 175, 55, 0.08)' : 'rgba(191, 161, 48, 0.06)',
+    secondary: isDark ? 'rgba(160, 160, 160, 0.05)' : 'rgba(100, 100, 100, 0.04)',
+    tertiary: isDark ? 'rgba(229, 229, 229, 0.03)' : 'rgba(50, 50, 50, 0.02)',
+  };
+
+  if (!mounted) return null;
+
   return (
     <>
       <motion.div 
         className="fixed top-0 left-0 w-96 h-96 rounded-full pointer-events-none z-[-1]"
         style={{
-          background: 'rgba(212, 175, 55, 0.08)',
+          background: orbColors.primary,
           filter: 'blur(120px)'
         }}
         animate={{
@@ -122,7 +146,7 @@ export const AmbientOrbs: React.FC = () => {
       <motion.div 
         className="fixed bottom-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none z-[-1]"
         style={{
-          background: 'rgba(160, 160, 160, 0.05)',
+          background: orbColors.secondary,
           filter: 'blur(120px)'
         }}
         animate={{
@@ -134,7 +158,7 @@ export const AmbientOrbs: React.FC = () => {
       <motion.div 
         className="fixed top-1/2 right-1/4 w-72 h-72 rounded-full pointer-events-none z-[-1]"
         style={{
-          background: 'rgba(229, 229, 229, 0.03)',
+          background: orbColors.tertiary,
           filter: 'blur(100px)'
         }}
         animate={{
@@ -152,16 +176,34 @@ interface ScrollProgressProps {
 }
 
 export const ScrollProgress: React.FC<ScrollProgressProps> = () => {
+  const { resolvedTheme } = useTheme();
   const { scrollYProgress } = useScroll();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const height = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
   const smoothHeight = useSpring(height, { stiffness: 100, damping: 30 });
 
+  const isDark = resolvedTheme === 'dark';
+  const trackColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  const progressColor = isDark ? '#ffffff' : '#161616';
+
+  if (!mounted) return null;
+
   return (
-    <div className="fixed left-8 top-1/2 -translate-y-1/2 h-64 w-[1px] bg-white/10 hidden lg:block z-30">
+    <div 
+      className="fixed left-8 top-1/2 -translate-y-1/2 h-64 w-[1px] hidden lg:block z-30"
+      style={{ backgroundColor: trackColor }}
+    >
       <motion.div 
-        className="w-full bg-white origin-top"
-        style={{ height: smoothHeight }}
+        className="w-full origin-top"
+        style={{ 
+          height: smoothHeight,
+          backgroundColor: progressColor
+        }}
       />
     </div>
   );
@@ -172,25 +214,59 @@ interface JourneyLayoutWrapperProps {
 }
 
 export const JourneyLayoutWrapper: React.FC<JourneyLayoutWrapperProps> = ({ children }) => {
+  const { resolvedTheme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = resolvedTheme === 'dark';
+
+  const themeStyles = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    text: isDark ? '#e5e5e5' : '#161616',
+    scrollbarTrack: isDark ? '#0a0a0a' : '#f0ede6',
+    scrollbar: isDark ? '#333' : '#ccc',
+    selection: isDark ? '#ffffff' : '#161616',
+    selectionText: isDark ? '#000000' : '#ffffff',
+  };
+
+  if (!mounted) {
+    return (
+      <div 
+        className="min-h-screen bg-[#050505] text-[#e5e5e5] font-sans antialiased"
+        style={{ fontFamily: "'Manrope', sans-serif" }}
+      >
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div 
       ref={containerRef}
-      className="min-h-screen bg-[#050505] text-silk font-sans antialiased selection:bg-white selection:text-black"
+      className="min-h-screen font-sans antialiased"
       style={{ 
-        fontFamily: "'Manrope', sans-serif"
+        fontFamily: "'Manrope', sans-serif",
+        backgroundColor: themeStyles.bg,
+        color: themeStyles.text,
       }}
     >
       <style jsx global>{`
+        .journey-page ::selection {
+          background: ${themeStyles.selection};
+          color: ${themeStyles.selectionText};
+        }
         .journey-page ::-webkit-scrollbar {
           width: 6px;
         }
         .journey-page ::-webkit-scrollbar-track {
-          background: #0a0a0a;
+          background: ${themeStyles.scrollbarTrack};
         }
         .journey-page ::-webkit-scrollbar-thumb {
-          background: #333;
+          background: ${themeStyles.scrollbar};
           border-radius: 3px;
         }
         .journey-page .reveal-text {
