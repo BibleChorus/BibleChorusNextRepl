@@ -234,7 +234,7 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
 
         <div style={{ height: '400px' }}>
           {viewOption === 'both' && hasLyrics && hasVerses ? (
-            <div ref={containerRef} className="flex h-full">
+            <div ref={containerRef} className="flex h-full [&_::-webkit-scrollbar]:w-2 [&_::-webkit-scrollbar-track]:bg-transparent [&_::-webkit-scrollbar-thumb]:bg-border [&_::-webkit-scrollbar-thumb]:rounded-full">
               <div 
                 className="overflow-y-auto"
                 style={{ width: `${leftPanelWidth}%` }}
