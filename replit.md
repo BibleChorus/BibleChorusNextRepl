@@ -79,8 +79,12 @@ Preferred communication style: Simple, everyday language.
    - **Advanced Scroll Animations**: Staggered reveals with cubic-bezier(0.16, 1, 0.3, 1) easing, Framer Motion transforms
    - **Timeline Layout**: Sticky sidebar with giant year watermark (10% opacity), minimal track rows for songs
    - **Track Rows**: Minimal design (number, play button, title, date, duration) instead of card-based layout
-   - **Database**: `journey_profiles` stores user preferences (including `likes_count` for denormalized like counting), `seasons` for time periods, `journey_season_songs` links songs with notes
-   - **Components**: JourneyEffects.tsx (shared visual primitives), JourneyHero.tsx, JourneyTimeline.tsx, JourneySong.tsx
+   - **Important Dates**: Users can add milestone dates (baptism, marriage, births, etc.) within seasons that display chronologically alongside songs
+     - Database: `journey_season_important_dates` table with title, description, event_date, photo_url
+     - Important dates appear before songs on the same date
+     - Display component: JourneyImportantDate.tsx with photo reveal on hover/click
+   - **Database**: `journey_profiles` stores user preferences (including `likes_count` for denormalized like counting), `seasons` for time periods, `journey_season_songs` links songs with notes, `journey_season_important_dates` stores milestone dates
+   - **Components**: JourneyEffects.tsx (shared visual primitives), JourneyHero.tsx, JourneyTimeline.tsx, JourneySong.tsx, JourneyImportantDate.tsx
    - **Public Journeys Discovery**: The `/journeys` page displays all public journeys sorted by likes, showing creator info, title, subtitle, song count, and like count
    - **Journey Likes**: Users can like public journeys using the polymorphic `likes` table with `likeable_type='journey'`
    - **API Endpoints**:
