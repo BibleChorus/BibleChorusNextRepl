@@ -54,6 +54,15 @@ Preferred communication style: Simple, everyday language.
 - Community CTA section encouraging user sign-up or exploration
 - Responsive design with elegant typography and gold accents
 
+**Sidebar Design**:
+- Matches journeys/home page aesthetic with gold accent colors
+- Italiana serif font for BibleChorus logo, Manrope sans-serif for menu items
+- Binary state only: fully hidden or fully expanded (no icon-only mode)
+- Theme-responsive colors (dark: void #050505, light: porcelain #f8f5f0)
+- Gold accent line on hover for menu items
+- Automatically hidden on home page, expanded on other pages
+- Smooth slide animations using Framer Motion
+
 ### Backend Architecture
 
 **API Layer**: Next.js API Routes (`/pages/api`)
