@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 
 interface SidebarContextType {
@@ -15,14 +15,22 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const router = useRouter();
   const [isOpen, setIsOpen] = useState<boolean>(true);
   const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false);
+  const previousPathRef = useRef<string | null>(null);
   
   const isHomePage = router.pathname === '/';
   
   useEffect(() => {
-    if (isHomePage) {
+    const wasOnHomePage = previousPathRef.current === '/';
+    const isNowOnHomePage = router.pathname === '/';
+    
+    if (isNowOnHomePage && !wasOnHomePage) {
       setIsOpen(false);
+    } else if (!isNowOnHomePage && wasOnHomePage) {
+      setIsOpen(true);
     }
-  }, [isHomePage]);
+    
+    previousPathRef.current = router.pathname;
+  }, [router.pathname]);
 
   return (
     <SidebarContext.Provider value={{ isOpen, setIsOpen, isMobileOpen, setIsMobileOpen, isHomePage }}>
