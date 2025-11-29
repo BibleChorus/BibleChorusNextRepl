@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { Upload, Map, List, MessageSquare, Headphones, User, HelpCircle, FileText, X, Sparkles } from 'lucide-react';
+import { Upload, Map, List, MessageSquare, Headphones, User, HelpCircle, FileText, X, TrendingUp } from 'lucide-react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,8 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const menuItems = [
   { name: 'Upload Songs', icon: Upload, href: '/upload' },
-  { name: 'Progress Map', icon: Map, href: '/progress' },
-  { name: 'Journeys', icon: Sparkles, href: '/journeys' },
+  { name: 'Progress Map', icon: TrendingUp, href: '/progress' },
+  { name: 'Journeys', icon: Map, href: '/journeys' },
   { name: 'Playlists', icon: List, href: '/playlists' },
   { name: 'Forum', icon: MessageSquare, href: '/forum' },
   { name: 'Listen', icon: Headphones, href: '/listen' },
