@@ -96,6 +96,7 @@ export default async function handler(
           personal_note: data.personal_note || null,
           significance: data.significance || null,
           added_date: data.added_date || song.created_at,
+          source_url: data.source_url || null,
         })
         .returning('*');
 

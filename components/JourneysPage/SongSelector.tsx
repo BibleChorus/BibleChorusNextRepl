@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Music, Plus, Check, Loader2 } from 'lucide-react';
+import { Search, Music, Plus, Check, Loader2, Link } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import Image from 'next/image';
@@ -43,6 +44,7 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [personalNote, setPersonalNote] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
@@ -78,6 +80,7 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
       await axios.post(`/api/journeys/seasons/${seasonId}/songs`, {
         song_id: selectedSong.id,
         personal_note: personalNote || undefined,
+        source_url: sourceUrl || undefined,
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -146,6 +149,24 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
           />
           <p className="text-xs text-slate-500 dark:text-slate-400">
             This note will appear below the song on your journey page
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="source-url" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+            <Link className="w-4 h-4" />
+            Source Hyperlink (optional)
+          </Label>
+          <Input
+            id="source-url"
+            type="url"
+            value={sourceUrl}
+            onChange={(e) => setSourceUrl(e.target.value)}
+            placeholder="https://example.com/song-origin"
+            className="bg-white dark:bg-slate-800"
+          />
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Link to the source of origination for this song (e.g., YouTube, Spotify, original post)
           </p>
         </div>
 
