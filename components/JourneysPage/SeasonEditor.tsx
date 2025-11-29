@@ -28,7 +28,14 @@ interface SeasonEditorProps {
 }
 
 
-const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '/';
+const getImageUrl = (path: string) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const baseUrl = process.env.NEXT_PUBLIC_CDN_URL || '';
+  if (baseUrl) return `${baseUrl}${path}`;
+  return path.startsWith('/') ? path : `/${path}`;
+};
 
 interface SeasonFormData {
   title: string;
@@ -677,7 +684,7 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0">
                               {ss.song?.song_art_url ? (
                                 <Image
-                                  src={`${CDN_URL}${ss.song.song_art_url}`}
+                                  src={getImageUrl(ss.song.song_art_url)}
                                   alt={ss.song.title}
                                   width={40}
                                   height={40}
@@ -757,7 +764,7 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0">
                               {date.photo_url ? (
                                 <Image
-                                  src={`${CDN_URL}${date.photo_url}`}
+                                  src={getImageUrl(date.photo_url)}
                                   alt={date.title}
                                   width={40}
                                   height={40}
@@ -1008,7 +1015,7 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
                 <div className="relative inline-block">
                   <div className="w-24 h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
                     <Image
-                      src={`${CDN_URL}${importantDateFormData.photo_url}`}
+                      src={getImageUrl(importantDateFormData.photo_url)}
                       alt="Important date photo"
                       width={96}
                       height={96}

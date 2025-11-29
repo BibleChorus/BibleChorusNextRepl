@@ -9,7 +9,13 @@ import { Star, Calendar, X } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import Image from 'next/image';
 
-const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+const getImageUrl = (path: string | null | undefined): string => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const baseUrl = process.env.NEXT_PUBLIC_CDN_URL || '';
+  if (baseUrl) return `${baseUrl}${path}`;
+  return path.startsWith('/') ? path : `/${path}`;
+};
 
 interface JourneyImportantDateProps {
   importantDate: ImportantDate;
@@ -48,7 +54,7 @@ export const JourneyImportantDate: React.FC<JourneyImportantDateProps> = ({
   
   const hasDescription = importantDate.description && importantDate.description.trim().length > 0;
   const hasPhoto = importantDate.photo_url && importantDate.photo_url.trim().length > 0;
-  const photoUrl = hasPhoto ? `${CDN_URL}${importantDate.photo_url}` : null;
+  const photoUrl = hasPhoto ? getImageUrl(importantDate.photo_url) : null;
   
   const showDetails = isHovered || isTouched;
   const showPhoto = hasPhoto && (isHovered || isTouched);
