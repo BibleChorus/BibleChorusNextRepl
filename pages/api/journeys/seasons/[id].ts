@@ -56,7 +56,7 @@ export default async function handler(
           'songs.created_at as song_created_at',
           'songs.genres as song_genres'
         )
-        .orderBy('journey_season_songs.display_order', 'asc');
+        .orderByRaw('COALESCE(songs.journey_date, songs.created_at) ASC');
 
       existingSeason.songs = seasonSongs.map((ss: any) => ({
         id: ss.id,

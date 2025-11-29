@@ -44,9 +44,11 @@ export default async function handler(
             'songs.audio_url as song_audio_url',
             'songs.song_art_url as song_art_url',
             'songs.duration as song_duration',
-            'songs.genres as song_genres'
+            'songs.genres as song_genres',
+            'songs.journey_date as song_journey_date',
+            'songs.created_at as song_created_at'
           )
-          .orderBy('journey_season_songs.display_order', 'asc');
+          .orderByRaw('COALESCE(songs.journey_date, songs.created_at) ASC');
 
         season.songs = seasonSongs.map((ss: any) => ({
           id: ss.id,
@@ -56,6 +58,7 @@ export default async function handler(
           personal_note: ss.personal_note,
           significance: ss.significance,
           added_date: ss.added_date,
+          source_url: ss.source_url,
           created_at: ss.created_at,
           song: {
             id: ss.song_id,
@@ -65,6 +68,8 @@ export default async function handler(
             song_art_url: ss.song_art_url,
             duration: ss.song_duration,
             genres: ss.song_genres,
+            journey_date: ss.song_journey_date,
+            created_at: ss.song_created_at,
           },
         }));
         season.song_count = seasonSongs.length;

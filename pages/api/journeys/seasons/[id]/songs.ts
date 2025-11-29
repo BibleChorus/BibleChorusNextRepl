@@ -53,7 +53,7 @@ export default async function handler(
           'songs.duration as song_duration',
           'songs.genres as song_genres'
         )
-        .orderBy('journey_season_songs.display_order', 'asc');
+        .orderByRaw('COALESCE(songs.journey_date, songs.created_at) ASC');
 
       return res.status(200).json(songs);
     } catch (error) {

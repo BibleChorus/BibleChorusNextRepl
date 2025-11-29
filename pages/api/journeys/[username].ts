@@ -97,7 +97,7 @@ export default async function handler(
           'songs.music_origin as song_music_origin',
           'songs.ai_used_for_lyrics as song_ai_used_for_lyrics'
         )
-        .orderBy('journey_season_songs.display_order', 'asc');
+        .orderByRaw('COALESCE(songs.journey_date, songs.created_at) ASC');
 
       for (const ss of seasonSongs) {
         const bibleVerses = await db('bible_verses')
