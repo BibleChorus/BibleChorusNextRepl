@@ -5,6 +5,7 @@ import { SongList } from '@/components/ListenPage/SongList'
 import { Filters } from '@/components/ListenPage/Filters'
 import { motion, AnimatePresence } from "framer-motion"
 import { Filter, X, Info, Save, Search, Check, ListMusic, ArrowUpDown, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Expand, Shrink, PlayCircle, Edit } from "lucide-react"
+import { useTheme } from 'next-themes'
 
 import { Badge } from "@/components/ui/badge"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -157,6 +158,24 @@ function ListenContent({
   const { user } = useAuth(); // useAuth already provides User | null with correct type
   const { currentSong, isMinimized, isShuffling, queue, updateQueue, registerShuffleLoader, playSong, toggleShuffle } = useMusicPlayer();
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
+  const { resolvedTheme } = useTheme();
+  
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+    separator: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.2)',
+    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
+    accentBgMedium: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.15)',
+  };
 
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(initialSelectedPlaylist)
   const [filterOptions, setFilterOptions] = useState<FilterOptions>(initialFilterOptions)
@@ -843,15 +862,19 @@ function ListenContent({
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30">
+      <div className="min-h-screen" style={{ backgroundColor: theme.bg }}>
         <Head>
           <title>BibleChorus - Listen</title>
           <link rel="icon" href="/favicon.ico" />
         </Head>
 
         <motion.div
-          className="sticky z-20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border-b border-white/20 dark:border-slate-700/50 shadow-lg"
-          style={{ top: 'var(--top-bar-height, 4rem)' }}
+          className="sticky z-20 backdrop-blur-2xl shadow-lg"
+          style={{ 
+            top: 'var(--top-bar-height, 4rem)',
+            backgroundColor: isDark ? 'rgba(10, 10, 10, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+            borderBottom: `1px solid ${theme.border}`
+          }}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -866,18 +889,21 @@ function ListenContent({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
                   className="text-2xl lg:text-3xl font-bold"
+                  style={{ fontFamily: "'Italiana', serif", color: theme.accent }}
                 >
-                  <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400 bg-clip-text text-transparent">
-                    Listen
-                  </span>
+                  Listen
                 </motion.h1>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.6, delay: 0.2 }}
-                  className="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-400/12 to-purple-400/12 border border-indigo-400/12"
+                  className="px-3 py-1 rounded-full"
+                  style={{ 
+                    backgroundColor: theme.accentBgLight,
+                    border: `1px solid ${theme.border}`
+                  }}
                 >
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                  <span className="text-sm font-medium" style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}>
                     {totalSongs.toLocaleString()} songs
                   </span>
                 </motion.div>
@@ -895,17 +921,18 @@ function ListenContent({
                   variant="outline"
                   size="sm"
                   onClick={() => setIsFilterExpanded(!isFilterExpanded)}
-                  className={cn(
-                    "h-9 px-3 backdrop-blur-sm transition-all duration-300",
-                    getFilterTags().length > 0
-                      ? "bg-gradient-to-r from-indigo-400/14 to-purple-400/14 border-indigo-400/24 text-indigo-700 dark:text-indigo-300 hover:from-indigo-400/20 hover:to-purple-400/20"
-                      : "bg-white/60 dark:bg-slate-700/60 border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
-                  )}
+                  className="h-9 px-3 backdrop-blur-sm transition-all duration-300"
+                  style={{
+                    backgroundColor: getFilterTags().length > 0 ? theme.accentBgLight : theme.hoverBg,
+                    borderColor: getFilterTags().length > 0 ? theme.borderHover : theme.border,
+                    color: getFilterTags().length > 0 ? theme.accent : theme.text,
+                    fontFamily: "'Manrope', sans-serif"
+                  }}
                 >
-                  <Filter className="h-4 w-4 mr-2" />
+                  <Filter className="h-4 w-4 mr-2" style={{ color: getFilterTags().length > 0 ? theme.accent : theme.textSecondary }} />
                   Filters
                   {getFilterTags().length > 0 && (
-                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-indigo-400/16 dark:bg-indigo-300/16 rounded-full">
+                    <span className="ml-2 px-1.5 py-0.5 text-xs rounded-full" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent }}>
                       {getFilterTags().length}
                     </span>
                   )}
@@ -915,9 +942,15 @@ function ListenContent({
                   variant="outline"
                   size="sm"
                   onClick={() => setIsSortExpanded(!isSortExpanded)}
-                  className="h-9 px-3 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
+                  className="h-9 px-3 backdrop-blur-sm transition-all duration-300"
+                  style={{
+                    backgroundColor: theme.hoverBg,
+                    borderColor: theme.border,
+                    color: theme.text,
+                    fontFamily: "'Manrope', sans-serif"
+                  }}
                 >
-                  <ArrowUpDown className="h-4 w-4 mr-2" />
+                  <ArrowUpDown className="h-4 w-4 mr-2" style={{ color: theme.textSecondary }} />
                   Sort
                 </Button>
                 
@@ -925,17 +958,18 @@ function ListenContent({
                   variant="outline"
                   size="sm"
                   onClick={() => setIsPlaylistExpanded(!isPlaylistExpanded)}
-                  className={cn(
-                    "h-9 px-3 backdrop-blur-sm transition-all duration-300",
-                    selectedPlaylist
-                      ? "bg-gradient-to-r from-purple-400/14 to-pink-400/14 border-purple-400/24 text-purple-700 dark:text-purple-300 hover:from-purple-400/20 hover:to-pink-400/20"
-                      : "bg-white/60 dark:bg-slate-700/60 border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
-                  )}
+                  className="h-9 px-3 backdrop-blur-sm transition-all duration-300"
+                  style={{
+                    backgroundColor: selectedPlaylist ? theme.accentBgLight : theme.hoverBg,
+                    borderColor: selectedPlaylist ? theme.borderHover : theme.border,
+                    color: selectedPlaylist ? theme.accent : theme.text,
+                    fontFamily: "'Manrope', sans-serif"
+                  }}
                 >
-                  <ListMusic className="h-4 w-4 mr-2" />
+                  <ListMusic className="h-4 w-4 mr-2" style={{ color: selectedPlaylist ? theme.accent : theme.textSecondary }} />
                   Playlists
                   {selectedPlaylist && (
-                    <span className="ml-2 w-2 h-2 bg-purple-400/50 dark:bg-purple-300/50 rounded-full"></span>
+                    <span className="ml-2 w-2 h-2 rounded-full" style={{ backgroundColor: theme.accent }}></span>
                   )}
                 </Button>
 
@@ -945,7 +979,12 @@ function ListenContent({
                       variant="outline"
                       size="sm"
                       onClick={() => setIsNarrowView(!isNarrowView)}
-                      className="h-9 w-9 p-0 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
+                      className="h-9 w-9 p-0 backdrop-blur-sm transition-all duration-300"
+                      style={{
+                        backgroundColor: theme.hoverBg,
+                        borderColor: theme.border,
+                        color: theme.textSecondary
+                      }}
                     >
                       {isNarrowView ? (
                         <Expand className="h-4 w-4" />
@@ -978,17 +1017,22 @@ function ListenContent({
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
-                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-2xl shadow-xl p-6"
+                  className="backdrop-blur-2xl rounded-2xl shadow-xl p-6"
+                  style={{
+                    backgroundColor: theme.bgCard,
+                    border: `1px solid ${theme.border}`
+                  }}
                 >
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+                    <h3 className="text-lg font-semibold" style={{ fontFamily: "'Italiana', serif", color: theme.accent }}>
                       Filters & Search
                     </h3>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsFilterExpanded(false)}
-                      className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                      className="h-8 w-8 p-0 rounded-lg transition-all duration-300"
+                      style={{ color: theme.textSecondary }}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -1017,17 +1061,22 @@ function ListenContent({
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
-                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-2xl shadow-xl p-6"
+                  className="backdrop-blur-2xl rounded-2xl shadow-xl p-6"
+                  style={{
+                    backgroundColor: theme.bgCard,
+                    border: `1px solid ${theme.border}`
+                  }}
                 >
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+                    <h3 className="text-lg font-semibold" style={{ fontFamily: "'Italiana', serif", color: theme.accent }}>
                       Sort Options
                     </h3>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsSortExpanded(false)}
-                      className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                      className="h-8 w-8 p-0 rounded-lg transition-all duration-300"
+                      style={{ color: theme.textSecondary }}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -1056,17 +1105,22 @@ function ListenContent({
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
-                  className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-2xl shadow-xl p-6"
+                  className="backdrop-blur-2xl rounded-2xl shadow-xl p-6"
+                  style={{
+                    backgroundColor: theme.bgCard,
+                    border: `1px solid ${theme.border}`
+                  }}
                 >
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+                    <h3 className="text-lg font-semibold" style={{ fontFamily: "'Italiana', serif", color: theme.accent }}>
                       Playlist Management
                     </h3>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsPlaylistExpanded(false)}
-                      className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                      className="h-8 w-8 p-0 rounded-lg transition-all duration-300"
+                      style={{ color: theme.textSecondary }}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -1092,9 +1146,9 @@ function ListenContent({
                           
                           <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" className="h-12 px-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl min-w-[200px] justify-start">
+                              <Button variant="outline" className="h-12 px-4 backdrop-blur-sm transition-all duration-300 rounded-xl min-w-[200px] justify-start" style={{ backgroundColor: theme.hoverBg, borderColor: theme.border }}>
                                 <div className="flex items-center gap-3 overflow-hidden">
-                                  <ListMusic className="h-4 w-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
+                                  <ListMusic className="h-4 w-4 flex-shrink-0" style={{ color: theme.accent }} />
                                   <div className="flex flex-col items-start min-w-0">
                                     <span className="font-medium text-sm truncate">
                                       {selectedPlaylist
@@ -1119,15 +1173,16 @@ function ListenContent({
                                 )}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-80 p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-2xl">
+                            <PopoverContent className="w-80 p-0 backdrop-blur-xl rounded-2xl shadow-2xl" style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}>
                               <div className="p-4">
                                 <div className="flex items-center gap-2 mb-4">
-                                  <Search className="h-4 w-4 text-slate-400" />
+                                  <Search className="h-4 w-4" style={{ color: theme.textSecondary }} />
                                   <Input
                                     placeholder="Search playlists..."
                                     value={playlistSearch}
                                     onChange={(e) => setPlaylistSearch(e.target.value)}
-                                    className="h-9 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 rounded-lg"
+                                    className="h-9 backdrop-blur-sm rounded-lg"
+                                    style={{ backgroundColor: theme.hoverBg, borderColor: theme.border }}
                                   />
                                 </div>
                                 <ScrollArea className="h-[300px]">
@@ -1137,10 +1192,11 @@ function ListenContent({
                                         key={playlist.id}
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className={cn(
-                                          "flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-indigo-400/12 hover:to-purple-400/12",
-                                          selectedPlaylist === playlist.id.toString() && "bg-gradient-to-r from-indigo-400/12 to-purple-400/12 border border-indigo-400/12"
-                                        )}
+                                        className="flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200"
+                                        style={{
+                                          backgroundColor: selectedPlaylist === playlist.id.toString() ? theme.accentBgLight : 'transparent',
+                                          border: selectedPlaylist === playlist.id.toString() ? `1px solid ${theme.borderHover}` : '1px solid transparent'
+                                        }}
                                         onClick={() => handlePlaylistSelect(playlist.id.toString())}
                                       >
                                         <div className="w-10 h-10 relative flex-shrink-0">
@@ -1153,15 +1209,15 @@ function ListenContent({
                                           />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                          <div className="font-medium text-sm truncate text-slate-900 dark:text-white">
+                                          <div className="font-medium text-sm truncate" style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}>
                                             {playlist.name}
                                           </div>
-                                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                                          <div className="text-xs" style={{ color: theme.textSecondary }}>
                                             {playlist.song_count || 0} songs
                                           </div>
                                         </div>
                                         {selectedPlaylist === playlist.id.toString() && (
-                                          <Check className="h-4 w-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
+                                          <Check className="h-4 w-4 flex-shrink-0" style={{ color: theme.accent }} />
                                         )}
                                       </motion.div>
                                     ))}
@@ -1196,7 +1252,11 @@ function ListenContent({
                       <div className="flex items-center gap-2">
                         <Button 
                           onClick={handleSavePlaylist}
-                          className="h-12 px-6 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
+                          className="h-12 px-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
+                          style={{ 
+                            backgroundColor: theme.accent,
+                            fontFamily: "'Manrope', sans-serif"
+                          }}
                         >
                           <Save className="h-4 w-4 mr-2" />
                           Save Playlist
@@ -1217,13 +1277,17 @@ function ListenContent({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl p-4 mb-6"
+              className="backdrop-blur-xl rounded-2xl p-4 mb-6"
+              style={{ 
+                backgroundColor: theme.bgCard,
+                border: `1px solid ${theme.border}`
+              }}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <Filter className="h-4 w-4" style={{ color: theme.accent }} />
+                    <span className="text-sm font-medium" style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}>
                       Active Filters ({getFilterTags().length})
                     </span>
                   </div>
@@ -1269,9 +1333,14 @@ function ListenContent({
                     >
                       <Badge 
                         variant="secondary" 
-                        className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-400/12 to-purple-400/12 border border-indigo-400/12 text-slate-700 dark:text-slate-300 hover:from-indigo-400/18 hover:to-purple-400/18 transition-all duration-200 rounded-lg"
+                        className="flex items-center gap-2 px-3 py-1.5 transition-all duration-200 rounded-lg"
+                        style={{
+                          backgroundColor: theme.accentBgLight,
+                          border: `1px solid ${theme.borderHover}`,
+                          color: theme.text
+                        }}
                       >
-                        <span className="text-sm">{tag.label}</span>
+                        <span className="text-sm" style={{ fontFamily: "'Manrope', sans-serif" }}>{tag.label}</span>
                         <button
                           onClick={() => removeFilter(tag.type, tag.value)}
                           className="ml-1 hover:text-red-500 transition-colors"
@@ -1291,14 +1360,18 @@ function ListenContent({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white/30 dark:bg-slate-800/30 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-3 sm:p-6 shadow-xl"
+            className="backdrop-blur-xl rounded-3xl p-3 sm:p-6 shadow-xl"
+            style={{ 
+              backgroundColor: theme.bgCard,
+              border: `1px solid ${theme.border}`
+            }}
           >
             {songs.length > 0 ? (
               <div className="space-y-4">
                 {/* Song Count and Quick Actions */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/50 dark:border-slate-700/50">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4" style={{ borderBottom: `1px solid ${theme.border}` }}>
                   <div className="flex items-center gap-4">
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    <h2 className="text-lg font-semibold" style={{ color: theme.text, fontFamily: "'Italiana', serif" }}>
                       {totalSongs.toLocaleString()} Songs
                     </h2>
                   </div>
@@ -1313,12 +1386,10 @@ function ListenContent({
                           const allSongs = await fetchAllSongs();
                           if (allSongs.length > 0) {
                             const playerSongs = allSongs.map(toPlayerSong);
-                            // Enable shuffle mode and start playing the first song
                             updateQueue(playerSongs);
                             if (!isShuffling) {
-                              toggleShuffle(); // This will shuffle the queue
+                              toggleShuffle();
                             }
-                            // Play the first song in the shuffled queue
                             const firstSong = playerSongs[0];
                             playSong(firstSong, playerSongs);
                             toast.success(`Shuffling ${allSongs.length} songs`);
@@ -1330,9 +1401,15 @@ function ListenContent({
                           toast.error('Failed to shuffle songs');
                         }
                       }}
-                      className="h-9 px-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 rounded-lg"
+                      className="h-9 px-4 backdrop-blur-sm rounded-lg transition-all duration-300"
+                      style={{ 
+                        backgroundColor: theme.hoverBg,
+                        borderColor: theme.border,
+                        color: theme.text,
+                        fontFamily: "'Manrope', sans-serif"
+                      }}
                     >
-                      <ChevronUp className="h-4 w-4 mr-2" />
+                      <ChevronUp className="h-4 w-4 mr-2" style={{ color: theme.accent }} />
                       Shuffle All
                     </Button>
                     <Button
@@ -1343,12 +1420,10 @@ function ListenContent({
                           const allSongs = await fetchAllSongs();
                           if (allSongs.length > 0) {
                             const playerSongs = allSongs.map(toPlayerSong);
-                            // Disable shuffle mode and start playing the first song
                             updateQueue(playerSongs);
                             if (isShuffling) {
-                              toggleShuffle(); // This will disable shuffle
+                              toggleShuffle();
                             }
-                            // Play the first song in order
                             const firstSong = playerSongs[0];
                             playSong(firstSong, playerSongs);
                             toast.success(`Playing ${allSongs.length} songs`);
@@ -1360,9 +1435,15 @@ function ListenContent({
                           toast.error('Failed to play songs');
                         }
                       }}
-                      className="h-9 px-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 rounded-lg"
+                      className="h-9 px-4 backdrop-blur-sm rounded-lg transition-all duration-300"
+                      style={{ 
+                        backgroundColor: theme.hoverBg,
+                        borderColor: theme.border,
+                        color: theme.text,
+                        fontFamily: "'Manrope', sans-serif"
+                      }}
                     >
-                      <PlayCircle className="h-4 w-4 mr-2" />
+                      <PlayCircle className="h-4 w-4 mr-2" style={{ color: theme.accent }} />
                       Play All
                     </Button>
                   </div>
@@ -1389,10 +1470,10 @@ function ListenContent({
                 <div className="flex items-center justify-center py-12">
                   <div className="space-y-4 text-center">
                     <div className="relative">
-                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-600 mx-auto"></div>
-                      <div className="absolute inset-0 rounded-full animate-pulse bg-gradient-to-r from-indigo-400/16 to-purple-400/16"></div>
+                      <div className="animate-spin rounded-full h-16 w-16 border-4 mx-auto" style={{ borderColor: theme.border, borderTopColor: theme.accent }}></div>
+                      <div className="absolute inset-0 rounded-full animate-pulse" style={{ backgroundColor: theme.accentBgLight }}></div>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-300 text-lg">Loading songs...</p>
+                    <p className="text-lg" style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}>Loading songs...</p>
                   </div>
                 </div>
                 <SongListSkeleton />
@@ -1401,11 +1482,11 @@ function ListenContent({
               // Enhanced empty state
               <div className="text-center py-16">
                 <div className="relative mb-6">
-                  <PlayCircle className="w-16 h-16 mx-auto text-slate-400 dark:text-slate-500" />
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full opacity-20"></div>
+                  <PlayCircle className="w-16 h-16 mx-auto" style={{ color: theme.textSecondary }} />
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full opacity-20" style={{ backgroundColor: theme.accent }}></div>
                 </div>
-                <h3 className="text-2xl font-semibold mb-3 text-slate-900 dark:text-white">No songs found</h3>
-                <p className="text-slate-600 dark:text-slate-300 mb-6 text-lg max-w-md mx-auto">
+                <h3 className="text-2xl font-semibold mb-3" style={{ color: theme.text, fontFamily: "'Italiana', serif" }}>No songs found</h3>
+                <p className="mb-6 text-lg max-w-md mx-auto" style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}>
                   {getFilterTags().length > 0 
                     ? "Try adjusting your filters to find more songs"
                     : "Start exploring our collection of Bible-inspired music!"}
@@ -1437,6 +1518,11 @@ function ListenContent({
                       includeJourneySongs: false,
                     })}
                     className="h-12 px-6 border-2 hover:scale-105 transition-all duration-300 rounded-xl"
+                    style={{ 
+                      borderColor: theme.accent, 
+                      color: theme.accent,
+                      fontFamily: "'Manrope', sans-serif"
+                    }}
                   >
                     Clear All Filters
                   </Button>

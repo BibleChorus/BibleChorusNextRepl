@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Play, Pause, MessageCircle } from 'lucide-react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
+import { useTheme } from 'next-themes'
 import { formatBibleVerses } from '@/lib/utils'
 import { 
   DropdownMenu, 
@@ -264,6 +265,23 @@ const SongListItem = React.memo(function SongListItem({
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [isAddToPlaylistDialogOpen, setIsAddToPlaylistDialogOpen] = useState(false);
   const [isLyricsBibleDialogOpen, setIsLyricsBibleDialogOpen] = useState(false);
+  
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
+    accentBgMedium: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.15)',
+  };
 
   const fetchComments = useCallback(async () => {
     try {
@@ -487,8 +505,16 @@ const SongListItem = React.memo(function SongListItem({
 
   return (
     <motion.div
-      className={`flex items-center p-2 sm:p-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-lg relative overflow-hidden group song-card hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 ${isNarrowView ? 'h-[70px] sm:h-[80px]' : 'min-h-[110px]'}`}
-      whileHover={{ scale: 1.01, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
+      className={`flex items-center p-2 sm:p-3 backdrop-blur-xl rounded-2xl shadow-lg relative overflow-hidden group song-card transition-all duration-300 ${isNarrowView ? 'h-[70px] sm:h-[80px]' : 'min-h-[110px]'}`}
+      style={{
+        backgroundColor: theme.bgCard,
+        border: `1px solid ${theme.border}`,
+      }}
+      whileHover={{ 
+        scale: 1.01, 
+        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+        borderColor: theme.borderHover
+      }}
       transition={{ duration: 0.3 }}
     >
       {/* Song Art with Play/Pause Button */}
@@ -540,14 +566,25 @@ const SongListItem = React.memo(function SongListItem({
       <div className="flex-1 min-w-0 flex flex-col justify-center">
         <div className={`flex items-start justify-between ${isNarrowView ? 'mb-1' : 'mb-2'}`}>
           <Link href={`/Songs/${song.id}`} className="flex-1 min-w-0">
-            <h2 className={`font-semibold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 truncate ${isNarrowView ? 'text-sm' : 'text-base sm:text-lg'}`}>
+            <h2 
+              className={`font-semibold transition-colors duration-200 truncate ${isNarrowView ? 'text-sm' : 'text-base sm:text-lg'}`}
+              style={{ 
+                color: theme.text, 
+                fontFamily: "'Italiana', serif"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+              onMouseLeave={(e) => e.currentTarget.style.color = theme.text}
+            >
               {song.title}
             </h2>
           </Link>
           {!isNarrowView && (
             <button
               onClick={() => setIsLyricsBibleDialogOpen(true)}
-              className="text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 ml-3 flex-shrink-0"
+              className="transition-colors duration-200 ml-3 flex-shrink-0"
+              style={{ color: theme.textSecondary }}
+              onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+              onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
             >
               <BookOpenText className="h-5 w-5" />
             </button>
@@ -558,14 +595,17 @@ const SongListItem = React.memo(function SongListItem({
         <div className={`flex items-center text-xs ${isNarrowView ? 'mb-1' : 'mb-2'}`}>
           <button
             onClick={() => router.push(`/profile?id=${song.uploaded_by}`)}
-            className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors duration-200 truncate font-medium"
+            className="hover:underline transition-colors duration-200 truncate font-medium"
+            style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+            onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+            onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
           >
             {song.username || 'Unknown User'}
           </button>
           {song.bible_verses && song.bible_verses.length > 0 && (
             <>
-              <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
-              <span className="font-medium text-indigo-600 dark:text-indigo-400 italic overflow-hidden overflow-ellipsis whitespace-nowrap flex-shrink min-w-0">
+              <span className="mx-2" style={{ color: theme.border }}>•</span>
+              <span className="font-medium italic overflow-hidden overflow-ellipsis whitespace-nowrap flex-shrink min-w-0" style={{ color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 {formatBibleVerses(song.bible_verses)}
               </span>
             </>
@@ -573,7 +613,7 @@ const SongListItem = React.memo(function SongListItem({
         </div>
         
         {/* Action Buttons Row - Compact for narrow view */}
-        <div className={`flex items-center ${isNarrowView ? 'gap-2 text-xs' : 'gap-3 text-sm flex-wrap'} ${isNarrowView ? 'mt-0' : 'mt-2'}`}>
+        <div className={`flex items-center ${isNarrowView ? 'gap-2 text-xs' : 'gap-3 text-sm flex-wrap'} ${isNarrowView ? 'mt-0' : 'mt-2'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
           <button
             onClick={() => handleLike(song)}
             className="flex items-center text-slate-500 hover:text-red-500 transition-all duration-200 hover:scale-105"
@@ -612,7 +652,10 @@ const SongListItem = React.memo(function SongListItem({
           
           <button
             onClick={() => setIsCommentsDialogOpen(true)}
-            className="flex items-center text-slate-500 hover:text-purple-500 transition-all duration-200 hover:scale-105"
+            className="flex items-center transition-all duration-200 hover:scale-105"
+            style={{ color: theme.textSecondary }}
+            onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+            onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
           >
             <MessageCircle className={`${isNarrowView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1.5'}`} />
             <span className="font-medium">{localCommentsCount}</span>
@@ -621,7 +664,10 @@ const SongListItem = React.memo(function SongListItem({
           {isNarrowView && (
             <button
               onClick={() => setIsLyricsBibleDialogOpen(true)}
-              className="flex items-center text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 ml-auto"
+              className="flex items-center transition-colors duration-200 ml-auto"
+              style={{ color: theme.textSecondary }}
+              onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+              onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
             >
               <BookOpenText className="h-3 w-3" />
             </button>
@@ -632,27 +678,69 @@ const SongListItem = React.memo(function SongListItem({
         {!isNarrowView && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {song.genres && song.genres.slice(0, 3).map((genre, index) => (
-              <Badge key={`${song.id}-${genre}-${index}`} variant="secondary" className="text-xs px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-300 border-0 rounded-md font-medium">
+              <Badge 
+                key={`${song.id}-${genre}-${index}`} 
+                variant="secondary" 
+                className="text-xs px-2 py-0.5 border-0 rounded-md font-medium"
+                style={{ 
+                  backgroundColor: theme.hoverBg, 
+                  color: theme.textSecondary,
+                  fontFamily: "'Manrope', sans-serif"
+                }}
+              >
                 {genre}
               </Badge>
             ))}
             {song.genres && song.genres.length > 3 && (
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-300 border-0 rounded-md font-medium">
+              <Badge 
+                variant="secondary" 
+                className="text-xs px-2 py-0.5 border-0 rounded-md font-medium"
+                style={{ 
+                  backgroundColor: theme.hoverBg, 
+                  color: theme.textSecondary,
+                  fontFamily: "'Manrope', sans-serif"
+                }}
+              >
                 +{song.genres.length - 3}
               </Badge>
             )}
             {song.bible_translation_used && (
-              <Badge variant="outline" className="text-xs px-2 py-0.5 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-md font-medium">
+              <Badge 
+                variant="outline" 
+                className="text-xs px-2 py-0.5 rounded-md font-medium"
+                style={{ 
+                  borderColor: theme.borderHover, 
+                  color: theme.accent,
+                  backgroundColor: theme.accentBgLight,
+                  fontFamily: "'Manrope', sans-serif"
+                }}
+              >
                 {song.bible_translation_used}
               </Badge>
             )}
             {song.lyrics_scripture_adherence && (
-              <Badge variant="default" className="text-xs px-2 py-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 rounded-md font-medium">
+              <Badge 
+                variant="default" 
+                className="text-xs px-2 py-0.5 text-white border-0 rounded-md font-medium"
+                style={{ 
+                  backgroundColor: theme.accent,
+                  fontFamily: "'Manrope', sans-serif"
+                }}
+              >
                 {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
               </Badge>
             )}
             {song.is_continuous_passage !== undefined && (
-              <Badge variant="outline" className="text-xs px-2 py-0.5 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 rounded-md font-medium">
+              <Badge 
+                variant="outline" 
+                className="text-xs px-2 py-0.5 rounded-md font-medium"
+                style={{ 
+                  borderColor: theme.border,
+                  color: theme.textSecondary,
+                  backgroundColor: theme.hoverBg,
+                  fontFamily: "'Manrope', sans-serif"
+                }}
+              >
                 {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
               </Badge>
             )}

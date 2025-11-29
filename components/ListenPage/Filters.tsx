@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark, Heart, Star, User, Filter, Map } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
+import { useTheme } from 'next-themes'
 import { Input } from "@/components/ui/input"
 import { GENRES, BIBLE_BOOKS, BIBLE_TRANSLATIONS, AI_MUSIC_MODELS } from "@/lib/constants"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -56,6 +57,23 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
   const [openBibleBooks, setOpenBibleBooks] = useState(false)
   const [bibleBookSearch, setBibleBookSearch] = useState('')
   const [currentTab, setCurrentTab] = useState("AI Info")
+  
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
+    accentBgMedium: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.15)',
+  };
 
   // State for Bible books
   const [openChapters, setOpenChapters] = useState(false)
@@ -300,93 +318,93 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
         filterOptions.showBestLyrically || 
         filterOptions.showBestOverall || 
         filterOptions.showMySongs) && (
-        <div className="mb-4 p-3 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-lg">
+        <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: theme.accentBgLight, border: `1px solid ${theme.borderHover}` }}>
           <div className="flex items-center gap-2 mb-2">
-            <Filter className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
-            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+            <Filter className="h-3 w-3" style={{ color: theme.accent }} />
+            <span className="text-xs font-medium" style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}>
               Current Filters
             </span>
           </div>
           <div className="flex flex-wrap gap-1">
             {filterOptions.search && (
-              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Search: &quot;{filterOptions.search}&quot;
               </span>
             )}
             {filterOptions.lyricsAdherence.map(value => (
-              <span key={value} className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span key={value} className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Lyrics: {value.replace(/_/g, ' ')}
               </span>
             ))}
             {filterOptions.isContinuous !== "all" && (
-              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Passage: {filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}
               </span>
             )}
             {filterOptions.aiMusic !== "all" && (
-              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Music: {filterOptions.aiMusic === "true" ? "AI Generated" : "Human Composed"}
               </span>
             )}
             {filterOptions.genres.map(genre => (
-              <span key={genre} className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span key={genre} className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Genre: {genre}
               </span>
             ))}
             {filterOptions.aiUsedForLyrics !== "all" && (
-              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Lyrics: {filterOptions.aiUsedForLyrics === "true" ? "AI Generated" : "Human Written"}
               </span>
             )}
             {filterOptions.musicModelUsed && (
-              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Model: {filterOptions.musicModelUsed}
               </span>
             )}
             {filterOptions.bibleTranslation && (
-              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Translation: {filterOptions.bibleTranslation}
               </span>
             )}
             {filterOptions.bibleBooks.map(book => (
-              <span key={book} className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span key={book} className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Book: {book}
               </span>
             ))}
             {Object.entries(filterOptions.bibleChapters || {}).map(([book, chapters]) =>
               chapters.map(chapter => (
-                <span key={`${book}:${chapter}`} className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+                <span key={`${book}:${chapter}`} className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                   Chapter: {book} {chapter}
                 </span>
               ))
             )}
             {filterOptions.bibleVerses.map(verse => (
-              <span key={verse} className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span key={verse} className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Verse: {verse}
               </span>
             ))}
             {filterOptions.showLikedSongs && (
-              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Liked Songs
               </span>
             )}
             {filterOptions.showBestMusically && (
-              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Best Musically
               </span>
             )}
             {filterOptions.showBestLyrically && (
-              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Best Lyrically
               </span>
             )}
             {filterOptions.showBestOverall && (
-              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Best Overall
               </span>
             )}
             {filterOptions.showMySongs && (
-              <span className="inline-flex items-center px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded">
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 My Songs
               </span>
             )}
@@ -397,7 +415,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       <div className="flex flex-col sm:flex-row items-center justify-between mb-2 space-y-2 sm:space-y-0">
         <div className="flex items-center justify-between w-full sm:w-auto">
           <div className="flex items-center space-x-1">
-            <h2 className="text-sm font-semibold">Filters</h2>
+            <h2 className="text-sm font-semibold" style={{ color: theme.text, fontFamily: "'Italiana', serif" }}>Filters</h2>
             <Popover>
               <PopoverTrigger>
                 <Info className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-pointer" />
