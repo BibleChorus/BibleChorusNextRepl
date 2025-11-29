@@ -717,7 +717,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
                 imageUrl={cropImageUrl}
                 onCropComplete={handleCropComplete}
                 onCancel={handleCropCancel}
-                aspect={1}
+                aspectRatio={1}
                 maxHeight={cropperMaxHeight - 100}
               />
             </DialogContent>
