@@ -73,6 +73,11 @@ export default async function handler(
           },
         }));
         season.song_count = seasonSongs.length;
+
+        const importantDates = await db('journey_season_important_dates')
+          .where({ season_id: season.id })
+          .orderBy('event_date', 'asc');
+        season.important_dates = importantDates;
       }
 
       return res.status(200).json(seasons);
