@@ -33,15 +33,26 @@ Preferred communication style: Simple, everyday language.
 - Responsive design optimized for mobile and desktop
 
 **State Management**:
-- React Context API for global state (MusicPlayerContext, ThemeContext)
+- React Context API for global state (MusicPlayerContext, ThemeContext, SidebarContext)
 - TanStack Query (React Query) for server state and caching
 - React Hook Form with Zod for form validation and management
+- SidebarContext tracks `isOpen`, `isMobileOpen`, and `isHomePage` states with automatic state restoration on navigation
 
 **Design Patterns**:
-- Modern glassmorphism aesthetic with backdrop blur effects
+- Modern editorial aesthetic with film grain overlay and ambient orbs (home page and journeys)
+- Gold accent color theme (#d4af37 dark mode, #bfa130 light mode) for home and journeys pages
+- Italiana serif font for headings, Manrope sans-serif for body text
 - Gradient color schemes (indigo-purple-pink for forum, emerald-teal for progress)
 - Framer Motion for smooth animations and transitions
 - Infinite scroll implementation for large datasets
+
+**Home Page Design**:
+- Matches journeys page aesthetic with film grain overlay and animated ambient orbs
+- Features all seven app sections: Listen, Upload, Journeys, Playlists, Progress, Forum, Bible Study
+- Stats section showing total songs, community members, and song plays
+- Sidebar is minimized by default with hamburger menu to expand
+- Community CTA section encouraging user sign-up or exploration
+- Responsive design with elegant typography and gold accents
 
 ### Backend Architecture
 
