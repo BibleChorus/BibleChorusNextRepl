@@ -49,12 +49,41 @@ export default async function handler(
 
   if (req.method === 'PUT') {
     try {
-      const { personal_note, significance, display_order } = req.body;
+      const { personal_note, significance, display_order, source_url } = req.body;
 
       const updates: Record<string, any> = {};
-      if (personal_note !== undefined) updates.personal_note = personal_note;
+      
+      if (personal_note !== undefined) {
+        const trimmedNote = typeof personal_note === 'string' ? personal_note.trim() : '';
+        if (trimmedNote.length > 2000) {
+          return res.status(400).json({ error: 'Personal note must be 2000 characters or less' });
+        }
+        updates.personal_note = trimmedNote || null;
+      }
+      
       if (significance !== undefined) updates.significance = significance;
       if (display_order !== undefined) updates.display_order = display_order;
+      
+      if (source_url !== undefined) {
+        if (source_url === null || source_url === '') {
+          updates.source_url = null;
+        } else if (typeof source_url === 'string') {
+          const trimmedUrl = source_url.trim();
+          if (trimmedUrl) {
+            try {
+              const parsed = new URL(trimmedUrl);
+              if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                return res.status(400).json({ error: 'Source URL must use http or https protocol' });
+              }
+              updates.source_url = trimmedUrl;
+            } catch {
+              return res.status(400).json({ error: 'Invalid source URL format' });
+            }
+          } else {
+            updates.source_url = null;
+          }
+        }
+      }
 
       const [updated] = await db('journey_season_songs')
         .where({ season_id: seasonId, song_id: songId })

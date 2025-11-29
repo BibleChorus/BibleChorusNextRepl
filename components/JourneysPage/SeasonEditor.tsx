@@ -2,18 +2,18 @@
 
 import React, { useState, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Season } from '@/types/journey';
+import { Season, SeasonSong } from '@/types/journey';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { SongSelector } from './SongSelector';
 import { 
   Plus, Pencil, Trash2, Music, ChevronDown, ChevronUp, 
   Calendar, Save, X, Sparkles 
 } from 'lucide-react';
-import { FaEye as Eye, FaEyeSlash as EyeOff } from 'react-icons/fa';
+import { FaEye as Eye, FaEyeSlash as EyeOff, FaExternalLinkAlt, FaLink } from 'react-icons/fa';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
@@ -165,6 +165,12 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
   const [songSelectorSeasonId, setSongSelectorSeasonId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  const [editingSong, setEditingSong] = useState<{ seasonId: number; song: SeasonSong } | null>(null);
+  const [songEditFormData, setSongEditFormData] = useState({
+    personal_note: '',
+    source_url: '',
+  });
+  
   const [formData, setFormData] = useState<SeasonFormData>({
     title: '',
     description: '',
@@ -280,6 +286,55 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
       toast.error('Failed to remove song');
     }
   }, [onRefresh, getAuthToken]);
+
+  const startEditingSong = useCallback((seasonId: number, song: SeasonSong) => {
+    setEditingSong({ seasonId, song });
+    setSongEditFormData({
+      personal_note: song.personal_note || '',
+      source_url: song.source_url || '',
+    });
+  }, []);
+
+  const validateSourceUrl = (url: string): boolean => {
+    if (!url || url.trim() === '') return true;
+    try {
+      const parsed = new URL(url.trim());
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
+  const handleUpdateSong = useCallback(async () => {
+    if (!editingSong) return;
+
+    const trimmedUrl = songEditFormData.source_url.trim();
+    if (trimmedUrl && !validateSourceUrl(trimmedUrl)) {
+      toast.error('Please enter a valid URL (must start with http:// or https://)');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const token = await getAuthToken();
+      await axios.put(
+        `/api/journeys/seasons/${editingSong.seasonId}/songs/${editingSong.song.song_id}`,
+        {
+          personal_note: songEditFormData.personal_note.trim(),
+          source_url: trimmedUrl || null,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Song updated successfully');
+      setEditingSong(null);
+      onRefresh();
+    } catch (error) {
+      console.error('Error updating song:', error);
+      toast.error('Failed to update song');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [editingSong, songEditFormData, onRefresh, getAuthToken]);
 
   const startEditing = useCallback((season: Season) => {
     setFormData({
@@ -463,10 +518,26 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
                               <p className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">
                                 {ss.song?.title}
                               </p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                                {ss.song?.artist}
-                              </p>
+                              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                                <span className="truncate">{ss.song?.artist}</span>
+                                {ss.personal_note && (
+                                  <span className="text-indigo-500 dark:text-indigo-400 flex items-center gap-1">
+                                    <span className="text-[10px]">Has note</span>
+                                  </span>
+                                )}
+                                {ss.source_url && (
+                                  <FaExternalLinkAlt className="w-3 h-3 text-purple-500 dark:text-purple-400 flex-shrink-0" />
+                                )}
+                              </div>
                             </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-slate-500 hover:text-indigo-600 flex-shrink-0"
+                              onClick={() => startEditingSong(season.id, ss)}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -532,6 +603,83 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
               onClose={() => setSongSelectorSeasonId(null)}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editingSong !== null} onOpenChange={(open) => !open && setEditingSong(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-4 h-4" />
+              Edit Song Details
+            </DialogTitle>
+            <DialogDescription>
+              {editingSong?.song?.song?.title && (
+                <span className="font-medium">{editingSong.song.song.title}</span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit_personal_note">Personal Note / Description</Label>
+              <Textarea
+                id="edit_personal_note"
+                value={songEditFormData.personal_note}
+                onChange={(e) => {
+                  if (e.target.value.length <= 2000) {
+                    setSongEditFormData(prev => ({ ...prev, personal_note: e.target.value }));
+                  }
+                }}
+                placeholder="Add a personal note or description for this song..."
+                className="bg-white dark:bg-slate-800 min-h-[100px]"
+                maxLength={2000}
+              />
+              <div className="flex justify-between">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  This note will appear below the song on your journey page
+                </p>
+                <p className={`text-xs ${songEditFormData.personal_note.length > 1800 ? 'text-amber-500' : 'text-slate-400'}`}>
+                  {songEditFormData.personal_note.length}/2000
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit_source_url" className="flex items-center gap-2">
+                <FaLink className="w-3.5 h-3.5" />
+                Source Hyperlink
+              </Label>
+              <Input
+                id="edit_source_url"
+                type="url"
+                value={songEditFormData.source_url}
+                onChange={(e) => setSongEditFormData(prev => ({ ...prev, source_url: e.target.value }))}
+                placeholder="https://youtube.com/watch?v=..."
+                className="bg-white dark:bg-slate-800"
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Link to the original source (YouTube, SoundCloud, etc.)
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setEditingSong(null)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateSong}
+                disabled={isSubmitting}
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

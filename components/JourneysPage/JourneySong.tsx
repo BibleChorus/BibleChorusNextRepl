@@ -432,7 +432,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               animate={{ y: 0 }}
               exit={{ y: -10 }}
               transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-2 pb-6 pl-[52px] md:pl-[68px] pr-4"
+              className="pt-2 pb-6 pl-[52px] md:pl-[68px] pr-28 md:pr-36"
             >
               <div 
                 className="relative pl-6"
