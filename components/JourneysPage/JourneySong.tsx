@@ -21,6 +21,7 @@ interface JourneySongProps {
   showDate?: boolean;
   themeColor?: string;
   trackNumber?: number;
+  allJourneySongs?: SeasonSong[];
 }
 
 const easeOutExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -30,6 +31,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
   seasonSong,
   showDate = true,
   trackNumber = 1,
+  allJourneySongs = [],
 }) => {
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
   const { resolvedTheme } = useTheme();
@@ -139,7 +141,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         resume();
       }
     } else {
-      playSong({
+      const currentSongData = {
         id: song.id,
         title: song.title,
         artist: song.artist,
@@ -151,7 +153,32 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         lyrics: songAny.lyrics,
         bible_verses: songAny.bible_verses,
         bible_translation_used: songAny.bible_translation_used,
-      });
+      };
+
+      if (allJourneySongs.length > 0) {
+        const queue = allJourneySongs
+          .filter(ss => ss.song)
+          .map(ss => {
+            const s = ss.song!;
+            const sAny = s as any;
+            return {
+              id: s.id,
+              title: s.title,
+              artist: s.artist,
+              audioUrl: s.audio_url,
+              audio_url: s.audio_url,
+              coverArtUrl: s.song_art_url || undefined,
+              duration: s.duration,
+              uploaded_by: 0,
+              lyrics: sAny.lyrics,
+              bible_verses: sAny.bible_verses,
+              bible_translation_used: sAny.bible_translation_used,
+            };
+          });
+        playSong(currentSongData, queue);
+      } else {
+        playSong(currentSongData);
+      }
     }
   };
 

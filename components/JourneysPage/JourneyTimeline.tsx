@@ -84,6 +84,7 @@ interface SeasonSectionProps {
     border: string;
     borderHover: string;
   };
+  allJourneySongs: import('@/types/journey').SeasonSong[];
 }
 
 const SeasonSection: React.FC<SeasonSectionProps> = ({ 
@@ -92,7 +93,8 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
   showPlayCounts, 
   showDates,
   totalSeasons,
-  theme
+  theme,
+  allJourneySongs
 }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
@@ -252,6 +254,7 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
                       showDate={showDates}
                       themeColor="gold"
                       trackNumber={songIndex + 1}
+                      allJourneySongs={allJourneySongs}
                     />
                   </motion.div>
                 ))}
@@ -310,6 +313,8 @@ export const JourneyTimeline: React.FC<JourneyTimelineProps> = ({ journey, isPre
     return dateA - dateB;
   });
 
+  const allJourneySongs = sortedSeasons.flatMap(season => season.songs || []);
+
   if (!mounted) {
     return <div className="relative bg-transparent" />;
   }
@@ -362,6 +367,7 @@ export const JourneyTimeline: React.FC<JourneyTimelineProps> = ({ journey, isPre
           showDates={journey.show_song_dates}
           totalSeasons={sortedSeasons.length}
           theme={theme}
+          allJourneySongs={allJourneySongs}
         />
       ))}
       
