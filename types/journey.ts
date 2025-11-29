@@ -42,6 +42,7 @@ export interface Season {
   created_at: string;
   updated_at: string;
   songs?: SeasonSong[];
+  important_dates?: ImportantDate[];
 }
 
 export interface SeasonSong {
@@ -73,6 +74,32 @@ export interface SeasonSong {
     music_origin?: 'human' | 'ai' | 'ai_cover_of_human';
     ai_used_for_lyrics?: boolean;
   };
+}
+
+export interface ImportantDate {
+  id: number;
+  season_id: number;
+  title: string;
+  description: string | null;
+  event_date: string;
+  photo_url: string | null;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateImportantDateRequest {
+  title: string;
+  description?: string;
+  event_date: string;
+  photo_url?: string;
+}
+
+export interface UpdateImportantDateRequest {
+  title?: string;
+  description?: string;
+  event_date?: string;
+  photo_url?: string;
 }
 
 export interface JourneyWithSeasons extends JourneyProfile {
