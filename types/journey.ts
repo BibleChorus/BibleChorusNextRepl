@@ -70,6 +70,8 @@ export interface SeasonSong {
     lyrics?: string;
     bible_translation_used?: string;
     bible_verses?: Array<{ book: string; chapter: number; verse: number }>;
+    music_origin?: 'human' | 'ai' | 'ai_cover_of_human';
+    ai_used_for_lyrics?: boolean;
   };
 }
 

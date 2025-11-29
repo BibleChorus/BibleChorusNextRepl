@@ -93,7 +93,9 @@ export default async function handler(
           'songs.journey_song_origin as song_journey_song_origin',
           'songs.genres as song_genres',
           'songs.lyrics as song_lyrics',
-          'songs.bible_translation_used as song_bible_translation_used'
+          'songs.bible_translation_used as song_bible_translation_used',
+          'songs.music_origin as song_music_origin',
+          'songs.ai_used_for_lyrics as song_ai_used_for_lyrics'
         )
         .orderBy('journey_season_songs.display_order', 'asc');
 
@@ -130,6 +132,8 @@ export default async function handler(
           lyrics: ss.song_lyrics,
           bible_translation_used: ss.song_bible_translation_used,
           bible_verses: ss.bible_verses,
+          music_origin: ss.song_music_origin,
+          ai_used_for_lyrics: ss.song_ai_used_for_lyrics,
         },
       }));
     }
