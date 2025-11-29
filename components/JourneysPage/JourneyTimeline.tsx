@@ -1,13 +1,25 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useTheme } from 'next-themes';
-import { Season, JourneyWithSeasons } from '@/types/journey';
+import { Season, JourneyWithSeasons, SeasonSong, ImportantDate } from '@/types/journey';
 import { JourneySong } from './JourneySong';
+import { JourneyImportantDate } from './JourneyImportantDate';
 import { Music, BookOpen } from 'lucide-react';
 import { FaQuoteLeft as Quote } from 'react-icons/fa';
 import { format, parseISO } from 'date-fns';
+
+type TimelineItem = 
+  | { type: 'song'; data: SeasonSong; date: number }
+  | { type: 'important_date'; data: ImportantDate; date: number };
+
+const getDateTimestamp = (dateStr: string | undefined | null): number => {
+  if (!dateStr) return 0;
+  const datePart = dateStr.split('T')[0].split(' ')[0];
+  const [year, month, day] = datePart.split('-').map(Number);
+  return new Date(year, month - 1, day).getTime();
+};
 
 interface JourneyTimelineProps {
   journey: JourneyWithSeasons;
@@ -107,6 +119,46 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
     const end = season.end_date ? format(parseISO(season.end_date), 'MMMM yyyy') : 'Present';
     return `${start} — ${end}`;
   };
+
+  const mergedTimelineItems = useMemo(() => {
+    const items: TimelineItem[] = [];
+    
+    if (season.songs) {
+      for (const song of season.songs) {
+        const songDate = song.song?.journey_date || song.song?.created_at;
+        items.push({
+          type: 'song',
+          data: song,
+          date: getDateTimestamp(songDate)
+        });
+      }
+    }
+    
+    if (season.important_dates) {
+      for (const importantDate of season.important_dates) {
+        items.push({
+          type: 'important_date',
+          data: importantDate,
+          date: getDateTimestamp(importantDate.event_date)
+        });
+      }
+    }
+    
+    items.sort((a, b) => {
+      if (a.date !== b.date) {
+        return a.date - b.date;
+      }
+      if (a.type === 'important_date' && b.type === 'song') {
+        return -1;
+      }
+      if (a.type === 'song' && b.type === 'important_date') {
+        return 1;
+      }
+      return 0;
+    });
+    
+    return items;
+  }, [season.songs, season.important_dates]);
 
   return (
     <section 
@@ -235,29 +287,55 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
               </motion.div>
             )}
 
-            {season.songs && season.songs.length > 0 ? (
+            {mergedTimelineItems.length > 0 ? (
               <div className="space-y-3">
-                {season.songs.map((seasonSong, songIndex) => (
-                  <motion.div
-                    key={seasonSong.id}
-                    variants={revealVariants}
-                    custom={songIndex}
-                    transition={{ 
-                      delay: 0.3 + songIndex * 0.1,
-                      duration: 1.2,
-                      ease: easeOutExpo
-                    }}
-                  >
-                    <JourneySong
-                      seasonSong={seasonSong}
-                      showPlayCount={showPlayCounts}
-                      showDate={showDates}
-                      themeColor="gold"
-                      trackNumber={songIndex + 1}
-                      allJourneySongs={allJourneySongs}
-                    />
-                  </motion.div>
-                ))}
+                {(() => {
+                  let songTrackNumber = 0;
+                  return mergedTimelineItems.map((item, itemIndex) => {
+                    if (item.type === 'song') {
+                      songTrackNumber++;
+                      return (
+                        <motion.div
+                          key={`song-${item.data.id}`}
+                          variants={revealVariants}
+                          custom={itemIndex}
+                          transition={{ 
+                            delay: 0.3 + itemIndex * 0.1,
+                            duration: 1.2,
+                            ease: easeOutExpo
+                          }}
+                        >
+                          <JourneySong
+                            seasonSong={item.data}
+                            showPlayCount={showPlayCounts}
+                            showDate={showDates}
+                            themeColor="gold"
+                            trackNumber={songTrackNumber}
+                            allJourneySongs={allJourneySongs}
+                          />
+                        </motion.div>
+                      );
+                    } else {
+                      return (
+                        <motion.div
+                          key={`date-${item.data.id}`}
+                          variants={revealVariants}
+                          custom={itemIndex}
+                          transition={{ 
+                            delay: 0.3 + itemIndex * 0.1,
+                            duration: 1.2,
+                            ease: easeOutExpo
+                          }}
+                        >
+                          <JourneyImportantDate
+                            importantDate={item.data}
+                            theme={theme}
+                          />
+                        </motion.div>
+                      );
+                    }
+                  });
+                })()}
               </div>
             ) : (
               <motion.div

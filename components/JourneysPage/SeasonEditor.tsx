@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Season, SeasonSong } from '@/types/journey';
+import { Season, SeasonSong, ImportantDate } from '@/types/journey';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,14 +11,15 @@ import { Label } from '@/components/ui/label';
 import { SongSelector } from './SongSelector';
 import { 
   Plus, Pencil, Trash2, Music, ChevronDown, ChevronUp, 
-  Calendar, Save, X, Sparkles 
+  Calendar, Save, X, Sparkles, Heart, Upload, Loader2
 } from 'lucide-react';
-import { FaEye as Eye, FaEyeSlash as EyeOff, FaExternalLinkAlt, FaLink } from 'react-icons/fa';
+import { FaEye as Eye, FaEyeSlash as EyeOff, FaExternalLinkAlt, FaLink, FaCamera } from 'react-icons/fa';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
+import { uploadFile } from '@/lib/uploadUtils';
 
 interface SeasonEditorProps {
   seasons: Season[];
@@ -158,7 +159,7 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
   onSeasonsChange,
   onRefresh,
 }) => {
-  const { getAuthToken } = useAuth();
+  const { getAuthToken, user } = useAuth();
   const [expandedSeasons, setExpandedSeasons] = useState<number[]>([]);
   const [isAddingNewSeason, setIsAddingNewSeason] = useState(false);
   const [editingSeasonId, setEditingSeasonId] = useState<number | null>(null);
@@ -170,6 +171,17 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
     personal_note: '',
     source_url: '',
   });
+  
+  const [importantDateDialogSeasonId, setImportantDateDialogSeasonId] = useState<number | null>(null);
+  const [editingImportantDate, setEditingImportantDate] = useState<ImportantDate | null>(null);
+  const [importantDateFormData, setImportantDateFormData] = useState({
+    title: '',
+    description: '',
+    event_date: '',
+    photo_url: '',
+  });
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState<SeasonFormData>({
     title: '',
@@ -353,6 +365,169 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
     resetForm();
     setIsAddingNewSeason(true);
   }, [resetForm]);
+
+  const resetImportantDateForm = useCallback(() => {
+    setImportantDateFormData({
+      title: '',
+      description: '',
+      event_date: '',
+      photo_url: '',
+    });
+    setEditingImportantDate(null);
+    setImportantDateDialogSeasonId(null);
+  }, []);
+
+  const openAddImportantDateDialog = useCallback((seasonId: number) => {
+    setImportantDateFormData({
+      title: '',
+      description: '',
+      event_date: '',
+      photo_url: '',
+    });
+    setEditingImportantDate(null);
+    setImportantDateDialogSeasonId(seasonId);
+  }, []);
+
+  const openEditImportantDateDialog = useCallback((seasonId: number, date: ImportantDate) => {
+    setImportantDateFormData({
+      title: date.title,
+      description: date.description || '',
+      event_date: date.event_date?.split('T')[0] || '',
+      photo_url: date.photo_url || '',
+    });
+    setEditingImportantDate(date);
+    setImportantDateDialogSeasonId(seasonId);
+  }, []);
+
+  const handlePhotoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image must be less than 10MB');
+      return;
+    }
+
+    if (!user?.id) {
+      toast.error('You must be logged in to upload images');
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+    try {
+      const result = await uploadFile(file, 'image', user.id, 'song_art');
+      if (typeof result === 'string') {
+        toast.error(result);
+      } else {
+        setImportantDateFormData(prev => ({ ...prev, photo_url: result.fileKey }));
+        toast.success('Photo uploaded successfully');
+      }
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error('Failed to upload photo');
+    } finally {
+      setIsUploadingPhoto(false);
+      if (photoInputRef.current) {
+        photoInputRef.current.value = '';
+      }
+    }
+  }, [user?.id]);
+
+  const handleCreateImportantDate = useCallback(async () => {
+    if (!importantDateDialogSeasonId) return;
+
+    if (!importantDateFormData.title.trim()) {
+      toast.error('Title is required');
+      return;
+    }
+
+    if (!importantDateFormData.event_date) {
+      toast.error('Event date is required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const token = await getAuthToken();
+      await axios.post(
+        `/api/journeys/seasons/${importantDateDialogSeasonId}/important-dates`,
+        {
+          title: importantDateFormData.title.trim(),
+          description: importantDateFormData.description.trim() || undefined,
+          event_date: importantDateFormData.event_date,
+          photo_url: importantDateFormData.photo_url || undefined,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Important date added');
+      resetImportantDateForm();
+      onRefresh();
+    } catch (error) {
+      console.error('Error creating important date:', error);
+      toast.error('Failed to add important date');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [importantDateDialogSeasonId, importantDateFormData, resetImportantDateForm, onRefresh, getAuthToken]);
+
+  const handleUpdateImportantDate = useCallback(async () => {
+    if (!importantDateDialogSeasonId || !editingImportantDate) return;
+
+    if (!importantDateFormData.title.trim()) {
+      toast.error('Title is required');
+      return;
+    }
+
+    if (!importantDateFormData.event_date) {
+      toast.error('Event date is required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const token = await getAuthToken();
+      await axios.put(
+        `/api/journeys/seasons/${importantDateDialogSeasonId}/important-dates/${editingImportantDate.id}`,
+        {
+          title: importantDateFormData.title.trim(),
+          description: importantDateFormData.description.trim() || null,
+          event_date: importantDateFormData.event_date,
+          photo_url: importantDateFormData.photo_url || null,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Important date updated');
+      resetImportantDateForm();
+      onRefresh();
+    } catch (error) {
+      console.error('Error updating important date:', error);
+      toast.error('Failed to update important date');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [importantDateDialogSeasonId, editingImportantDate, importantDateFormData, resetImportantDateForm, onRefresh, getAuthToken]);
+
+  const handleDeleteImportantDate = useCallback(async (seasonId: number, dateId: number) => {
+    if (!confirm('Are you sure you want to delete this important date?')) return;
+
+    try {
+      const token = await getAuthToken();
+      await axios.delete(
+        `/api/journeys/seasons/${seasonId}/important-dates/${dateId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Important date deleted');
+      onRefresh();
+    } catch (error) {
+      console.error('Error deleting important date:', error);
+      toast.error('Failed to delete important date');
+    }
+  }, [onRefresh, getAuthToken]);
 
   return (
     <div className="space-y-6">
@@ -556,6 +731,89 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
                       </div>
                     )}
                   </div>
+
+                  <div className="pt-6 mt-4 border-t border-slate-200/60 dark:border-slate-700/60">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                        Important Dates in this season
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openAddImportantDateDialog(season.id)}
+                      >
+                        <Plus className="w-3.5 h-3.5 mr-1" />
+                        Add Date
+                      </Button>
+                    </div>
+
+                    {season.important_dates && season.important_dates.length > 0 ? (
+                      <div className="space-y-2">
+                        {season.important_dates.map((date) => (
+                          <div
+                            key={date.id}
+                            className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50"
+                          >
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0">
+                              {date.photo_url ? (
+                                <Image
+                                  src={`${CDN_URL}${date.photo_url}`}
+                                  alt={date.title}
+                                  width={40}
+                                  height={40}
+                                  className="object-cover w-full h-full"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Heart className="w-4 h-4 text-rose-400" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">
+                                {date.title}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {format(parseISO(date.event_date), 'MMM d, yyyy')}
+                                </span>
+                                {date.description && (
+                                  <span className="text-indigo-500 dark:text-indigo-400 text-[10px]">
+                                    Has description
+                                  </span>
+                                )}
+                                {date.photo_url && (
+                                  <FaCamera className="w-3 h-3 text-purple-500 dark:text-purple-400 flex-shrink-0" />
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-slate-500 hover:text-indigo-600 flex-shrink-0"
+                              onClick={() => openEditImportantDateDialog(season.id, date)}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-500 hover:text-red-600 flex-shrink-0"
+                              onClick={() => handleDeleteImportantDate(season.id, date.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                        <Heart className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No important dates added yet</p>
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -677,6 +935,156 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
               >
                 <Save className="w-4 h-4 mr-2" />
                 Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={importantDateDialogSeasonId !== null} onOpenChange={(open) => !open && resetImportantDateForm()}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Heart className="w-4 h-4 text-rose-500" />
+              {editingImportantDate ? 'Edit Important Date' : 'Add Important Date'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingImportantDate 
+                ? 'Update the details for this important date.'
+                : 'Add a meaningful date to this season of your journey.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="important_date_title">Title *</Label>
+              <Input
+                id="important_date_title"
+                value={importantDateFormData.title}
+                onChange={(e) => setImportantDateFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="e.g., First time leading worship"
+                className="bg-white dark:bg-slate-800"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="important_date_event_date">Event Date *</Label>
+              <Input
+                id="important_date_event_date"
+                type="date"
+                value={importantDateFormData.event_date}
+                onChange={(e) => setImportantDateFormData(prev => ({ ...prev, event_date: e.target.value }))}
+                className="bg-white dark:bg-slate-800"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="important_date_description">Description</Label>
+              <Textarea
+                id="important_date_description"
+                value={importantDateFormData.description}
+                onChange={(e) => {
+                  if (e.target.value.length <= 500) {
+                    setImportantDateFormData(prev => ({ ...prev, description: e.target.value }));
+                  }
+                }}
+                placeholder="Add a description or reflection about this date..."
+                className="bg-white dark:bg-slate-800 min-h-[80px]"
+                maxLength={500}
+              />
+              <div className="flex justify-end">
+                <p className={`text-xs ${importantDateFormData.description.length > 450 ? 'text-amber-500' : 'text-slate-400'}`}>
+                  {importantDateFormData.description.length}/500
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <FaCamera className="w-3.5 h-3.5" />
+                Photo
+              </Label>
+              
+              {importantDateFormData.photo_url ? (
+                <div className="relative inline-block">
+                  <div className="w-24 h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+                    <Image
+                      src={`${CDN_URL}${importantDateFormData.photo_url}`}
+                      alt="Important date photo"
+                      width={96}
+                      height={96}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 w-6 h-6"
+                    onClick={() => setImportantDateFormData(prev => ({ ...prev, photo_url: '' }))}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={photoInputRef}
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                    id="important_date_photo"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                    className="w-full"
+                  >
+                    {isUploadingPhoto ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Photo
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Optional. Max 10MB. JPG, PNG, or WebP.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={resetImportantDateForm}
+                disabled={isSubmitting || isUploadingPhoto}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={editingImportantDate ? handleUpdateImportantDate : handleCreateImportantDate}
+                disabled={isSubmitting || isUploadingPhoto}
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {editingImportantDate ? 'Saving...' : 'Adding...'}
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    {editingImportantDate ? 'Save Changes' : 'Add Date'}
+                  </>
+                )}
               </Button>
             </div>
           </div>
