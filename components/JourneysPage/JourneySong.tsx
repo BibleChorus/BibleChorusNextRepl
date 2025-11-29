@@ -15,6 +15,12 @@ import Image from 'next/image';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
+const getImageUrl = (path: string | null | undefined): string | null => {
+  if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
+};
+
 interface JourneySongProps {
   seasonSong: SeasonSong;
   showPlayCount?: boolean;
@@ -75,7 +81,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
   const journeySongOrigin = songAny.journey_song_origin;
   
   const showArt = isHovered || isTouched || isCurrentSong;
-  const songArtUrl = song.song_art_url ? `${CDN_URL}${song.song_art_url}` : null;
+  const songArtUrl = getImageUrl(song.song_art_url);
   
   const formatJourneySongOrigin = (origin: string): string => {
     const originMap: { [key: string]: string } = {

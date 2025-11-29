@@ -34,6 +34,12 @@ interface SongSelectorProps {
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
+const getImageUrl = (path: string | null | undefined): string => {
+  if (!path) return '/biblechorus-icon.png';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
+};
+
 export const SongSelector: React.FC<SongSelectorProps> = ({
   seasonId,
   onSongAdded,
@@ -113,7 +119,7 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
           <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0">
             {selectedSong.song_art_url ? (
               <Image
-                src={`${CDN_URL}${selectedSong.song_art_url}`}
+                src={getImageUrl(selectedSong.song_art_url)}
                 alt={selectedSong.title}
                 width={64}
                 height={64}
@@ -229,7 +235,7 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
                 <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0">
                   {song.song_art_url ? (
                     <Image
-                      src={`${CDN_URL}${song.song_art_url}`}
+                      src={getImageUrl(song.song_art_url)}
                       alt={song.title}
                       width={48}
                       height={48}
