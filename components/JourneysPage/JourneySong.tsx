@@ -7,6 +7,9 @@ import { SeasonSong } from '@/types/journey';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { format, parseISO } from 'date-fns';
 import { BookOpen, Music } from 'lucide-react';
+import { FaExternalLinkAlt } from 'react-icons/fa';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import LyricsBibleComparisonDialog from '@/components/ListenPage/LyricsBibleComparisonDialog';
 import Image from 'next/image';
 
@@ -32,6 +35,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
+  const [showExternalLinkDialog, setShowExternalLinkDialog] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isTouched, setIsTouched] = useState(false);
   const song = seasonSong.song;
@@ -89,8 +93,16 @@ export const JourneySong: React.FC<JourneySongProps> = ({
   };
 
   const hasOrigin = journeySongOrigin && journeySongOrigin.trim().length > 0;
+  const hasSourceUrl = seasonSong.source_url && seasonSong.source_url.trim().length > 0;
   const showNote = hasPersonalNote && (isHovered || isTouched || isCurrentSong);
   const showOrigin = hasOrigin && (isHovered || isTouched || isCurrentSong);
+
+  const handleOpenExternalLink = () => {
+    if (seasonSong.source_url) {
+      window.open(seasonSong.source_url, '_blank', 'noopener,noreferrer');
+    }
+    setShowExternalLinkDialog(false);
+  };
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -375,7 +387,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               animate={{ y: 0 }}
               exit={{ y: -10 }}
               transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-2 pb-2 pl-[52px] md:pl-[68px] pr-4"
+              className="pt-2 pb-2 pl-[52px] md:pl-[68px] pr-4 flex items-center gap-3"
             >
               <span 
                 className="text-[11px] uppercase tracking-widest"
@@ -383,6 +395,20 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               >
                 Origin: {formatJourneySongOrigin(journeySongOrigin)}
               </span>
+              {hasSourceUrl && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowExternalLinkDialog(true);
+                  }}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
+                  style={{ color: theme.accent }}
+                  aria-label="View source link"
+                >
+                  <FaExternalLinkAlt className="w-3 h-3" />
+                  <span className="text-[10px] uppercase tracking-wider font-medium">Source</span>
+                </button>
+              )}
             </motion.div>
           </motion.div>
         )}
@@ -437,6 +463,42 @@ export const JourneySong: React.FC<JourneySongProps> = ({
           song={songAny}
         />
       </div>
+
+      <Dialog open={showExternalLinkDialog} onOpenChange={setShowExternalLinkDialog}>
+        <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FaExternalLinkAlt className="w-4 h-4" />
+              External Link
+            </DialogTitle>
+            <DialogDescription>
+              External link provided by journey creator
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg break-all">
+              <p className="text-sm text-slate-600 dark:text-slate-400 font-mono">
+                {seasonSong.source_url}
+              </p>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowExternalLinkDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleOpenExternalLink}
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+              >
+                <FaExternalLinkAlt className="w-3 h-3 mr-2" />
+                Proceed to Link
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };

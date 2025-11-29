@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Music, Plus, Check, Loader2, Link } from 'lucide-react';
+import { Search, Music, Plus, Check, Loader2 } from 'lucide-react';
+import { FaExternalLinkAlt } from 'react-icons/fa';
 import axios from 'axios';
 import { toast } from 'sonner';
 import Image from 'next/image';
@@ -154,7 +155,7 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor="source-url" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <Link className="w-4 h-4" />
+            <FaExternalLinkAlt className="w-3 h-3" />
             Source Hyperlink (optional)
           </Label>
           <Input
