@@ -80,6 +80,13 @@ export default async function handler(
         },
       }));
 
+      const importantDates = await db('journey_season_important_dates')
+        .where({ season_id: seasonId })
+        .orderBy('event_date', 'asc')
+        .select('*');
+
+      existingSeason.important_dates = importantDates;
+
       return res.status(200).json(existingSeason);
     } catch (error) {
       console.error('Error fetching season:', error);

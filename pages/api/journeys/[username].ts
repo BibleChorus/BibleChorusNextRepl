@@ -136,6 +136,13 @@ export default async function handler(
           ai_used_for_lyrics: ss.song_ai_used_for_lyrics,
         },
       }));
+
+      const importantDates = await db('journey_season_important_dates')
+        .where({ season_id: season.id })
+        .orderBy('event_date', 'asc')
+        .select('*');
+
+      season.important_dates = importantDates;
     }
 
     const journey: JourneyWithSeasons = {
