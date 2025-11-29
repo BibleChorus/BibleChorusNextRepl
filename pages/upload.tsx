@@ -13,7 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, X, Trash2, File as FileIcon, AlertCircle, CalendarIcon } from "lucide-react"
+import { Check, ChevronsUpDown, X, Trash2, File as FileIcon, Info, Calendar as CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Calendar } from "@/components/ui/calendar"
@@ -1768,7 +1768,7 @@ function UploadContent() {
                     />
                     {(watchScriptureAdherence === 'somewhat_connected' || watchScriptureAdherence === 'no_connection') && (
                       <Alert>
-                        <AlertCircle className="h-4 w-4" />
+                        <Info className="h-4 w-4" />
                         <AlertDescription>
                           Songs with limited or no scripture connection will not appear on the main Listen page by default, but can be added to your Journey page.
                         </AlertDescription>

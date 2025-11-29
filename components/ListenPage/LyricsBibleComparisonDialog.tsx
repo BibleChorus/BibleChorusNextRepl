@@ -86,6 +86,7 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
     if (isOpen && song?.bible_verses && song.bible_verses.length > 0) {
       fetchVerses();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, translation]);
 
   const fetchVerses = async () => {

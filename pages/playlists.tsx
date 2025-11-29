@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import PlaylistSection from '../components/PlaylistsPage/PlaylistSection';
-import { fetchPlaylists } from './api/playlists/api';
+import { fetchPlaylists } from '@/lib/api/playlists';
 import { Playlist } from '../types';
 import { BIBLE_BOOKS } from '@/lib/constants';
 import { motion } from 'framer-motion';

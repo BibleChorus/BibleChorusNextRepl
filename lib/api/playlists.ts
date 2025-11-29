@@ -1,4 +1,4 @@
-import { Playlist } from '../../../types';
+import { Playlist } from '@/types';
 import { BIBLE_BOOKS } from '@/lib/constants';
 
 // Function to fetch playlists from the API

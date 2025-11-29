@@ -39,6 +39,7 @@ export interface Season {
   is_visible: boolean;
   reflection: string | null;
   scripture_reference: string | null;
+  theme_color?: string;
   created_at: string;
   updated_at: string;
   songs?: SeasonSong[];

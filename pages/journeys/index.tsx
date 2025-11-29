@@ -402,7 +402,7 @@ export default function JourneysIndex() {
                   style={{ color: theme.textSecondary }}
                 >
                   Explore musical portfolios that tell stories of faith through scripture songs. 
-                  Each journey is a testimony of God's faithfulness through seasons of life.
+                  Each journey is a testimony of God&apos;s faithfulness through seasons of life.
                 </motion.p>
               </div>
             </div>
@@ -494,7 +494,7 @@ export default function JourneysIndex() {
                     className="relative text-sm font-light leading-relaxed"
                     style={{ color: theme.textSecondary }}
                   >
-                    Let others walk through your journey and be encouraged by God's faithfulness.
+                    Let others walk through your journey and be encouraged by God&apos;s faithfulness.
                   </p>
                 </motion.div>
               </div>

@@ -669,7 +669,7 @@ export default function JourneyPage() {
                   No Seasons Yet
                 </h2>
                 <p className="font-light" style={{ color: theme.textSecondary }}>
-                  This journey doesn't have any seasons to display yet.
+                  This journey doesn&apos;t have any seasons to display yet.
                 </p>
               </motion.div>
             )}
