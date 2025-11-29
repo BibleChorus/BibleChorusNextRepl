@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { ImportantDate } from '@/types/journey';
 import { format } from 'date-fns';
-import { Star, Calendar } from 'lucide-react';
+import { Star, Calendar, X } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import Image from 'next/image';
 
@@ -271,6 +271,17 @@ export const JourneyImportantDate: React.FC<JourneyImportantDateProps> = ({
           className="sm:max-w-2xl p-0 overflow-hidden border-0"
           onClick={(e) => e.stopPropagation()}
         >
+          <button
+            onClick={() => setShowPhotoDialog(false)}
+            className="absolute right-3 top-3 z-20 p-2 rounded-full transition-all hover:scale-110"
+            style={{ 
+              backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)',
+              color: theme.text
+            }}
+            aria-label="Close photo"
+          >
+            <X className="w-5 h-5" />
+          </button>
           <div className="relative">
             {photoUrl && (
               <div className="relative aspect-[4/3] w-full">
