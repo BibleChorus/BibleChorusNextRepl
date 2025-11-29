@@ -450,53 +450,36 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               animate={{ y: 0 }}
               exit={{ y: -10 }}
               transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-1 pb-2 pl-[52px] md:pl-[68px] pr-28 md:pr-36 flex flex-wrap items-center gap-3"
+              className="pt-1 pb-2 pl-[52px] md:pl-[68px] pr-28 md:pr-36 flex flex-wrap items-center gap-2"
             >
-              <div 
-                className="flex items-center gap-1.5 px-2 py-0.5 rounded-full"
+              <span 
+                className="text-[9px] uppercase tracking-widest"
                 style={{ 
-                  backgroundColor: musicOrigin === 'human' ? `${theme.accent}15` : musicOrigin === 'ai' ? 'rgba(139, 92, 246, 0.15)' : 'rgba(236, 72, 153, 0.15)',
-                  border: `1px solid ${musicOrigin === 'human' ? `${theme.accent}40` : musicOrigin === 'ai' ? 'rgba(139, 92, 246, 0.4)' : 'rgba(236, 72, 153, 0.4)'}`
+                  fontFamily: "'Manrope', sans-serif", 
+                  fontWeight: 400, 
+                  color: theme.textMuted,
+                  opacity: 0.7
                 }}
               >
-                <Music className="w-3 h-3" style={{ color: musicOrigin === 'human' ? theme.accent : musicOrigin === 'ai' ? '#8b5cf6' : '#ec4899' }} />
-                <span 
-                  className="text-[10px] uppercase tracking-wider font-medium"
-                  style={{ 
-                    fontFamily: "'Manrope', sans-serif",
-                    color: musicOrigin === 'human' ? theme.accent : musicOrigin === 'ai' ? '#8b5cf6' : '#ec4899'
-                  }}
-                >
-                  {formatMusicOrigin(musicOrigin)}
-                </span>
-              </div>
-              <div 
-                className="flex items-center gap-1.5 px-2 py-0.5 rounded-full"
+                Music: {formatMusicOrigin(musicOrigin)}
+              </span>
+              <span 
+                className="text-[9px]"
+                style={{ color: theme.textMuted, opacity: 0.4 }}
+              >
+                ·
+              </span>
+              <span 
+                className="text-[9px] uppercase tracking-widest"
                 style={{ 
-                  backgroundColor: aiUsedForLyrics ? 'rgba(139, 92, 246, 0.15)' : `${theme.accent}15`,
-                  border: `1px solid ${aiUsedForLyrics ? 'rgba(139, 92, 246, 0.4)' : `${theme.accent}40`}`
+                  fontFamily: "'Manrope', sans-serif", 
+                  fontWeight: 400, 
+                  color: theme.textMuted,
+                  opacity: 0.7
                 }}
               >
-                <svg 
-                  className="w-3 h-3" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2"
-                  style={{ color: aiUsedForLyrics ? '#8b5cf6' : theme.accent }}
-                >
-                  <path d="M12 3v18M8 8h8M6 12h12M8 16h8" strokeLinecap="round" />
-                </svg>
-                <span 
-                  className="text-[10px] uppercase tracking-wider font-medium"
-                  style={{ 
-                    fontFamily: "'Manrope', sans-serif",
-                    color: aiUsedForLyrics ? '#8b5cf6' : theme.accent
-                  }}
-                >
-                  Lyrics: {formatLyricsOrigin(aiUsedForLyrics)}
-                </span>
-              </div>
+                Lyrics: {formatLyricsOrigin(aiUsedForLyrics)}
+              </span>
             </motion.div>
           </motion.div>
         )}
