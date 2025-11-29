@@ -13,24 +13,52 @@ const scriptures = [
   { verse: "For this reason also God highly exalted Him, and bestowed on Him the name which is above every name, so that at the name of Jesus every knee will bow, of those who are in heaven and on earth and under the earth, and that every tongue will confess that Jesus Christ is Lord, to the glory of God the Father.", reference: "Philippians 2:9-11" },
 ]
 
-export function ScriptureScroll() {
+interface Theme {
+  bg: string;
+  bgCard: string;
+  text: string;
+  textSecondary: string;
+  accent: string;
+  accentHover: string;
+  border: string;
+  borderHover: string;
+  hoverBg: string;
+}
+
+interface ScriptureScrollProps {
+  theme?: Theme;
+}
+
+export function ScriptureScroll({ theme }: ScriptureScrollProps) {
   const [currentIndices, setCurrentIndices] = useState<number[]>([0, 1, 2])
-  const [fontSize, setFontSize] = useState(18)
+  const [fontSize, setFontSize] = useState(16)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  const defaultTheme: Theme = {
+    bg: '#050505',
+    bgCard: '#0a0a0a',
+    text: '#e5e5e5',
+    textSecondary: '#a0a0a0',
+    accent: '#d4af37',
+    accentHover: '#e5c349',
+    border: 'rgba(255, 255, 255, 0.08)',
+    borderHover: 'rgba(212, 175, 55, 0.3)',
+    hoverBg: 'rgba(255, 255, 255, 0.03)',
+  }
+
+  const t = theme || defaultTheme;
+
   useEffect(() => {
-    // Function to check if the text fits within the card height
     const isTextFitting = (cardHeight: number, fontSize: number) => {
       const testDiv = document.createElement('div')
       testDiv.style.fontSize = `${fontSize}px`
       testDiv.style.position = 'absolute'
       testDiv.style.visibility = 'hidden'
-      testDiv.style.width = `${containerRef.current!.clientWidth - 32}px` // Subtracting padding
+      testDiv.style.width = `${containerRef.current!.clientWidth - 48}px`
       document.body.appendChild(testDiv)
 
       let isFitting = true
       for (let index of currentIndices) {
-        // Set the HTML content for testing
         testDiv.innerHTML = `<h3 class="font-semibold mb-2">${scriptures[index].reference}</h3><p>${scriptures[index].verse}</p>`
         if (testDiv.offsetHeight > cardHeight) {
           isFitting = false
@@ -38,17 +66,16 @@ export function ScriptureScroll() {
         }
       }
 
-      document.body.removeChild(testDiv) // Clean up the test div
+      document.body.removeChild(testDiv)
       return isFitting
     }
 
     const adjustFontSize = () => {
       if (containerRef.current) {
         const containerHeight = containerRef.current.clientHeight
-        const cardHeight = containerHeight / 3 - 16 // Subtracting margin for three cards
-        let newFontSize = 18 // Starting font size
+        const cardHeight = containerHeight / 3 - 20
+        let newFontSize = 16
 
-        // Decrease font size until the text fits or the minimum font size is reached
         while (newFontSize > 12) {
           if (isTextFitting(cardHeight, newFontSize)) {
             break
@@ -56,14 +83,14 @@ export function ScriptureScroll() {
           newFontSize -= 0.5
         }
 
-        setFontSize(newFontSize) // Update the font size state
+        setFontSize(newFontSize)
       }
     }
 
-    adjustFontSize() // Initial font size adjustment
-    window.addEventListener('resize', adjustFontSize) // Adjust font size on window resize
-    return () => window.removeEventListener('resize', adjustFontSize) // Clean up the event listener
-  }, [currentIndices]) // Re-run the effect when currentIndices changes
+    adjustFontSize()
+    window.addEventListener('resize', adjustFontSize)
+    return () => window.removeEventListener('resize', adjustFontSize)
+  }, [currentIndices])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -88,28 +115,82 @@ export function ScriptureScroll() {
   }
 
   return (
-    <div className="h-full flex flex-col justify-between scripture-scroll">
+    <div 
+      className="h-full flex flex-col justify-between"
+      style={{ fontFamily: "'Manrope', sans-serif" }}
+    >
       <button 
         onClick={handlePrev} 
-        className="text-gray-800 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 self-center"
+        className="self-center p-2 transition-all duration-300"
+        style={{ 
+          color: t.textSecondary,
+          border: `1px solid ${t.border}`,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = t.borderHover;
+          e.currentTarget.style.color = t.accent;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = t.border;
+          e.currentTarget.style.color = t.textSecondary;
+        }}
         aria-label="Previous verse"
       >
-        <ChevronUp size={24} />
+        <ChevronUp size={20} />
       </button>
-      <div ref={containerRef} className="flex-grow overflow-hidden flex flex-col justify-center">
+      
+      <div ref={containerRef} className="flex-grow overflow-hidden flex flex-col justify-center py-4">
         {currentIndices.map((index, i) => (
-          <div key={i} className="bg-lavender-50 dark:bg-gray-700 p-4 rounded-lg mb-4 transition-all duration-500" style={{ fontSize: `${fontSize}px` }}>
-            <h3 className="font-semibold mb-2 text-center text-gray-900 dark:text-gray-100">{scriptures[index].reference}</h3>
-            <p className="font-serif text-gray-700 dark:text-gray-300">{scriptures[index].verse}</p>
+          <div 
+            key={i} 
+            className="p-5 mb-4 transition-all duration-500"
+            style={{ 
+              fontSize: `${fontSize}px`,
+              border: `1px solid ${t.border}`,
+              backgroundColor: t.hoverBg,
+            }}
+          >
+            <h3 
+              className="font-medium mb-3 text-center text-xs tracking-[0.2em] uppercase"
+              style={{ 
+                color: t.accent,
+                fontFamily: "'Manrope', sans-serif"
+              }}
+            >
+              {scriptures[index].reference}
+            </h3>
+            <p 
+              className="font-light leading-relaxed text-center"
+              style={{ 
+                color: t.text,
+                fontFamily: "'Italiana', serif",
+                fontSize: `${fontSize + 2}px`
+              }}
+            >
+              {scriptures[index].verse}
+            </p>
           </div>
         ))}
       </div>
+      
       <button 
         onClick={handleNext} 
-        className="text-gray-800 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 self-center"
+        className="self-center p-2 transition-all duration-300"
+        style={{ 
+          color: t.textSecondary,
+          border: `1px solid ${t.border}`,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = t.borderHover;
+          e.currentTarget.style.color = t.accent;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = t.border;
+          e.currentTarget.style.color = t.textSecondary;
+        }}
         aria-label="Next verse"
       >
-        <ChevronDown size={24} />
+        <ChevronDown size={20} />
       </button>
     </div>
   )

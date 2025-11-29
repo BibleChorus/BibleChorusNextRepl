@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 import { Sparkles, LogIn, UserPlus, ArrowLeft } from 'lucide-react'
+import { useTheme } from 'next-themes'
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -13,16 +14,100 @@ import { ScriptureScroll } from "@/components/LoginPage/scripture-scroll"
 import { TermsDialog } from "@/components/LoginPage/terms-dialog"
 import { PrivacyDialog } from "@/components/LoginPage/privacy-dialog"
 
-// Define metadata as a constant (not exported)
 const metadata: Metadata = {
   title: "Authentication",
   description: "Authentication forms built using the components.",
 }
 
+const FilmGrainOverlay: React.FC = () => {
+  return (
+    <div 
+      className="fixed inset-0 pointer-events-none opacity-[0.015]"
+      style={{
+        zIndex: 1,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+      }}
+    />
+  );
+};
+
+interface AmbientOrbsOverlayProps {
+  isDark: boolean;
+}
+
+const AmbientOrbsOverlay: React.FC<AmbientOrbsOverlayProps> = ({ isDark }) => {
+  const orbColors = {
+    primary: isDark ? 'rgba(212, 175, 55, 0.06)' : 'rgba(191, 161, 48, 0.05)',
+    secondary: isDark ? 'rgba(160, 160, 160, 0.04)' : 'rgba(100, 100, 100, 0.03)',
+    tertiary: isDark ? 'rgba(229, 229, 229, 0.02)' : 'rgba(50, 50, 50, 0.02)',
+  };
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+      <motion.div 
+        className="absolute top-0 left-0 w-96 h-96 rounded-full"
+        style={{
+          background: orbColors.primary,
+          filter: 'blur(120px)'
+        }}
+        animate={{
+          y: [0, -30, 0],
+          x: [0, 20, 0],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div 
+        className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full"
+        style={{
+          background: orbColors.secondary,
+          filter: 'blur(120px)'
+        }}
+        animate={{
+          y: [0, 30, 0],
+          x: [0, -20, 0],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+      />
+      <motion.div 
+        className="absolute top-1/2 right-1/4 w-72 h-72 rounded-full"
+        style={{
+          background: orbColors.tertiary,
+          filter: 'blur(100px)'
+        }}
+        animate={{
+          y: [0, 20, 0],
+          x: [0, -15, 0],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
+      />
+    </div>
+  );
+};
+
 export default function AuthenticationPage() {
   const [isLogin, setIsLogin] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const [redirectPath, setRedirectPath] = useState<string | null>(null)
+  const { resolvedTheme } = useTheme()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const isDark = resolvedTheme === 'dark'
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+  }
 
   useEffect(() => {
     const view = router.query.view as string
@@ -34,12 +119,9 @@ export default function AuthenticationPage() {
   }, [router.query.view])
 
   useEffect(() => {
-    // Check if there's a redirect path stored
     const redirectPath = localStorage.getItem('loginRedirectPath')
     if (redirectPath) {
-      // Remove it from storage
       localStorage.removeItem('loginRedirectPath')
-      // Store it in state or ref to use after successful login
       setRedirectPath(redirectPath)
     }
   }, [])
@@ -57,15 +139,32 @@ export default function AuthenticationPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/24 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/24">
-      {/* Enhanced Background Effects */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/[0.08] via-purple-400/[0.06] to-pink-400/[0.08] dark:from-indigo-400/[0.13] dark:via-purple-400/[0.1] dark:to-pink-400/[0.13]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
-      </div>
+  if (!mounted) {
+    return (
+      <div 
+        className="min-h-screen opacity-0" 
+        style={{ fontFamily: "'Manrope', sans-serif" }} 
+      />
+    )
+  }
 
-      {/* Home Button */}
+  return (
+    <div 
+      className="min-h-screen relative"
+      style={{ 
+        backgroundColor: theme.bg,
+        fontFamily: "'Manrope', sans-serif"
+      }}
+    >
+      <style jsx global>{`
+        html, body {
+          background-color: ${theme.bg} !important;
+        }
+      `}</style>
+
+      <AmbientOrbsOverlay isDark={isDark} />
+      <FilmGrainOverlay />
+
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -74,50 +173,72 @@ export default function AuthenticationPage() {
       >
         <Link
           href="/"
-          className={cn(
-            "inline-flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/12 dark:border-slate-700/40 rounded-xl shadow-lg hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 hover:scale-105 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium"
-          )}
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs tracking-[0.15em] uppercase transition-all duration-300"
+          style={{
+            backgroundColor: 'transparent',
+            color: theme.textSecondary,
+            border: `1px solid ${theme.border}`,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = theme.borderHover;
+            e.currentTarget.style.color = theme.accent;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = theme.border;
+            e.currentTarget.style.color = theme.textSecondary;
+          }}
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="hidden sm:inline">Home</span>
         </Link>
       </motion.div>
 
-      <div className="container relative min-h-screen flex flex-col items-center justify-center lg:grid lg:max-w-none lg:grid-cols-2 lg:px-4">
+      <div className="container relative min-h-screen flex flex-col items-center justify-center lg:grid lg:max-w-none lg:grid-cols-2 lg:px-4" style={{ zIndex: 2 }}>
         
-        {/* Left Panel - Scripture Scroll */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
-          className="relative hidden h-full flex-col p-10 text-slate-800 dark:text-white lg:flex"
+          className="relative hidden h-full flex-col p-10 lg:flex"
+          style={{ color: theme.text }}
         >
-          <div className="absolute inset-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-3xl shadow-2xl" />
+          <div 
+            className="absolute inset-4 backdrop-blur-sm"
+            style={{
+              backgroundColor: theme.bgCard,
+              border: `1px solid ${theme.border}`,
+            }}
+          />
           
-          {/* Logo and Brand */}
-          <div className="relative z-20 flex items-center text-xl font-bold mb-8">
-            <div className="p-2 bg-gradient-to-br from-indigo-400/12 to-purple-400/12 rounded-2xl backdrop-blur-sm border border-indigo-400/14 dark:border-indigo-400/18 mr-3">
+          <div className="relative z-20 flex items-center mb-8">
+            <div 
+              className="p-2 mr-3 flex items-center justify-center"
+              style={{ border: `1px solid ${theme.border}` }}
+            >
               <Image
                 src="/biblechorus-icon.png"
                 alt="BibleChorus"
                 width={32}
                 height={32}
-                className="rounded-lg"
               />
             </div>
-            <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 dark:from-indigo-400 dark:via-violet-400 dark:to-purple-400 bg-clip-text text-transparent">
+            <span 
+              className="text-xl tracking-wide"
+              style={{ 
+                fontFamily: "'Italiana', serif",
+                color: theme.accent
+              }}
+            >
               BibleChorus
             </span>
           </div>
 
-          {/* Scripture Scroll Container */}
-          <div className="relative z-20 flex-grow overflow-hidden rounded-2xl">
-            <ScriptureScroll />
+          <div className="relative z-20 flex-grow overflow-hidden">
+            <ScriptureScroll theme={theme} />
           </div>
 
         </motion.div>
 
-        {/* Right Panel - Auth Form */}
         <motion.div
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -126,86 +247,132 @@ export default function AuthenticationPage() {
         >
           <div className="mx-auto flex w-full flex-col justify-center space-y-8 sm:w-[400px]">
             
-            {/* Enhanced Header */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
               className="flex flex-col space-y-6 text-center"
             >
-              {/* Badge */}
               <div className="mb-4">
-                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-400/12 via-purple-400/12 to-pink-400/12 dark:from-indigo-400/16 dark:via-purple-400/16 dark:to-pink-400/16 backdrop-blur-md border border-indigo-400/14 dark:border-indigo-400/18 shadow-lg">
-                  <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-300" />
-                  <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 dark:from-indigo-400 dark:via-violet-400 dark:to-purple-400 bg-clip-text text-transparent font-semibold">
-                    Welcome to BibleChorus
-                  </span>
+                <span 
+                  className="inline-flex items-center gap-2.5 px-5 py-2 text-xs tracking-[0.2em] uppercase"
+                  style={{
+                    border: `1px solid ${theme.border}`,
+                    color: theme.accent,
+                    fontFamily: "'Manrope', sans-serif"
+                  }}
+                >
+                  <Sparkles className="w-4 h-4" style={{ color: theme.accent }} />
+                  <span>Welcome to BibleChorus</span>
                 </span>
               </div>
 
-              {/* Main Title */}
-              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
-                <span className="block text-slate-900 dark:text-white mb-2">
+              <h1 className="mb-2">
+                <span 
+                  className="block text-5xl sm:text-6xl tracking-tight mb-2"
+                  style={{ 
+                    fontFamily: "'Italiana', serif",
+                    color: theme.text 
+                  }}
+                >
                   {isLogin ? "Welcome" : "Join Our"}
                 </span>
-                <span className="block relative">
-                  <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
-                    {isLogin ? "Back" : "Community"}
-                  </span>
-                  <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 rounded-full scale-x-0 animate-scale-x"></div>
+                <span 
+                  className="block text-5xl sm:text-6xl tracking-tight italic"
+                  style={{ 
+                    fontFamily: "'Italiana', serif",
+                    color: theme.text,
+                    opacity: 0.9
+                  }}
+                >
+                  {isLogin ? "Back" : "Community"}
                 </span>
               </h1>
 
-              {/* Subtitle */}
-              <p className="text-lg text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+              <p 
+                className="text-base max-w-md mx-auto leading-relaxed font-light"
+                style={{ color: theme.textSecondary }}
+              >
                 {isLogin 
                   ? "Sign in to continue your journey with Bible-inspired music"
                   : "Create your account and discover a world of spiritual melodies"}
               </p>
             </motion.div>
 
-            {/* Enhanced Form Container */}
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-3xl shadow-2xl p-8"
+              className="p-8"
+              style={{
+                backgroundColor: theme.bgCard,
+                border: `1px solid ${theme.border}`,
+              }}
             >
-              <UserAuthForm isLogin={isLogin} onLoginSuccess={handleLoginSuccess} />
+              <UserAuthForm isLogin={isLogin} onLoginSuccess={handleLoginSuccess} theme={theme} />
             </motion.div>
 
-            {/* Enhanced Footer */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
               className="space-y-6"
             >
-              {/* Toggle View */}
               <div className="text-center">
-                <p className="text-slate-600 dark:text-slate-300 mb-3">
+                <p 
+                  className="mb-3 text-sm font-light"
+                  style={{ color: theme.textSecondary }}
+                >
                   {isLogin ? "Don't have an account?" : "Already have an account?"}
                 </p>
                 <button
                   onClick={toggleView}
-                  className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-400/14 to-purple-400/14 hover:from-indigo-400/18 hover:to-purple-400/18 dark:from-indigo-400/18 dark:to-purple-400/18 dark:hover:from-indigo-400/22 dark:hover:to-purple-400/22 backdrop-blur-sm border border-indigo-400/16 dark:border-indigo-400/18 rounded-xl transition-all duration-300 hover:scale-105 font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  className="group inline-flex items-center gap-2 px-6 py-3 text-xs tracking-[0.15em] uppercase transition-all duration-300"
+                  style={{
+                    border: `1px solid ${theme.border}`,
+                    color: theme.textSecondary,
+                    backgroundColor: 'transparent',
+                    fontFamily: "'Manrope', sans-serif"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = theme.borderHover;
+                    e.currentTarget.style.color = theme.accent;
+                    e.currentTarget.style.backgroundColor = theme.hoverBg;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = theme.border;
+                    e.currentTarget.style.color = theme.textSecondary;
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                 >
                   {isLogin ? <UserPlus className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
                   {isLogin ? "Create Account" : "Sign In"}
                 </button>
               </div>
 
-              {/* Terms and Privacy */}
-              <p className="text-center text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p 
+                className="text-center text-xs leading-relaxed"
+                style={{ color: theme.textSecondary }}
+              >
                 By continuing, you agree to our{" "}
                 <TermsDialog>
-                  <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 underline underline-offset-2 font-medium transition-colors">
+                  <button 
+                    className="underline underline-offset-2 transition-colors"
+                    style={{ color: theme.accent }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = theme.accentHover}
+                    onMouseLeave={(e) => e.currentTarget.style.color = theme.accent}
+                  >
                     Terms of Service
                   </button>
                 </TermsDialog>
                 {" "}and{" "}
                 <PrivacyDialog>
-                  <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 underline underline-offset-2 font-medium transition-colors">
+                  <button 
+                    className="underline underline-offset-2 transition-colors"
+                    style={{ color: theme.accent }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = theme.accentHover}
+                    onMouseLeave={(e) => e.currentTarget.style.color = theme.accent}
+                  >
                     Privacy Policy
                   </button>
                 </PrivacyDialog>

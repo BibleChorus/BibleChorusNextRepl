@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Italiana and Manrope fonts for journeys aesthetic */
+@import url('https://fonts.googleapis.com/css2?family=Italiana&family=Manrope:wght@200;300;400;500;600;700;800&display=swap');
+
 /* You can add any additional global styles here */
 
 html,
@@ -61,9 +64,9 @@ a {
     --chart-2: 215 20% 65%;
  
     /* Update these variables for the chart colors */
-    --chart-purple: 158 64% 52%; /* Emerald color to match theme */
+    --chart-purple: 47 60% 47%; /* Gold color to match theme */
     --chart-gray: 215 20% 65%;
-    --chart-uncovered: 210 40% 96%; /* Light gray for light mode */
+    --chart-uncovered: 47 10% 90%; /* Light gold-gray for light mode */
   }
  
   .dark {
@@ -100,9 +103,9 @@ a {
     --chart-2: 215 16% 47%;
  
     /* Update these variables for the chart colors in dark mode */
-    --chart-purple: 158 64% 52%; /* Emerald color to match theme */
+    --chart-purple: 45 64% 52%; /* Gold color to match theme */
     --chart-gray: 215 16% 47%;
-    --chart-uncovered: 217.2 32.6% 17.5%; /* Dark gray for dark mode */
+    --chart-uncovered: 45 10% 15%; /* Dark gold-gray for dark mode */
   }
 }
 

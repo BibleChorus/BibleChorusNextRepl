@@ -21,6 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { useTheme } from 'next-themes';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 import 'react-quill/dist/quill.snow.css';
@@ -32,11 +33,28 @@ interface NewTopicDialogProps {
 
 export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, children }) => {
   const { user } = useAuth();
+  const { resolvedTheme } = useTheme();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+    separator: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.2)',
+    accentGlow: isDark ? 'rgba(212, 175, 55, 0.12)' : 'rgba(191, 161, 48, 0.1)',
+  };
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -78,38 +96,148 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, 
       <DialogTrigger asChild>
         {children || <Button>Create New Topic</Button>}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent 
+        className="sm:max-w-[500px] rounded-2xl"
+        style={{ 
+          backgroundColor: theme.bgCard,
+          border: `1px solid ${theme.border}`
+        }}
+      >
         <DialogHeader>
-          <DialogTitle>Create a New Topic</DialogTitle>
-          <DialogDescription>
+          <DialogTitle 
+            className="text-2xl"
+            style={{ color: theme.text, fontFamily: "'Italiana', serif" }}
+          >
+            Create a New Topic
+          </DialogTitle>
+          <DialogDescription 
+            style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+          >
             Fill in the details for your new forum topic.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 mt-4">
+        <div className="space-y-5 mt-4">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium mb-1">Title</label>
+            <label 
+              htmlFor="title" 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
+            >
+              Title
+            </label>
             <Input
               id="title"
               placeholder="Topic Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              className="h-11 rounded-lg transition-all duration-300"
+              style={{ 
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                borderColor: theme.border,
+                color: theme.text,
+                fontFamily: "'Manrope', sans-serif"
+              }}
             />
           </div>
           <div>
-            <label htmlFor="content" className="block text-sm font-medium mb-1">Description</label>
-            <div className="border rounded-md">
+            <label 
+              htmlFor="content" 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
+            >
+              Description
+            </label>
+            <div 
+              className="rounded-lg overflow-hidden"
+              style={{ border: `1px solid ${theme.border}` }}
+            >
+              <style jsx global>{`
+                .ql-toolbar.ql-snow {
+                  border: none !important;
+                  border-bottom: 1px solid ${theme.border} !important;
+                  background: ${isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)'};
+                }
+                .ql-container.ql-snow {
+                  border: none !important;
+                  background: ${isDark ? 'rgba(255, 255, 255, 0.02)' : 'transparent'};
+                }
+                .ql-editor {
+                  color: ${theme.text} !important;
+                  font-family: 'Manrope', sans-serif !important;
+                  min-height: 120px;
+                }
+                .ql-editor.ql-blank::before {
+                  color: ${theme.textSecondary} !important;
+                  font-style: normal !important;
+                }
+                .ql-snow .ql-stroke {
+                  stroke: ${theme.textSecondary} !important;
+                }
+                .ql-snow .ql-fill {
+                  fill: ${theme.textSecondary} !important;
+                }
+                .ql-snow .ql-picker {
+                  color: ${theme.textSecondary} !important;
+                }
+                .ql-snow .ql-picker-options {
+                  background: ${theme.bgCard} !important;
+                  border-color: ${theme.border} !important;
+                }
+                .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-label {
+                  border-color: ${theme.accent} !important;
+                }
+                .ql-snow.ql-toolbar button:hover,
+                .ql-snow .ql-toolbar button:hover {
+                  color: ${theme.accent} !important;
+                }
+                .ql-snow.ql-toolbar button:hover .ql-stroke,
+                .ql-snow .ql-toolbar button:hover .ql-stroke {
+                  stroke: ${theme.accent} !important;
+                }
+                .ql-snow.ql-toolbar button:hover .ql-fill,
+                .ql-snow .ql-toolbar button:hover .ql-fill {
+                  fill: ${theme.accent} !important;
+                }
+                .ql-snow.ql-toolbar button.ql-active,
+                .ql-snow .ql-toolbar button.ql-active {
+                  color: ${theme.accent} !important;
+                }
+                .ql-snow.ql-toolbar button.ql-active .ql-stroke,
+                .ql-snow .ql-toolbar button.ql-active .ql-stroke {
+                  stroke: ${theme.accent} !important;
+                }
+                .ql-snow.ql-toolbar button.ql-active .ql-fill,
+                .ql-snow .ql-toolbar button.ql-active .ql-fill {
+                  fill: ${theme.accent} !important;
+                }
+              `}</style>
               <ReactQuill
                 id="content"
                 value={content}
                 onChange={setContent}
-                className="[&_.ql-editor]:min-h-[100px]"
+                placeholder="Write your topic description..."
               />
             </div>
           </div>
           <div>
-            <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
+            <label 
+              htmlFor="category" 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
+            >
+              Category
+            </label>
             <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger id="category">
+              <SelectTrigger 
+                id="category"
+                className="h-11 rounded-lg transition-all duration-300"
+                style={{ 
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                  borderColor: theme.border,
+                  color: theme.text,
+                  fontFamily: "'Manrope', sans-serif"
+                }}
+              >
                 <SelectValue placeholder="Select Category" />
               </SelectTrigger>
               <SelectContent>
@@ -125,7 +253,24 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, 
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleCreateTopic} disabled={!title || !content || !categoryId}>
+          <Button 
+            onClick={handleCreateTopic} 
+            disabled={!title || !content || !categoryId}
+            className="w-full h-11 rounded-lg font-medium transition-all duration-300 disabled:opacity-50"
+            style={{ 
+              backgroundColor: theme.accent,
+              color: '#ffffff',
+              fontFamily: "'Manrope', sans-serif"
+            }}
+            onMouseEnter={(e) => {
+              if (!e.currentTarget.disabled) {
+                e.currentTarget.style.backgroundColor = theme.accentHover;
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = theme.accent;
+            }}
+          >
             Create Topic
           </Button>
         </div>

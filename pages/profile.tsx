@@ -3,15 +3,16 @@ import Image from 'next/image'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTheme } from 'next-themes'
 import axios from 'axios'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
-import { CommentList } from '@/components/SongComments/CommentList' // Adjust the import path as needed
+import { CommentList } from '@/components/SongComments/CommentList'
 import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper'
-import { Pencil, User } from 'lucide-react'
+import { Pencil, User, ArrowLeft } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { Music, MessageCircle, Upload, ArrowRight, Heart, ThumbsUp } from 'lucide-react';
@@ -59,7 +60,6 @@ interface SongComment {
   created_at: string;
 }
 
-// Update the Activity interface to include all metadata fields
 interface Activity {
   id: string;
   type: 'song_comment' | 'forum_comment' | 'song_upload' | 'song_like' | 'song_vote';
@@ -90,17 +90,14 @@ const getImageUrl = (path: string | null | undefined): string => {
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
   return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
 };
-const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024;
 
-// Add this constant near the top of the file
-const DEFAULT_PROFILE_IMAGE = '/biblechorus-icon.png'; // Make sure this file exists in your public directory
+const DEFAULT_PROFILE_IMAGE = '/biblechorus-icon.png';
 
-// Add this function to safely render HTML content
 const createMarkup = (content: string) => {
   return { __html: DOMPurify.sanitize(content) };
 };
 
-// Add a helper function to format the date and time
 const formatDateTime = (dateString: string) => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('en-US', {
@@ -113,16 +110,83 @@ const formatDateTime = (dateString: string) => {
   }).format(date);
 };
 
+const FilmGrainOverlay: React.FC = () => {
+  return (
+    <div 
+      className="fixed inset-0 pointer-events-none opacity-[0.015]"
+      style={{
+        zIndex: 1,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+      }}
+    />
+  );
+};
+
+interface AmbientOrbsOverlayProps {
+  isDark: boolean;
+}
+
+const AmbientOrbsOverlay: React.FC<AmbientOrbsOverlayProps> = ({ isDark }) => {
+  const orbColors = {
+    primary: isDark ? 'rgba(212, 175, 55, 0.06)' : 'rgba(191, 161, 48, 0.05)',
+    secondary: isDark ? 'rgba(160, 160, 160, 0.04)' : 'rgba(100, 100, 100, 0.03)',
+    tertiary: isDark ? 'rgba(229, 229, 229, 0.02)' : 'rgba(50, 50, 50, 0.02)',
+  };
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+      <motion.div 
+        className="absolute top-0 left-0 w-96 h-96 rounded-full"
+        style={{
+          background: orbColors.primary,
+          filter: 'blur(120px)'
+        }}
+        animate={{
+          y: [0, -30, 0],
+          x: [0, 20, 0],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div 
+        className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full"
+        style={{
+          background: orbColors.secondary,
+          filter: 'blur(120px)'
+        }}
+        animate={{
+          y: [0, 30, 0],
+          x: [0, -20, 0],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+      />
+      <motion.div 
+        className="absolute top-1/2 right-1/4 w-72 h-72 rounded-full"
+        style={{
+          background: orbColors.tertiary,
+          filter: 'blur(100px)'
+        }}
+        animate={{
+          y: [0, 20, 0],
+          x: [0, -15, 0],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
+      />
+    </div>
+  );
+};
+
 export default function Profile() {
   const { user: currentUser, login, getAuthToken } = useAuth();
+  const { resolvedTheme } = useTheme();
   const router = useRouter();
-  const { id: profileUserId } = router.query; // Get the user ID from the URL query
+  const { id: profileUserId } = router.query;
   const [profileUser, setProfileUser] = useState<any>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [forumComments, setForumComments] = useState<ForumComment[]>([]);
   const [songComments, setSongComments] = useState<SongComment[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [mounted, setMounted] = useState(false);
 
   const [isEditProfileImageDialogOpen, setIsEditProfileImageDialogOpen] = useState(false)
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
@@ -138,7 +202,30 @@ export default function Profile() {
   const [error, setError] = useState<string | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
-  // Move all fetch functions before the useEffects that use them
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgAlt: isDark ? '#0a0a0a' : '#f0ede6',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    borderLight: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+    borderHover: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+    cardBorder: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    accentBorder: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    accentBg: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
+  };
+
   const fetchUserSongs = useCallback(async () => {
     if (!profileUser) return;
     try {
@@ -215,7 +302,6 @@ export default function Profile() {
     }
   }, [profileUser, currentUser, currentPage, ITEMS_PER_PAGE, fetchUnreadActivitiesCount, getAuthToken, router]);
 
-  // Now add the useEffects that use these functions
   const handleUnauthorizedAccess = useCallback(() => {
     setIsLoading(false);
     setShowLoginPrompt(true);
@@ -241,7 +327,6 @@ export default function Profile() {
     }
   }, [profileUserId, currentUser, handleUnauthorizedAccess]);
 
-  // Authentication check useEffect
   useEffect(() => {
     const checkAuth = async () => {
       if (!currentUser && !profileUserId) {
@@ -255,7 +340,6 @@ export default function Profile() {
     checkAuth();
   }, [currentUser, profileUserId, fetchProfileUser, handleUnauthorizedAccess]);
 
-  // Data fetching useEffect
   useEffect(() => {
     const fetchData = async () => {
       if (!profileUser) return;
@@ -282,12 +366,10 @@ export default function Profile() {
     fetchData();
   }, [profileUser, currentUser, fetchUserSongs, fetchUserPlaylists, fetchUserActivities, getAuthToken, profileUserId, handleUnauthorizedAccess]);
 
-  // Calculate total pages
   const totalPages = Math.ceil(totalActivities / ITEMS_PER_PAGE);
 
-  // Fix the type issue with page numbers array
   const getPageNumbers = () => {
-    const pages: (number | 'ellipsis')[] = []; // Add explicit type
+    const pages: (number | 'ellipsis')[] = [];
     for (let i = 1; i <= totalPages; i++) {
       if (
         i === 1 ||
@@ -302,13 +384,12 @@ export default function Profile() {
     return pages;
   };
 
-  // Add helper function to check if current user is viewing their own profile
   const isOwnProfile = currentUser && profileUser && currentUser.id === profileUser.id;
 
   useEffect(() => {
     const updateCropperMaxHeight = () => {
       const viewportHeight = window.innerHeight
-      setCropperMaxHeight(Math.floor(viewportHeight * 0.8)) // Set max height to 80% of viewport height
+      setCropperMaxHeight(Math.floor(viewportHeight * 0.8))
     }
 
     updateCropperMaxHeight()
@@ -364,7 +445,6 @@ export default function Profile() {
     }
 
     try {
-      // First, delete the old profile image if it exists
       if (profileUser.profile_image_url) {
         const fileKey = profileUser.profile_image_url.replace(CDN_URL, '').replace(/^\/+/, '');
         await axios.post('/api/delete-file', { fileKey });
@@ -376,7 +456,6 @@ export default function Profile() {
       const userId = profileUser.id;
       const fileSize = croppedImageBlob.size.toString();
 
-      // Get signed URL for uploading new profile image
       const uploadUrlResponse = await axios.post('/api/upload-url', {
         fileType,
         fileExtension,
@@ -391,22 +470,18 @@ export default function Profile() {
 
       const { signedUrl, fileKey } = uploadUrlResponse.data;
 
-      // Upload the image to S3 using the signed URL
       await axios.put(signedUrl, croppedImageBlob, {
         headers: {
           'Content-Type': fileType,
         },
       });
 
-      // Update the user with the new profile image URL
       const updateResponse = await axios.put(`/api/users/${profileUser.id}/update-profile-image`, {
         profileImageUrl: fileKey,
       });
 
       if (updateResponse.status === 200) {
-        // Update the user context with the new profile image URL
         const updatedUser = { ...profileUser, profile_image_url: updateResponse.data.updatedUrl };
-        // Get the current auth token
         const currentToken = await getAuthToken();
         if (currentToken) {
           login(updatedUser, currentToken);
@@ -431,21 +506,18 @@ export default function Profile() {
     setPendingImageFile(null);
   };
 
-  // Add handleActivityClick inside the component
   const handleActivityClick = async (activityId: string) => {
     try {
       await axios.post(`/api/users/activities/${activityId}/mark-as-read`);
-      // Now fetchUserActivities is in scope
       fetchUserActivities();
     } catch (error) {
       console.error('Error marking activity as read:', error);
     }
   };
 
-  // Add this early return for the login prompt
   if (showLoginPrompt) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen" style={{ backgroundColor: theme.bg }}>
         <LoginPromptDialog
           isOpen={showLoginPrompt}
           onClose={() => setShowLoginPrompt(false)}
@@ -456,32 +528,54 @@ export default function Profile() {
     );
   }
 
-  // Keep the loading state check
+  if (!mounted) {
+    return (
+      <div 
+        className="min-h-screen opacity-0" 
+        style={{ fontFamily: "'Manrope', sans-serif" }} 
+      />
+    );
+  }
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <main className="container mx-auto px-4 py-8">
-          <div className="animate-pulse">
-            <div className="h-64 sm:h-80 w-full mb-8 bg-gray-200 dark:bg-gray-700" />
-            <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
-              <div className="lg:col-span-2 h-48 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-              <div className="lg:col-span-4 h-48 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-              <div className="lg:col-span-6 h-48 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-            </div>
-          </div>
-        </main>
+      <div className="min-h-screen" style={{ backgroundColor: theme.bg }}>
+        <div className="flex justify-center items-center min-h-screen">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 rounded-full"
+            style={{ 
+              border: `1px solid ${theme.border}`,
+              borderTopColor: theme.accent
+            }}
+          />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: theme.bg }}>
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-destructive">{error}</h2>
-          <Button onClick={() => window.location.reload()}>
+          <h2 
+            className="text-2xl"
+            style={{ fontFamily: "'Italiana', serif", color: theme.accent }}
+          >
+            {error}
+          </h2>
+          <button
+            onClick={() => window.location.reload()}
+            className="h-10 px-6 text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
+            style={{
+              backgroundColor: theme.accent,
+              color: isDark ? '#050505' : '#ffffff',
+              fontFamily: "'Manrope', sans-serif"
+            }}
+          >
             Try Again
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -504,340 +598,533 @@ export default function Profile() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50/40 via-white to-purple-50/24 dark:from-blue-950/40 dark:via-slate-900 dark:to-purple-950/24">
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative overflow-hidden pb-20 pt-12"
-        >
-          {/* Enhanced Background Effects */}
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/[0.08] via-purple-400/[0.06] to-indigo-400/[0.08] dark:from-blue-400/[0.13] dark:via-purple-400/[0.1] dark:to-indigo-400/[0.13]"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(99,102,241,0.1),rgba(255,255,255,0))]"></div>
-          </div>
-          
-          <div className="relative z-10 container mx-auto px-4">
-            <div className="text-center mb-12">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.1 }}
-                className="mb-6"
-              >
-                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-400/12 via-purple-400/12 to-indigo-400/12 dark:from-blue-400/16 dark:via-purple-400/16 dark:to-indigo-400/16 backdrop-blur-md border border-blue-400/14 dark:border-blue-400/18 shadow-lg">
-                  <User className="w-4 h-4 text-blue-500 dark:text-blue-300" />
-                  <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 dark:from-blue-300 dark:via-purple-300 dark:to-indigo-300 bg-clip-text text-transparent font-semibold">
+      <div 
+        className="min-h-screen relative"
+        style={{ 
+          backgroundColor: theme.bg,
+          color: theme.text,
+          fontFamily: "'Manrope', sans-serif"
+        }}
+      >
+        <style jsx global>{`
+          html, body {
+            background-color: ${theme.bg} !important;
+          }
+        `}</style>
+
+        <AmbientOrbsOverlay isDark={isDark} />
+        <FilmGrainOverlay />
+
+        <div className="relative" style={{ zIndex: 2 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative overflow-hidden pb-16 pt-24"
+          >
+            <div className="container mx-auto px-6 md:px-12">
+              <div className="flex justify-start mb-12">
+                <motion.button
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  onClick={() => router.back()}
+                  className="flex items-center gap-2 h-10 px-6 text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
+                  style={{
+                    border: `1px solid ${theme.border}`,
+                    color: theme.text,
+                    backgroundColor: 'transparent',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = theme.accentBorder;
+                    e.currentTarget.style.backgroundColor = theme.hoverBg;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = theme.border;
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </motion.button>
+              </div>
+
+              <div className="text-center max-w-4xl mx-auto">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.1 }}
+                  className="mb-8"
+                >
+                  <span 
+                    className="text-xs tracking-[0.5em] uppercase"
+                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.accent }}
+                  >
                     {isOwnProfile ? 'Your Profile' : 'User Profile'}
                   </span>
-                </span>
-              </motion.div>
-              
-              <motion.h1 
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-6xl font-bold tracking-tight sm:text-7xl md:text-8xl"
-              >
-                <span className="block text-slate-900 dark:text-white mb-2">{profileUser.username}</span>
-                <span className="block relative">
-                  <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                </motion.div>
+                
+                <motion.h1 
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="mb-8"
+                >
+                  <span 
+                    className="block text-6xl md:text-7xl lg:text-8xl tracking-tight mb-2"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                  >
+                    {profileUser.username}
+                  </span>
+                  <span 
+                    className="block text-4xl md:text-5xl lg:text-6xl italic font-light"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.text, opacity: 0.9 }}
+                  >
                     Profile
                   </span>
-                  <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 rounded-full scale-x-0 animate-scale-x"></div>
-                </span>
-              </motion.h1>
-              
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="mt-8 text-xl text-slate-600 dark:text-slate-300 sm:text-2xl max-w-3xl mx-auto leading-relaxed"
-              >
-                {isOwnProfile ? 
-                  'Manage your contributions and track your musical journey' :
-                  `Explore ${profileUser.username}'s musical contributions and activities`
-                }
-              </motion.p>
-            </div>
+                </motion.h1>
+                
+                <motion.p 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                  className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-light mb-12"
+                  style={{ color: theme.textSecondary }}
+                >
+                  {isOwnProfile ? 
+                    'Manage your contributions and track your musical journey' :
+                    `Explore ${profileUser.username}'s musical contributions and activities`
+                  }
+                </motion.p>
 
-            {/* Profile Image Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="flex justify-center"
-            >
-                <div className="relative group">
-                  <div className="w-48 h-48 rounded-full overflow-hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-4 border-white/12 dark:border-slate-700/40 shadow-2xl group-hover:shadow-3xl transition-all duration-500">
-                  <Image
-                    src={profileUser?.profile_image_url ? getImageUrl(profileUser.profile_image_url) : DEFAULT_PROFILE_IMAGE}
-                    alt={`${profileUser?.username} profile`}
-                    width={192}
-                    height={192}
-                    className="w-full h-full object-cover"
-                    priority
-                  />
-                </div>
-                  <div className="absolute inset-0 bg-slate-900/16 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
-                {isOwnProfile && (
-                    <button
-                      onClick={handleEditProfileImageClick}
-                      className="absolute bottom-2 right-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-lg"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                )}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="flex justify-center"
+                >
+                  <div className="relative group">
+                    <div 
+                      className="w-40 h-40 md:w-48 md:h-48 overflow-hidden transition-all duration-500"
+                      style={{ 
+                        border: `1px solid ${theme.border}`,
+                      }}
+                    >
+                      <Image
+                        src={profileUser?.profile_image_url ? getImageUrl(profileUser.profile_image_url) : DEFAULT_PROFILE_IMAGE}
+                        alt={`${profileUser?.username} profile`}
+                        width={192}
+                        height={192}
+                        className="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-500"
+                        priority
+                      />
+                    </div>
+                    {isOwnProfile && (
+                      <button
+                        onClick={handleEditProfileImageClick}
+                        className="absolute bottom-2 right-2 p-3 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.accent,
+                          color: isDark ? '#050505' : '#ffffff',
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="flex items-center justify-center gap-8 mt-8"
+                  style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.5 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <motion.span 
+                      className="text-sm" 
+                      style={{ color: theme.accent }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.7, type: "spring", stiffness: 300, damping: 20 }}
+                    >
+                      {songs.length}
+                    </motion.span>
+                    <span className="text-xs tracking-[0.2em] uppercase">Songs</span>
+                  </div>
+                  <div className="w-px h-4" style={{ backgroundColor: `${theme.textSecondary}4d` }} />
+                  <div className="flex items-center gap-2">
+                    <motion.span 
+                      className="text-sm" 
+                      style={{ color: theme.accent }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.8, type: "spring", stiffness: 300, damping: 20 }}
+                    >
+                      {playlists.length}
+                    </motion.span>
+                    <span className="text-xs tracking-[0.2em] uppercase">Playlists</span>
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
-            
-          </div>
-        </motion.div>
+            </div>
+          </motion.div>
 
-        {/* Main Content */}
-        <div className="container mx-auto px-4 -mt-12 relative z-20">
+          <div className="container mx-auto px-6 md:px-12 pb-32">
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
-              className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-3xl shadow-2xl p-8 md:p-10"
             >
-            {/* Main content */}
-            <Button variant="outline" onClick={() => router.back()} className="mb-6 hover:scale-105 transition-all duration-300">
-              Back
-            </Button>
-
-            <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
-              {/* Enhanced User Details Card */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="lg:col-span-2"
-              >
-                <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        Profile Details
-                      </CardTitle>
-                      <div className="p-2 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl backdrop-blur-sm border border-blue-500/20 dark:border-blue-500/30">
-                        <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
+              <div className="grid grid-cols-1 lg:grid-cols-6 gap-px" style={{ backgroundColor: theme.border }}>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  className="lg:col-span-2 p-6 md:p-8"
+                  style={{ backgroundColor: theme.bgCard }}
+                >
+                  <div className="flex items-center gap-3 mb-6">
+                    <div 
+                      className="w-10 h-10 flex items-center justify-center"
+                      style={{ border: `1px solid ${theme.border}` }}
+                    >
+                      <User className="w-5 h-5" style={{ color: theme.accent }} />
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-xl border border-blue-200/30 dark:border-blue-800/30">
-                      <p className="text-slate-700 dark:text-slate-300">
-                        <strong className="text-blue-600 dark:text-blue-400">Username:</strong> {profileUser.username}
+                    <h3 
+                      className="text-lg tracking-wide"
+                      style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                    >
+                      Profile Details
+                    </h3>
+                  </div>
+                  <div 
+                    className="p-4 space-y-3"
+                    style={{ 
+                      border: `1px solid ${theme.border}`,
+                      backgroundColor: theme.hoverBg
+                    }}
+                  >
+                    <p style={{ color: theme.textSecondary }}>
+                      <span style={{ color: theme.accent }} className="text-xs tracking-[0.15em] uppercase">Username</span>
+                      <br />
+                      <span style={{ color: theme.text }}>{profileUser.username}</span>
+                    </p>
+                    {isOwnProfile && (
+                      <p style={{ color: theme.textSecondary }}>
+                        <span style={{ color: theme.accent }} className="text-xs tracking-[0.15em] uppercase">Email</span>
+                        <br />
+                        <span style={{ color: theme.text }}>{profileUser.email}</span>
                       </p>
-                      {isOwnProfile && (
-                        <p className="text-slate-700 dark:text-slate-300 mt-2">
-                          <strong className="text-purple-600 dark:text-purple-400">Email:</strong> {profileUser.email}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                    )}
+                  </div>
+                </motion.div>
 
-              {/* Enhanced Playlists Card */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="lg:col-span-4"
-              >
-                <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                        Playlists
-                      </CardTitle>
-                      <div className="p-2 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-xl backdrop-blur-sm border border-purple-500/20 dark:border-purple-500/30">
-                        <Music className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                      </div>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="lg:col-span-4 p-6 md:p-8"
+                  style={{ backgroundColor: theme.bgCard }}
+                >
+                  <div className="flex items-center gap-3 mb-6">
+                    <div 
+                      className="w-10 h-10 flex items-center justify-center"
+                      style={{ border: `1px solid ${theme.border}` }}
+                    >
+                      <Music className="w-5 h-5" style={{ color: theme.accent }} />
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Accordion type="single" collapsible>
-                      <AccordionItem value="playlists" className="border-purple-200/30 dark:border-purple-800/30">
-                        <AccordionTrigger className="text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
-                          View Playlists ({playlists.length})
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                            {playlists.map((playlist) => (
-                              <Link
-                                href={`/playlists/${playlist.id}`}
-                                key={playlist.id}
+                    <h3 
+                      className="text-lg tracking-wide"
+                      style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                    >
+                      Playlists
+                    </h3>
+                  </div>
+                  
+                  <details className="group">
+                    <summary 
+                      className="flex items-center justify-between cursor-pointer p-3 transition-colors duration-300"
+                      style={{ 
+                        border: `1px solid ${theme.border}`,
+                        color: theme.text
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = theme.accentBorder;
+                        e.currentTarget.style.backgroundColor = theme.hoverBg;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = theme.border;
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <span className="text-sm" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                        View Playlists ({playlists.length})
+                      </span>
+                      <ArrowRight className="w-4 h-4 transition-transform group-open:rotate-90" style={{ color: theme.accent }} />
+                    </summary>
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-px" style={{ backgroundColor: theme.border }}>
+                      {playlists.map((playlist) => (
+                        <Link href={`/playlists/${playlist.id}`} key={playlist.id}>
+                          <div 
+                            className="group/item p-4 transition-all duration-300 cursor-pointer"
+                            style={{ backgroundColor: theme.bgCard }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = theme.hoverBg;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = theme.bgCard;
+                            }}
+                          >
+                            {playlist.cover_art_url && (
+                              <div 
+                                className="w-full h-32 mb-3 overflow-hidden"
+                                style={{ border: `1px solid ${theme.border}` }}
                               >
-                                <div className="group bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm p-4 rounded-xl border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer">
-                                  {playlist.cover_art_url && (
-                                    <Image
-                                      src={playlist.cover_art_url}
-                                      alt={playlist.name}
-                                      width={200}
-                                      height={200}
-                                      className="w-full h-32 object-cover rounded-lg mb-3 group-hover:scale-105 transition-transform duration-300"
-                                    />
-                                  )}
-                                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                                    {playlist.name}
-                                  </h3>
-                                  {playlist.description && (
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">{playlist.description}</p>
-                                  )}
-                                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 flex items-center">
-                                    <span className="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>
-                                    {new Date(playlist.created_at).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </Link>
-                            ))}
+                                <Image
+                                  src={playlist.cover_art_url}
+                                  alt={playlist.name}
+                                  width={200}
+                                  height={200}
+                                  className="w-full h-full object-cover grayscale opacity-80 group-hover/item:opacity-100 group-hover/item:grayscale-0 transition-all duration-500"
+                                />
+                              </div>
+                            )}
+                            <h4 
+                              className="text-base mb-1 transition-colors"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              {playlist.name}
+                            </h4>
+                            {playlist.description && (
+                              <p className="text-sm font-light line-clamp-2" style={{ color: theme.textSecondary }}>
+                                {playlist.description}
+                              </p>
+                            )}
+                            <p className="text-xs mt-2 flex items-center gap-2" style={{ color: theme.textMuted }}>
+                              <span className="w-1 h-1 rounded-full" style={{ backgroundColor: theme.accent }}></span>
+                              {new Date(playlist.created_at).toLocaleDateString()}
+                            </p>
                           </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Enhanced Uploaded Songs Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="lg:col-span-6"
-              >
-                <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-                        Uploaded Songs
-                      </CardTitle>
-                      <div className="p-2 bg-gradient-to-br from-indigo-500/10 to-blue-500/10 rounded-xl backdrop-blur-sm border border-indigo-500/20 dark:border-indigo-500/30">
-                        <Upload className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                      </div>
+                        </Link>
+                      ))}
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Accordion type="single" collapsible>
-                      <AccordionItem value="songs" className="border-indigo-200/30 dark:border-indigo-800/30">
-                        <AccordionTrigger className="text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                          View Songs ({songs.length})
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {songs.map((song) => (
-                              <Link href={`/Songs/${song.id}`} key={song.id}>
-                                <div className="group bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm p-4 rounded-xl border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer">
-                                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
-                                    {song.title}
-                                  </h3>
-                                  <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">{song.artist}</p>
-                                  <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-100/60 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
-                                      {song.genre}
-                                    </span>
-                                  </p>
-                                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 flex items-center">
-                                    <span className="w-2 h-2 bg-indigo-400 rounded-full mr-2"></span>
-                                    {new Date(song.created_at).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </Link>
-                            ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  </details>
+                </motion.div>
 
-              {/* Enhanced Activity Card */}
-              {isOwnProfile && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="lg:col-span-6"
-                  id="activities"
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="lg:col-span-6 p-6 md:p-8"
+                  style={{ backgroundColor: theme.bgCard }}
                 >
-                  <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:shadow-xl">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-                          Recent Activity
-                        </CardTitle>
-                        <div className="flex items-center gap-3">
-                          {unreadActivitiesCount > 0 && (
-                            <span className="bg-gradient-to-r from-green-600 to-teal-600 text-white text-sm rounded-full px-3 py-1 shadow-lg">
-                              {unreadActivitiesCount} new
+                  <div className="flex items-center gap-3 mb-6">
+                    <div 
+                      className="w-10 h-10 flex items-center justify-center"
+                      style={{ border: `1px solid ${theme.border}` }}
+                    >
+                      <Upload className="w-5 h-5" style={{ color: theme.accent }} />
+                    </div>
+                    <h3 
+                      className="text-lg tracking-wide"
+                      style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                    >
+                      Uploaded Songs
+                    </h3>
+                  </div>
+                  
+                  <details className="group">
+                    <summary 
+                      className="flex items-center justify-between cursor-pointer p-3 transition-colors duration-300"
+                      style={{ 
+                        border: `1px solid ${theme.border}`,
+                        color: theme.text
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = theme.accentBorder;
+                        e.currentTarget.style.backgroundColor = theme.hoverBg;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = theme.border;
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <span className="text-sm" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                        View Songs ({songs.length})
+                      </span>
+                      <ArrowRight className="w-4 h-4 transition-transform group-open:rotate-90" style={{ color: theme.accent }} />
+                    </summary>
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px" style={{ backgroundColor: theme.border }}>
+                      {songs.map((song) => (
+                        <Link href={`/Songs/${song.id}`} key={song.id}>
+                          <div 
+                            className="group/item p-4 transition-all duration-300 cursor-pointer"
+                            style={{ backgroundColor: theme.bgCard }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = theme.hoverBg;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = theme.bgCard;
+                            }}
+                          >
+                            <h4 
+                              className="text-base mb-1 line-clamp-2 transition-colors"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              {song.title}
+                            </h4>
+                            <p className="text-sm font-light" style={{ color: theme.textSecondary }}>
+                              {song.artist}
+                            </p>
+                            <span 
+                              className="inline-block mt-2 px-2 py-1 text-[10px] tracking-[0.1em] uppercase"
+                              style={{ 
+                                border: `1px solid ${theme.accentBorder}`,
+                                color: theme.accent,
+                                backgroundColor: theme.accentBg
+                              }}
+                            >
+                              {song.genre}
                             </span>
-                          )}
-                          <div className="p-2 bg-gradient-to-br from-green-500/10 to-teal-500/10 rounded-xl backdrop-blur-sm border border-green-500/20 dark:border-green-500/30">
-                            <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                            <p className="text-xs mt-3 flex items-center gap-2" style={{ color: theme.textMuted }}>
+                              <span className="w-1 h-1 rounded-full" style={{ backgroundColor: theme.accent }}></span>
+                              {new Date(song.created_at).toLocaleDateString()}
+                            </p>
                           </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </details>
+                </motion.div>
+
+                {isOwnProfile && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                    className="lg:col-span-6 p-6 md:p-8"
+                    id="activities"
+                    style={{ backgroundColor: theme.bgCard }}
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-10 h-10 flex items-center justify-center"
+                          style={{ border: `1px solid ${theme.border}` }}
+                        >
+                          <MessageCircle className="w-5 h-5" style={{ color: theme.accent }} />
                         </div>
+                        <h3 
+                          className="text-lg tracking-wide"
+                          style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                        >
+                          Recent Activity
+                        </h3>
                       </div>
-                    </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="activities">
-                    <AccordionTrigger>View Activity</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-4">
+                      {unreadActivitiesCount > 0 && (
+                        <span 
+                          className="px-3 py-1 text-[10px] tracking-[0.1em] uppercase"
+                          style={{ 
+                            backgroundColor: theme.accent,
+                            color: isDark ? '#050505' : '#ffffff'
+                          }}
+                        >
+                          {unreadActivitiesCount} new
+                        </span>
+                      )}
+                    </div>
+                    
+                    <details className="group">
+                      <summary 
+                        className="flex items-center justify-between cursor-pointer p-3 transition-colors duration-300"
+                        style={{ 
+                          border: `1px solid ${theme.border}`,
+                          color: theme.text
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = theme.accentBorder;
+                          e.currentTarget.style.backgroundColor = theme.hoverBg;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = theme.border;
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <span className="text-sm" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                          View Activity
+                        </span>
+                        <ArrowRight className="w-4 h-4 transition-transform group-open:rotate-90" style={{ color: theme.accent }} />
+                      </summary>
+                      <div className="mt-4 space-y-2">
                         {activities.length === 0 ? (
-                          <p className="text-muted-foreground">No recent activity</p>
+                          <p 
+                            className="text-center py-8"
+                            style={{ color: theme.textSecondary }}
+                          >
+                            No recent activity
+                          </p>
                         ) : (
                           <>
                             {activities.map((activity) => (
                               <div
                                 key={activity.id}
-                                className={cn(
-                                  "bg-card p-3 md:p-4 rounded-lg border shadow-sm transition-all",
-                                  activity.is_new 
-                                    ? "bg-primary/5 border-primary ring-2 ring-primary/20" 
-                                    : "hover:border-primary/30",
-                                  "relative"
-                                )}
+                                className="relative p-4 transition-all duration-300"
+                                style={{ 
+                                  border: activity.is_new 
+                                    ? `1px solid ${theme.accentBorder}` 
+                                    : `1px solid ${theme.border}`,
+                                  backgroundColor: activity.is_new ? theme.accentBg : 'transparent'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!activity.is_new) {
+                                    e.currentTarget.style.backgroundColor = theme.hoverBg;
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!activity.is_new) {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                  }
+                                }}
                               >
                                 {activity.is_new && (
-                                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full px-2 py-1">
+                                  <span 
+                                    className="absolute -top-2 -right-2 px-2 py-0.5 text-[9px] tracking-[0.1em] uppercase"
+                                    style={{ 
+                                      backgroundColor: theme.accent,
+                                      color: isDark ? '#050505' : '#ffffff'
+                                    }}
+                                  >
                                     New
                                   </span>
                                 )}
                                 <div className="space-y-2">
-                                  {/* Activity Header */}
-                                  <div className="flex items-center gap-2 md:gap-3">
-                                    {/* Icons */}
+                                  <div className="flex items-center gap-3">
                                     {activity.type === 'song_upload' && (
-                                      <Upload className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 text-blue-500" />
+                                      <Upload className="h-4 w-4 flex-shrink-0" style={{ color: theme.accent }} />
                                     )}
                                     {activity.type === 'song_comment' && (
-                                      <Music className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 text-purple-500" />
+                                      <Music className="h-4 w-4 flex-shrink-0" style={{ color: theme.accent }} />
                                     )}
                                     {activity.type === 'forum_comment' && (
-                                      <MessageCircle className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 text-green-500" />
+                                      <MessageCircle className="h-4 w-4 flex-shrink-0" style={{ color: theme.accent }} />
                                     )}
                                     {activity.type === 'song_like' && (
-                                      <Heart className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 text-red-500" />
+                                      <Heart className="h-4 w-4 flex-shrink-0" style={{ color: theme.accent }} />
                                     )}
                                     {activity.type === 'song_vote' && (
-                                      <ThumbsUp className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 text-yellow-500" />
+                                      <ThumbsUp className="h-4 w-4 flex-shrink-0" style={{ color: theme.accent }} />
                                     )}
                                     
-                                    {/* Activity Title */}
                                     <Link href={`/Songs/${activity.metadata.song_id}`} legacyBehavior>
                                       <a
                                         onClick={() => handleActivityClick(activity.id)}
-                                        className={cn(
-                                          "font-medium hover:underline flex-grow",
-                                          activity.is_new && "text-primary font-semibold"
-                                        )}
+                                        className="text-sm font-medium flex-grow transition-colors hover:underline"
+                                        style={{ 
+                                          color: activity.is_new ? theme.accent : theme.text,
+                                          fontFamily: "'Manrope', sans-serif"
+                                        }}
                                       >
                                         <span className="line-clamp-2">
                                           {activity.type === 'song_upload' && (
@@ -859,34 +1146,32 @@ export default function Profile() {
                                         </span>
                                       </a>
                                     </Link>
-                                    {activity.is_new && <ArrowRight className="h-4 w-4 flex-shrink-0" />}
+                                    {activity.is_new && <ArrowRight className="h-4 w-4 flex-shrink-0" style={{ color: theme.accent }} />}
                                   </div>
 
-                                  {/* Timestamp */}
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-xs" style={{ color: theme.textMuted }}>
                                     {formatDateTime(activity.created_at)}
                                   </p>
 
-                                  {/* Activity Content */}
                                   {(activity.type === 'song_comment' || activity.type === 'forum_comment') && (
                                     <div 
-                                      className="text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none break-words"
+                                      className="text-sm font-light"
+                                      style={{ color: theme.textSecondary }}
                                       dangerouslySetInnerHTML={createMarkup(activity.content)}
                                     />
                                   )}
 
-                                  {/* Additional Metadata */}
-                                  <div className="flex flex-wrap gap-2 text-sm">
+                                  <div className="flex flex-wrap gap-3 text-sm">
                                     {typeof activity.metadata.new_replies === 'number' && 
                                      activity.metadata.new_replies > 0 && (
-                                      <p className="text-primary font-medium">
+                                      <p style={{ color: theme.accent }}>
                                         {activity.metadata.new_replies} new {activity.metadata.new_replies === 1 ? 'reply' : 'replies'}
                                       </p>
                                     )}
                                     {typeof activity.metadata.comment_likes === 'number' && 
                                      activity.metadata.comment_likes > 0 && (
-                                      <p className="text-muted-foreground flex items-center gap-1">
-                                        <span className="text-red-500">♥</span>
+                                      <p className="flex items-center gap-1" style={{ color: theme.textSecondary }}>
+                                        <Heart className="w-3 h-3" style={{ color: theme.accent }} />
                                         {activity.metadata.comment_likes} {activity.metadata.comment_likes === 1 ? 'like' : 'likes'}
                                       </p>
                                     )}
@@ -895,109 +1180,162 @@ export default function Profile() {
                               </div>
                             ))}
                             
-                            {/* Pagination */}
                             {totalPages > 1 && (
-                              <Pagination className="mt-4">
-                                <PaginationContent>
-                                  <PaginationItem>
-                                    <PaginationPrevious
-                                      href="#"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        if (currentPage > 1) setCurrentPage(currentPage - 1);
-                                      }}
-                                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-                                    />
-                                  </PaginationItem>
-                                  
-                                  {getPageNumbers().map((page, index) => (
-                                    <PaginationItem key={index}>
-                                      {page === 'ellipsis' ? (
-                                        <PaginationEllipsis />
-                                      ) : (
-                                        <PaginationLink
-                                          href="#"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            setCurrentPage(page as number);
-                                          }}
-                                          isActive={currentPage === page}
-                                        >
-                                          {page}
-                                        </PaginationLink>
-                                      )}
-                                    </PaginationItem>
-                                  ))}
+                              <div className="flex items-center justify-center gap-2 mt-6 pt-4" style={{ borderTop: `1px solid ${theme.border}` }}>
+                                <button
+                                  onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+                                  disabled={currentPage === 1}
+                                  className="p-2 transition-colors disabled:opacity-50"
+                                  style={{ 
+                                    border: `1px solid ${theme.border}`,
+                                    color: theme.text
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (currentPage > 1) {
+                                      e.currentTarget.style.borderColor = theme.accentBorder;
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.borderColor = theme.border;
+                                  }}
+                                >
+                                  <ArrowLeft className="w-4 h-4" />
+                                </button>
+                                
+                                {getPageNumbers().map((page, index) => (
+                                  <React.Fragment key={index}>
+                                    {page === 'ellipsis' ? (
+                                      <span style={{ color: theme.textSecondary }}>...</span>
+                                    ) : (
+                                      <button
+                                        onClick={() => setCurrentPage(page as number)}
+                                        className="w-8 h-8 text-xs transition-colors"
+                                        style={{ 
+                                          border: `1px solid ${currentPage === page ? theme.accent : theme.border}`,
+                                          backgroundColor: currentPage === page ? theme.accent : 'transparent',
+                                          color: currentPage === page ? (isDark ? '#050505' : '#ffffff') : theme.text
+                                        }}
+                                      >
+                                        {page}
+                                      </button>
+                                    )}
+                                  </React.Fragment>
+                                ))}
 
-                                  <PaginationItem>
-                                    <PaginationNext
-                                      href="#"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-                                      }}
-                                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
-                                    />
-                                  </PaginationItem>
-                                </PaginationContent>
-                              </Pagination>
+                                <button
+                                  onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+                                  disabled={currentPage === totalPages}
+                                  className="p-2 transition-colors disabled:opacity-50"
+                                  style={{ 
+                                    border: `1px solid ${theme.border}`,
+                                    color: theme.text
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (currentPage < totalPages) {
+                                      e.currentTarget.style.borderColor = theme.accentBorder;
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.borderColor = theme.border;
+                                  }}
+                                >
+                                  <ArrowRight className="w-4 h-4" />
+                                </button>
+                              </div>
                             )}
                           </>
                         )}
                       </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                                    </Accordion>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-            </div>
-          </motion.div>
+                    </details>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Edit Profile Image Dialog */}
         {isOwnProfile && (
           <>
             <Dialog open={isEditProfileImageDialogOpen} onOpenChange={setIsEditProfileImageDialogOpen}>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent 
+                className="sm:max-w-[425px]"
+                style={{ 
+                  backgroundColor: theme.bgCard,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: 0
+                }}
+              >
                 <DialogHeader>
-                  <DialogTitle>Edit Profile Image</DialogTitle>
+                  <DialogTitle 
+                    style={{ 
+                      fontFamily: "'Italiana', serif",
+                      color: theme.text
+                    }}
+                  >
+                    Edit Profile Image
+                  </DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-col items-center">
-                  <Image
-                    src={profileUser?.profile_image_url ? getImageUrl(profileUser.profile_image_url) : DEFAULT_PROFILE_IMAGE}
-                    alt="Current Profile Image"
-                    width={200}
-                    height={200}
-                    className="rounded-full mb-4"
-                  />
-                  <Button onClick={handleReplaceClick}>Replace Image</Button>
+                  <div 
+                    className="w-[200px] h-[200px] mb-6 overflow-hidden"
+                    style={{ border: `1px solid ${theme.border}` }}
+                  >
+                    <Image
+                      src={profileUser?.profile_image_url ? getImageUrl(profileUser.profile_image_url) : DEFAULT_PROFILE_IMAGE}
+                      alt="Current Profile Image"
+                      width={200}
+                      height={200}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <button
+                    onClick={handleReplaceClick}
+                    className="h-10 px-6 text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
+                    style={{
+                      backgroundColor: theme.accent,
+                      color: isDark ? '#050505' : '#ffffff',
+                      fontFamily: "'Manrope', sans-serif"
+                    }}
+                  >
+                    Replace Image
+                  </button>
                   <input
                     type="file"
                     ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
                     onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
                   />
                 </div>
               </DialogContent>
             </Dialog>
-
+            
             <Dialog open={isImageCropperOpen} onOpenChange={setIsImageCropperOpen}>
-              <DialogContent className="sm:max-w-[600px] p-0">
-                <DialogHeader className="p-4">
-                  <DialogTitle>Crop Image</DialogTitle>
+              <DialogContent 
+                className="sm:max-w-2xl max-h-[90vh] overflow-auto"
+                style={{ 
+                  backgroundColor: theme.bgCard,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: 0
+                }}
+              >
+                <DialogHeader>
+                  <DialogTitle 
+                    style={{ 
+                      fontFamily: "'Italiana', serif",
+                      color: theme.text
+                    }}
+                  >
+                    Crop Image
+                  </DialogTitle>
                 </DialogHeader>
                 {cropImageUrl && (
                   <ImageCropper
                     imageUrl={cropImageUrl}
                     onCropComplete={handleCropComplete}
                     onCancel={handleCropCancel}
+                    aspectRatio={1}
                     maxHeight={cropperMaxHeight}
-                    originalFileName={pendingImageFile?.name}
-                    originalMimeType={pendingImageFile?.type}
-                    desiredFileName={pendingImageFile?.name}
                   />
                 )}
               </DialogContent>
@@ -1006,5 +1344,5 @@ export default function Profile() {
         )}
       </div>
     </>
-  )
+  );
 }

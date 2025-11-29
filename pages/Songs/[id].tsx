@@ -3,12 +3,13 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
+import { useTheme } from 'next-themes'
 import { Card, CardContent, CardHeader, CardFooter, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Play, Pause, Edit, Share2, Info, Trash2, Heart, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Pencil, BookOpenText , Sparkles } from 'lucide-react'
+import { Play, Pause, Edit, Share2, Info, Trash2, Heart, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Pencil, BookOpenText, Sparkles, ArrowLeft } from 'lucide-react'
 import db from '@/db'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -105,11 +106,96 @@ interface BibleVerse {
   text: string;
 }
 
+const FilmGrainOverlay: React.FC = () => {
+  return (
+    <div 
+      className="fixed inset-0 pointer-events-none opacity-[0.015]"
+      style={{
+        zIndex: 1,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+      }}
+    />
+  );
+};
+
+interface AmbientOrbsOverlayProps {
+  isDark: boolean;
+}
+
+const AmbientOrbsOverlay: React.FC<AmbientOrbsOverlayProps> = ({ isDark }) => {
+  const orbColors = {
+    primary: isDark ? 'rgba(212, 175, 55, 0.06)' : 'rgba(191, 161, 48, 0.05)',
+    secondary: isDark ? 'rgba(160, 160, 160, 0.04)' : 'rgba(100, 100, 100, 0.03)',
+    tertiary: isDark ? 'rgba(229, 229, 229, 0.02)' : 'rgba(50, 50, 50, 0.02)',
+  };
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+      <motion.div 
+        className="absolute top-0 left-0 w-96 h-96 rounded-full"
+        style={{
+          background: orbColors.primary,
+          filter: 'blur(120px)'
+        }}
+        animate={{
+          y: [0, -30, 0],
+          x: [0, 20, 0],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div 
+        className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full"
+        style={{
+          background: orbColors.secondary,
+          filter: 'blur(120px)'
+        }}
+        animate={{
+          y: [0, 30, 0],
+          x: [0, -20, 0],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+      />
+      <motion.div 
+        className="absolute top-1/2 right-1/4 w-72 h-72 rounded-full"
+        style={{
+          background: orbColors.tertiary,
+          filter: 'blur(100px)'
+        }}
+        animate={{
+          y: [0, 20, 0],
+          x: [0, -15, 0],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
+      />
+    </div>
+  );
+};
+
 export default function SongPage({ song: initialSong }: SongPageProps) {
   const [song, setSong] = useState(initialSong)
   const router = useRouter()
   const { user } = useAuth()
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer()
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  const isDark = resolvedTheme === 'dark'
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgAlt: isDark ? '#0a0a0a' : '#f0ede6',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    borderLight: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+    borderHover: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+    cardBorder: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+  }
   const [isDeleting, setIsDeleting] = useState(false)
   const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false)
   const [selectedVoteType, setSelectedVoteType] = useState<string>('')
@@ -483,6 +569,10 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       console.error('Error fetching comments count:', error);
     }
   }, [song.id]);
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1017,8 +1107,29 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
     }
   }, [song]);
 
+  if (!mounted) {
+    return (
+      <>
+        <Head>
+          <title>{`${song.title} by ${song.username} - BibleChorus`}</title>
+        </Head>
+        <div 
+          className="min-h-screen opacity-0" 
+          style={{ fontFamily: "'Manrope', sans-serif" }} 
+        />
+      </>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50/70 via-purple-50/60 to-pink-50/40 dark:from-indigo-950/40 dark:via-purple-950/50 dark:to-pink-950/30">
+    <div 
+      className="min-h-screen relative"
+      style={{ 
+        backgroundColor: theme.bg,
+        color: theme.text,
+        fontFamily: "'Manrope', sans-serif"
+      }}
+    >
       <Head>
         <title>{`${song.title} by ${song.username} - BibleChorus`}</title>
         <meta property="og:title" content={`${song.title} by ${song.username}`} />
@@ -1028,502 +1139,900 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
         <meta property="og:type" content="music.song" />
         <meta property="music:duration" content={`${song.duration}`} />
         <meta property="music:musician" content={song.username} />
-        {/* Add other Open Graph music tags as needed */}
       </Head>
 
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="relative overflow-hidden pb-20 pt-12"
-      >
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/60 via-purple-500/40 to-pink-500/60"></div>
-          <div className="absolute inset-0 bg-gradient-radial from-indigo-200/20 via-purple-100/10 to-transparent"></div>
-        </div>
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="mb-6"
-          >
-            <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-500/20 dark:via-purple-500/20 dark:to-pink-500/20 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 shadow-lg">
-              <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 dark:from-indigo-400 dark:via-violet-400 dark:to-purple-400 bg-clip-text text-transparent font-semibold">
-                Song Spotlight
-              </span>
-            </span>
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-5xl md:text-6xl font-bold tracking-tight"
-          >
-            <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
-                {song.title}
-              </span>
-              <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 rounded-full scale-x-0 animate-scale-x"></div>
-            </span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="mt-4 text-lg text-slate-600 dark:text-slate-300"
-          >
-            By {song.artist}
-          </motion.p>
-          {song.bible_verses && song.bible_verses.length > 0 && (
-            <div className="mt-4 flex items-center justify-center">
-              <p className="text-sm sm:text-base font-semibold text-white">
-                {formatBibleVerses(song.bible_verses)}
-              </p>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => setIsKJVTextOpen(true)}
-                      className="ml-2 text-white hover:text-primary-300 transition-colors"
-                    >
-                      <BookOpenText className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Click to view Bible verses</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          )}
-        </div>
-      </motion.div>
+      <style jsx global>{`
+        html, body {
+          background-color: ${theme.bg} !important;
+        }
+      `}</style>
 
-      <div className="container mx-auto px-4 -mt-12 relative z-20">
+      <AmbientOrbsOverlay isDark={isDark} />
+      <FilmGrainOverlay />
+
+      <div className="relative" style={{ zIndex: 2 }}>
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-6 md:p-10 space-y-6"
+          transition={{ duration: 0.8 }}
+          className="relative overflow-hidden pb-16 pt-12"
         >
-          <Button
-            variant="outline"
-            onClick={() => router.back()}
-            className="mb-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300"
-          >
-            Back
-          </Button>
+          <div className="container mx-auto px-6 md:px-12">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.back()}
+              className="mb-8 flex items-center gap-2 text-xs tracking-[0.2em] uppercase font-light transition-colors"
+              style={{ color: theme.textSecondary }}
+              onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+              onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </motion.button>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-12">
+            <div className="text-center max-w-4xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+                className="mb-6"
+              >
+                <span 
+                  className="inline-flex items-center gap-3 px-5 py-2 text-xs tracking-[0.3em] uppercase"
+                  style={{ 
+                    border: `1px solid ${theme.border}`,
+                    color: theme.accent,
+                    fontFamily: "'Manrope', sans-serif"
+                  }}
+                >
+                  <Sparkles className="w-4 h-4" style={{ color: theme.accent }} />
+                  Song Spotlight
+                </span>
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="mb-6"
+              >
+                <span 
+                  className="block text-4xl md:text-5xl lg:text-6xl tracking-tight"
+                  style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                >
+                  {song.title}
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="text-lg md:text-xl font-light"
+                style={{ color: theme.textSecondary }}
+              >
+                By {song.artist}
+              </motion.p>
+
+              {song.bible_verses && song.bible_verses.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="mt-6 flex items-center justify-center gap-3"
+                >
+                  <p 
+                    className="text-sm sm:text-base font-medium"
+                    style={{ color: theme.accent }}
+                  >
+                    {formatBibleVerses(song.bible_verses)}
+                  </p>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsKJVTextOpen(true)}
+                          className="transition-colors"
+                          style={{ color: theme.accent }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = theme.accentHover}
+                          onMouseLeave={(e) => e.currentTarget.style.color = theme.accent}
+                        >
+                          <BookOpenText className="h-5 w-5" />
+                        </motion.button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Click to view Bible verses</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="container mx-auto px-6 md:px-12 pb-24">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="p-6 md:p-10 space-y-8"
+            style={{ 
+              backgroundColor: theme.bgCard,
+              border: `1px solid ${theme.border}`
+            }}
+          >
+
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-12">
             {song.song_art_url && (
-              <div className="md:col-span-2 xl:col-span-4">
-                <div className="relative">
+              <motion.div 
+                className="md:col-span-2 xl:col-span-4"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6 }}
+              >
+                <div 
+                  className="relative group overflow-hidden"
+                  style={{ border: `1px solid ${theme.border}` }}
+                >
                   <Image
                     src={getImageUrl(song.song_art_url)}
                     alt={song.title}
                     width={400}
                     height={500}
-                    className="w-full h-auto object-contain rounded"
+                    className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
                   />
                   {isCreator && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-3 right-3 bg-white/80 text-slate-700 hover:bg-white hover:text-slate-900 shadow-lg"
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="absolute top-4 right-4 p-2 transition-all duration-300"
+                      style={{ 
+                        backgroundColor: `${theme.bgCard}cc`,
+                        border: `1px solid ${theme.border}`,
+                        color: theme.text
+                      }}
                       onClick={handleEditArtClick}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = theme.accent
+                        e.currentTarget.style.color = theme.accent
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = theme.border
+                        e.currentTarget.style.color = theme.text
+                      }}
                     >
                       <Pencil className="h-4 w-4" />
-                    </Button>
+                    </motion.button>
                   )}
                 </div>
-              </div>
+              </motion.div>
             )}
-            {/* Song Info Card */}
-            <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold mb-2 bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                    Song Details
-                  </CardTitle>
-                  {isCreator && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsEditDialogOpen(true)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {song.genres && song.genres.map((genre, index) => (
-                    <Badge key={`${song.id}-${genre}-${index}`} variant="secondary">
-                      {genre}
-                    </Badge>
-                  ))}
-                  <Badge variant="outline">{song.bible_translation_used}</Badge>
-                  <Badge variant="default" className="bg-primary text-primary-foreground">
-                    {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
-                  </Badge>
-                  <Badge variant="outline">
-                    {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
-                  </Badge>
-                  {song.ai_used_for_lyrics && <Badge variant="secondary">AI Lyrics</Badge>}
-                  {song.music_ai_generated && <Badge variant="secondary">AI Music</Badge>}
-                  {song.music_origin === 'ai_cover_of_human' && <Badge variant="secondary">AI Cover</Badge>}
-                  {song.is_journey_song && <Badge variant="default" className="bg-amber-500 text-white">Journey Song</Badge>}
-                </div>
-                <p><strong>Uploaded by:</strong> {song.username}</p>
-                <p><strong>Created at:</strong> {new Date(song.created_at).toLocaleString()}</p>
+
+            <div 
+              className="md:col-span-2 xl:col-span-4 p-6"
+              style={{ 
+                backgroundColor: theme.bgCard,
+                border: `1px solid ${theme.border}`
+              }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 
+                  className="text-xl tracking-wide"
+                  style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                >
+                  Song Details
+                </h2>
+                {isCreator && (
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsEditDialogOpen(true)}
+                    className="p-2 transition-colors"
+                    style={{ color: theme.textSecondary }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                    onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </motion.button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-6">
+                {song.genres && song.genres.map((genre, index) => (
+                  <span 
+                    key={`${song.id}-${genre}-${index}`}
+                    className="px-3 py-1 text-xs tracking-wider uppercase"
+                    style={{ 
+                      border: `1px solid ${theme.border}`,
+                      color: theme.textSecondary,
+                      fontFamily: "'Manrope', sans-serif"
+                    }}
+                  >
+                    {genre}
+                  </span>
+                ))}
+                <span 
+                  className="px-3 py-1 text-xs tracking-wider uppercase"
+                  style={{ 
+                    border: `1px solid ${theme.accent}40`,
+                    color: theme.accent,
+                    fontFamily: "'Manrope', sans-serif"
+                  }}
+                >
+                  {song.bible_translation_used}
+                </span>
+                <span 
+                  className="px-3 py-1 text-xs tracking-wider uppercase"
+                  style={{ 
+                    backgroundColor: `${theme.accent}20`,
+                    border: `1px solid ${theme.accent}40`,
+                    color: theme.accent,
+                    fontFamily: "'Manrope', sans-serif"
+                  }}
+                >
+                  {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
+                </span>
+                {song.ai_used_for_lyrics && (
+                  <span 
+                    className="px-3 py-1 text-xs tracking-wider uppercase"
+                    style={{ 
+                      border: `1px solid ${theme.border}`,
+                      color: theme.textSecondary,
+                      fontFamily: "'Manrope', sans-serif"
+                    }}
+                  >
+                    AI Lyrics
+                  </span>
+                )}
+                {song.music_ai_generated && (
+                  <span 
+                    className="px-3 py-1 text-xs tracking-wider uppercase"
+                    style={{ 
+                      border: `1px solid ${theme.border}`,
+                      color: theme.textSecondary,
+                      fontFamily: "'Manrope', sans-serif"
+                    }}
+                  >
+                    AI Music
+                  </span>
+                )}
                 {song.is_journey_song && (
-                  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg">
-                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">Journey Song Details</p>
-                    {song.journey_date && (
-                      <p className="text-sm"><strong>Originating Date:</strong> {(() => {
+                  <span 
+                    className="px-3 py-1 text-xs tracking-wider uppercase"
+                    style={{ 
+                      backgroundColor: `${theme.accent}30`,
+                      border: `1px solid ${theme.accent}`,
+                      color: theme.accent,
+                      fontFamily: "'Manrope', sans-serif"
+                    }}
+                  >
+                    Journey Song
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-3 mb-6" style={{ color: theme.textSecondary }}>
+                <p className="text-sm font-light">
+                  <span style={{ color: theme.textMuted }}>Uploaded by:</span>{' '}
+                  <span style={{ color: theme.text }}>{song.username}</span>
+                </p>
+                <p className="text-sm font-light">
+                  <span style={{ color: theme.textMuted }}>Created:</span>{' '}
+                  <span style={{ color: theme.text }}>{new Date(song.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                </p>
+              </div>
+
+              {song.is_journey_song && (
+                <div 
+                  className="p-4 mb-6"
+                  style={{ 
+                    backgroundColor: `${theme.accent}10`,
+                    border: `1px solid ${theme.accent}30`
+                  }}
+                >
+                  <p 
+                    className="text-sm font-medium mb-3"
+                    style={{ color: theme.accent }}
+                  >
+                    Journey Song Details
+                  </p>
+                  {song.journey_date && (
+                    <p className="text-sm font-light" style={{ color: theme.textSecondary }}>
+                      <span style={{ color: theme.textMuted }}>Originating Date:</span>{' '}
+                      <span style={{ color: theme.text }}>{(() => {
                         const dateStr = song.journey_date;
                         const datePart = dateStr.split('T')[0].split(' ')[0];
                         const [year, month, day] = datePart.split('-').map(Number);
                         return new Date(year, month - 1, day).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                      })()}</p>
-                    )}
-                    {song.journey_song_origin && (
-                      <p className="text-sm"><strong>Origin:</strong> {formatJourneySongOrigin(song.journey_song_origin)}</p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter className="flex flex-col space-y-2">
-                <Button
+                      })()}</span>
+                    </p>
+                  )}
+                  {song.journey_song_origin && (
+                    <p className="text-sm font-light mt-2" style={{ color: theme.textSecondary }}>
+                      <span style={{ color: theme.textMuted }}>Origin:</span>{' '}
+                      <span style={{ color: theme.text }}>{formatJourneySongOrigin(song.journey_song_origin)}</span>
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handlePlayClick}
-                  className="w-full"
+                  className="w-full py-3 px-6 flex items-center justify-center gap-2 text-sm tracking-[0.15em] uppercase font-medium transition-all duration-300"
+                  style={{ 
+                    backgroundColor: theme.accent,
+                    color: isDark ? '#050505' : '#ffffff'
+                  }}
                 >
                   {currentSong?.id === song.id && isPlaying ? (
                     <>
-                      <Pause className="mr-2" />
+                      <Pause className="w-4 h-4" />
                       Pause
                     </>
                   ) : (
                     <>
-                      <Play className="mr-2" />
+                      <Play className="w-4 h-4" />
                       Play
                     </>
                   )}
-                </Button>
-                <div className="flex w-full space-x-2">
-                  <Button variant="outline" className="flex-1" onClick={handleShare}>
-                    <Share2 className="mr-2" />Share
-                  </Button>
+                </motion.button>
+
+                <div className="flex gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleShare}
+                    className="flex-1 py-3 px-4 flex items-center justify-center gap-2 text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
+                    style={{ 
+                      border: `1px solid ${theme.border}`,
+                      color: theme.text,
+                      backgroundColor: 'transparent'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = theme.accent
+                      e.currentTarget.style.color = theme.accent
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = theme.border
+                      e.currentTarget.style.color = theme.text
+                    }}
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share
+                  </motion.button>
+
                   {isCreator && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" disabled={isDeleting} className="flex-1">
-                          <Trash2 className="mr-2" />
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          disabled={isDeleting}
+                          className="flex-1 py-3 px-4 flex items-center justify-center gap-2 text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
+                          style={{ 
+                            border: `1px solid ${isDark ? 'rgba(220, 38, 38, 0.5)' : 'rgba(220, 38, 38, 0.5)'}`,
+                            color: isDark ? '#ef4444' : '#dc2626',
+                            backgroundColor: 'transparent'
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
                           {isDeleting ? 'Deleting...' : 'Delete'}
-                        </Button>
+                        </motion.button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure you want to delete this song?</AlertDialogTitle>
-                          <AlertDialogDescription>
+                          <AlertDialogTitle style={{ color: theme.text }}>Are you sure you want to delete this song?</AlertDialogTitle>
+                          <AlertDialogDescription style={{ color: theme.textSecondary }}>
                             This action cannot be undone. This will permanently delete the song, its associated data, and remove the audio and artwork files from storage.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={deleteSong}>Delete</AlertDialogAction>
+                          <AlertDialogCancel 
+                            style={{ 
+                              border: `1px solid ${theme.border}`,
+                              color: theme.text,
+                              backgroundColor: 'transparent'
+                            }}
+                          >
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={deleteSong}
+                            style={{ 
+                              backgroundColor: '#dc2626',
+                              color: '#ffffff'
+                            }}
+                          >
+                            Delete
+                          </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
                 </div>
-              </CardFooter>
-            </Card>
+              </div>
+            </div>
 
             {/* Votes and Likes Card */}
-            <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                  Votes & Likes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col space-y-4">
-                  <button
-                    onClick={handleLike}
-                    className="flex items-center justify-between text-gray-500 hover:text-red-500 transition-colors duration-200"
-                  >
-                    <span>Likes</span>
-                    <div className="flex items-center">
-                      <Heart
-                        className={`h-6 w-6 mr-2 ${
-                          likeState ? 'fill-current text-red-500' : ''
-                        }`}
-                      />
-                      <span className="text-lg">{likeCount}</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => handleVoteClick('Best Musically')}
-                    className="flex items-center justify-between text-gray-500 hover:text-blue-500 transition-colors duration-200"
-                  >
-                    <span>Best Musically</span>
-                    <div className="flex items-center">
-                      {getVoteIcon('Best Musically')}
-                      <span className="text-lg">{voteCounts['Best Musically'] || 0}</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => handleVoteClick('Best Lyrically')}
-                    className="flex items-center justify-between text-gray-500 hover:text-green-500 transition-colors duration-200"
-                  >
-                    <span>Best Lyrically</span>
-                    <div className="flex items-center">
-                      {getVoteIcon('Best Lyrically')}
-                      <span className="text-lg">{voteCounts['Best Lyrically'] || 0}</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => handleVoteClick('Best Overall')}
-                    className="flex items-center justify-between text-gray-500 hover:text-yellow-500 transition-colors duration-200"
-                  >
-                    <span>Best Overall</span>
-                    <div className="flex items-center">
-                      {getVoteIcon('Best Overall')}
-                      <span className="text-lg">{voteCounts['Best Overall'] || 0}</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setIsCommentsDialogOpen(true)}
-                    className="flex items-center justify-between text-gray-500 hover:text-purple-500 transition-colors duration-200"
-                  >
-                    <span>Comments</span>
-                    <div className="flex items-center">
-                      <MessageCircle className="h-6 w-6 mr-2" />
-                      <span className="text-lg">{commentsCount}</span>
-                    </div>
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
+            <div 
+              className="md:col-span-2 xl:col-span-4 p-6"
+              style={{ 
+                backgroundColor: theme.bgCard,
+                border: `1px solid ${theme.border}`
+              }}
+            >
+              <h2 
+                className="text-xl tracking-wide mb-6"
+                style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+              >
+                Votes & Likes
+              </h2>
+
+              <div className="flex flex-col space-y-4">
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={handleLike}
+                  className="flex items-center justify-between p-3 transition-all duration-300"
+                  style={{ 
+                    border: `1px solid ${theme.borderLight}`,
+                    color: likeState ? '#ef4444' : theme.textSecondary
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = theme.accent
+                    if (!likeState) e.currentTarget.style.color = theme.accent
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = theme.borderLight
+                    if (!likeState) e.currentTarget.style.color = theme.textSecondary
+                  }}
+                >
+                  <span className="text-sm tracking-wider uppercase font-light">Likes</span>
+                  <div className="flex items-center gap-2">
+                    <Heart
+                      className={`h-5 w-5 ${likeState ? 'fill-current' : ''}`}
+                    />
+                    <span className="text-lg font-medium" style={{ color: theme.text }}>{likeCount}</span>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => handleVoteClick('Best Musically')}
+                  className="flex items-center justify-between p-3 transition-all duration-300"
+                  style={{ 
+                    border: `1px solid ${theme.borderLight}`,
+                    color: theme.textSecondary
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = theme.accent
+                    e.currentTarget.style.color = theme.accent
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = theme.borderLight
+                    e.currentTarget.style.color = theme.textSecondary
+                  }}
+                >
+                  <span className="text-sm tracking-wider uppercase font-light">Best Musically</span>
+                  <div className="flex items-center gap-2">
+                    {getVoteIcon('Best Musically')}
+                    <span className="text-lg font-medium" style={{ color: theme.text }}>{voteCounts['Best Musically'] || 0}</span>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => handleVoteClick('Best Lyrically')}
+                  className="flex items-center justify-between p-3 transition-all duration-300"
+                  style={{ 
+                    border: `1px solid ${theme.borderLight}`,
+                    color: theme.textSecondary
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = theme.accent
+                    e.currentTarget.style.color = theme.accent
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = theme.borderLight
+                    e.currentTarget.style.color = theme.textSecondary
+                  }}
+                >
+                  <span className="text-sm tracking-wider uppercase font-light">Best Lyrically</span>
+                  <div className="flex items-center gap-2">
+                    {getVoteIcon('Best Lyrically')}
+                    <span className="text-lg font-medium" style={{ color: theme.text }}>{voteCounts['Best Lyrically'] || 0}</span>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => handleVoteClick('Best Overall')}
+                  className="flex items-center justify-between p-3 transition-all duration-300"
+                  style={{ 
+                    border: `1px solid ${theme.borderLight}`,
+                    color: theme.textSecondary
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = theme.accent
+                    e.currentTarget.style.color = theme.accent
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = theme.borderLight
+                    e.currentTarget.style.color = theme.textSecondary
+                  }}
+                >
+                  <span className="text-sm tracking-wider uppercase font-light">Best Overall</span>
+                  <div className="flex items-center gap-2">
+                    {getVoteIcon('Best Overall')}
+                    <span className="text-lg font-medium" style={{ color: theme.text }}>{voteCounts['Best Overall'] || 0}</span>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => setIsCommentsDialogOpen(true)}
+                  className="flex items-center justify-between p-3 transition-all duration-300"
+                  style={{ 
+                    border: `1px solid ${theme.borderLight}`,
+                    color: theme.textSecondary
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = theme.accent
+                    e.currentTarget.style.color = theme.accent
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = theme.borderLight
+                    e.currentTarget.style.color = theme.textSecondary
+                  }}
+                >
+                  <span className="text-sm tracking-wider uppercase font-light">Comments</span>
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="h-5 w-5" />
+                    <span className="text-lg font-medium" style={{ color: theme.text }}>{commentsCount}</span>
+                  </div>
+                </motion.button>
+              </div>
+            </div>
 
             {/* AI Info Card */}
             {(song.ai_used_for_lyrics || song.music_ai_generated) && (
-              <Card className="md:col-span-2 xl:col-span-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                      AI Information
-                    </CardTitle>
-                    {isCreator && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsAIEditDialogOpen(true)}
+              <div 
+                className="md:col-span-2 xl:col-span-4 p-6"
+                style={{ 
+                  backgroundColor: theme.bgCard,
+                  border: `1px solid ${theme.border}`
+                }}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 
+                    className="text-xl tracking-wide"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                  >
+                    AI Information
+                  </h2>
+                  {isCreator && (
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setIsAIEditDialogOpen(true)}
+                      className="p-2 transition-colors"
+                      style={{ color: theme.textSecondary }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                      onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </motion.button>
+                  )}
+                </div>
+
+                <Accordion type="multiple" defaultValue={['lyric-ai', 'music-ai']} className="space-y-3">
+                  {song.ai_used_for_lyrics && (
+                    <AccordionItem 
+                      value="lyric-ai" 
+                      className="border-0"
+                      style={{ borderBottom: `1px solid ${theme.borderLight}` }}
+                    >
+                      <AccordionTrigger 
+                        className="text-sm tracking-wider uppercase font-light py-3"
+                        style={{ color: theme.textSecondary }}
                       >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Accordion type="multiple" defaultValue={['lyric-ai', 'music-ai']}>
-                    {song.ai_used_for_lyrics && (
-                      <AccordionItem value="lyric-ai">
-                        <AccordionTrigger>Lyric AI</AccordionTrigger>
-                        <AccordionContent>
-                          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                            <p className="mb-2"><strong>Prompt:</strong></p>
-                            <p>{song.lyric_ai_prompt}</p>
-                          </ScrollArea>
-                        </AccordionContent>
-                      </AccordionItem>
-                    )}
-                    {song.music_ai_generated && (
-                      <AccordionItem value="music-ai">
-                        <AccordionTrigger>Music AI</AccordionTrigger>
-                        <AccordionContent>
-                          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                            <p><strong>Model:</strong> {song.music_model_used}</p>
-                            <p className="mt-2"><strong>Prompt:</strong></p>
-                            <p>{song.music_ai_prompt}</p>
-                          </ScrollArea>
-                        </AccordionContent>
-                      </AccordionItem>
-                    )}
-                  </Accordion>
-                </CardContent>
-              </Card>
+                        Lyric AI
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <ScrollArea 
+                          className="h-[200px] w-full p-4"
+                          style={{ border: `1px solid ${theme.borderLight}` }}
+                        >
+                          <p className="mb-2 text-sm" style={{ color: theme.accent }}>Prompt:</p>
+                          <p className="text-sm font-light" style={{ color: theme.textSecondary }}>{song.lyric_ai_prompt}</p>
+                        </ScrollArea>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                  {song.music_ai_generated && (
+                    <AccordionItem 
+                      value="music-ai" 
+                      className="border-0"
+                      style={{ borderBottom: `1px solid ${theme.borderLight}` }}
+                    >
+                      <AccordionTrigger 
+                        className="text-sm tracking-wider uppercase font-light py-3"
+                        style={{ color: theme.textSecondary }}
+                      >
+                        Music AI
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <ScrollArea 
+                          className="h-[200px] w-full p-4"
+                          style={{ border: `1px solid ${theme.borderLight}` }}
+                        >
+                          <p className="text-sm" style={{ color: theme.text }}>
+                            <span style={{ color: theme.accent }}>Model:</span> {song.music_model_used}
+                          </p>
+                          <p className="mt-3 text-sm" style={{ color: theme.accent }}>Prompt:</p>
+                          <p className="text-sm font-light" style={{ color: theme.textSecondary }}>{song.music_ai_prompt}</p>
+                        </ScrollArea>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                </Accordion>
+              </div>
             )}
 
             {/* Bible Info Card */}
-            <Card className="md:col-span-2 xl:col-span-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                    Bible Info
-                  </CardTitle>
-                  {isCreator && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsBibleInfoEditDialogOpen(true)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible defaultValue="verses">
-                  <AccordionItem value="verses">
-                    <AccordionTrigger>Bible Verses Covered</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="mb-4">
-                        <Popover open={openTranslation} onOpenChange={setOpenTranslation}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={openTranslation}
-                              className="w-full justify-between"
-                            >
-                              {bibleInfoTranslation ? `${bibleInfoTranslation} - ${BOLLS_LIFE_API_BIBLE_TRANSLATIONS.find(t => t.shortName === bibleInfoTranslation)?.fullName}` : "Select Bible translation..."}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0 max-w-[90vw] sm:max-w-[300px]" ref={translationRef}>
-                            <div className="p-2">
-                              <div className="flex items-center justify-between pb-2">
-                                <Input
-                                  placeholder="Search translations..."
-                                  value={translationSearch}
-                                  onChange={(e) => setTranslationSearch(e.target.value)}
-                                  className="mr-2"
-                                />
-                                {bibleInfoTranslation && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setBibleInfoTranslation('NASB')
-                                      setTranslationSearch('')
-                                    }}
+            <div 
+              className="md:col-span-2 xl:col-span-8 p-6"
+              style={{ 
+                backgroundColor: theme.bgCard,
+                border: `1px solid ${theme.border}`
+              }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 
+                  className="text-xl tracking-wide"
+                  style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                >
+                  Bible Info
+                </h2>
+                {isCreator && (
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsBibleInfoEditDialogOpen(true)}
+                    className="p-2 transition-colors"
+                    style={{ color: theme.textSecondary }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                    onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </motion.button>
+                )}
+              </div>
+
+              <Accordion type="single" collapsible defaultValue="verses">
+                <AccordionItem 
+                  value="verses" 
+                  className="border-0"
+                  style={{ borderBottom: `1px solid ${theme.borderLight}` }}
+                >
+                  <AccordionTrigger 
+                    className="text-sm tracking-wider uppercase font-light py-3"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    Bible Verses Covered
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="mb-4">
+                      <Popover open={openTranslation} onOpenChange={setOpenTranslation}>
+                        <PopoverTrigger asChild>
+                          <button
+                            role="combobox"
+                            aria-expanded={openTranslation}
+                            className="w-full py-2 px-4 flex items-center justify-between text-sm transition-colors"
+                            style={{ 
+                              border: `1px solid ${theme.border}`,
+                              color: theme.text,
+                              backgroundColor: 'transparent'
+                            }}
+                          >
+                            {bibleInfoTranslation ? `${bibleInfoTranslation} - ${BOLLS_LIFE_API_BIBLE_TRANSLATIONS.find(t => t.shortName === bibleInfoTranslation)?.fullName}` : "Select Bible translation..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0" style={{ color: theme.textMuted }} />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent 
+                          className="w-full p-0 max-w-[90vw] sm:max-w-[300px]" 
+                          ref={translationRef}
+                          style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+                        >
+                          <div className="p-2">
+                            <div className="flex items-center justify-between pb-2">
+                              <Input
+                                placeholder="Search translations..."
+                                value={translationSearch}
+                                onChange={(e) => setTranslationSearch(e.target.value)}
+                                className="mr-2"
+                                style={{ 
+                                  backgroundColor: 'transparent',
+                                  border: `1px solid ${theme.border}`,
+                                  color: theme.text
+                                }}
+                              />
+                              {bibleInfoTranslation && (
+                                <button
+                                  onClick={() => {
+                                    setBibleInfoTranslation('NASB')
+                                    setTranslationSearch('')
+                                  }}
+                                  className="px-3 py-1 text-xs tracking-wider uppercase transition-colors"
+                                  style={{ 
+                                    border: `1px solid ${theme.border}`,
+                                    color: theme.textSecondary
+                                  }}
+                                >
+                                  Clear
+                                </button>
+                              )}
+                            </div>
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {filteredTranslations().map((translation) => (
+                                <div
+                                  key={translation.shortName}
+                                  className="flex cursor-pointer items-center px-2 py-1 transition-colors"
+                                  style={{ 
+                                    backgroundColor: bibleInfoTranslation === translation.shortName ? `${theme.accent}20` : 'transparent',
+                                    color: theme.text
+                                  }}
+                                  onClick={() => {
+                                    setBibleInfoTranslation(translation.shortName)
+                                    setOpenTranslation(false)
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${theme.accent}10`}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = bibleInfoTranslation === translation.shortName ? `${theme.accent}20` : 'transparent'}
+                                >
+                                  <div 
+                                    className="mr-2 h-4 w-4 flex-shrink-0 flex items-center justify-center"
+                                    style={{ border: `1px solid ${theme.accent}` }}
                                   >
-                                    Clear
-                                  </Button>
-                                )}
-                              </div>
-                              <div className="max-h-[200px] overflow-y-auto">
-                                {filteredTranslations().map((translation) => (
-                                  <div
-                                    key={translation.shortName}
-                                    className={cn(
-                                      "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                                      bibleInfoTranslation === translation.shortName && "bg-accent"
-                                    )}
-                                    onClick={() => {
-                                      setBibleInfoTranslation(translation.shortName)
-                                      setOpenTranslation(false)
-                                    }}
-                                  >
-                                    <div className="mr-2 h-4 w-4 flex-shrink-0 border border-primary rounded flex items-center justify-center">
-                                      {bibleInfoTranslation === translation.shortName && <Check className="h-3 w-3" />}
-                                    </div>
-                                    <div className="flex-grow overflow-hidden">
-                                      <span className="font-semibold">{translation.shortName}</span> - <span className="text-sm break-words">{translation.fullName}</span>
-                                    </div>
+                                    {bibleInfoTranslation === translation.shortName && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
                                   </div>
-                                ))}
-                              </div>
+                                  <div className="flex-grow overflow-hidden">
+                                    <span className="font-medium" style={{ color: theme.accent }}>{translation.shortName}</span>
+                                    <span style={{ color: theme.textSecondary }}> - </span>
+                                    <span className="text-sm break-words" style={{ color: theme.textSecondary }}>{translation.fullName}</span>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                        {isLoadingBibleInfoVerses ? (
-                          <div className="flex flex-col items-center justify-center h-40">
-                            <BookOpen className="h-12 w-12 animate-pulse text-primary" />
-                            <p className="mt-4 text-muted-foreground">Loading verses...</p>
                           </div>
-                        ) : bibleInfoVerseError ? (
-                          <p className="text-red-500">{bibleInfoVerseError}</p>
-                        ) : (
-                          bibleInfoVerses.map((verse, index) => (
-                            <div key={index} className="mb-4">
-                              <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
-                              <div dangerouslySetInnerHTML={renderHTML(verse.text)} />
-                            </div>
-                          ))
-                        )}
-                      </ScrollArea>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </CardContent>
-            </Card>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <ScrollArea 
+                      className="h-[400px] w-full p-4"
+                      style={{ border: `1px solid ${theme.borderLight}` }}
+                    >
+                      {isLoadingBibleInfoVerses ? (
+                        <div className="flex flex-col items-center justify-center h-40">
+                          <BookOpen className="h-12 w-12 animate-pulse" style={{ color: theme.accent }} />
+                          <p className="mt-4" style={{ color: theme.textMuted }}>Loading verses...</p>
+                        </div>
+                      ) : bibleInfoVerseError ? (
+                        <p className="text-red-500">{bibleInfoVerseError}</p>
+                      ) : (
+                        bibleInfoVerses.map((verse, index) => (
+                          <div key={index} className="mb-4">
+                            <p className="font-medium" style={{ color: theme.accent }}>{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
+                            <div className="text-sm font-light" style={{ color: theme.textSecondary }} dangerouslySetInnerHTML={renderHTML(verse.text)} />
+                          </div>
+                        ))
+                      )}
+                    </ScrollArea>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
 
             {/* Lyrics Card */}
-            <Card className="md:col-span-2 xl:col-span-12 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-xl">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                    Lyrics
-                  </CardTitle>
-                  {isCreator && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsLyricsEditDialogOpen(true)}
+            <div 
+              className="md:col-span-2 xl:col-span-12 p-6"
+              style={{ 
+                backgroundColor: theme.bgCard,
+                border: `1px solid ${theme.border}`
+              }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 
+                  className="text-xl tracking-wide"
+                  style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                >
+                  Lyrics
+                </h2>
+                {isCreator && (
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsLyricsEditDialogOpen(true)}
+                    className="p-2 transition-colors"
+                    style={{ color: theme.textSecondary }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                    onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </motion.button>
+                )}
+              </div>
+
+              <Accordion type="single" collapsible defaultValue="lyrics">
+                <AccordionItem 
+                  value="lyrics" 
+                  className="border-0"
+                  style={{ borderBottom: `1px solid ${theme.borderLight}` }}
+                >
+                  <AccordionTrigger 
+                    className="text-sm tracking-wider uppercase font-light py-3"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    View Lyrics
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <ScrollArea 
+                      className="h-[400px] w-full p-4"
+                      style={{ border: `1px solid ${theme.borderLight}` }}
                     >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible defaultValue="lyrics">
-                  <AccordionItem value="lyrics">
-                    <AccordionTrigger>View Lyrics</AccordionTrigger>
-                    <AccordionContent>
-                      <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                        <p className="whitespace-pre-wrap">{song.lyrics}</p>
-                      </ScrollArea>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </CardContent>
-            </Card>
+                      <p className="whitespace-pre-wrap text-sm font-light leading-relaxed" style={{ color: theme.textSecondary }}>{song.lyrics}</p>
+                    </ScrollArea>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
           </div>
         </motion.div>
+        </div>
       </div>
 
       {/* KJV Text Dialog */}
       <Dialog open={isKJVTextOpen} onOpenChange={setIsKJVTextOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent 
+          className="sm:max-w-[600px]"
+          style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+        >
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle style={{ fontFamily: "'Italiana', serif", color: theme.text }}>
               {dialogTranslation} Text for {formatBibleVerses(song.bible_verses || [])}
             </DialogTitle>
-            {/* Updated translation selection dropdown */}
             <div className="mt-4">
               <Popover open={dialogOpenTranslation} onOpenChange={setDialogOpenTranslation}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
+                  <button
                     role="combobox"
                     aria-expanded={dialogOpenTranslation}
-                    className="w-full justify-between"
+                    className="w-full py-2 px-4 flex items-center justify-between text-sm transition-colors"
+                    style={{ 
+                      border: `1px solid ${theme.border}`,
+                      color: theme.text,
+                      backgroundColor: 'transparent'
+                    }}
                   >
                     {dialogTranslation ? `${dialogTranslation} - ${BOLLS_LIFE_API_BIBLE_TRANSLATIONS.find(t => t.shortName === dialogTranslation)?.fullName}` : "Select Bible translation..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0" style={{ color: theme.textMuted }} />
+                  </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0 max-w-[90vw] sm:max-w-[300px]" ref={dialogTranslationRef}>
+                <PopoverContent 
+                  className="w-full p-0 max-w-[90vw] sm:max-w-[300px]" 
+                  ref={dialogTranslationRef}
+                  style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+                >
                   <div className="p-2">
                     <div className="flex items-center justify-between pb-2">
                       <Input
@@ -1531,39 +2040,55 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                         value={dialogTranslationSearch}
                         onChange={(e) => setDialogTranslationSearch(e.target.value)}
                         className="mr-2"
+                        style={{ 
+                          backgroundColor: 'transparent',
+                          border: `1px solid ${theme.border}`,
+                          color: theme.text
+                        }}
                       />
                       {dialogTranslation && (
-                        <Button
-                          variant="outline"
-                          size="sm"
+                        <button
                           onClick={() => {
                             setDialogTranslation('KJV')
                             setDialogTranslationSearch('')
                           }}
+                          className="px-3 py-1 text-xs tracking-wider uppercase transition-colors"
+                          style={{ 
+                            border: `1px solid ${theme.border}`,
+                            color: theme.textSecondary
+                          }}
                         >
                           Clear
-                        </Button>
+                        </button>
                       )}
                     </div>
                     <div className="max-h-[200px] overflow-y-auto">
                       {filteredDialogTranslations().map((translation) => (
                         <div
                           key={translation.shortName}
-                          className={cn(
-                            "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                            dialogTranslation === translation.shortName && "bg-accent"
-                          )}
+                          className="flex cursor-pointer items-center px-2 py-1 transition-colors"
+                          style={{ 
+                            backgroundColor: dialogTranslation === translation.shortName ? `${theme.accent}20` : 'transparent',
+                            color: theme.text
+                          }}
                           onClick={() => {
                             setDialogTranslation(translation.shortName)
                             setDialogOpenTranslation(false)
                             setSelectedTranslation(translation.shortName)
                           }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${theme.accent}10`}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = dialogTranslation === translation.shortName ? `${theme.accent}20` : 'transparent'}
                         >
-                          <div className="mr-2 h-4 w-4 flex-shrink-0 border border-primary rounded flex items-center justify-center">
-                            {dialogTranslation === translation.shortName && <Check className="h-3 w-3" />}
+                          <div 
+                            className="mr-2 h-4 w-4 flex-shrink-0 flex items-center justify-center"
+                            style={{ border: `1px solid ${theme.accent}` }}
+                          >
+                            {dialogTranslation === translation.shortName && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
                           </div>
                           <div className="flex-grow overflow-hidden">
-                            <span className="font-semibold">{translation.shortName}</span> - <span className="text-sm break-words">{translation.fullName}</span>
+                            <span className="font-medium" style={{ color: theme.accent }}>{translation.shortName}</span>
+                            <span style={{ color: theme.textSecondary }}> - </span>
+                            <span className="text-sm break-words" style={{ color: theme.textSecondary }}>{translation.fullName}</span>
                           </div>
                         </div>
                       ))}
@@ -1576,16 +2101,16 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           <div className="max-h-[60vh] overflow-y-auto mt-4">
             {isLoadingVerses ? (
               <div className="flex flex-col items-center justify-center h-40">
-                <BookOpen className="h-12 w-12 animate-pulse text-primary" />
-                <p className="mt-4 text-muted-foreground">Loading verses...</p>
+                <BookOpen className="h-12 w-12 animate-pulse" style={{ color: theme.accent }} />
+                <p className="mt-4" style={{ color: theme.textMuted }}>Loading verses...</p>
               </div>
             ) : verseError ? (
               <p className="text-red-500">{verseError}</p>
             ) : (
               verses.map((verse, index) => (
                 <div key={index} className="mb-4">
-                  <p className="font-semibold">{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
-                  <div dangerouslySetInnerHTML={renderHTML(verse.text)} />
+                  <p className="font-medium" style={{ color: theme.accent }}>{`${verse.book} ${verse.chapter}:${verse.verse}`}</p>
+                  <div className="text-sm font-light" style={{ color: theme.textSecondary }} dangerouslySetInnerHTML={renderHTML(verse.text)} />
                 </div>
               ))
             )}
@@ -1595,32 +2120,69 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
       {/* Vote Dialog */}
       <Dialog open={isVoteDialogOpen} onOpenChange={setIsVoteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent 
+          className="sm:max-w-[425px]"
+          style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+        >
           <DialogHeader>
-            <DialogTitle className="text-center">Vote for {selectedVoteType}</DialogTitle>
-            <DialogDescription className="text-center">{song.title}</DialogDescription>
+            <DialogTitle 
+              className="text-center"
+              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+            >
+              Vote for {selectedVoteType}
+            </DialogTitle>
+            <DialogDescription className="text-center" style={{ color: theme.textSecondary }}>
+              {song.title}
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
             {voteStates[selectedVoteType] !== 1 && (
-              <Button onClick={() => handleVote('up')} variant="outline" className="w-full sm:w-auto">
-                <ThumbsUp className="mr-2 h-4 w-4" />
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleVote('up')}
+                className="w-full sm:w-auto py-2 px-4 flex items-center justify-center gap-2 text-sm tracking-[0.1em] uppercase transition-colors"
+                style={{ 
+                  border: `1px solid ${theme.border}`,
+                  color: theme.text
+                }}
+              >
+                <ThumbsUp className="h-4 w-4" />
                 Upvote
-              </Button>
+              </motion.button>
             )}
             {voteStates[selectedVoteType] !== -1 && (
-              <Button onClick={() => handleVote('down')} variant="outline" className="w-full sm:w-auto">
-                <ThumbsDown className="mr-2 h-4 w-4" />
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleVote('down')}
+                className="w-full sm:w-auto py-2 px-4 flex items-center justify-center gap-2 text-sm tracking-[0.1em] uppercase transition-colors"
+                style={{ 
+                  border: `1px solid ${theme.border}`,
+                  color: theme.text
+                }}
+              >
+                <ThumbsDown className="h-4 w-4" />
                 Downvote
-              </Button>
+              </motion.button>
             )}
             {voteStates[selectedVoteType] !== 0 && (
-              <Button onClick={() => handleVote('0')} variant="outline" className="w-full sm:w-auto">
-                <X className="mr-2 h-4 w-4" />
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleVote('0')}
+                className="w-full sm:w-auto py-2 px-4 flex items-center justify-center gap-2 text-sm tracking-[0.1em] uppercase transition-colors"
+                style={{ 
+                  border: `1px solid ${theme.border}`,
+                  color: theme.text
+                }}
+              >
+                <X className="h-4 w-4" />
                 Remove Vote
-              </Button>
+              </motion.button>
             )}
           </div>
-          <div className="text-sm text-center text-muted-foreground mt-4">
+          <div className="text-sm text-center mt-4" style={{ color: theme.textMuted }}>
             Your current vote: {getVoteLabel(voteStates[selectedVoteType] || 0)}
           </div>
         </DialogContent>
@@ -1628,17 +2190,20 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
       {/* Edit Song Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent 
+          className="sm:max-w-[425px]"
+          style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+        >
           <DialogHeader>
-            <DialogTitle>Edit Song Details</DialogTitle>
-            <DialogDescription>
+            <DialogTitle style={{ fontFamily: "'Italiana', serif", color: theme.text }}>Edit Song Details</DialogTitle>
+            <DialogDescription style={{ color: theme.textSecondary }}>
               Make changes to the song title, artist name, and genres here.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">
+                <Label htmlFor="title" className="text-right" style={{ color: theme.textSecondary }}>
                   Title
                 </Label>
                 <Input
@@ -1646,10 +2211,11 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                   value={editedTitle}
                   onChange={(e) => setEditedTitle(e.target.value)}
                   className="col-span-3"
+                  style={{ backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.text }}
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="artist" className="text-right">
+                <Label htmlFor="artist" className="text-right" style={{ color: theme.textSecondary }}>
                   Artist
                 </Label>
                 <Input
@@ -1657,28 +2223,27 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                   value={editedArtist}
                   onChange={(e) => setEditedArtist(e.target.value)}
                   className="col-span-3"
+                  style={{ backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.text }}
                 />
               </div>
               <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="genres" className="text-right pt-2">
+                <Label htmlFor="genres" className="text-right pt-2" style={{ color: theme.textSecondary }}>
                   Genres
                 </Label>
                 <div className="col-span-3">
                   <Popover open={openGenre} onOpenChange={setOpenGenre}>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
+                      <button
                         role="combobox"
                         aria-expanded={openGenre}
-                        className="w-full justify-between"
+                        className="w-full py-2 px-4 flex items-center justify-between text-sm"
+                        style={{ border: `1px solid ${theme.border}`, color: theme.text, backgroundColor: 'transparent' }}
                       >
-                        {editedGenres.length > 0
-                          ? `${editedGenres.length} selected`
-                          : "Select genres..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
+                        {editedGenres.length > 0 ? `${editedGenres.length} selected` : "Select genres..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0" style={{ color: theme.textMuted }} />
+                      </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
+                    <PopoverContent className="w-full p-0" style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}>
                       <div className="p-2">
                         <div className="flex items-center justify-between pb-2">
                           <Input
@@ -1686,27 +2251,22 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                             value={genreSearch}
                             onChange={(e) => setGenreSearch(e.target.value)}
                             className="mr-2"
+                            style={{ backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.text }}
                           />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={clearGenres}
-                          >
+                          <button onClick={clearGenres} className="px-3 py-1 text-xs uppercase" style={{ border: `1px solid ${theme.border}`, color: theme.textSecondary }}>
                             Clear
-                          </Button>
+                          </button>
                         </div>
                         <div className="max-h-[200px] overflow-y-auto">
                           {filteredGenres().map((genre) => (
                             <div
                               key={genre}
-                              className={cn(
-                                "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                                editedGenres.includes(genre) && "bg-accent"
-                              )}
+                              className="flex cursor-pointer items-center px-2 py-1 transition-colors"
+                              style={{ backgroundColor: editedGenres.includes(genre) ? `${theme.accent}20` : 'transparent', color: theme.text }}
                               onClick={() => handleGenreToggle(genre)}
                             >
-                              <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                                {editedGenres.includes(genre) && <Check className="h-3 w-3" />}
+                              <div className="mr-2 h-4 w-4 flex items-center justify-center" style={{ border: `1px solid ${theme.accent}` }}>
+                                {editedGenres.includes(genre) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
                               </div>
                               {genre}
                             </div>
@@ -1719,17 +2279,13 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                     {editedGenres.map((genre) => (
                       <div
                         key={genre}
-                        className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                        className="px-2 py-1 text-sm flex items-center"
+                        style={{ border: `1px solid ${theme.accent}40`, color: theme.accent }}
                       >
                         {genre}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="ml-1 h-4 w-4 p-0"
-                          onClick={() => handleGenreToggle(genre)}
-                        >
+                        <button className="ml-1 p-0.5" onClick={() => handleGenreToggle(genre)}>
                           <X className="h-3 w-3" />
-                        </Button>
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -1737,9 +2293,16 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={isEditing}>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={isEditing}
+                className="py-2 px-6 text-sm tracking-[0.1em] uppercase transition-all"
+                style={{ backgroundColor: theme.accent, color: isDark ? '#050505' : '#ffffff' }}
+              >
                 {isEditing ? 'Saving...' : 'Save changes'}
-              </Button>
+              </motion.button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1747,16 +2310,19 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
       {/* Edit Lyrics Dialog */}
       <Dialog open={isLyricsEditDialogOpen} onOpenChange={setIsLyricsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent 
+          className="sm:max-w-[600px]"
+          style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+        >
           <DialogHeader>
-            <DialogTitle>Edit Lyrics</DialogTitle>
-            <DialogDescription>
+            <DialogTitle style={{ fontFamily: "'Italiana', serif", color: theme.text }}>Edit Lyrics</DialogTitle>
+            <DialogDescription style={{ color: theme.textSecondary }}>
               Make changes to the lyrics and lyrics adherence here.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="lyrics" className="text-right">
+              <Label htmlFor="lyrics" className="text-right" style={{ color: theme.textSecondary }}>
                 Lyrics
               </Label>
               <Textarea
@@ -1765,20 +2331,21 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
                 onChange={(e) => setEditedLyrics(e.target.value)}
                 className="col-span-3"
                 rows={10}
+                style={{ backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.text }}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="lyrics-adherence" className="text-right">
+              <Label htmlFor="lyrics-adherence" className="text-right" style={{ color: theme.textSecondary }}>
                 Scripture Adherence
               </Label>
               <Select
                 onValueChange={(value) => setEditedLyricsAdherence(value as 'word_for_word' | 'close_paraphrase' | 'creative_inspiration')}
                 defaultValue={editedLyricsAdherence}
               >
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="col-span-3" style={{ backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.text }}>
                   <SelectValue placeholder="Select adherence level" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}>
                   <SelectItem value="word_for_word">Word-for-word</SelectItem>
                   <SelectItem value="close_paraphrase">Close paraphrase</SelectItem>
                   <SelectItem value="creative_inspiration">Creative inspiration</SelectItem>
@@ -1787,19 +2354,29 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleLyricsEditSubmit} disabled={isLyricsEditing}>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleLyricsEditSubmit}
+              disabled={isLyricsEditing}
+              className="py-2 px-6 text-sm tracking-[0.1em] uppercase transition-all"
+              style={{ backgroundColor: theme.accent, color: isDark ? '#050505' : '#ffffff' }}
+            >
               {isLyricsEditing ? 'Saving...' : 'Save changes'}
-            </Button>
+            </motion.button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit AI Info Dialog */}
       <Dialog open={isAIEditDialogOpen} onOpenChange={setIsAIEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent 
+          className="sm:max-w-[600px]"
+          style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+        >
           <DialogHeader>
-            <DialogTitle>Edit AI Information</DialogTitle>
-            <DialogDescription>
+            <DialogTitle style={{ fontFamily: "'Italiana', serif", color: theme.text }}>Edit AI Information</DialogTitle>
+            <DialogDescription style={{ color: theme.textSecondary }}>
               Make changes to the AI-related information here.
             </DialogDescription>
           </DialogHeader>
@@ -1872,19 +2449,29 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             )}
           </div>
           <DialogFooter>
-            <Button onClick={handleAIEditSubmit} disabled={isAIEditing}>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleAIEditSubmit}
+              disabled={isAIEditing}
+              className="py-2 px-6 text-sm tracking-[0.1em] uppercase transition-all"
+              style={{ backgroundColor: theme.accent, color: isDark ? '#050505' : '#ffffff' }}
+            >
               {isAIEditing ? 'Saving...' : 'Save changes'}
-            </Button>
+            </motion.button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Bible Info Edit Dialog */}
       <Dialog open={isBibleInfoEditDialogOpen} onOpenChange={setIsBibleInfoEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent 
+          className="sm:max-w-[600px]"
+          style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+        >
           <DialogHeader>
-            <DialogTitle>Edit Bible Information</DialogTitle>
-            <DialogDescription>
+            <DialogTitle style={{ fontFamily: "'Italiana', serif", color: theme.text }}>Edit Bible Information</DialogTitle>
+            <DialogDescription style={{ color: theme.textSecondary }}>
               Make changes to the Bible-related information here.
             </DialogDescription>
           </DialogHeader>
@@ -1964,31 +2551,50 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               disabled={selectedBibleVerses.length === 0 || isBibleInfoEditing}
               onClick={handleBibleInfoEditSubmit}
+              className="py-2 px-6 text-sm tracking-[0.1em] uppercase transition-all disabled:opacity-50"
+              style={{ backgroundColor: theme.accent, color: isDark ? '#050505' : '#ffffff' }}
             >
               {isBibleInfoEditing ? 'Saving...' : 'Save changes'}
-            </Button>
+            </motion.button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit Song Art Dialog */}
       <Dialog open={isEditArtDialogOpen} onOpenChange={setIsEditArtDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent 
+          className="sm:max-w-[425px]"
+          style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+        >
           <DialogHeader>
-            <DialogTitle>Edit Song Art</DialogTitle>
+            <DialogTitle style={{ fontFamily: "'Italiana', serif", color: theme.text }}>Edit Song Art</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center">
-            <Image
-              src={song.song_art_url ? getImageUrl(song.song_art_url) : '/biblechorus-icon.png'}
-              alt="Current Song Art"
-              width={200}
-              height={200}
-              className="rounded-lg mb-4"
-            />
-            <Button onClick={handleReplaceClick}>Replace Image</Button>
+            <div 
+              className="mb-4 overflow-hidden"
+              style={{ border: `1px solid ${theme.border}` }}
+            >
+              <Image
+                src={song.song_art_url ? getImageUrl(song.song_art_url) : '/biblechorus-icon.png'}
+                alt="Current Song Art"
+                width={200}
+                height={200}
+              />
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleReplaceClick}
+              className="py-2 px-6 text-sm tracking-[0.1em] uppercase transition-all"
+              style={{ backgroundColor: theme.accent, color: isDark ? '#050505' : '#ffffff' }}
+            >
+              Replace Image
+            </motion.button>
             <input
               type="file"
               ref={fileInputRef}
@@ -2001,9 +2607,12 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
       </Dialog>
 
       <Dialog open={isImageCropperOpen} onOpenChange={setIsImageCropperOpen}>
-        <DialogContent className="sm:max-w-[600px] p-0">
+        <DialogContent 
+          className="sm:max-w-[600px] p-0"
+          style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+        >
           <DialogHeader className="p-4">
-            <DialogTitle>Crop Image</DialogTitle>
+            <DialogTitle style={{ fontFamily: "'Italiana', serif", color: theme.text }}>Crop Image</DialogTitle>
           </DialogHeader>
           {cropImageUrl && (
             <ImageCropper
@@ -2021,10 +2630,13 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
 
       {/* Comments Dialog */}
       <Dialog open={isCommentsDialogOpen} onOpenChange={setIsCommentsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col">
+        <DialogContent 
+          className="sm:max-w-[600px] h-[80vh] flex flex-col"
+          style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+        >
           <DialogHeader>
-            <DialogTitle>Comments</DialogTitle>
-            <DialogDescription>
+            <DialogTitle style={{ fontFamily: "'Italiana', serif", color: theme.text }}>Comments</DialogTitle>
+            <DialogDescription style={{ color: theme.textSecondary }}>
               Join the discussion about this song.
             </DialogDescription>
           </DialogHeader>

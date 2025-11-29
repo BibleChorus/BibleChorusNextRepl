@@ -22,13 +22,13 @@ import LyricsBibleComparisonDialog from '@/components/ListenPage/LyricsBibleComp
 import Link from 'next/link';
 import { SongOptionsMenu } from '@/components/SongOptionsMenu';
 import { Song } from '@/types';
+import { useTheme } from 'next-themes';
 
-// Add a type for the music player song that includes optional properties
 interface MusicPlayerSong extends Partial<Song> {
   id: number;
   title: string;
   artist?: string;
-  coverArtUrl?: string; // Note: this matches the property name used in the component
+  coverArtUrl?: string;
   audio_url: string;
   uploaded_by: number;
 }
@@ -51,6 +51,21 @@ export default function FloatingMusicPlayer() {
     isMinimized,
     setIsMinimized,
   } = useMusicPlayer();
+
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+  };
 
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
@@ -95,7 +110,6 @@ export default function FloatingMusicPlayer() {
     console.log('Current Song:', currentSong);
   }, [currentSong]);
 
-  // Transform currentSong to match the Song interface
   const getSongForOptions = (song: MusicPlayerSong): Song => {
     return {
       id: song.id,
@@ -103,12 +117,11 @@ export default function FloatingMusicPlayer() {
       artist: song.artist || '',
       audio_url: song.audio_url,
       uploaded_by: song.uploaded_by,
-      username: '', // Add default values for required Song properties
+      username: '',
       genres: [],
       created_at: '',
       duration: 0,
       song_art_url: song.coverArtUrl,
-      // Add other required properties with default values
       ai_used_for_lyrics: false,
       music_ai_generated: false,
     };
@@ -116,23 +129,59 @@ export default function FloatingMusicPlayer() {
 
   if (!currentSong) return null;
 
+  const controlButtonStyle = {
+    color: theme.textSecondary,
+    transition: 'all 0.2s ease',
+  };
+
+  const activeControlStyle = {
+    color: theme.accent,
+  };
+
   return (
     <>
       {isMobile && isMinimized ? (
-        // Minimized player view for mobile
-        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
+        <div 
+          className="fixed bottom-0 left-0 right-0 z-50 transition-colors duration-300"
+          style={{ 
+            backgroundColor: theme.bg,
+            borderTop: `1px solid ${theme.border}`,
+          }}
+        >
           <div className="container mx-auto px-2 py-1 flex items-center justify-between">
-            <button onClick={() => setIsMinimized(false)} className="p-1">
+            <button 
+              onClick={() => setIsMinimized(false)} 
+              className="p-1 transition-colors duration-200"
+              style={controlButtonStyle}
+              onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+              onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+            >
               <Maximize2 className="w-4 h-4" />
             </button>
             <div className="flex items-center space-x-1">
-              <button onClick={previous} className="p-1">
+              <button 
+                onClick={previous} 
+                className="p-1 transition-colors duration-200"
+                style={controlButtonStyle}
+                onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+              >
                 <SkipBack className="w-5 h-5" />
               </button>
-              <button onClick={isPlaying ? pause : resume} className="p-1">
+              <button 
+                onClick={isPlaying ? pause : resume} 
+                className="p-1 transition-colors duration-200"
+                style={{ color: theme.accent }}
+              >
                 {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
               </button>
-              <button onClick={next} className="p-1">
+              <button 
+                onClick={next} 
+                className="p-1 transition-colors duration-200"
+                style={controlButtonStyle}
+                onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+              >
                 <SkipForward className="w-5 h-5" />
               </button>
             </div>
@@ -144,27 +193,37 @@ export default function FloatingMusicPlayer() {
                 value={currentTime}
                 onChange={handleTimeChange}
                 className="w-full h-1"
+                style={{
+                  accentColor: theme.accent,
+                }}
               />
             </div>
           </div>
         </div>
       ) : (
-        // Full player view
         <div
-          className={`fixed bottom-0 ${leftOffset} right-0 bg-background border-t border-border z-50 transition-all duration-300`}
+          className={`fixed bottom-0 ${leftOffset} right-0 z-50 transition-all duration-300`}
+          style={{ 
+            backgroundColor: theme.bg,
+            borderTop: `1px solid ${theme.border}`,
+          }}
         >
           <div
             className={`container mx-auto px-4 py-2 ${
               isMobile ? 'flex flex-col space-y-2' : 'flex items-center justify-between'
             }`}
           >
-            {/* Minimize Button for Mobile */}
             {isMobile && (
-              <button onClick={() => setIsMinimized(true)} className="absolute top-2 right-2 p-1">
+              <button 
+                onClick={() => setIsMinimized(true)} 
+                className="absolute top-2 right-2 p-1 transition-colors duration-200"
+                style={controlButtonStyle}
+                onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+              >
                 <Minimize2 className="w-5 h-5" />
               </button>
             )}
-            {/* Song Info and Controls */}
             <div
               className={`flex ${
                 isMobile
@@ -172,7 +231,6 @@ export default function FloatingMusicPlayer() {
                   : 'items-center justify-between w-full'
               }`}
             >
-              {/* Song Info */}
               <div className="flex items-center">
                 <div className="w-12 h-12 relative mr-3">
                   <Image
@@ -181,37 +239,57 @@ export default function FloatingMusicPlayer() {
                     layout="fill"
                     objectFit="cover"
                     className="rounded"
+                    style={{ 
+                      border: `1px solid ${theme.border}`,
+                    }}
                   />
                 </div>
                 <div>
                   <Link 
                     href={`/Songs/${currentSong.id}`}
-                    className="text-sm font-semibold hover:underline"
+                    className="text-sm font-semibold hover:underline transition-colors duration-200"
+                    style={{ color: theme.text }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                    onMouseLeave={(e) => e.currentTarget.style.color = theme.text}
                   >
                     {currentSong.title}
                   </Link>
                   <Link
                     href={`/profile?id=${currentSong.uploaded_by}`}
-                    className="text-xs text-muted-foreground hover:underline block"
+                    className="text-xs hover:underline block transition-colors duration-200"
+                    style={{ color: theme.textSecondary }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                    onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
                   >
                     {currentSong.artist}
                   </Link>
                 </div>
               </div>
-              {/* Playback Controls */}
               <div className="flex items-center space-x-2">
                 <button
                   onClick={toggleShuffle}
-                  className={`p-2 relative ${isShuffling ? 'text-purple-500 glow' : ''}`}
+                  className="p-2 relative transition-all duration-200"
+                  style={isShuffling ? activeControlStyle : controlButtonStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                  onMouseLeave={(e) => {
+                    if (!isShuffling) e.currentTarget.style.color = theme.textSecondary;
+                  }}
                 >
                   <Shuffle className="w-5 h-5" />
                 </button>
-                <button onClick={previous} className="p-2">
+                <button 
+                  onClick={previous} 
+                  className="p-2 transition-colors duration-200"
+                  style={controlButtonStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                  onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+                >
                   <SkipBack className="w-6 h-6" />
                 </button>
                 <button
                   onClick={isPlaying ? pause : resume}
-                  className="p-2"
+                  className="p-2 transition-colors duration-200"
+                  style={{ color: theme.accent }}
                 >
                   {isPlaying ? (
                     <Pause className="w-8 h-8" />
@@ -219,12 +297,23 @@ export default function FloatingMusicPlayer() {
                     <Play className="w-8 h-8" />
                   )}
                 </button>
-                <button onClick={next} className="p-2">
+                <button 
+                  onClick={next} 
+                  className="p-2 transition-colors duration-200"
+                  style={controlButtonStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                  onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+                >
                   <SkipForward className="w-6 h-6" />
                 </button>
                 <button
                   onClick={toggleRepeat}
-                  className={`p-2 relative ${repeatMode !== 'none' ? 'text-purple-500 glow' : ''}`}
+                  className="p-2 relative transition-all duration-200"
+                  style={repeatMode !== 'none' ? activeControlStyle : controlButtonStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                  onMouseLeave={(e) => {
+                    if (repeatMode === 'none') e.currentTarget.style.color = theme.textSecondary;
+                  }}
                 >
                   {repeatMode === 'one' ? (
                     <Repeat1 className="w-5 h-5" />
@@ -234,13 +323,21 @@ export default function FloatingMusicPlayer() {
                 </button>
                 <button
                   onClick={() => setIsQueueVisible(!isQueueVisible)}
-                  className="p-2"
+                  className="p-2 transition-colors duration-200"
+                  style={isQueueVisible ? activeControlStyle : controlButtonStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                  onMouseLeave={(e) => {
+                    if (!isQueueVisible) e.currentTarget.style.color = theme.textSecondary;
+                  }}
                 >
                   <ListMusic className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setIsLyricsBibleDialogOpen(true)}
-                  className="p-2"
+                  className="p-2 transition-colors duration-200"
+                  style={controlButtonStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                  onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
                 >
                   <BookOpenText className="w-5 h-5" />
                 </button>
@@ -250,9 +347,11 @@ export default function FloatingMusicPlayer() {
               </div>
             </div>
 
-            {/* Progress Slider */}
             <div className="flex items-center w-full">
-              <span className="text-xs mr-2 w-10 text-right">
+              <span 
+                className="text-xs mr-2 w-10 text-right"
+                style={{ color: theme.textSecondary }}
+              >
                 {formatTime(currentTime)}
               </span>
               <input
@@ -262,8 +361,14 @@ export default function FloatingMusicPlayer() {
                 value={currentTime}
                 onChange={handleTimeChange}
                 className="w-full"
+                style={{
+                  accentColor: theme.accent,
+                }}
               />
-              <span className="text-xs ml-2 w-10">
+              <span 
+                className="text-xs ml-2 w-10"
+                style={{ color: theme.textSecondary }}
+              >
                 {formatTime(duration)}
               </span>
             </div>
@@ -271,37 +376,84 @@ export default function FloatingMusicPlayer() {
         </div>
       )}
 
-      {/* Queue Display */}
       {isQueueVisible && (
         <div
-          className={`fixed bottom-[60px] ${leftOffset} right-0 max-h-[50vh] bg-background border border-border z-50 transition-all duration-300 flex flex-col`}
+          className={`fixed bottom-[60px] ${leftOffset} right-0 max-h-[50vh] z-50 transition-all duration-300 flex flex-col`}
+          style={{ 
+            backgroundColor: theme.bg,
+            border: `1px solid ${theme.border}`,
+          }}
         >
-          {/* Queue Header - Sticky */}
-          <div className="sticky top-0 z-10 p-4 border-b border-border flex items-center justify-between bg-background">
-            <h3 className="text-lg font-semibold">Up Next ({queue.length} songs)</h3>
-            <button onClick={() => setIsQueueVisible(false)} className="p-1 hover:bg-accent rounded">
+          <div 
+            className="sticky top-0 z-10 p-4 flex items-center justify-between"
+            style={{ 
+              backgroundColor: theme.bg,
+              borderBottom: `1px solid ${theme.border}`,
+            }}
+          >
+            <h3 
+              className="text-lg font-semibold"
+              style={{ color: theme.text }}
+            >
+              Up Next ({queue.length} songs)
+            </h3>
+            <button 
+              onClick={() => setIsQueueVisible(false)} 
+              className="p-1 rounded transition-colors duration-200"
+              style={controlButtonStyle}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = theme.accent;
+                e.currentTarget.style.backgroundColor = theme.hoverBg;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = theme.textSecondary;
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
-          {/* Queue List - Scrollable */}
           <div ref={queueListRef} className="flex-1 overflow-y-auto">
             <div className="p-4">
               {queue.map((song, index) => (
                 <div
                   key={song.id}
-                  className={`flex items-center py-2 hover:bg-accent/50 rounded px-2 -mx-2 cursor-pointer ${
-                    currentSong?.id === song.id ? 'text-primary font-semibold bg-accent' : ''
-                  }`}
+                  className="flex items-center py-2 rounded px-2 -mx-2 cursor-pointer transition-all duration-200"
+                  style={{ 
+                    backgroundColor: currentSong?.id === song.id ? theme.hoverBg : 'transparent',
+                    color: currentSong?.id === song.id ? theme.accent : theme.text,
+                  }}
                   onClick={() => playSong(song)}
+                  onMouseEnter={(e) => {
+                    if (currentSong?.id !== song.id) {
+                      e.currentTarget.style.backgroundColor = theme.hoverBg;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentSong?.id !== song.id) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
                 >
-                  <div className="mr-3 text-sm">{index + 1}.</div>
+                  <div 
+                    className="mr-3 text-sm"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    {index + 1}.
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="truncate">{song.title}</div>
-                    <div className="text-xs text-muted-foreground truncate">
+                    <div 
+                      className="text-xs truncate"
+                      style={{ color: theme.textSecondary }}
+                    >
                       {song.artist}
                     </div>
                   </div>
-                  <Play className="w-4 h-4 flex-shrink-0 ml-2" />
+                  <Play 
+                    className="w-4 h-4 flex-shrink-0 ml-2" 
+                    style={{ color: theme.accent }}
+                  />
                 </div>
               ))}
             </div>
@@ -309,7 +461,6 @@ export default function FloatingMusicPlayer() {
         </div>
       )}
 
-      {/* Add the LyricsBibleComparisonDialog */}
       {currentSong && (
         <LyricsBibleComparisonDialog
           isOpen={isLyricsBibleDialogOpen}

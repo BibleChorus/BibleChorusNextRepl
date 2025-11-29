@@ -11,15 +11,33 @@ import { motion } from 'framer-motion';
 import { MessageSquare, TrendingUp, Clock, Search, Filter, Plus, Sparkles, Users2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useTheme } from 'next-themes';
 
 export default function Forum() {
   const { user } = useAuth();
+  const { resolvedTheme } = useTheme();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'recent' | 'popular'>('recent');
   const [loading, setLoading] = useState(true);
+
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+    separator: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.2)',
+    accentGlow: isDark ? 'rgba(212, 175, 55, 0.12)' : 'rgba(191, 161, 48, 0.1)',
+  };
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -72,18 +90,31 @@ export default function Forum() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30">
-        {/* Hero Section */}
+      <div 
+        className="min-h-screen transition-colors duration-300"
+        style={{ backgroundColor: theme.bg }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           className="relative overflow-hidden pb-20 pt-12"
         >
-          {/* Enhanced Background Effects */}
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/[0.08] via-purple-400/[0.06] to-pink-400/[0.08] dark:from-indigo-400/[0.13] dark:via-purple-400/[0.1] dark:to-pink-400/[0.13]"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
+            <div 
+              className="absolute inset-0"
+              style={{
+                background: isDark 
+                  ? 'radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 50%)'
+                  : 'radial-gradient(ellipse at 50% 0%, rgba(191, 161, 48, 0.06) 0%, transparent 50%)'
+              }}
+            />
+            <div 
+              className="absolute inset-0"
+              style={{
+                background: 'radial-gradient(circle at 50% 120%, rgba(212, 175, 55, 0.05), transparent 60%)'
+              }}
+            />
           </div>
           
           <div className="relative z-10 container mx-auto px-4">
@@ -94,9 +125,16 @@ export default function Forum() {
                 transition={{ duration: 0.8, delay: 0.1 }}
                 className="mb-6"
               >
-                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-400/12 via-purple-400/12 to-pink-400/12 dark:from-indigo-400/16 dark:via-purple-400/16 dark:to-pink-400/16 backdrop-blur-md border border-indigo-400/14 dark:border-indigo-400/18 shadow-lg">
-                  <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-300" />
-                  <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 dark:from-indigo-400 dark:via-violet-400 dark:to-purple-400 bg-clip-text text-transparent font-semibold">
+                <span 
+                  className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium backdrop-blur-md shadow-lg"
+                  style={{
+                    backgroundColor: theme.accentGlow,
+                    border: `1px solid ${theme.borderHover}`,
+                    fontFamily: "'Manrope', sans-serif"
+                  }}
+                >
+                  <Sparkles className="w-4 h-4" style={{ color: theme.accent }} />
+                  <span style={{ color: theme.accent, fontWeight: 600 }}>
                     Join the Conversation
                   </span>
                 </span>
@@ -107,13 +145,20 @@ export default function Forum() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="text-6xl font-bold tracking-tight sm:text-7xl md:text-8xl"
+                style={{ fontFamily: "'Italiana', serif" }}
               >
-                <span className="block text-slate-900 dark:text-white mb-2">Community</span>
+                <span className="block mb-2" style={{ color: theme.text }}>Community</span>
                 <span className="block relative">
-                  <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                  <span style={{ color: theme.accent }}>
                     Forum
                   </span>
-                  <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 rounded-full scale-x-0 animate-scale-x"></div>
+                  <motion.div 
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.8, delay: 0.5 }}
+                    className="absolute -bottom-4 left-1/4 right-1/4 h-0.5 rounded-full origin-center"
+                    style={{ backgroundColor: theme.accent }}
+                  />
                 </span>
               </motion.h1>
               
@@ -121,74 +166,185 @@ export default function Forum() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
-                className="mt-8 text-xl text-slate-600 dark:text-slate-300 sm:text-2xl max-w-3xl mx-auto leading-relaxed"
+                className="mt-8 text-xl sm:text-2xl max-w-3xl mx-auto leading-relaxed"
+                style={{ 
+                  color: theme.textSecondary,
+                  fontFamily: "'Manrope', sans-serif"
+                }}
               >
                 Connect with fellow believers through meaningful discussions about 
-                <span className="font-semibold text-slate-900 dark:text-white"> Bible-inspired music</span> and 
-                <span className="font-semibold text-slate-900 dark:text-white"> spiritual insights</span>
+                <span style={{ fontWeight: 600, color: theme.text }}> Bible-inspired music</span> and 
+                <span style={{ fontWeight: 600, color: theme.text }}> spiritual insights</span>
               </motion.p>
             </div>
 
-            {/* Enhanced Stats Cards */}
             <motion.div 
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
               className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto"
             >
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/12 dark:border-slate-700/40 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-400/12">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/6 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full opacity-20 group-hover:opacity-35 transition-opacity duration-500"></div>
-                <MessageSquare className="relative w-10 h-10 mx-auto mb-4 text-indigo-500 dark:text-indigo-300 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-indigo-500 to-indigo-400 bg-clip-text text-transparent mb-2">{stats.totalTopics}</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Active Topics</div>
-              </div>
+              <motion.div 
+                whileHover={{ scale: 1.02, y: -4 }}
+                transition={{ duration: 0.3 }}
+                className="group relative backdrop-blur-xl rounded-2xl p-8 text-center transition-all duration-500"
+                style={{ 
+                  backgroundColor: isDark ? 'rgba(10, 10, 10, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                  border: `1px solid ${theme.border}`
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = theme.borderHover;
+                  e.currentTarget.style.boxShadow = `0 20px 40px ${theme.accentGlow}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = theme.border;
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div 
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full opacity-30 group-hover:opacity-50 transition-opacity duration-500"
+                  style={{ backgroundColor: theme.accent }}
+                />
+                <MessageSquare 
+                  className="relative w-10 h-10 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" 
+                  style={{ color: theme.accent }}
+                />
+                <div 
+                  className="relative text-4xl font-bold mb-2"
+                  style={{ color: theme.accent, fontFamily: "'Italiana', serif" }}
+                >
+                  {stats.totalTopics}
+                </div>
+                <div 
+                  className="relative text-sm font-medium"
+                  style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+                >
+                  Active Topics
+                </div>
+              </motion.div>
               
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/12 dark:border-slate-700/40 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-400/12">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/6 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 group-hover:opacity-35 transition-opacity duration-500"></div>
-                <TrendingUp className="relative w-10 h-10 mx-auto mb-4 text-purple-500 dark:text-purple-300 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-purple-500 to-purple-400 bg-clip-text text-transparent mb-2">{stats.totalDiscussions}</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Total Discussions</div>
-              </div>
+              <motion.div 
+                whileHover={{ scale: 1.02, y: -4 }}
+                transition={{ duration: 0.3 }}
+                className="group relative backdrop-blur-xl rounded-2xl p-8 text-center transition-all duration-500"
+                style={{ 
+                  backgroundColor: isDark ? 'rgba(10, 10, 10, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                  border: `1px solid ${theme.border}`
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = theme.borderHover;
+                  e.currentTarget.style.boxShadow = `0 20px 40px ${theme.accentGlow}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = theme.border;
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div 
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full opacity-30 group-hover:opacity-50 transition-opacity duration-500"
+                  style={{ backgroundColor: theme.accent }}
+                />
+                <TrendingUp 
+                  className="relative w-10 h-10 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" 
+                  style={{ color: theme.accent }}
+                />
+                <div 
+                  className="relative text-4xl font-bold mb-2"
+                  style={{ color: theme.accent, fontFamily: "'Italiana', serif" }}
+                >
+                  {stats.totalDiscussions}
+                </div>
+                <div 
+                  className="relative text-sm font-medium"
+                  style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+                >
+                  Total Discussions
+                </div>
+              </motion.div>
               
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/12 dark:border-slate-700/40 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-pink-400/12">
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-400/6 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-pink-400 to-rose-400 rounded-full opacity-20 group-hover:opacity-35 transition-opacity duration-500"></div>
-                <Users2 className="relative w-10 h-10 mx-auto mb-4 text-pink-500 dark:text-pink-300 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-4xl font-bold bg-gradient-to-r from-pink-500 to-pink-400 bg-clip-text text-transparent mb-2">{stats.activeUsers}</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Active Contributors</div>
-              </div>
+              <motion.div 
+                whileHover={{ scale: 1.02, y: -4 }}
+                transition={{ duration: 0.3 }}
+                className="group relative backdrop-blur-xl rounded-2xl p-8 text-center transition-all duration-500"
+                style={{ 
+                  backgroundColor: isDark ? 'rgba(10, 10, 10, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                  border: `1px solid ${theme.border}`
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = theme.borderHover;
+                  e.currentTarget.style.boxShadow = `0 20px 40px ${theme.accentGlow}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = theme.border;
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div 
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full opacity-30 group-hover:opacity-50 transition-opacity duration-500"
+                  style={{ backgroundColor: theme.accent }}
+                />
+                <Users2 
+                  className="relative w-10 h-10 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" 
+                  style={{ color: theme.accent }}
+                />
+                <div 
+                  className="relative text-4xl font-bold mb-2"
+                  style={{ color: theme.accent, fontFamily: "'Italiana', serif" }}
+                >
+                  {stats.activeUsers}
+                </div>
+                <div 
+                  className="relative text-sm font-medium"
+                  style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+                >
+                  Active Contributors
+                </div>
+              </motion.div>
             </motion.div>
             
           </div>
         </motion.div>
 
-        {/* Main Content */}
-        <div className="container mx-auto px-4 -mt-12 relative z-20">
+        <div className="container mx-auto px-4 -mt-12 relative z-20 pb-12">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/12 dark:border-slate-700/40 rounded-3xl shadow-2xl p-8 md:p-10"
+            className="backdrop-blur-2xl rounded-2xl shadow-2xl p-8 md:p-10"
+            style={{ 
+              backgroundColor: isDark ? 'rgba(10, 10, 10, 0.9)' : 'rgba(255, 255, 255, 0.95)',
+              border: `1px solid ${theme.border}`
+            }}
           >
-            {/* Enhanced Action Bar */}
             <div className="flex flex-col lg:flex-row gap-6 mb-10">
-              {/* Search and Filters */}
               <div className="flex-1 flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style={{ color: theme.textSecondary }} />
                   <Input
                     placeholder="Search topics..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-12 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 focus:bg-white dark:focus:bg-slate-700 transition-all duration-300 rounded-xl text-base"
+                    className="pl-12 h-12 backdrop-blur-sm transition-all duration-300 rounded-xl text-base"
+                    style={{
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                      borderColor: theme.border,
+                      color: theme.text,
+                      fontFamily: "'Manrope', sans-serif"
+                    }}
                   />
                 </div>
                 <div className="flex gap-3">
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-[200px] h-12 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl">
-                      <Filter className="w-4 h-4 mr-2" />
+                    <SelectTrigger 
+                      className="w-[200px] h-12 backdrop-blur-sm transition-all duration-300 rounded-xl"
+                      style={{
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                        borderColor: theme.border,
+                        color: theme.text,
+                        fontFamily: "'Manrope', sans-serif"
+                      }}
+                    >
+                      <Filter className="w-4 h-4 mr-2" style={{ color: theme.accent }} />
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -201,7 +357,15 @@ export default function Forum() {
                     </SelectContent>
                   </Select>
                   <Select value={sortBy} onValueChange={(value: 'recent' | 'popular') => setSortBy(value)}>
-                    <SelectTrigger className="w-[160px] h-12 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl">
+                    <SelectTrigger 
+                      className="w-[160px] h-12 backdrop-blur-sm transition-all duration-300 rounded-xl"
+                      style={{
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                        borderColor: theme.border,
+                        color: theme.text,
+                        fontFamily: "'Manrope', sans-serif"
+                      }}
+                    >
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>
@@ -218,11 +382,25 @@ export default function Forum() {
                 </div>
               </div>
 
-              {/* Enhanced New Topic Button */}
               {user && (
                 <NewTopicDialog onTopicCreated={(newTopic: Topic) => setTopics([newTopic, ...topics])}>
-                  <Button className="relative h-12 px-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold">
-                    <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+                  <Button 
+                    className="relative h-12 px-8 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
+                    style={{ 
+                      backgroundColor: theme.accent,
+                      fontFamily: "'Manrope', sans-serif"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = theme.accentHover;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = theme.accent;
+                    }}
+                  >
+                    <span 
+                      className="absolute inset-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    />
                     <Plus className="relative w-5 h-5 mr-2" />
                     <span className="relative">New Topic</span>
                   </Button>
@@ -230,15 +408,25 @@ export default function Forum() {
               )}
             </div>
 
-            {/* Topics List */}
             {loading ? (
               <div className="flex items-center justify-center min-h-[500px]">
                 <div className="space-y-6 text-center">
                   <div className="relative">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-500 mx-auto"></div>
-                    <div className="absolute inset-0 rounded-full animate-pulse bg-gradient-to-r from-indigo-400/16 to-purple-400/16"></div>
+                    <div 
+                      className="animate-spin rounded-full h-16 w-16 border-4 mx-auto"
+                      style={{ 
+                        borderColor: theme.border,
+                        borderTopColor: theme.accent
+                      }}
+                    />
+                    <div 
+                      className="absolute inset-0 rounded-full animate-pulse"
+                      style={{ backgroundColor: theme.accentGlow }}
+                    />
                   </div>
-                  <p className="text-slate-600 dark:text-slate-300 text-lg">Loading discussions...</p>
+                  <p style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }} className="text-lg">
+                    Loading discussions...
+                  </p>
                 </div>
               </div>
             ) : filteredTopics.length > 0 ? (
@@ -252,18 +440,37 @@ export default function Forum() {
             ) : (
               <div className="text-center py-16">
                 <div className="relative mb-6">
-                  <MessageSquare className="w-16 h-16 mx-auto text-slate-400 dark:text-slate-500" />
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full opacity-20"></div>
+                  <MessageSquare className="w-16 h-16 mx-auto" style={{ color: theme.textSecondary }} />
+                  <div 
+                    className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full opacity-20"
+                    style={{ backgroundColor: theme.accent }}
+                  />
                 </div>
-                <h3 className="text-2xl font-semibold mb-3 text-slate-900 dark:text-white">No topics found</h3>
-                <p className="text-slate-600 dark:text-slate-300 mb-6 text-lg max-w-md mx-auto">
+                <h3 
+                  className="text-2xl font-semibold mb-3"
+                  style={{ color: theme.text, fontFamily: "'Italiana', serif" }}
+                >
+                  No topics found
+                </h3>
+                <p 
+                  className="mb-6 text-lg max-w-md mx-auto"
+                  style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+                >
                   {searchTerm || selectedCategory !== 'all' 
                     ? "Try adjusting your filters or search terms to find more discussions"
                     : "Be the first to start a meaningful conversation in our community!"}
                 </p>
                 {user && !searchTerm && selectedCategory === 'all' && (
                   <NewTopicDialog onTopicCreated={(newTopic: Topic) => setTopics([newTopic, ...topics])}>
-                    <Button variant="outline" className="h-12 px-6 border-2 hover:scale-105 transition-all duration-300 rounded-xl">
+                    <Button 
+                      variant="outline" 
+                      className="h-12 px-6 border-2 hover:scale-105 transition-all duration-300 rounded-xl"
+                      style={{ 
+                        borderColor: theme.accent,
+                        color: theme.accent,
+                        fontFamily: "'Manrope', sans-serif"
+                      }}
+                    >
                       <Plus className="w-5 h-5 mr-2" />
                       Create First Topic
                     </Button>
@@ -272,29 +479,55 @@ export default function Forum() {
               </div>
             )}
 
-            {/* Enhanced Active Categories */}
             {categories.length > 0 && !searchTerm && selectedCategory === 'all' && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="mt-12 pt-10 border-t border-slate-200/60 dark:border-slate-700/60"
+                className="mt-12 pt-10"
+                style={{ borderTop: `1px solid ${theme.border}` }}
               >
-                <h3 className="text-xl font-semibold mb-6 text-slate-900 dark:text-white">Browse by Category</h3>
+                <h3 
+                  className="text-xl font-semibold mb-6"
+                  style={{ color: theme.text, fontFamily: "'Italiana', serif" }}
+                >
+                  Browse by Category
+                </h3>
                 <div className="flex flex-wrap gap-3">
                   {categories.map((category) => {
                     const topicCount = topics.filter(t => t.category === category.name).length;
                     return (
-                      <button
+                      <motion.button
                         key={category.id}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => setSelectedCategory(category.name)}
-                        className="inline-flex items-center rounded-xl border-2 border-slate-200/60 dark:border-slate-700/60 px-4 py-2 text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 bg-white/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:text-white hover:border-transparent hover:scale-105 cursor-pointer backdrop-blur-sm"
+                        className="inline-flex items-center rounded-xl border-2 px-4 py-2 text-sm font-medium transition-all duration-300 focus:outline-none backdrop-blur-sm cursor-pointer"
+                        style={{ 
+                          borderColor: theme.border,
+                          color: theme.text,
+                          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+                          fontFamily: "'Manrope', sans-serif"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = theme.accent;
+                          e.currentTarget.style.backgroundColor = theme.accent;
+                          e.currentTarget.style.color = '#ffffff';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = theme.border;
+                          e.currentTarget.style.backgroundColor = isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)';
+                          e.currentTarget.style.color = theme.text;
+                        }}
                       >
                         {category.name}
-                        <span className="ml-2 text-xs opacity-70 bg-slate-200/60 dark:bg-slate-600/60 px-2 py-0.5 rounded-full">
+                        <span 
+                          className="ml-2 text-xs opacity-70 px-2 py-0.5 rounded-full"
+                          style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)' }}
+                        >
                           {topicCount}
                         </span>
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </div>

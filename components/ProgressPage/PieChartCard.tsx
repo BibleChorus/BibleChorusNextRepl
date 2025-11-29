@@ -1,16 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Label, Pie, PieChart, Sector } from "recharts"
-import { PieSectorDataItem } from "recharts/types/polar/Pie"
+import { Label, Pie, PieChart } from "recharts"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
@@ -18,6 +10,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useTheme } from "next-themes"
+import { motion } from "framer-motion"
 
 interface PieChartCardProps {
   title: string
@@ -30,31 +24,45 @@ interface PieChartCardProps {
   totalVerses: number
 }
 
-const chartConfig: ChartConfig = {
-  covered: {
-    label: "Covered",
-    color: "hsl(var(--chart-purple))",
-  },
-  uncovered: {
-    label: "Uncovered",
-    color: "hsl(var(--chart-uncovered))",
-  },
-}
-
 export function PieChartCard({ title, description, data, totalVerses }: PieChartCardProps) {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+
+  const theme = {
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+  }
+
   const id = `pie-${title.toLowerCase().replace(/\s/g, '-')}`
 
-  const updatedData = data.map(item => ({
-    ...item,
-    fill: item.name === "uncovered" ? "hsl(var(--chart-uncovered))" : item.fill
-  }))
+  const chartConfig: ChartConfig = {
+    covered: {
+      label: "Covered",
+      color: theme.accent,
+    },
+    uncovered: {
+      label: "Uncovered",
+      color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    },
+  }
 
   return (
     <div data-chart={id} className="flex flex-col h-full">
       <ChartStyle id={id} config={chartConfig} />
       <div className="text-center mb-4">
-        <h3 className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">{title}</h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400">{description}</p>
+        <h3 
+          className="text-lg font-bold mb-2"
+          style={{ color: theme.accent, fontFamily: "'Italiana', serif" }}
+        >
+          {title}
+        </h3>
+        <p 
+          className="text-sm"
+          style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+        >
+          {description}
+        </p>
       </div>
       <div className="flex justify-center flex-grow">
         <ChartContainer
@@ -67,12 +75,13 @@ export function PieChartCard({ title, description, data, totalVerses }: PieChart
               content={<ChartTooltipContent nameKey="name" labelKey="value" />}
             />
             <Pie
-              data={updatedData}
+              data={data}
               dataKey="value"
               nameKey="name"
               innerRadius={40}
               outerRadius={60}
               paddingAngle={2}
+              strokeWidth={0}
             >
               <Label
                 content={({ viewBox }) => {
@@ -89,14 +98,22 @@ export function PieChartCard({ title, description, data, totalVerses }: PieChart
                         <tspan
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-foreground text-xl font-bold"
+                          className="text-xl font-bold"
+                          style={{ 
+                            fill: theme.accent,
+                            fontFamily: "'Italiana', serif",
+                          }}
                         >
                           {percentage}%
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 16}
-                          className="fill-muted-foreground text-[10px]"
+                          className="text-[10px]"
+                          style={{ 
+                            fill: theme.textSecondary,
+                            fontFamily: "'Manrope', sans-serif",
+                          }}
                         >
                           Covered
                         </tspan>

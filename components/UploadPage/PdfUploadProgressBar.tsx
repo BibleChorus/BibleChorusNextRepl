@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
+import { useTheme } from 'next-themes';
 import * as ProgressPrimitive from '@radix-ui/react-progress';
-import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface Props {
   onProgressChange: (progress: number) => void;
@@ -15,6 +16,15 @@ const PdfUploadProgressBar: React.FC<Props> = ({ onProgressChange }) => {
   const { watch } = useFormContext();
   const watchedFields = watch();
   const prevRef = useRef(0);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    progressBg: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.15)',
+  };
 
   const progress = useMemo(() => {
     let total = 0;
@@ -42,17 +52,33 @@ const PdfUploadProgressBar: React.FC<Props> = ({ onProgressChange }) => {
   }, [progress, onProgressChange]);
 
   return (
-    <div className="w-full space-y-2">
-      <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+    <div className="w-full space-y-3">
+      <div 
+        className="flex justify-between text-xs tracking-[0.1em] uppercase"
+        style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+      >
         <span>Upload Progress</span>
-        <span>{progress}% Complete</span>
+        <span style={{ color: progress === 100 ? theme.accent : theme.textSecondary }}>
+          {progress}% Complete
+        </span>
       </div>
-      <ProgressPrimitive.Root className="relative h-4 w-full overflow-hidden rounded-full bg-secondary">
-        <ProgressPrimitive.Indicator
-          className={cn('h-full w-full flex-1 transition-all duration-500 ease-in-out',
-            progress === 100 ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-primary')}
-          style={{ transform: `translateX(-${100 - progress}%)` }}
-        />
+      <ProgressPrimitive.Root 
+        className="relative h-1 w-full overflow-hidden"
+        style={{ backgroundColor: theme.progressBg }}
+      >
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <ProgressPrimitive.Indicator
+            className="h-full w-full flex-1"
+            style={{ 
+              backgroundColor: theme.accent,
+              boxShadow: progress === 100 ? `0 0 12px ${theme.accent}` : 'none',
+            }}
+          />
+        </motion.div>
       </ProgressPrimitive.Root>
     </div>
   );

@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatBibleVerses } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { useTheme } from 'next-themes';
 
 interface EditPlaylistDialogProps {
   isOpen: boolean;
@@ -32,6 +33,22 @@ export default function EditPlaylistDialog({
   const [description, setDescription] = useState(playlist.description || '');
   const [isPublic, setIsPublic] = useState(playlist.is_public);
   const [selectedSongs, setSelectedSongs] = useState<number[]>([]);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+    inputBg: isDark ? '#0f0f0f' : '#f8f5f0',
+  };
 
   const handleSaveDetails = async () => {
     try {
@@ -68,59 +85,121 @@ export default function EditPlaylistDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] h-[80vh] flex flex-col p-0">
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle>Edit Playlist</DialogTitle>
+      <DialogContent 
+        className="sm:max-w-[450px] h-[80vh] flex flex-col p-0 rounded-none"
+        style={{
+          backgroundColor: theme.bgCard,
+          border: `1px solid ${theme.border}`,
+          color: theme.text,
+        }}
+      >
+        <DialogHeader className="p-6 pb-4">
+          <DialogTitle 
+            className="text-xl tracking-wide"
+            style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+          >
+            Edit Playlist
+          </DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="details" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-2 px-6">
-            <TabsTrigger value="details">Playlist Details</TabsTrigger>
-            <TabsTrigger value="songs">Remove Songs</TabsTrigger>
-          </TabsList>
+          <div className="px-6">
+            <TabsList 
+              className="grid w-full grid-cols-2 gap-1 h-auto p-1 rounded-none"
+              style={{
+                backgroundColor: theme.hoverBg,
+                border: `1px solid ${theme.border}`,
+              }}
+            >
+              <TabsTrigger 
+                value="details"
+                className="rounded-none text-xs tracking-[0.15em] uppercase font-medium py-2.5 transition-all data-[state=active]:shadow-none"
+                style={{ color: theme.textSecondary }}
+              >
+                Details
+              </TabsTrigger>
+              <TabsTrigger 
+                value="songs"
+                className="rounded-none text-xs tracking-[0.15em] uppercase font-medium py-2.5 transition-all data-[state=active]:shadow-none"
+                style={{ color: theme.textSecondary }}
+              >
+                Remove Songs
+              </TabsTrigger>
+            </TabsList>
+          </div>
           
-          <div className="flex-1 relative">
+          <div className="flex-1 relative mt-4">
             <TabsContent 
               value="details" 
               className="absolute inset-0 flex flex-col px-6"
             >
               <ScrollArea className="flex-1">
-                <div className="space-y-4 pr-4">
+                <div className="space-y-6 pr-4">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                    <label 
+                      htmlFor="name" 
+                      className="block text-xs tracking-[0.15em] uppercase font-medium mb-2"
+                      style={{ color: theme.textSecondary }}
+                    >
                       Name
                     </label>
                     <Input
                       id="name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="mt-1"
+                      className="rounded-none text-sm"
+                      style={{
+                        backgroundColor: theme.inputBg,
+                        border: `1px solid ${theme.border}`,
+                        color: theme.text,
+                      }}
                     />
                   </div>
                   <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                    <label 
+                      htmlFor="description" 
+                      className="block text-xs tracking-[0.15em] uppercase font-medium mb-2"
+                      style={{ color: theme.textSecondary }}
+                    >
                       Description
                     </label>
                     <Textarea
                       id="description"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="mt-1"
+                      className="rounded-none text-sm min-h-[100px]"
+                      style={{
+                        backgroundColor: theme.inputBg,
+                        border: `1px solid ${theme.border}`,
+                        color: theme.text,
+                      }}
                     />
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center justify-between py-2">
+                    <label 
+                      htmlFor="public" 
+                      className="block text-xs tracking-[0.15em] uppercase font-medium"
+                      style={{ color: theme.textSecondary }}
+                    >
+                      Public
+                    </label>
                     <Switch
                       checked={isPublic}
                       onCheckedChange={setIsPublic}
                       id="public"
+                      className="data-[state=checked]:bg-[#d4af37]"
                     />
-                    <label htmlFor="public" className="ml-2 block text-sm font-medium text-gray-700">
-                      Public
-                    </label>
                   </div>
                 </div>
               </ScrollArea>
-              <div className="py-4">
-                <Button onClick={handleSaveDetails} className="w-full">
+              <div className="py-6">
+                <Button 
+                  onClick={handleSaveDetails} 
+                  className="w-full h-12 rounded-none text-xs tracking-[0.2em] uppercase font-medium"
+                  style={{
+                    backgroundColor: theme.accent,
+                    color: isDark ? '#050505' : '#ffffff',
+                  }}
+                >
                   Save Details
                 </Button>
               </div>
@@ -131,9 +210,16 @@ export default function EditPlaylistDialog({
               className="absolute inset-0 flex flex-col px-6"
             >
               <ScrollArea className="flex-1">
-                <div className="space-y-4 pr-4">
+                <div className="space-y-3 pr-4">
                   {songs.map((song) => (
-                    <div key={song.id} className="flex items-start space-x-2 pb-2">
+                    <div 
+                      key={song.id} 
+                      className="flex items-start space-x-3 p-3 transition-colors duration-300"
+                      style={{
+                        backgroundColor: selectedSongs.includes(song.id) ? theme.hoverBg : 'transparent',
+                        border: `1px solid ${selectedSongs.includes(song.id) ? theme.borderHover : theme.border}`,
+                      }}
+                    >
                       <input
                         type="checkbox"
                         id={`song-${song.id}`}
@@ -145,24 +231,49 @@ export default function EditPlaylistDialog({
                             setSelectedSongs(selectedSongs.filter((id) => id !== song.id));
                           }
                         }}
-                        className="mt-1"
+                        className="mt-1 accent-[#d4af37]"
+                        style={{ accentColor: theme.accent }}
                       />
                       <div className="flex-grow">
                         <div className="flex flex-col">
                           <div className="flex items-center space-x-2">
-                            <label htmlFor={`song-${song.id}`} className="font-medium">{song.title}</label>
+                            <label 
+                              htmlFor={`song-${song.id}`} 
+                              className="text-sm cursor-pointer"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              {song.title}
+                            </label>
                             {song.bible_verses && song.bible_verses.length > 0 && (
                               <>
-                                <Separator orientation="vertical" className="h-4" />
-                                <span className="text-sm text-muted-foreground">
+                                <Separator 
+                                  orientation="vertical" 
+                                  className="h-4"
+                                  style={{ backgroundColor: theme.border }}
+                                />
+                                <span 
+                                  className="text-xs font-light"
+                                  style={{ color: theme.textMuted }}
+                                >
                                   {formatBibleVerses(song.bible_verses)}
                                 </span>
                               </>
                             )}
                           </div>
-                          <div className="flex flex-wrap gap-1 mt-1">
+                          <div className="flex flex-wrap gap-1.5 mt-2">
                             {song.genres && song.genres.map((genre) => (
-                              <Badge key={genre} variant="secondary" className="text-xs">{genre}</Badge>
+                              <Badge 
+                                key={genre} 
+                                variant="secondary" 
+                                className="text-[9px] tracking-[0.1em] uppercase px-1.5 py-0.5 rounded-none font-medium"
+                                style={{
+                                  backgroundColor: 'transparent',
+                                  color: theme.textMuted,
+                                  border: `1px solid ${theme.border}`,
+                                }}
+                              >
+                                {genre}
+                              </Badge>
                             ))}
                           </div>
                         </div>
@@ -171,13 +282,18 @@ export default function EditPlaylistDialog({
                   ))}
                 </div>
               </ScrollArea>
-              <div className="py-4">
+              <div className="py-6">
                 <Button 
                   onClick={handleRemoveSongs} 
                   disabled={selectedSongs.length === 0} 
-                  className="w-full"
+                  className="w-full h-12 rounded-none text-xs tracking-[0.2em] uppercase font-medium transition-opacity"
+                  style={{
+                    backgroundColor: selectedSongs.length > 0 ? '#dc2626' : theme.border,
+                    color: selectedSongs.length > 0 ? '#ffffff' : theme.textMuted,
+                    opacity: selectedSongs.length === 0 ? 0.5 : 1,
+                  }}
                 >
-                  Remove Selected Songs
+                  Remove Selected Songs ({selectedSongs.length})
                 </Button>
               </div>
             </TabsContent>

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
+import { useTheme } from 'next-themes'
 import { Button } from "@/components/ui/button"
 import Image from 'next/image'
 import { getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils'
@@ -57,6 +58,19 @@ export function ImageCropper({
   const aspectRatioRef = useRef(aspectRatio)
   const minZoomRef = useRef(minZoom)
   const maxZoomRef = useRef(maxZoom)
+  
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    border: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.2)',
+    borderAccent: isDark ? 'rgba(212, 175, 55, 0.4)' : 'rgba(191, 161, 48, 0.5)',
+  }
 
   useEffect(() => {
     aspectRatioRef.current = aspectRatio
@@ -131,7 +145,6 @@ export function ImageCropper({
     const canvas = document.createElement('canvas')
     const scaleX = imageRef.naturalWidth / imageRef.width
     const scaleY = imageRef.naturalHeight / imageRef.height
-    // Preserve the original image resolution when generating the crop
     canvas.width = completedCrop.width * scaleX
     canvas.height = completedCrop.height * scaleY
     const ctx = canvas.getContext('2d')
@@ -235,34 +248,78 @@ export function ImageCropper({
   ])
 
   return (
-    <div className="p-4" style={{ maxHeight: `${maxHeight}px`, overflowY: 'auto' }}>
-      <ReactCrop
-        crop={crop}
-        onChange={(c, percentCrop) => setCrop(percentCrop)}
-        onComplete={(c) => setCompletedCrop(c)}
-        aspect={aspectRatioRef.current}
-        minWidth={cropConstraints?.minWidth ?? undefined}
-        minHeight={cropConstraints?.minHeight ?? undefined}
-        maxWidth={cropConstraints?.maxWidth ?? undefined}
-        maxHeight={cropConstraints?.maxHeight ?? undefined}
+    <div 
+      className="p-6" 
+      style={{ 
+        maxHeight: `${maxHeight}px`, 
+        overflowY: 'auto',
+        backgroundColor: theme.bgCard,
+      }}
+    >
+      <h3 
+        className="text-lg mb-4 tracking-wide"
+        style={{ fontFamily: "'Italiana', serif", color: theme.text }}
       >
-        <Image
-          src={imageUrl}
-          alt="Crop me"
-          onLoad={(e) => onLoad(e.currentTarget)}
-          width={800}
-          height={600}
-          style={{ 
-            maxHeight: `${maxHeight - 100}px`,
-            width: 'auto',
-            maxWidth: '100%',
-            display: 'block'
+        Crop Your Image
+      </h3>
+      <div 
+        className="p-4"
+        style={{ 
+          border: `1px solid ${theme.border}`,
+          backgroundColor: theme.bg,
+        }}
+      >
+        <ReactCrop
+          crop={crop}
+          onChange={(c, percentCrop) => setCrop(percentCrop)}
+          onComplete={(c) => setCompletedCrop(c)}
+          aspect={aspectRatioRef.current}
+          minWidth={cropConstraints?.minWidth ?? undefined}
+          minHeight={cropConstraints?.minHeight ?? undefined}
+          maxWidth={cropConstraints?.maxWidth ?? undefined}
+          maxHeight={cropConstraints?.maxHeight ?? undefined}
+        >
+          <Image
+            src={imageUrl}
+            alt="Crop me"
+            onLoad={(e) => onLoad(e.currentTarget)}
+            width={800}
+            height={600}
+            style={{ 
+              maxHeight: `${maxHeight - 160}px`,
+              width: 'auto',
+              maxWidth: '100%',
+              display: 'block'
+            }}
+          />
+        </ReactCrop>
+      </div>
+      <div className="mt-6 flex justify-end space-x-3">
+        <Button 
+          onClick={onCancel} 
+          variant="outline" 
+          type="button"
+          className="h-10 px-5 rounded-none text-xs tracking-[0.1em] uppercase transition-all duration-300"
+          style={{
+            borderColor: theme.border,
+            color: theme.textSecondary,
+            backgroundColor: 'transparent',
           }}
-        />
-      </ReactCrop>
-      <div className="mt-4 flex justify-end space-x-2">
-        <Button onClick={onCancel} variant="outline" type="button">Cancel</Button>
-        <Button onClick={getCroppedImg} type="button">Save Image</Button>
+        >
+          Cancel
+        </Button>
+        <Button 
+          onClick={getCroppedImg} 
+          type="button"
+          className="h-10 px-5 rounded-none text-xs tracking-[0.1em] uppercase transition-all duration-300"
+          style={{
+            backgroundColor: theme.accent,
+            color: isDark ? '#050505' : '#ffffff',
+            border: 'none',
+          }}
+        >
+          Save Image
+        </Button>
       </div>
     </div>
   )

@@ -4,7 +4,6 @@ import Head from 'next/head';
 import db from '@/db';
 import { parsePostgresArray } from '@/lib/utils';
 import { Pdf, PdfComment, PdfNote } from '@/types';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CommentList } from '@/components/PdfComments/CommentList';
@@ -12,7 +11,7 @@ import Image from 'next/image';
 import { NewCommentForm } from '@/components/PdfComments/NewCommentForm';
 import { NotesSection } from '@/components/PdfNotes/NotesSection';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThumbsUp, ThumbsDown, Headphones, FileText, Share2, Sparkles } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Headphones, FileText, Share2, Sparkles, BookOpen, MessageSquare, StickyNote, ArrowLeft } from 'lucide-react';
 import apiClient from '@/lib/apiClient';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,6 +26,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BIBLE_BOOKS } from '@/lib/constants';
 import { motion } from 'framer-motion';
+import { useTheme } from 'next-themes';
 import { FetchVersesResponse } from '@/types/api';
 
 interface BibleVerse {
@@ -43,8 +43,62 @@ interface PdfPageProps {
   initialNotes: PdfNote[];
 }
 
+const FilmGrainOverlay: React.FC = () => {
+  return (
+    <div 
+      className="fixed inset-0 pointer-events-none opacity-[0.015]"
+      style={{
+        zIndex: 1,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+      }}
+    />
+  );
+};
+
+interface AmbientOrbsOverlayProps {
+  isDark: boolean;
+}
+
+const AmbientOrbsOverlay: React.FC<AmbientOrbsOverlayProps> = ({ isDark }) => {
+  const orbColors = {
+    primary: isDark ? 'rgba(212, 175, 55, 0.06)' : 'rgba(191, 161, 48, 0.05)',
+    secondary: isDark ? 'rgba(160, 160, 160, 0.04)' : 'rgba(100, 100, 100, 0.03)',
+  };
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+      <motion.div 
+        className="absolute top-0 right-0 w-96 h-96 rounded-full"
+        style={{
+          background: orbColors.primary,
+          filter: 'blur(120px)'
+        }}
+        animate={{
+          y: [0, -30, 0],
+          x: [0, -20, 0],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div 
+        className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full"
+        style={{
+          background: orbColors.secondary,
+          filter: 'blur(120px)'
+        }}
+        animate={{
+          y: [0, 30, 0],
+          x: [0, 20, 0],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+      />
+    </div>
+  );
+};
+
 export default function PdfPage({ pdf, bibleVerses, initialComments, initialNotes }: PdfPageProps) {
   const { user, getAuthToken } = useAuth();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [comments, setComments] = useState<PdfComment[]>(initialComments);
   const [ratingCounts, setRatingCounts] = useState({ quality: 0, theology: 0, helpfulness: 0 });
   const [notebookLmUrl, setNotebookLmUrl] = useState(pdf.notebook_lm_url || '');
@@ -52,6 +106,28 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
   const [editingDetails, setEditingDetails] = useState(false);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [isLoadingVerses, setIsLoadingVerses] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgAlt: isDark ? '#0a0a0a' : '#f0ede6',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    borderLight: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+    borderHover: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+    cardBorder: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+  };
 
   const handleCommentAdded = (comment: PdfComment) => {
     setComments((prev) => [comment, ...prev]);
@@ -99,6 +175,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
         summary: summary || null,
       });
       toast.success('Details updated');
+      setEditingDetails(false);
     } catch (err) {
       console.error('Error updating link', err);
       toast.error('Failed to update details');
@@ -167,299 +244,545 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
     fetchVerses();
   }, [bibleVerses]);
 
+  if (!mounted) {
+    return (
+      <>
+        <Head>
+          <title>{pdf.title} | BibleChorus</title>
+        </Head>
+        <div 
+          className="min-h-screen opacity-0" 
+          style={{ fontFamily: "'Manrope', sans-serif" }} 
+        />
+      </>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50/60 via-white to-yellow-50/30 dark:from-amber-950/40 dark:via-slate-900 dark:to-yellow-950/30">
+    <>
       <Head>
-        <title>{pdf.title}</title>
+        <title>{pdf.title} | BibleChorus</title>
       </Head>
 
-      {/* Page Background */}
-      <div className="min-h-screen bg-gradient-to-br from-amber-50/60 via-white to-yellow-50/30 dark:from-amber-950/40 dark:via-slate-900 dark:to-yellow-950/30">
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative overflow-hidden pb-20 pt-12"
-        >
-          {/* Background Blobs & Gradients */}
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.08] via-rose-500/[0.06] to-emerald-500/[0.08] dark:from-amber-500/[0.15] dark:via-rose-500/[0.12] dark:to-emerald-500/[0.15]"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(251,191,36,0.1),rgba(255,255,255,0))]"></div>
-          </div>
+      <div 
+        className="min-h-screen relative"
+        style={{ 
+          backgroundColor: theme.bg,
+          color: theme.text,
+          fontFamily: "'Manrope', sans-serif"
+        }}
+      >
+        <style jsx global>{`
+          html, body {
+            background-color: ${theme.bg} !important;
+          }
+        `}</style>
 
-          {/* Hero Content */}
-          <div className="relative z-10 container mx-auto px-4 text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="mb-6"
-            >
-              <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 dark:from-amber-500/20 dark:via-rose-500/20 dark:to-emerald-500/20 backdrop-blur-md border border-amber-500/20 dark:border-amber-500/30 shadow-lg">
-                <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span className="bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 dark:from-amber-400 dark:via-pink-400 dark:to-emerald-400 bg-clip-text text-transparent font-semibold">
-                  Study Resource
-                </span>
-              </span>
-            </motion.div>
+        <AmbientOrbsOverlay isDark={isDark} />
+        <FilmGrainOverlay />
 
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-5xl md:text-6xl font-bold tracking-tight"
-            >
-              <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
-                  {pdf.title}
-                </span>
-                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 rounded-full scale-x-0 animate-scale-x"></div>
-              </span>
-            </motion.h1>
-
-            {pdf.author && (
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="mt-4 text-lg text-slate-600 dark:text-slate-300"
-              >
-                By {pdf.author}
-              </motion.p>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Main Content */}
-        <div className="container mx-auto px-4 -mt-12 relative z-20">
+        <div className="relative" style={{ zIndex: 2 }}>
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-6 md:p-10 space-y-6"
+            transition={{ duration: 0.8 }}
+            className="relative overflow-hidden pb-8 pt-16"
           >
-            <div className="flex flex-col md:flex-row md:items-start md:space-x-6">
-              {pdf.image_url && (
-                <div className="w-full md:w-1/3 mb-4 md:mb-0">
-                  <Image
-                    src={
-                      pdf.image_url.startsWith('http')
-                        ? pdf.image_url
-                        : `${process.env.NEXT_PUBLIC_CDN_URL ?? ''}${pdf.image_url}`
-                    }
-                    alt={pdf.title}
-                    width={400}
-                    height={500}
-                    className="w-full h-auto object-contain rounded"
-                  />
-                </div>
-              )}
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold mb-1">{pdf.title}</h1>
+            <div className="container mx-auto px-6 md:px-12">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="mb-12"
+              >
+                <Link href="/pdfs">
+                  <Button 
+                    variant="ghost"
+                    className="h-10 px-4 rounded-none text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
+                    style={{
+                      color: theme.textSecondary,
+                      border: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Library
+                  </Button>
+                </Link>
+              </motion.div>
+
+              <div className="text-center max-w-4xl mx-auto">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.1 }}
+                  className="mb-6"
+                >
+                  <span 
+                    className="text-xs tracking-[0.5em] uppercase"
+                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.accent }}
+                  >
+                    Study Resource
+                  </span>
+                </motion.div>
+                
+                <motion.h1 
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="text-4xl md:text-5xl lg:text-6xl tracking-tight mb-4"
+                  style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                >
+                  {pdf.title}
+                </motion.h1>
+
                 {pdf.author && (
-                  <p className="text-muted-foreground">By {pdf.author}</p>
+                  <motion.p 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    className="text-lg font-light mb-6"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    by {pdf.author}
+                  </motion.p>
                 )}
-                <p className="text-sm text-muted-foreground">
-                  Uploaded on {new Date(pdf.created_at).toLocaleDateString()}
-                </p>
-                <div className="flex flex-wrap gap-2 mt-2">
+
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="flex flex-wrap justify-center gap-3 mb-8"
+                >
                   {pdf.themes.map((t) => (
-                    <Badge
+                    <span 
                       key={t}
-                      variant="secondary"
-                      className="bg-gradient-to-r from-amber-500/10 to-rose-500/10 text-amber-700 dark:text-amber-300 hover:from-amber-500/20 hover:to-rose-500/20 transition-all duration-300 text-xs border-amber-500/20 dark:border-amber-400/20 font-medium px-2 py-1 rounded-lg"
+                      className="px-4 py-1.5 text-[10px] tracking-[0.15em] uppercase transition-all duration-300"
+                      style={{ 
+                        border: `1px solid ${theme.border}`,
+                        color: theme.accent,
+                        backgroundColor: 'transparent'
+                      }}
                     >
                       {t}
-                    </Badge>
+                    </span>
                   ))}
-                </div>
-                {pdf.summary && <p className="mt-2 whitespace-pre-wrap">{pdf.summary}</p>}
-                {(pdf.notebook_lm_url || pdf.file_url) && (
-                  <div className="mt-4 flex flex-wrap items-center gap-4">
-                    {pdf.notebook_lm_url && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            asChild
-                            className="relative h-12 px-6 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 hover:from-indigo-600 hover:via-violet-600 hover:to-purple-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
-                          >
-                            <Link
-                              href={pdf.notebook_lm_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
-                              <Image
-                                src="/icons/notebooklm.svg"
-                                alt="NotebookLM"
-                                width={24}
-                                height={24}
-                                className="relative w-5 h-5 mr-2"
-                              />
-                              <span className="relative">Open in NotebookLM</span>
-                            </Link>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Google NotebookLM lets you ask questions and explore your PDFs.
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                    {pdf.file_url && (
-                      <Button
-                        asChild
-                        className="relative h-12 px-6 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 hover:from-amber-600 hover:via-pink-600 hover:to-emerald-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group rounded-xl font-semibold"
-                      >
-                        <Link
-                          href={pdf.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
-                          <FileText className="relative w-5 h-5 mr-2" />
-                          <span className="relative">Open PDF</span>
-                        </Link>
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      onClick={handleShare}
-                      className="h-12 px-6 flex items-center gap-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
-                    >
-                      <Share2 className="w-5 h-5" />
-                      Share
-                    </Button>
-                  </div>
-                )}
-                {user && user.id === pdf.uploaded_by && (
-                  <div className="mt-2 space-y-1">
-                    {!editingDetails ? (
-                      <Button size="sm" onClick={() => setEditingDetails(true)}>
-                        Edit Details
-                      </Button>
-                    ) : (
-                      <div className="space-y-1">
-                        <Input
-                          value={notebookLmUrl}
-                          onChange={(e) => setNotebookLmUrl(e.target.value)}
-                          placeholder="https://notebooklm.google.com/..."
-                        />
-                        <Textarea
-                          value={summary}
-                          onChange={(e) => setSummary(e.target.value)}
-                          placeholder="One paragraph summary"
-                        />
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" onClick={handleDetailsSave}>Save Details</Button>
-                          <Button size="sm" variant="secondary" onClick={() => setEditingDetails(false)}>
-                            Cancel
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                </motion.div>
               </div>
             </div>
-
-            <Separator />
-
-            <section>
-              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 bg-clip-text text-transparent">Bible Verses</h2>
-              {isLoadingVerses ? (
-                <p>Loading verses...</p>
-              ) : verses.length === 0 ? (
-                <p>No verses linked.</p>
-              ) : (
-                <ScrollArea className="h-[400px] pr-4">
-                  <div className="space-y-4">
-                    {verses.map((v, i) => (
-                      <div key={i}>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold">{`${v.book} ${v.chapter}:${v.verse}`}</p>
-                          <Link
-                            href={{
-                              pathname: '/listen',
-                              query: {
-                                bibleBooks: v.book,
-                                bibleChapters: `${v.book}:${v.chapter}`,
-                                bibleVerses: `${v.book} ${v.chapter}:${v.verse}`,
-                              },
-                            }}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Headphones className="w-4 h-4" />
-                          </Link>
-                        </div>
-                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(v.text) }} />
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </section>
-
-            <Separator />
-
-            <section>
-              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 bg-clip-text text-transparent">Ratings</h2>
-              <div className="space-y-2">
-                {(['quality', 'theology', 'helpfulness'] as const).map((cat) => (
-                  <div key={cat} className="flex items-center space-x-2">
-                    <span className="capitalize w-32">{cat}</span>
-                    <Button
-                      aria-label={`Upvote ${cat}`}
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleVote(cat, 1)}
-                      className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-gradient-to-r hover:from-amber-500 hover:to-emerald-500 hover:text-white hover:border-transparent transition-all duration-300 rounded-lg"
-                    >
-                      <ThumbsUp className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      aria-label={`Downvote ${cat}`}
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleVote(cat, -1)}
-                      className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-gradient-to-r hover:from-rose-500 hover:to-amber-500 hover:text-white hover:border-transparent transition-all duration-300 rounded-lg"
-                    >
-                      <ThumbsDown className="h-4 w-4" />
-                    </Button>
-                    <span>{ratingCounts[cat]}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <Separator />
-
-            <section>
-              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 bg-clip-text text-transparent">Comments</h2>
-              {user ? (
-                <NewCommentForm pdfId={pdf.id} onCommentAdded={handleCommentAdded} />
-              ) : (
-                <p>Please log in to add a comment.</p>
-              )}
-              <CommentList
-                comments={comments}
-                pdfId={pdf.id}
-                fileUrl={pdf.file_url}
-                onCommentAdded={handleCommentAdded}
-              />
-            </section>
-
-            <Separator />
-
-            <section>
-              <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-amber-500 via-pink-500 to-emerald-500 bg-clip-text text-transparent">My Notes</h2>
-              <NotesSection initialNotes={initialNotes} pdfId={pdf.id} />
-            </section>
           </motion.div>
+
+          <div className="container mx-auto px-6 md:px-12 pb-24">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+            >
+              <div 
+                className="p-8 md:p-12"
+                style={{ 
+                  border: `1px solid ${theme.border}`,
+                  backgroundColor: theme.bgCard
+                }}
+              >
+                <div className="grid md:grid-cols-3 gap-8 md:gap-12">
+                  {pdf.image_url && (
+                    <div className="md:col-span-1">
+                      <div 
+                        className="relative aspect-[3/4] overflow-hidden"
+                        style={{ border: `1px solid ${theme.borderLight}` }}
+                      >
+                        <Image
+                          src={
+                            pdf.image_url.startsWith('http')
+                              ? pdf.image_url
+                              : `${process.env.NEXT_PUBLIC_CDN_URL ?? ''}${pdf.image_url}`
+                          }
+                          alt={pdf.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className={pdf.image_url ? 'md:col-span-2' : 'md:col-span-3'}>
+                    <div className="space-y-6">
+                      <div>
+                        <p 
+                          className="text-sm mb-2"
+                          style={{ color: theme.textMuted }}
+                        >
+                          Uploaded by {pdf.username} on {new Date(pdf.created_at).toLocaleDateString()}
+                        </p>
+                        
+                        {pdf.summary && (
+                          <p 
+                            className="text-base leading-relaxed font-light whitespace-pre-wrap"
+                            style={{ color: theme.textSecondary }}
+                          >
+                            {pdf.summary}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-4">
+                        {pdf.notebook_lm_url && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Link href={pdf.notebook_lm_url} target="_blank" rel="noopener noreferrer">
+                                <Button
+                                  className="h-12 px-6 rounded-none text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
+                                  style={{
+                                    backgroundColor: theme.accent,
+                                    color: isDark ? '#050505' : '#ffffff',
+                                  }}
+                                >
+                                  <Image
+                                    src="/icons/notebooklm.svg"
+                                    alt="NotebookLM"
+                                    width={20}
+                                    height={20}
+                                    className="mr-3"
+                                  />
+                                  NotebookLM
+                                </Button>
+                              </Link>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Google NotebookLM lets you ask questions and explore your PDFs.
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        
+                        {pdf.file_url && (
+                          <Link href={pdf.file_url} target="_blank" rel="noopener noreferrer">
+                            <Button
+                              variant="outline"
+                              className="h-12 px-6 rounded-none text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
+                              style={{
+                                borderColor: theme.borderHover,
+                                color: theme.text,
+                                backgroundColor: 'transparent',
+                              }}
+                            >
+                              <FileText className="w-4 h-4 mr-3" />
+                              Open PDF
+                            </Button>
+                          </Link>
+                        )}
+                        
+                        <Button
+                          variant="outline"
+                          onClick={handleShare}
+                          className="h-12 px-6 rounded-none text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
+                          style={{
+                            borderColor: theme.border,
+                            color: theme.textSecondary,
+                            backgroundColor: 'transparent',
+                          }}
+                        >
+                          <Share2 className="w-4 h-4 mr-3" />
+                          Share
+                        </Button>
+                      </div>
+
+                      {user && user.id === pdf.uploaded_by && (
+                        <div className="pt-4" style={{ borderTop: `1px solid ${theme.borderLight}` }}>
+                          {!editingDetails ? (
+                            <Button 
+                              variant="ghost"
+                              onClick={() => setEditingDetails(true)}
+                              className="h-10 px-4 rounded-none text-xs tracking-[0.15em] uppercase font-medium"
+                              style={{ color: theme.textMuted }}
+                            >
+                              Edit Details
+                            </Button>
+                          ) : (
+                            <div className="space-y-4">
+                              <div>
+                                <label 
+                                  className="block text-xs tracking-[0.15em] uppercase mb-2"
+                                  style={{ color: theme.textMuted }}
+                                >
+                                  NotebookLM URL
+                                </label>
+                                <Input
+                                  value={notebookLmUrl}
+                                  onChange={(e) => setNotebookLmUrl(e.target.value)}
+                                  placeholder="https://notebooklm.google.com/..."
+                                  className="h-12 rounded-none bg-transparent"
+                                  style={{
+                                    borderColor: theme.border,
+                                    color: theme.text,
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <label 
+                                  className="block text-xs tracking-[0.15em] uppercase mb-2"
+                                  style={{ color: theme.textMuted }}
+                                >
+                                  Summary
+                                </label>
+                                <Textarea
+                                  value={summary}
+                                  onChange={(e) => setSummary(e.target.value)}
+                                  placeholder="One paragraph summary"
+                                  className="min-h-[100px] rounded-none bg-transparent"
+                                  style={{
+                                    borderColor: theme.border,
+                                    color: theme.text,
+                                  }}
+                                />
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <Button 
+                                  onClick={handleDetailsSave}
+                                  className="h-10 px-6 rounded-none text-xs tracking-[0.15em] uppercase font-medium"
+                                  style={{
+                                    backgroundColor: theme.accent,
+                                    color: isDark ? '#050505' : '#ffffff',
+                                  }}
+                                >
+                                  Save
+                                </Button>
+                                <Button 
+                                  variant="ghost"
+                                  onClick={() => setEditingDetails(false)}
+                                  className="h-10 px-4 rounded-none text-xs tracking-[0.15em] uppercase font-medium"
+                                  style={{ color: theme.textMuted }}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div 
+                className="mt-px p-8 md:p-12"
+                style={{ 
+                  border: `1px solid ${theme.border}`,
+                  borderTop: 'none',
+                  backgroundColor: theme.bgCard
+                }}
+              >
+                <div className="flex items-center gap-4 mb-8">
+                  <BookOpen className="w-5 h-5" style={{ color: theme.accent }} />
+                  <h2 
+                    className="text-xs tracking-[0.3em] uppercase"
+                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
+                  >
+                    Bible Verses
+                  </h2>
+                </div>
+
+                {isLoadingVerses ? (
+                  <div className="flex justify-center py-12">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      className="w-8 h-8 rounded-full"
+                      style={{ 
+                        border: `1px solid ${theme.border}`,
+                        borderTopColor: theme.accent
+                      }}
+                    />
+                  </div>
+                ) : verses.length === 0 ? (
+                  <p className="text-sm font-light" style={{ color: theme.textMuted }}>
+                    No verses linked to this document.
+                  </p>
+                ) : (
+                  <ScrollArea className="h-[400px] pr-4">
+                    <div className="space-y-6">
+                      {verses.map((v, i) => (
+                        <motion.div 
+                          key={i}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: i * 0.05 }}
+                          className="pb-6"
+                          style={{ borderBottom: `1px solid ${theme.borderLight}` }}
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <span 
+                              className="text-sm font-medium"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.accent }}
+                            >
+                              {`${v.book} ${v.chapter}:${v.verse}`}
+                            </span>
+                            <Link
+                              href={{
+                                pathname: '/listen',
+                                query: {
+                                  bibleBooks: v.book,
+                                  bibleChapters: `${v.book}:${v.chapter}`,
+                                  bibleVerses: `${v.book} ${v.chapter}:${v.verse}`,
+                                },
+                              }}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 transition-colors duration-300"
+                              style={{ border: `1px solid ${theme.border}` }}
+                            >
+                              <Headphones className="w-3 h-3" style={{ color: theme.textMuted }} />
+                            </Link>
+                          </div>
+                          <div 
+                            className="text-sm leading-relaxed font-light"
+                            style={{ color: theme.textSecondary }}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(v.text) }} 
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+              </div>
+
+              <div 
+                className="mt-px p-8 md:p-12"
+                style={{ 
+                  border: `1px solid ${theme.border}`,
+                  borderTop: 'none',
+                  backgroundColor: theme.bgCard
+                }}
+              >
+                <div className="flex items-center gap-4 mb-8">
+                  <Sparkles className="w-5 h-5" style={{ color: theme.accent }} />
+                  <h2 
+                    className="text-xs tracking-[0.3em] uppercase"
+                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
+                  >
+                    Ratings
+                  </h2>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4">
+                  {(['quality', 'theology', 'helpfulness'] as const).map((cat) => (
+                    <div 
+                      key={cat} 
+                      className="flex items-center justify-between p-4"
+                      style={{ border: `1px solid ${theme.borderLight}` }}
+                    >
+                      <span 
+                        className="text-sm capitalize"
+                        style={{ color: theme.text }}
+                      >
+                        {cat}
+                      </span>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          aria-label={`Upvote ${cat}`}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleVote(cat, 1)}
+                          className="h-8 w-8 p-0 rounded-none transition-all duration-300"
+                          style={{ border: `1px solid ${theme.border}` }}
+                        >
+                          <ThumbsUp className="h-3.5 w-3.5" style={{ color: theme.accent }} />
+                        </Button>
+                        <span 
+                          className="text-sm font-medium min-w-[24px] text-center"
+                          style={{ color: theme.text }}
+                        >
+                          {ratingCounts[cat]}
+                        </span>
+                        <Button
+                          aria-label={`Downvote ${cat}`}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleVote(cat, -1)}
+                          className="h-8 w-8 p-0 rounded-none transition-all duration-300"
+                          style={{ border: `1px solid ${theme.border}` }}
+                        >
+                          <ThumbsDown className="h-3.5 w-3.5" style={{ color: theme.textMuted }} />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div 
+                className="mt-px p-8 md:p-12"
+                style={{ 
+                  border: `1px solid ${theme.border}`,
+                  borderTop: 'none',
+                  backgroundColor: theme.bgCard
+                }}
+              >
+                <div className="flex items-center gap-4 mb-8">
+                  <MessageSquare className="w-5 h-5" style={{ color: theme.accent }} />
+                  <h2 
+                    className="text-xs tracking-[0.3em] uppercase"
+                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
+                  >
+                    Comments
+                  </h2>
+                </div>
+
+                {user ? (
+                  <NewCommentForm 
+                    pdfId={pdf.id} 
+                    onCommentAdded={handleCommentAdded} 
+                    theme={theme}
+                    isDark={isDark}
+                  />
+                ) : (
+                  <p 
+                    className="text-sm font-light mb-6"
+                    style={{ color: theme.textMuted }}
+                  >
+                    Please log in to add a comment.
+                  </p>
+                )}
+                <CommentList
+                  comments={comments}
+                  pdfId={pdf.id}
+                  fileUrl={pdf.file_url}
+                  onCommentAdded={handleCommentAdded}
+                  theme={theme}
+                  isDark={isDark}
+                />
+              </div>
+
+              <div 
+                className="mt-px p-8 md:p-12"
+                style={{ 
+                  border: `1px solid ${theme.border}`,
+                  borderTop: 'none',
+                  backgroundColor: theme.bgCard
+                }}
+              >
+                <div className="flex items-center gap-4 mb-8">
+                  <StickyNote className="w-5 h-5" style={{ color: theme.accent }} />
+                  <h2 
+                    className="text-xs tracking-[0.3em] uppercase"
+                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
+                  >
+                    My Notes
+                  </h2>
+                </div>
+
+                <NotesSection 
+                  initialNotes={initialNotes} 
+                  pdfId={pdf.id} 
+                  theme={theme}
+                  isDark={isDark}
+                />
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -487,7 +810,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .where('pdf_verses.pdf_id', id)
       .select('bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse');
 
-    verses.sort((a, b) => {
+    verses.sort((a: { book: string; chapter: number; verse: number }, b: { book: string; chapter: number; verse: number }) => {
       const bookDiff =
         BIBLE_BOOKS.indexOf(a.book) - BIBLE_BOOKS.indexOf(b.book);
       if (bookDiff !== 0) return bookDiff;

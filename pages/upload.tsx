@@ -13,7 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, X, Trash2, File as FileIcon, Info, Calendar as CalendarIcon } from "lucide-react"
+import { Check, ChevronsUpDown, X, Trash2, File as FileIcon, Info, Calendar as CalendarIcon, Upload as UploadIcon, Music } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Calendar } from "@/components/ui/calendar"
@@ -32,10 +32,12 @@ import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageC
 import { useAuth } from '@/contexts/AuthContext';
 import { Modal } from '@/components/Modal'
 import UploadProgressBar from '@/components/UploadPage/UploadProgressBar';
-import GradientButton from '@/components/GradientButton'; // Import GradientButton
+import GradientButton from '@/components/GradientButton';
 import UploadInfoDialog from '@/components/UploadPage/UploadInfoDialog';
 import { useRouter } from 'next/router'
 import { extractFileExtension, getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils'
+import { useTheme } from 'next-themes'
+import { motion } from 'framer-motion'
 
 const MAX_AUDIO_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -137,6 +139,36 @@ function UploadContent() {
 
   const { user } = useAuth();
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgAlt: isDark ? '#0a0a0a' : '#f0ede6',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    borderLight: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    borderAccent: isDark ? 'rgba(212, 175, 55, 0.5)' : 'rgba(191, 161, 48, 0.5)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+    cardBorder: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    inputBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+    selection: isDark ? '#ffffff' : '#161616',
+    selectionText: isDark ? '#000000' : '#ffffff',
+    success: '#22c55e',
+    error: '#ef4444',
+  };
 
   // Move all hooks and state declarations to the top level
   const [currentStep, setCurrentStep] = useState(0);
@@ -833,38 +865,144 @@ function UploadContent() {
     }
   }
 
+  if (!mounted) {
+    return (
+      <>
+        <Head>
+          <title>BibleChorus - Upload Songs</title>
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <div className="min-h-screen opacity-0" style={{ fontFamily: "'Manrope', sans-serif" }} />
+      </>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div 
+      className="min-h-screen relative"
+      style={{ 
+        backgroundColor: theme.bg,
+        color: theme.text,
+        fontFamily: "'Manrope', sans-serif"
+      }}
+    >
+      <style jsx global>{`
+        html, body {
+          background-color: ${theme.bg} !important;
+        }
+        
+        .upload-input {
+          background-color: ${theme.inputBg} !important;
+          border-color: ${theme.border} !important;
+          color: ${theme.text} !important;
+        }
+        
+        .upload-input:focus {
+          border-color: ${theme.borderAccent} !important;
+          box-shadow: 0 0 0 1px ${theme.borderHover} !important;
+        }
+        
+        .upload-input::placeholder {
+          color: ${theme.textMuted} !important;
+        }
+        
+        .upload-card {
+          background-color: ${theme.bgCard} !important;
+          border-color: ${theme.border} !important;
+        }
+        
+        .upload-label {
+          color: ${theme.text} !important;
+          font-family: 'Italiana', serif !important;
+        }
+        
+        .upload-description {
+          color: ${theme.textSecondary} !important;
+        }
+      `}</style>
+      
       <Head>
         <title>BibleChorus - Upload Songs</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12">
-        <div className="flex justify-between items-center mb-4 sm:mb-8 pt-4 sm:pt-6 md:pt-8 lg:pt-10 xl:pt-12">
-          <div className="flex items-center">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mr-2">Upload Songs</h1>
-            <UploadInfoDialog />
+      <main className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex justify-between items-center mb-8 pt-8 sm:pt-12"
+        >
+          <div className="flex items-center gap-4">
+            <div 
+              className="w-12 h-12 flex items-center justify-center"
+              style={{ border: `1px solid ${theme.border}` }}
+            >
+              <UploadIcon className="w-5 h-5" style={{ color: theme.accent }} />
+            </div>
+            <div>
+              <h1 
+                className="text-3xl sm:text-4xl tracking-tight"
+                style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+              >
+                Upload Songs
+              </h1>
+              <p 
+                className="text-sm mt-1"
+                style={{ color: theme.textSecondary }}
+              >
+                Share your scripture songs with the community
+              </p>
+            </div>
+            <UploadInfoDialog theme={theme} />
           </div>
           {progress === 100 && (
-            <GradientButton type="button" progress={progress} onClick={handleSubmit} isLoading={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit'}
-            </GradientButton>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="h-12 px-8 rounded-none text-xs tracking-[0.2em] uppercase font-medium transition-all duration-300"
+                style={{
+                  backgroundColor: theme.accent,
+                  color: isDark ? '#050505' : '#ffffff',
+                  border: 'none',
+                }}
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Song'}
+              </Button>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
         
         <FormProvider {...form}>
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-8">
-            <UploadProgressBar onProgressChange={setProgress} />
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+            <UploadProgressBar onProgressChange={setProgress} theme={theme} />
             
             <Tabs value={steps[currentStep]} className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList 
+                className="grid w-full grid-cols-5 h-auto p-1 rounded-none"
+                style={{ 
+                  backgroundColor: theme.bgCard,
+                  border: `1px solid ${theme.border}`
+                }}
+              >
                 {steps.map((step, index) => (
                   <TabsTrigger
                     key={step}
                     value={step}
                     onClick={() => setCurrentStep(index)}
-                    className="text-xs sm:text-sm"
+                    className="text-xs sm:text-sm py-3 rounded-none transition-all duration-300 data-[state=active]:shadow-none"
+                    style={{ 
+                      color: currentStep === index ? theme.accent : theme.textSecondary,
+                      backgroundColor: currentStep === index ? theme.hoverBg : 'transparent',
+                      borderBottom: currentStep === index ? `2px solid ${theme.accent}` : '2px solid transparent',
+                      fontFamily: "'Manrope', sans-serif",
+                    }}
                   >
                     {step}
                   </TabsTrigger>
@@ -872,9 +1010,25 @@ function UploadContent() {
               </TabsList>
 
               <TabsContent value="Song Type">
-                <div className="space-y-4">
-                  <div className="rounded-lg border p-4">
-                    <FormLabel className="form-label text-base mb-4 block">What type of song is this?</FormLabel>
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-6"
+                >
+                  <div 
+                    className="rounded-none p-6"
+                    style={{ 
+                      backgroundColor: theme.bgCard,
+                      border: `1px solid ${theme.border}`
+                    }}
+                  >
+                    <FormLabel 
+                      className="text-lg mb-6 block tracking-wide"
+                      style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                    >
+                      What type of song is this?
+                    </FormLabel>
                     <RadioGroup
                       value={songType}
                       onValueChange={(value: 'scripture' | 'journey' | 'both') => {
@@ -886,38 +1040,47 @@ function UploadContent() {
                       }}
                       className="space-y-4"
                     >
-                      <div className={cn(
-                        "flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors",
-                        songType === 'scripture' && "border-primary bg-primary/5"
-                      )}>
-                        <RadioGroupItem value="scripture" id="scripture" className="mt-1" />
+                      <div 
+                        className="flex items-start space-x-4 rounded-none p-5 cursor-pointer transition-all duration-300"
+                        style={{ 
+                          border: `1px solid ${songType === 'scripture' ? theme.borderAccent : theme.border}`,
+                          backgroundColor: songType === 'scripture' ? theme.hoverBg : 'transparent'
+                        }}
+                      >
+                        <RadioGroupItem value="scripture" id="scripture" className="mt-1" style={{ borderColor: theme.accent }} />
                         <label htmlFor="scripture" className="cursor-pointer flex-1">
-                          <div className="font-medium">Scripture Song</div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="font-medium" style={{ color: theme.text }}>Scripture Song</div>
+                          <div className="text-sm mt-1" style={{ color: theme.textSecondary }}>
                             A song directly based on Bible verses. The lyrics are derived from or closely follow specific scripture passages.
                           </div>
                         </label>
                       </div>
-                      <div className={cn(
-                        "flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors",
-                        songType === 'journey' && "border-primary bg-primary/5"
-                      )}>
-                        <RadioGroupItem value="journey" id="journey" className="mt-1" />
+                      <div 
+                        className="flex items-start space-x-4 rounded-none p-5 cursor-pointer transition-all duration-300"
+                        style={{ 
+                          border: `1px solid ${songType === 'journey' ? theme.borderAccent : theme.border}`,
+                          backgroundColor: songType === 'journey' ? theme.hoverBg : 'transparent'
+                        }}
+                      >
+                        <RadioGroupItem value="journey" id="journey" className="mt-1" style={{ borderColor: theme.accent }} />
                         <label htmlFor="journey" className="cursor-pointer flex-1">
-                          <div className="font-medium">Journey Song</div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="font-medium" style={{ color: theme.text }}>Journey Song</div>
+                          <div className="text-sm mt-1" style={{ color: theme.textSecondary }}>
                             A song from your Christian journey that may or may not have a direct scripture connection. This could be inspired by a dream, testimony, life milestone, or personal experience.
                           </div>
                         </label>
                       </div>
-                      <div className={cn(
-                        "flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors",
-                        songType === 'both' && "border-primary bg-primary/5"
-                      )}>
-                        <RadioGroupItem value="both" id="both" className="mt-1" />
+                      <div 
+                        className="flex items-start space-x-4 rounded-none p-5 cursor-pointer transition-all duration-300"
+                        style={{ 
+                          border: `1px solid ${songType === 'both' ? theme.borderAccent : theme.border}`,
+                          backgroundColor: songType === 'both' ? theme.hoverBg : 'transparent'
+                        }}
+                      >
+                        <RadioGroupItem value="both" id="both" className="mt-1" style={{ borderColor: theme.accent }} />
                         <label htmlFor="both" className="cursor-pointer flex-1">
-                          <div className="font-medium">Both Scripture & Journey</div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="font-medium" style={{ color: theme.text }}>Both Scripture & Journey</div>
+                          <div className="text-sm mt-1" style={{ color: theme.textSecondary }}>
                             A song that is both scripture-based and part of your personal journey. It combines Biblical text with your testimony or life experience.
                           </div>
                         </label>
@@ -926,8 +1089,22 @@ function UploadContent() {
                   </div>
 
                   {(songType === 'journey' || songType === 'both') && (
-                    <div className="rounded-lg border p-4 space-y-4">
-                      <FormLabel className="form-label text-base block">Journey Details</FormLabel>
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      transition={{ duration: 0.3 }}
+                      className="rounded-none p-6 space-y-6"
+                      style={{ 
+                        backgroundColor: theme.bgCard,
+                        border: `1px solid ${theme.border}`
+                      }}
+                    >
+                      <FormLabel 
+                        className="text-lg block tracking-wide"
+                        style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                      >
+                        Journey Details
+                      </FormLabel>
                       
                       <FormField
                         control={form.control}
@@ -1028,116 +1205,170 @@ function UploadContent() {
                           </FormItem>
                         )}
                       />
-                    </div>
+                    </motion.div>
                   )}
-                </div>
+                </motion.div>
               </TabsContent>
 
               <TabsContent value="AI Info">
-                <FormField
-                  control={form.control}
-                  name="ai_used_for_lyrics"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col space-y-4 rounded-lg border p-4">
-                      <div className="flex flex-row items-center justify-between">
-                        <div className="space-y-0.5">
-                          <FormLabel className="form-label text-base">AI Used for Lyrics</FormLabel>
-                          <FormDescription>
-                            Was AI used to generate the lyrics?
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-6"
+                >
+                  <FormField
+                    control={form.control}
+                    name="ai_used_for_lyrics"
+                    render={({ field }) => (
+                      <FormItem 
+                        className="flex flex-col space-y-4 rounded-none p-6"
+                        style={{ 
+                          backgroundColor: theme.bgCard,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <div className="flex flex-row items-center justify-between">
+                          <div className="space-y-1">
+                            <FormLabel 
+                              className="text-base tracking-wide"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              AI Used for Lyrics
+                            </FormLabel>
+                            <FormDescription style={{ color: theme.textSecondary }}>
+                              Was AI used to generate the lyrics?
+                            </FormDescription>
+                          </div>
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <div>
+                                <FormControl>
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={handleAILyricsChange}
+                                    disabled={watchScriptureAdherence === "word_for_word"}
+                                    className="data-[state=checked]:bg-[#d4af37]"
+                                  />
+                                </FormControl>
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent 
+                              className="w-80 rounded-none"
+                              style={{ 
+                                backgroundColor: theme.bgCard,
+                                border: `1px solid ${theme.border}`,
+                                color: theme.textSecondary
+                              }}
+                            >
+                              {watchScriptureAdherence === "word_for_word" ? (
+                                <p>Cannot enable AI for lyrics when Word-for-word adherence is selected.</p>
+                              ) : (
+                                <p>Toggle to indicate if AI was used to generate the lyrics.</p>
+                              )}
+                            </HoverCardContent>
+                          </HoverCard>
+                        </div>
+                        {field.value && (
+                          <FormField
+                            control={form.control}
+                            name="lyric_ai_prompt"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel style={{ color: theme.text }}>AI Lyric Prompt</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Enter the prompt used to generate the lyrics"
+                                    className="resize-none upload-input rounded-none min-h-[100px]"
+                                    {...field}
+                                    value={field.value || ""}
+                                    onChange={(e) => {
+                                      field.onChange(e);
+                                      if (showValidationMessages) {
+                                        form.trigger("lyric_ai_prompt");
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                {showValidationMessages && <FormMessage />}
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="music_origin"
+                    render={({ field }) => (
+                      <FormItem 
+                        className="flex flex-col space-y-4 rounded-none p-6"
+                        style={{ 
+                          backgroundColor: theme.bgCard,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <div className="space-y-1">
+                          <FormLabel 
+                            className="text-base tracking-wide"
+                            style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                          >
+                            Music Origin
+                          </FormLabel>
+                          <FormDescription style={{ color: theme.textSecondary }}>
+                            How was the music for this song created?
                           </FormDescription>
                         </div>
-                        <HoverCard>
-                          <HoverCardTrigger asChild>
-                            <div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={handleAILyricsChange}
-                                  disabled={watchScriptureAdherence === "word_for_word"}
-                                />
-                              </FormControl>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              const isAI = value === 'ai' || value === 'ai_cover_of_human';
+                              form.setValue("music_ai_generated", isAI, { shouldValidate: true });
+                              if (!isAI) {
+                                form.setValue("music_model_used", "", { shouldValidate: true });
+                                form.setValue("music_ai_prompt", "", { shouldValidate: true });
+                              } else {
+                                form.trigger("music_model_used");
+                                form.trigger("music_ai_prompt");
+                              }
+                            }}
+                            value={field.value}
+                            className="space-y-3"
+                          >
+                            <div 
+                              className="flex items-center space-x-3 p-3 cursor-pointer transition-all duration-300"
+                              style={{ 
+                                border: `1px solid ${field.value === 'human' ? theme.borderAccent : theme.border}`,
+                                backgroundColor: field.value === 'human' ? theme.hoverBg : 'transparent'
+                              }}
+                            >
+                              <RadioGroupItem value="human" id="music-human" style={{ borderColor: theme.accent }} />
+                              <label htmlFor="music-human" className="cursor-pointer" style={{ color: theme.text }}>Human Performance</label>
                             </div>
-                          </HoverCardTrigger>
-                          <HoverCardContent className="w-80">
-                            {watchScriptureAdherence === "word_for_word" ? (
-                              <p>Cannot enable AI for lyrics when Word-for-word adherence is selected.</p>
-                            ) : (
-                              <p>Toggle to indicate if AI was used to generate the lyrics.</p>
-                            )}
-                          </HoverCardContent>
-                        </HoverCard>
-                      </div>
-                      {field.value && (
-                        <FormField
-                          control={form.control}
-                          name="lyric_ai_prompt"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>AI Lyric Prompt</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Enter the prompt used to generate the lyrics"
-                                  className="resize-none"
-                                  {...field}
-                                  value={field.value || ""}
-                                  onChange={(e) => {
-                                    field.onChange(e);
-                                    if (showValidationMessages) {
-                                      form.trigger("lyric_ai_prompt");
-                                    }
-                                  }}
-                                />
-                              </FormControl>
-                              {showValidationMessages && <FormMessage />}
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="music_origin"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col space-y-4 rounded-lg border p-4">
-                      <div className="space-y-2">
-                        <FormLabel className="form-label text-base">Music Origin</FormLabel>
-                        <FormDescription>
-                          How was the music for this song created?
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            const isAI = value === 'ai' || value === 'ai_cover_of_human';
-                            form.setValue("music_ai_generated", isAI, { shouldValidate: true });
-                            if (!isAI) {
-                              form.setValue("music_model_used", "", { shouldValidate: true });
-                              form.setValue("music_ai_prompt", "", { shouldValidate: true });
-                            } else {
-                              form.trigger("music_model_used");
-                              form.trigger("music_ai_prompt");
-                            }
-                          }}
-                          value={field.value}
-                          className="space-y-2"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="human" id="music-human" />
-                            <label htmlFor="music-human" className="cursor-pointer">Human Performance</label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="ai" id="music-ai" />
-                            <label htmlFor="music-ai" className="cursor-pointer">AI Generated</label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="ai_cover_of_human" id="music-ai-cover" />
-                            <label htmlFor="music-ai-cover" className="cursor-pointer">AI Cover of Human Original</label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
+                            <div 
+                              className="flex items-center space-x-3 p-3 cursor-pointer transition-all duration-300"
+                              style={{ 
+                                border: `1px solid ${field.value === 'ai' ? theme.borderAccent : theme.border}`,
+                                backgroundColor: field.value === 'ai' ? theme.hoverBg : 'transparent'
+                              }}
+                            >
+                              <RadioGroupItem value="ai" id="music-ai" style={{ borderColor: theme.accent }} />
+                              <label htmlFor="music-ai" className="cursor-pointer" style={{ color: theme.text }}>AI Generated</label>
+                            </div>
+                            <div 
+                              className="flex items-center space-x-3 p-3 cursor-pointer transition-all duration-300"
+                              style={{ 
+                                border: `1px solid ${field.value === 'ai_cover_of_human' ? theme.borderAccent : theme.border}`,
+                                backgroundColor: field.value === 'ai_cover_of_human' ? theme.hoverBg : 'transparent'
+                              }}
+                            >
+                              <RadioGroupItem value="ai_cover_of_human" id="music-ai-cover" style={{ borderColor: theme.accent }} />
+                              <label htmlFor="music-ai-cover" className="cursor-pointer" style={{ color: theme.text }}>AI Cover of Human Original</label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
                       {(watchMusicOrigin === 'ai' || watchMusicOrigin === 'ai_cover_of_human') && (
                         <>
                           <FormField
@@ -1201,153 +1432,229 @@ function UploadContent() {
                     </FormItem>
                   )}
                 />
+                </motion.div>
               </TabsContent>
 
               <TabsContent value="Song Info">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem className="rounded-lg border p-4">
-                      <FormLabel className="form-label">Song Title</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter song title" 
-                          {...field} 
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage className="form-message" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="artist"
-                  render={({ field }) => (
-                    <FormItem className="rounded-lg border p-4">
-                      <FormLabel className="form-label">Artist (optional)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter artist name" 
-                          {...field} 
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage className="form-message" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="genres" // Update to 'genres'
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col rounded-lg border p-4">
-                      <FormLabel className="form-label">Genre(s)</FormLabel>
-                      <Popover open={openGenre} onOpenChange={setOpenGenre}>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={openGenre}
-                              className="w-full justify-between"
-                            >
-                              {selectedGenres.length > 0
-                                ? `${selectedGenres.length} selected`
-                                : "Select genres..."}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0">
-                          <div className="p-2">
-                            <div className="flex items-center justify-between pb-2">
-                              <Input
-                                placeholder="Search genres..."
-                                value={genreSearch}
-                                onChange={(e) => setGenreSearch(e.target.value)}
-                                className="mr-2"
-                              />
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-6"
+                >
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem 
+                        className="rounded-none p-6"
+                        style={{ 
+                          backgroundColor: theme.bgCard,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <FormLabel 
+                          className="text-base tracking-wide"
+                          style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                        >
+                          Song Title
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter song title" 
+                            {...field} 
+                            value={field.value || ""}
+                            className="upload-input rounded-none mt-2"
+                          />
+                        </FormControl>
+                        <FormMessage className="form-message" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="artist"
+                    render={({ field }) => (
+                      <FormItem 
+                        className="rounded-none p-6"
+                        style={{ 
+                          backgroundColor: theme.bgCard,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <FormLabel 
+                          className="text-base tracking-wide"
+                          style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                        >
+                          Artist (optional)
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter artist name" 
+                            {...field} 
+                            value={field.value || ""}
+                            className="upload-input rounded-none mt-2"
+                          />
+                        </FormControl>
+                        <FormMessage className="form-message" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="genres"
+                    render={({ field }) => (
+                      <FormItem 
+                        className="flex flex-col rounded-none p-6"
+                        style={{ 
+                          backgroundColor: theme.bgCard,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <FormLabel 
+                          className="text-base tracking-wide"
+                          style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                        >
+                          Genre(s)
+                        </FormLabel>
+                        <Popover open={openGenre} onOpenChange={setOpenGenre}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
                               <Button
                                 variant="outline"
-                                size="sm"
-                                onClick={clearGenres}
+                                role="combobox"
+                                aria-expanded={openGenre}
+                                className="w-full justify-between rounded-none mt-2 upload-input"
+                                style={{ 
+                                  backgroundColor: theme.inputBg,
+                                  borderColor: theme.border,
+                                  color: selectedGenres.length > 0 ? theme.text : theme.textMuted
+                                }}
                               >
-                                Clear
+                                {selectedGenres.length > 0
+                                  ? `${selectedGenres.length} selected`
+                                  : "Select genres..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0" style={{ color: theme.accent }} />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent 
+                            className="w-full p-0 rounded-none"
+                            style={{ 
+                              backgroundColor: theme.bgCard,
+                              border: `1px solid ${theme.border}`
+                            }}
+                          >
+                            <div className="p-3">
+                              <div className="flex items-center justify-between pb-3">
+                                <Input
+                                  placeholder="Search genres..."
+                                  value={genreSearch}
+                                  onChange={(e) => setGenreSearch(e.target.value)}
+                                  className="mr-2 rounded-none upload-input"
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={clearGenres}
+                                  className="rounded-none"
+                                  style={{ borderColor: theme.border, color: theme.textSecondary }}
+                                >
+                                  Clear
+                                </Button>
+                              </div>
+                              <div className="max-h-[200px] overflow-y-auto">
+                                {filteredGenres.map((genre) => (
+                                  <div
+                                    key={genre}
+                                    className="flex cursor-pointer items-center px-3 py-2 transition-all duration-200"
+                                    style={{ 
+                                      backgroundColor: selectedGenres.includes(genre) ? theme.hoverBg : 'transparent',
+                                      color: theme.text
+                                    }}
+                                    onClick={() => handleGenreToggle(genre)}
+                                  >
+                                    <div 
+                                      className="mr-3 h-4 w-4 flex items-center justify-center"
+                                      style={{ border: `1px solid ${selectedGenres.includes(genre) ? theme.accent : theme.border}` }}
+                                    >
+                                      {selectedGenres.includes(genre) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
+                                    </div>
+                                    {genre}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {selectedGenres.map((genre) => (
+                            <div
+                              key={genre}
+                              className="px-3 py-1.5 text-sm flex items-center rounded-none"
+                              style={{ 
+                                backgroundColor: theme.hoverBg,
+                                border: `1px solid ${theme.borderAccent}`,
+                                color: theme.text
+                              }}
+                            >
+                              {genre}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="ml-2 h-4 w-4 p-0"
+                                onClick={() => handleGenreToggle(genre)}
+                              >
+                                <X className="h-3 w-3" style={{ color: theme.textSecondary }} />
                               </Button>
                             </div>
-                            <div className="max-h-[200px] overflow-y-auto">
-                              {filteredGenres.map((genre) => (
-                                <div
-                                  key={genre}
-                                  className={cn(
-                                    "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                                    selectedGenres.includes(genre) && "bg-accent"
-                                  )}
-                                  onClick={() => handleGenreToggle(genre)}
-                                >
-                                  <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                                    {selectedGenres.includes(genre) && <Check className="h-3 w-3" />}
-                                  </div>
-                                  {genre}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                      {/* Update the display of selected genres */}
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {selectedGenres.map((genre) => (
-                          <div
-                            key={genre}
-                            className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
-                          >
-                            {genre}
+                          ))}
+                          {selectedGenres.length > 0 && (
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
-                              className="ml-1 h-4 w-4 p-0"
-                              onClick={() => handleGenreToggle(genre)}
+                              onClick={clearGenres}
+                              className="rounded-none"
+                              style={{ borderColor: theme.border, color: theme.textSecondary }}
                             >
-                              <X className="h-3 w-3" />
+                              Clear All
                             </Button>
-                          </div>
-                        ))}
-                        {selectedGenres.length > 0 && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={clearGenres}
-                            className="mt-1"
-                          >
-                            Clear All
-                          </Button>
-                        )}
-                      </div>
-                      <FormMessage className="form-message" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="lyrics"
-                  render={({ field }) => (
-                    <FormItem className="rounded-lg border p-4">
-                      <FormLabel className="form-label">Lyrics</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter song lyrics"
-                          className="min-h-[200px]"
-                          {...field}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage className="form-message" />
-                    </FormItem>
-                  )}
-                />
+                          )}
+                        </div>
+                        <FormMessage className="form-message" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lyrics"
+                    render={({ field }) => (
+                      <FormItem 
+                        className="rounded-none p-6"
+                        style={{ 
+                          backgroundColor: theme.bgCard,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <FormLabel 
+                          className="text-base tracking-wide"
+                          style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                        >
+                          Lyrics
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Enter song lyrics"
+                            className="min-h-[200px] upload-input rounded-none mt-2"
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage className="form-message" />
+                      </FormItem>
+                    )}
+                  />
+                </motion.div>
               </TabsContent>
 
               <TabsContent value="Bible Info">
@@ -2023,30 +2330,59 @@ function UploadContent() {
               </TabsContent>
             </Tabs>
 
-            <div className="flex justify-between items-center pb-4 sm:pb-6 md:pb-8 lg:pb-10 xl:pb-12">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className="flex justify-between items-center pb-8 sm:pb-12 mt-8"
+            >
               {currentStep > 0 ? (
                 <Button
                   type="button"
                   onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                  variant="outline"
+                  className="h-12 px-6 rounded-none text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
+                  style={{
+                    borderColor: theme.border,
+                    color: theme.text,
+                    backgroundColor: 'transparent',
+                  }}
                 >
                   Previous
                 </Button>
               ) : (
-                <div /> // Empty div as placeholder when there's no Previous button
+                <div />
               )}
               {currentStep < steps.length - 1 ? (
                 <Button
                   type="button"
                   onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+                  className="h-12 px-6 rounded-none text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
+                  style={{
+                    backgroundColor: theme.accent,
+                    color: isDark ? '#050505' : '#ffffff',
+                    border: 'none',
+                  }}
                 >
                   Next
                 </Button>
               ) : (
-                <GradientButton type="submit" progress={progress} onClick={handleSubmit} isLoading={isSubmitting}>
-                  {isSubmitting ? 'Submitting...' : 'Submit'}
-                </GradientButton>
+                <Button
+                  type="submit"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="h-12 px-8 rounded-none text-xs tracking-[0.2em] uppercase font-medium transition-all duration-300"
+                  style={{
+                    backgroundColor: progress === 100 ? theme.accent : theme.textMuted,
+                    color: isDark ? '#050505' : '#ffffff',
+                    border: 'none',
+                    opacity: progress === 100 ? 1 : 0.7,
+                  }}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Song'}
+                </Button>
               )}
-            </div>
+            </motion.div>
           </form>
         </FormProvider>
       </main>

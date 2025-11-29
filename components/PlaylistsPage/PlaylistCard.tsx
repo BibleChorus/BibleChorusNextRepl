@@ -3,6 +3,8 @@ import { Playlist } from '../../types';
 import Image from 'next/image';
 import { Music2, Play } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { useTheme } from 'next-themes';
+import { motion } from 'framer-motion';
 
 interface PlaylistCardProps {
   playlist: Playlist;
@@ -10,80 +12,129 @@ interface PlaylistCardProps {
   gradientIndex: number;
 }
 
-const gradients = [
-  'from-violet-600 via-purple-600 to-indigo-600',
-  'from-blue-600 via-cyan-600 to-teal-600',
-  'from-pink-600 via-rose-600 to-red-600',
-  'from-amber-600 via-orange-600 to-red-600',
-  'from-emerald-600 via-green-600 to-teal-600',
-  'from-indigo-600 via-blue-600 to-purple-600',
-  'from-purple-600 via-pink-600 to-rose-600',
-  'from-cyan-600 via-blue-600 to-indigo-600',
-  'from-slate-600 via-gray-600 to-zinc-600',
-  'from-fuchsia-600 via-violet-600 to-purple-600',
-];
-
 const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onClick, gradientIndex }) => {
   const hasCoverArt = !!playlist.cover_art_url;
-  const gradientBackground = `bg-gradient-to-br ${gradients[gradientIndex % gradients.length]}`;
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+  };
 
   return (
-    <Card
-      onClick={onClick}
-      className="group relative aspect-square overflow-hidden cursor-pointer transition-all duration-700 hover:scale-[1.03] hover:shadow-2xl border border-white/20 dark:border-white/10 bg-white/10 dark:bg-black/20 backdrop-blur-xl rounded-2xl hover:rotate-1"
+    <motion.div
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
     >
-      {/* Background Image or Gradient */}
-      {hasCoverArt ? (
-        <div className="absolute inset-0">
-          <Image
-            src={playlist.cover_art_url!}
-            alt={`${playlist.name} Cover`}
-            layout="fill"
-            objectFit="cover"
-            className="transition-transform duration-700 group-hover:scale-125"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-        </div>
-      ) : (
-        <div className={`absolute inset-0 ${gradientBackground} transition-transform duration-700 group-hover:scale-110 group-hover:rotate-3`}>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.2),transparent_50%)]" />
-          <Music2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 sm:w-20 sm:h-20 text-white/30 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12" />
-        </div>
-      )}
-
-      {/* Enhanced Play Button Overlay */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
-        <div className="bg-white/95 dark:bg-black/95 rounded-full p-4 shadow-2xl transform scale-0 group-hover:scale-100 transition-all duration-500 backdrop-blur-sm border border-white/30 dark:border-white/20">
-          <Play className="w-8 h-8 text-black dark:text-white fill-current translate-x-0.5" />
-        </div>
-      </div>
-
-      {/* Enhanced Glow Effect */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-      {/* Content */}
-      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-        <h3 className="text-white font-bold text-sm sm:text-base line-clamp-2 drop-shadow-2xl leading-tight mb-1">
-          {playlist.name}
-        </h3>
-        {playlist.description && (
-          <p className="text-white/90 text-xs sm:text-sm mt-1 line-clamp-1 drop-shadow-lg font-medium">
-            {playlist.description}
-          </p>
+      <Card
+        onClick={onClick}
+        className="group relative aspect-square overflow-hidden cursor-pointer transition-all duration-500 rounded-none"
+        style={{
+          backgroundColor: theme.bgCard,
+          border: `1px solid ${theme.border}`,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = theme.borderHover;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = theme.border;
+        }}
+      >
+        {hasCoverArt ? (
+          <div className="absolute inset-0">
+            <Image
+              src={playlist.cover_art_url!}
+              alt={`${playlist.name} Cover`}
+              layout="fill"
+              objectFit="cover"
+              className="transition-all duration-700 group-hover:scale-105 grayscale-[20%] group-hover:grayscale-0"
+            />
+            <div 
+              className="absolute inset-0 transition-opacity duration-500"
+              style={{
+                background: `linear-gradient(to top, ${isDark ? 'rgba(5,5,5,0.95)' : 'rgba(0,0,0,0.85)'} 0%, ${isDark ? 'rgba(5,5,5,0.5)' : 'rgba(0,0,0,0.3)'} 40%, transparent 100%)`
+              }}
+            />
+          </div>
+        ) : (
+          <div 
+            className="absolute inset-0 transition-all duration-500"
+            style={{ backgroundColor: theme.bgCard }}
+          >
+            <div 
+              className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-500"
+              style={{
+                background: `linear-gradient(135deg, ${theme.accent} 0%, transparent 50%)`
+              }}
+            />
+            <Music2 
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-16 sm:h-16 transition-all duration-500 group-hover:scale-110"
+              style={{ color: theme.border }}
+            />
+          </div>
         )}
-      </div>
 
-      {/* Enhanced Song Count Badge */}
-      {playlist.song_count !== undefined && playlist.song_count > 0 && (
-        <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-md text-white text-xs sm:text-sm px-3 py-1.5 rounded-full border border-white/20 font-medium shadow-lg">
-          {playlist.song_count} {playlist.song_count === 1 ? 'song' : 'songs'}
+        <div 
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500"
+        >
+          <motion.div 
+            className="p-4 transform scale-0 group-hover:scale-100 transition-all duration-500"
+            style={{
+              backgroundColor: theme.accent,
+            }}
+            whileHover={{ scale: 1.1 }}
+          >
+            <Play 
+              className="w-6 h-6 fill-current translate-x-0.5" 
+              style={{ color: isDark ? '#050505' : '#ffffff' }}
+            />
+          </motion.div>
         </div>
-      )}
 
-      {/* Subtle Corner Accent */}
-      <div className="absolute bottom-0 right-0 w-8 h-8 bg-gradient-to-tl from-white/20 to-transparent rounded-tl-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-    </Card>
+        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+          <h3 
+            className="font-medium text-sm sm:text-base line-clamp-2 leading-tight mb-1 tracking-wide"
+            style={{ 
+              fontFamily: "'Italiana', serif",
+              color: hasCoverArt ? '#ffffff' : theme.text
+            }}
+          >
+            {playlist.name}
+          </h3>
+          {playlist.description && (
+            <p 
+              className="text-xs sm:text-sm mt-1 line-clamp-1 font-light"
+              style={{ 
+                color: hasCoverArt ? 'rgba(255,255,255,0.8)' : theme.textSecondary
+              }}
+            >
+              {playlist.description}
+            </p>
+          )}
+        </div>
+
+        {playlist.song_count !== undefined && playlist.song_count > 0 && (
+          <div 
+            className="absolute top-3 right-3 text-[10px] tracking-[0.15em] uppercase px-2.5 py-1.5 font-medium"
+            style={{
+              backgroundColor: isDark ? 'rgba(5,5,5,0.9)' : 'rgba(255,255,255,0.95)',
+              color: theme.accent,
+              border: `1px solid ${theme.border}`,
+            }}
+          >
+            {playlist.song_count} {playlist.song_count === 1 ? 'song' : 'songs'}
+          </div>
+        )}
+      </Card>
+    </motion.div>
   );
 };
 

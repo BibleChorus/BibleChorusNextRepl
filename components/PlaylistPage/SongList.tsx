@@ -7,6 +7,7 @@ import { formatBibleVerses } from '@/lib/utils';
 import { Song } from '@/types';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { motion } from 'framer-motion';
+import { useTheme } from 'next-themes';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
@@ -22,13 +23,13 @@ interface SongListProps {
 
 export const SongList: React.FC<SongListProps> = ({ songs }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {songs.map((song, index) => (
         <motion.div
           key={song.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.05 }}
+          transition={{ duration: 0.4, delay: index * 0.05 }}
         >
           <SongListItem song={song} allSongs={songs} />
         </motion.div>
@@ -39,6 +40,21 @@ export const SongList: React.FC<SongListProps> = ({ songs }) => {
 
 const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSongs }) => {
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+  };
 
   const handlePlayClick = () => {
     if (currentSong?.id === song.id) {
@@ -90,121 +106,189 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
 
   return (
     <motion.div 
-      className="group relative bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 hover:border-slate-300/80 dark:hover:border-slate-600/80 transition-all duration-500 overflow-hidden hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900/30"
-      whileHover={{ scale: 1.01, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
+      className="group relative transition-all duration-500 overflow-hidden"
+      style={{
+        backgroundColor: theme.bgCard,
+        border: `1px solid ${isCurrentSong ? theme.borderHover : theme.border}`,
+      }}
+      whileHover={{ y: -2 }}
+      onMouseEnter={(e) => {
+        if (!isCurrentSong) {
+          e.currentTarget.style.borderColor = theme.borderHover;
+          e.currentTarget.style.backgroundColor = theme.hoverBg;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isCurrentSong) {
+          e.currentTarget.style.borderColor = theme.border;
+          e.currentTarget.style.backgroundColor = theme.bgCard;
+        }
+      }}
     >
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      
-      {/* Currently Playing Indicator */}
       {isCurrentSong && (
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+        <div 
+          className="absolute top-0 left-0 w-1 h-full"
+          style={{ backgroundColor: theme.accent }}
+        />
       )}
 
-      <div className="relative p-6 flex flex-col md:flex-row md:items-center gap-6">
-        {/* Song Art with Enhanced Play Button */}
-        <div className="flex-shrink-0 w-full md:w-48 h-48 relative group/image">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl blur-xl group-hover/image:blur-2xl transition-all duration-500"></div>
-          <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-white/20 dark:border-slate-700/50 shadow-lg">
+      <div className="relative p-5 flex flex-col md:flex-row md:items-center gap-5">
+        <div className="flex-shrink-0 w-full md:w-32 h-32 relative group/image">
+          <div 
+            className="relative w-full h-full overflow-hidden"
+            style={{ border: `1px solid ${theme.border}` }}
+          >
             <Image
               src={getImageUrl(song.song_art_url)}
               alt={song.title}
               layout="fill"
               objectFit="cover"
-              className="transition-transform duration-500 group-hover/image:scale-105"
+              className="transition-all duration-500 group-hover/image:scale-105 grayscale-[20%] group-hover/image:grayscale-0"
             />
-            {/* Enhanced Play Button Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover/image:opacity-100 transition-all duration-300 flex items-center justify-center">
+            <div 
+              className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-all duration-300"
+              style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+            >
               <motion.button 
                 onClick={handlePlayClick}
-                className="relative bg-white/20 backdrop-blur-md border border-white/30 rounded-full p-4 text-white hover:bg-white/30 transition-all duration-300 hover:scale-110"
+                className="p-3 transition-all duration-300"
+                style={{
+                  backgroundColor: theme.accent,
+                  color: isDark ? '#050505' : '#ffffff',
+                }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-full"></span>
                 {isCurrentSong && isPlaying ? (
-                  <Pause className="relative w-8 h-8" />
+                  <Pause className="w-5 h-5" />
                 ) : (
-                  <PlayCircle className="relative w-8 h-8" />
+                  <PlayCircle className="w-5 h-5" />
                 )}
               </motion.button>
             </div>
           </div>
         </div>
 
-        {/* Song Details with Enhanced Typography */}
-        <div className="flex-grow space-y-4">
-          {/* Title and Artist */}
-          <div className="space-y-2">
+        <div className="flex-grow space-y-3">
+          <div className="space-y-1.5">
             <Link 
               href={`/Songs/${song.id}`} 
-              className="block text-2xl md:text-3xl font-bold text-slate-900 dark:text-white hover:bg-gradient-to-r hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 hover:bg-clip-text hover:text-transparent transition-all duration-300 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
+              className="block text-lg md:text-xl tracking-wide transition-colors duration-300"
+              style={{ 
+                fontFamily: "'Italiana', serif",
+                color: theme.text
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = theme.accent;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = theme.text;
+              }}
             >
               {song.title}
             </Link>
-            <div className="flex items-center gap-2 text-lg text-slate-600 dark:text-slate-300">
-              <div className="w-6 h-6 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded-full flex items-center justify-center">
-                <User className="w-3 h-3" />
-              </div>
-              <span className="font-medium">{song.username || 'Unknown Artist'}</span>
+            <div 
+              className="flex items-center gap-2 text-sm font-light"
+              style={{ color: theme.textSecondary }}
+            >
+              <User className="w-3 h-3" />
+              <span>{song.username || 'Unknown Artist'}</span>
             </div>
           </div>
 
-          {/* Bible Verses */}
           {song.bible_verses && song.bible_verses.length > 0 && (
-            <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 rounded-xl border border-indigo-500/20 dark:border-indigo-500/30">
-              <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mt-0.5">
-                <Music className="w-3 h-3 text-white" />
-              </div>
-              <p className="text-indigo-700 dark:text-indigo-300 italic font-medium leading-relaxed">
+            <div 
+              className="flex items-start gap-3 p-3"
+              style={{ 
+                backgroundColor: theme.hoverBg,
+                border: `1px solid ${theme.border}`
+              }}
+            >
+              <Music className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: theme.accent }} />
+              <p 
+                className="text-sm italic font-light leading-relaxed"
+                style={{ color: theme.textSecondary }}
+              >
                 {formatBibleVerses(song.bible_verses)}
               </p>
             </div>
           )}
 
-          {/* Meta Information Row */}
-          <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-3">
             {song.duration && (
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded-full flex items-center justify-center">
-                  <Clock className="w-3 h-3" />
-                </div>
-                <span className="font-medium text-slate-700 dark:text-slate-300">
-                  {formatDuration(song.duration)}
-                </span>
+              <div 
+                className="flex items-center gap-2 text-xs tracking-[0.1em] uppercase"
+                style={{ color: theme.textMuted }}
+              >
+                <Clock className="w-3 h-3" />
+                <span>{formatDuration(song.duration)}</span>
               </div>
             )}
           </div>
 
-          {/* Tags */}
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {song.genres && song.genres.slice(0, 3).map((genre, index) => (
               <Badge
                 key={`${song.id}-${genre}-${index}`}
                 variant="secondary"
-                className="text-xs px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-300 border-0 rounded-md font-medium"
+                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-none font-medium"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: theme.textSecondary,
+                  border: `1px solid ${theme.border}`,
+                }}
               >
                 {genre}
               </Badge>
             ))}
             {song.genres && song.genres.length > 3 && (
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-300 border-0 rounded-md font-medium">
+              <Badge 
+                variant="secondary" 
+                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-none font-medium"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: theme.textSecondary,
+                  border: `1px solid ${theme.border}`,
+                }}
+              >
                 +{song.genres.length - 3}
               </Badge>
             )}
             {song.bible_translation_used && (
-              <Badge variant="outline" className="text-xs px-2 py-0.5 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-md font-medium">
+              <Badge 
+                variant="outline" 
+                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-none font-medium"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: theme.accent,
+                  border: `1px solid ${theme.borderHover}`,
+                }}
+              >
                 {song.bible_translation_used}
               </Badge>
             )}
             {song.lyrics_scripture_adherence && (
-              <Badge variant="default" className="text-xs px-2 py-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 rounded-md font-medium">
+              <Badge 
+                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-none font-medium"
+                style={{
+                  backgroundColor: theme.accent,
+                  color: isDark ? '#050505' : '#ffffff',
+                  border: 'none',
+                }}
+              >
                 {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
               </Badge>
             )}
             {song.is_continuous_passage !== undefined && (
-              <Badge variant="outline" className="text-xs px-2 py-0.5 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 rounded-md font-medium">
+              <Badge 
+                variant="outline" 
+                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-none font-medium"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: theme.textSecondary,
+                  border: `1px solid ${theme.border}`,
+                }}
+              >
                 {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
               </Badge>
             )}

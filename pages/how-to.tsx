@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { useTheme } from 'next-themes'
 import {
   Tabs,
   TabsList,
@@ -16,11 +17,110 @@ import {
 } from '@/components/ui/accordion'
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Music, UploadCloud, FileText, Book, Sparkles, PenTool, Download, List, User, Headphones, BookOpen, Info } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { CheckCircle, Music, UploadCloud, FileText, Book, Sparkles, PenTool, Download, List, User, Headphones, Info } from 'lucide-react'
+
+const FilmGrainOverlay: React.FC = () => {
+  return (
+    <div 
+      className="fixed inset-0 pointer-events-none opacity-[0.015]"
+      style={{
+        zIndex: 1,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+      }}
+    />
+  );
+};
+
+interface AmbientOrbsOverlayProps {
+  isDark: boolean;
+}
+
+const AmbientOrbsOverlay: React.FC<AmbientOrbsOverlayProps> = ({ isDark }) => {
+  const orbColors = {
+    primary: isDark ? 'rgba(212, 175, 55, 0.06)' : 'rgba(191, 161, 48, 0.05)',
+    secondary: isDark ? 'rgba(160, 160, 160, 0.04)' : 'rgba(100, 100, 100, 0.03)',
+    tertiary: isDark ? 'rgba(229, 229, 229, 0.02)' : 'rgba(50, 50, 50, 0.02)',
+  };
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+      <motion.div 
+        className="absolute top-0 left-0 w-96 h-96 rounded-full"
+        style={{
+          background: orbColors.primary,
+          filter: 'blur(120px)'
+        }}
+        animate={{
+          y: [0, -30, 0],
+          x: [0, 20, 0],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div 
+        className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full"
+        style={{
+          background: orbColors.secondary,
+          filter: 'blur(120px)'
+        }}
+        animate={{
+          y: [0, 30, 0],
+          x: [0, -20, 0],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+      />
+      <motion.div 
+        className="absolute top-1/2 right-1/4 w-72 h-72 rounded-full"
+        style={{
+          background: orbColors.tertiary,
+          filter: 'blur(100px)'
+        }}
+        animate={{
+          y: [0, 20, 0],
+          x: [0, -15, 0],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
+      />
+    </div>
+  );
+};
 
 export default function HowTo() {
   const [activeTab, setActiveTab] = useState('lyrics')
+  const [mounted, setMounted] = useState(false)
+  const { resolvedTheme } = useTheme()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const isDark = resolvedTheme === 'dark'
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+  }
+
+  if (!mounted) {
+    return (
+      <>
+        <Head>
+          <title>BibleChorus - How To Create and Upload Songs</title>
+          <meta name="description" content="Learn how to create and upload Bible-inspired music" />
+        </Head>
+        <div 
+          className="min-h-screen opacity-0" 
+          style={{ fontFamily: "'Manrope', sans-serif" }} 
+        />
+      </>
+    )
+  }
 
   return (
     <>
@@ -29,391 +129,884 @@ export default function HowTo() {
         <meta name="description" content="Learn how to create and upload Bible-inspired music" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50/50 via-white to-teal-50/30 dark:from-emerald-950/50 dark:via-slate-900 dark:to-teal-950/30">
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative overflow-hidden pb-20 pt-12"
-        >
-          {/* Enhanced Background Effects */}
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/[0.08] via-teal-500/[0.06] to-cyan-500/[0.08] dark:from-emerald-500/[0.15] dark:via-teal-500/[0.12] dark:to-cyan-500/[0.15]"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(16,185,129,0.1),rgba(255,255,255,0))]"></div>
-          </div>
-          
-          <div className="relative z-10 container mx-auto px-4">
-            <div className="text-center mb-12">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.1 }}
-                className="mb-6"
-              >
-                <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:via-teal-500/20 dark:to-cyan-500/20 backdrop-blur-md border border-emerald-500/20 dark:border-emerald-500/30 shadow-lg">
-                  <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400 bg-clip-text text-transparent font-semibold">
+      <div 
+        className="min-h-screen relative"
+        style={{ 
+          backgroundColor: theme.bg,
+          color: theme.text,
+          fontFamily: "'Manrope', sans-serif"
+        }}
+      >
+        <style jsx global>{`
+          html, body {
+            background-color: ${theme.bg} !important;
+          }
+        `}</style>
+
+        <AmbientOrbsOverlay isDark={isDark} />
+        <FilmGrainOverlay />
+
+        <div className="relative" style={{ zIndex: 2 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative overflow-hidden pb-16 pt-24"
+          >
+            <div className="container mx-auto px-6 md:px-12">
+              <div className="text-center max-w-4xl mx-auto">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.1 }}
+                  className="mb-8"
+                >
+                  <span 
+                    className="inline-flex items-center gap-2.5 px-5 py-2 text-xs tracking-[0.3em] uppercase"
+                    style={{ 
+                      fontFamily: "'Manrope', sans-serif", 
+                      color: theme.accent,
+                      border: `1px solid ${theme.border}`
+                    }}
+                  >
+                    <Info className="w-4 h-4" style={{ color: theme.accent }} />
                     Creator&apos;s Guide
                   </span>
-                </span>
-              </motion.div>
-              
-              <motion.h1 
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-6xl font-bold tracking-tight sm:text-7xl md:text-8xl"
-              >
-                <span className="block text-slate-900 dark:text-white mb-2">Create &</span>
-                <span className="block relative">
-                  <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
+                </motion.div>
+                
+                <motion.h1 
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="mb-8"
+                >
+                  <span 
+                    className="block text-6xl md:text-7xl lg:text-8xl tracking-tight mb-2"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                  >
+                    Create &
+                  </span>
+                  <span 
+                    className="block text-6xl md:text-7xl lg:text-8xl italic font-light"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.text, opacity: 0.9 }}
+                  >
                     Upload
                   </span>
-                  <div className="absolute -bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-full scale-x-0 animate-scale-x"></div>
-                </span>
-              </motion.h1>
-              
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="mt-8 text-xl text-slate-600 dark:text-slate-300 sm:text-2xl max-w-3xl mx-auto leading-relaxed"
-              >
-                Learn how to transform 
-                <span className="font-semibold text-slate-900 dark:text-white"> Scripture into song</span> using 
-                <span className="font-semibold text-slate-900 dark:text-white"> AI tools and creativity</span>
-              </motion.p>
+                </motion.h1>
+                
+                <motion.p 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                  className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-light"
+                  style={{ color: theme.textSecondary }}
+                >
+                  Learn how to transform{' '}
+                  <span style={{ color: theme.text, fontWeight: 500 }}>Scripture into song</span>{' '}
+                  using{' '}
+                  <span style={{ color: theme.text, fontWeight: 500 }}>AI tools and creativity</span>
+                </motion.p>
+              </div>
             </div>
+          </motion.div>
 
-            {/* Enhanced Stats/Steps Cards */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
+          <div className="container mx-auto px-6 md:px-12 pb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto"
             >
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <FileText className="relative w-10 h-10 mx-auto mb-4 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-2xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent mb-2">Step 1</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Generate Lyrics</div>
-              </div>
-              
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-teal-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <Music className="relative w-10 h-10 mx-auto mb-4 text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-500 bg-clip-text text-transparent mb-2">Step 2</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Generate Music</div>
-              </div>
-              
-              <div className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-3xl p-8 text-center hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-cyan-500/10">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <UploadCloud className="relative w-10 h-10 mx-auto mb-4 text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative text-2xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 bg-clip-text text-transparent mb-2">Step 3</div>
-                <div className="relative text-sm font-medium text-slate-600 dark:text-slate-300">Upload Song</div>
+              <div 
+                className="grid md:grid-cols-3 gap-px max-w-5xl mx-auto"
+                style={{ border: `1px solid ${theme.border}` }}
+              >
+                <motion.div
+                  whileHover={{ backgroundColor: theme.hoverBg }}
+                  className="group relative p-8 md:p-10 text-center transition-all duration-500"
+                  style={{ 
+                    borderRight: `1px solid ${theme.border}`,
+                    backgroundColor: theme.bgCard
+                  }}
+                >
+                  <div className="relative mb-6">
+                    <div 
+                      className="w-14 h-14 mx-auto flex items-center justify-center"
+                      style={{ border: `1px solid ${theme.border}` }}
+                    >
+                      <FileText className="w-6 h-6" style={{ color: theme.accent }} />
+                    </div>
+                  </div>
+                  <div 
+                    className="text-lg mb-2 tracking-wide"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.accent }}
+                  >
+                    Step 1
+                  </div>
+                  <h3 
+                    className="relative text-lg mb-3 tracking-wide"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                  >
+                    Generate Lyrics
+                  </h3>
+                  <p 
+                    className="relative text-sm font-light leading-relaxed"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    Transform scripture into beautiful song lyrics with AI assistance.
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ backgroundColor: theme.hoverBg }}
+                  className="group relative p-8 md:p-10 text-center transition-all duration-500"
+                  style={{ 
+                    borderRight: `1px solid ${theme.border}`,
+                    backgroundColor: theme.bgCard
+                  }}
+                >
+                  <div className="relative mb-6">
+                    <div 
+                      className="w-14 h-14 mx-auto flex items-center justify-center"
+                      style={{ border: `1px solid ${theme.border}` }}
+                    >
+                      <Music className="w-6 h-6" style={{ color: theme.accent }} />
+                    </div>
+                  </div>
+                  <div 
+                    className="text-lg mb-2 tracking-wide"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.accent }}
+                  >
+                    Step 2
+                  </div>
+                  <h3 
+                    className="relative text-lg mb-3 tracking-wide"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                  >
+                    Generate Music
+                  </h3>
+                  <p 
+                    className="relative text-sm font-light leading-relaxed"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    Create melodies and arrangements using AI music platforms.
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ backgroundColor: theme.hoverBg }}
+                  className="group relative p-8 md:p-10 text-center transition-all duration-500"
+                  style={{ backgroundColor: theme.bgCard }}
+                >
+                  <div className="relative mb-6">
+                    <div 
+                      className="w-14 h-14 mx-auto flex items-center justify-center"
+                      style={{ border: `1px solid ${theme.border}` }}
+                    >
+                      <UploadCloud className="w-6 h-6" style={{ color: theme.accent }} />
+                    </div>
+                  </div>
+                  <div 
+                    className="text-lg mb-2 tracking-wide"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.accent }}
+                  >
+                    Step 3
+                  </div>
+                  <h3 
+                    className="relative text-lg mb-3 tracking-wide"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                  >
+                    Upload Song
+                  </h3>
+                  <p 
+                    className="relative text-sm font-light leading-relaxed"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    Share your creation with the BibleChorus community.
+                  </p>
+                </motion.div>
               </div>
             </motion.div>
-            
           </div>
-        </motion.div>
 
-        {/* Main Content */}
-        <div className="container mx-auto px-4 -mt-12 relative z-20 max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 rounded-3xl shadow-2xl p-8 md:p-10"
-          >
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="mb-10 grid grid-cols-3 p-1.5 bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 rounded-2xl shadow-xl h-16">
-                <TabsTrigger 
-                  value="lyrics"
-                  className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:via-teal-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300 data-[state=active]:scale-[1.02] h-12 font-medium text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-600/40"
+          <div className="container mx-auto px-6 md:px-12 pb-32 max-w-6xl">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="p-8 md:p-10"
+              style={{
+                backgroundColor: theme.bgCard,
+                border: `1px solid ${theme.border}`
+              }}
+            >
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList 
+                  className="mb-10 grid grid-cols-3 p-1 h-14"
+                  style={{ 
+                    backgroundColor: 'transparent',
+                    border: `1px solid ${theme.border}`
+                  }}
                 >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Generate</span> Lyrics
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="music"
-                  className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:via-teal-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300 data-[state=active]:scale-[1.02] h-12 font-medium text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-600/40"
-                >
-                  <Music className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Generate</span> Music
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="upload"
-                  className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:via-teal-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300 data-[state=active]:scale-[1.02] h-12 font-medium text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-600/40"
-                >
-                  <UploadCloud className="mr-2 h-4 w-4" />
-                  Upload Song
-                </TabsTrigger>
-              </TabsList>
+                  <TabsTrigger 
+                    value="lyrics"
+                    className="h-12 font-medium text-sm tracking-wide transition-all duration-300 data-[state=active]:shadow-none rounded-none"
+                    style={{
+                      fontFamily: "'Manrope', sans-serif",
+                      color: activeTab === 'lyrics' ? (isDark ? '#050505' : '#ffffff') : theme.textSecondary,
+                      backgroundColor: activeTab === 'lyrics' ? theme.accent : 'transparent',
+                    }}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Generate</span> Lyrics
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="music"
+                    className="h-12 font-medium text-sm tracking-wide transition-all duration-300 data-[state=active]:shadow-none rounded-none"
+                    style={{
+                      fontFamily: "'Manrope', sans-serif",
+                      color: activeTab === 'music' ? (isDark ? '#050505' : '#ffffff') : theme.textSecondary,
+                      backgroundColor: activeTab === 'music' ? theme.accent : 'transparent',
+                      borderLeft: `1px solid ${theme.border}`,
+                      borderRight: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    <Music className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Generate</span> Music
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="upload"
+                    className="h-12 font-medium text-sm tracking-wide transition-all duration-300 data-[state=active]:shadow-none rounded-none"
+                    style={{
+                      fontFamily: "'Manrope', sans-serif",
+                      color: activeTab === 'upload' ? (isDark ? '#050505' : '#ffffff') : theme.textSecondary,
+                      backgroundColor: activeTab === 'upload' ? theme.accent : 'transparent',
+                    }}
+                  >
+                    <UploadCloud className="mr-2 h-4 w-4" />
+                    Upload Song
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="lyrics">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <div className="mb-8 text-center">
-                    <div className="flex items-center justify-center mb-4">
-                      <div className="p-3 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl backdrop-blur-sm border border-emerald-500/20 dark:border-emerald-500/30">
-                        <Sparkles className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                <TabsContent value="lyrics">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <div className="mb-8 text-center">
+                      <div className="flex items-center justify-center mb-6">
+                        <div 
+                          className="w-16 h-16 flex items-center justify-center"
+                          style={{ border: `1px solid ${theme.border}` }}
+                        >
+                          <Sparkles className="w-7 h-7" style={{ color: theme.accent }} />
+                        </div>
                       </div>
+                      <h2 
+                        className="text-3xl mb-4 tracking-wide"
+                        style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                      >
+                        Generate Lyrics Using Scripture and AI
+                      </h2>
+                      <p 
+                        className="text-base max-w-2xl mx-auto font-light"
+                        style={{ color: theme.textSecondary }}
+                      >
+                        Transform Biblical passages into beautiful song lyrics with the help of AI
+                      </p>
                     </div>
-                    <h2 className="text-3xl font-bold mb-3 text-slate-900 dark:text-white">Generate Lyrics Using Scripture and AI</h2>
-                    <p className="text-slate-600 dark:text-slate-300 text-lg max-w-2xl mx-auto">Transform Biblical passages into beautiful song lyrics with the help of AI</p>
-                  </div>
 
-                  <Accordion type="single" collapsible className="w-full space-y-4">
-                    <AccordionItem value="step1" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <Book className="mr-3 h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                          <span className="text-lg font-semibold">Step 1: Choose a Scripture Passage</span>
+                    <Accordion type="single" collapsible className="w-full space-y-4">
+                      <AccordionItem 
+                        value="step1" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              1
+                            </span>
+                            <Book className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Choose a Scripture Passage
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="mb-4 font-light" style={{ color: theme.textSecondary }}>
+                            Select a Bible passage that inspires you. Or, view the progress map on BibleChorus.com to select a passage that has yet to be turned into a song.
+                          </p>
+                          <div 
+                            className="p-4"
+                            style={{ 
+                              backgroundColor: isDark ? 'rgba(212, 175, 55, 0.08)' : 'rgba(191, 161, 48, 0.08)',
+                              border: `1px solid ${theme.borderHover}`
+                            }}
+                          >
+                            <p style={{ color: theme.text }}>
+                              <strong style={{ color: theme.accent }}>Example:</strong> Psalm 23
+                            </p>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem 
+                        value="step2" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              2
+                            </span>
+                            <Sparkles className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Use an AI Assistant
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="font-light" style={{ color: theme.textSecondary }}>
+                            Utilize an AI language model (like OpenAI&apos;s GPT-4) to help generate lyrics based on your chosen scripture.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem 
+                        value="step3" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              3
+                            </span>
+                            <PenTool className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Craft Your Prompt
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="mb-4 font-light" style={{ color: theme.textSecondary }}>
+                            Write a detailed prompt for the AI, including the scripture reference, scripture adherence, and any specific instructions.
+                          </p>
+                          <div 
+                            className="p-4"
+                            style={{ 
+                              backgroundColor: isDark ? 'rgba(212, 175, 55, 0.08)' : 'rgba(191, 161, 48, 0.08)',
+                              border: `1px solid ${theme.borderHover}`
+                            }}
+                          >
+                            <p style={{ color: theme.text }}>
+                              <strong style={{ color: theme.accent }}>Example Prompt:</strong> &quot;Make the following into a song in the style of George Herbert, but with language that a modern listener would understand. Use verses, chorus, bridge, and outro. Stay as close to the passage of Scripture as possible. Use a rhyming scheme that is suitable for song.&quot;
+                            </p>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem 
+                        value="step4" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              4
+                            </span>
+                            <CheckCircle className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Refine the Generated Lyrics
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="font-light" style={{ color: theme.textSecondary }}>
+                            Review the AI-generated lyrics and make any necessary edits to get the lyrics just right.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </motion.div>
+                </TabsContent>
+
+                <TabsContent value="music">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <div className="mb-8 text-center">
+                      <div className="flex items-center justify-center mb-6">
+                        <div 
+                          className="w-16 h-16 flex items-center justify-center"
+                          style={{ border: `1px solid ${theme.border}` }}
+                        >
+                          <Music className="w-7 h-7" style={{ color: theme.accent }} />
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="mb-4 text-slate-600 dark:text-slate-300">Select a Bible passage that inspires you. Or, view the progress map on BibleChorus.com to select a passage that has yet to be turned into a song.</p>
-                        <Alert className="bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800 backdrop-blur-sm">
-                          <AlertDescription>
-                            <strong>Example:</strong> Psalm 23
-                          </AlertDescription>
-                        </Alert>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem value="step2" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <Sparkles className="mr-3 h-5 w-5 text-teal-600 dark:text-teal-400" />
-                          <span className="text-lg font-semibold">Step 2: Use an AI Assistant</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="text-slate-600 dark:text-slate-300">Utilize an AI language model (like OpenAI&apos;s GPT-4) to help generate lyrics based on your chosen scripture.</p>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem value="step3" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <PenTool className="mr-3 h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                          <span className="text-lg font-semibold">Step 3: Craft Your Prompt</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="mb-4 text-slate-600 dark:text-slate-300">
-                          Write a detailed prompt for the AI, including the scripture reference, scripture adherence, and any specific instructions.
-                        </p>
-                        <Alert className="bg-teal-50/80 dark:bg-teal-950/50 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-800 backdrop-blur-sm">
-                          <AlertDescription>
-                            <strong>Example Prompt:</strong> &quot;Make the following into a song in the style of George Herbert, but with language that a modern listener would understand. Use verses, chorus, bridge, and outro. Stay as close to the passage of Scripture as possible. Use a rhyming scheme that is suitable for song.&quot;
-                          </AlertDescription>
-                        </Alert>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem value="step4" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <CheckCircle className="mr-3 h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                          <span className="text-lg font-semibold">Step 4: Refine the Generated Lyrics</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="text-slate-600 dark:text-slate-300">Review the AI-generated lyrics and make any necessary edits to get the lyrics just right.</p>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </motion.div>
-              </TabsContent>
-
-              <TabsContent value="music">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <div className="mb-8 text-center">
-                    <div className="flex items-center justify-center mb-4">
-                      <div className="p-3 bg-gradient-to-br from-teal-500/10 to-cyan-500/10 rounded-2xl backdrop-blur-sm border border-teal-500/20 dark:border-teal-500/30">
-                        <Music className="w-8 h-8 text-teal-600 dark:text-teal-400" />
                       </div>
+                      <h2 
+                        className="text-3xl mb-4 tracking-wide"
+                        style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                      >
+                        Generate Music Using AI Platforms
+                      </h2>
+                      <p 
+                        className="text-base max-w-2xl mx-auto font-light"
+                        style={{ color: theme.textSecondary }}
+                      >
+                        Create beautiful melodies and arrangements for your lyrics
+                      </p>
                     </div>
-                    <h2 className="text-3xl font-bold mb-3 text-slate-900 dark:text-white">Generate Music Using AI Platforms</h2>
-                    <p className="text-slate-600 dark:text-slate-300 text-lg max-w-2xl mx-auto">Create beautiful melodies and arrangements for your lyrics</p>
-                  </div>
 
-                  <Accordion type="single" collapsible className="w-full space-y-4">
-                    <AccordionItem value="step1" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <List className="mr-3 h-5 w-5 text-teal-600 dark:text-teal-400" />
-                          <span className="text-lg font-semibold">Step 1: Choose an AI Music Platform</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="mb-4 text-slate-600 dark:text-slate-300">
-                          Platforms like Suno or Udio can help you generate music.
-                        </p>
-                        <div className="flex flex-wrap gap-3">
-                          <Badge variant="secondary" className="text-teal-600 dark:text-teal-400 bg-teal-100/60 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 backdrop-blur-sm hover:bg-teal-200/60 dark:hover:bg-teal-900/40 transition-all duration-300">
+                    <Accordion type="single" collapsible className="w-full space-y-4">
+                      <AccordionItem 
+                        value="step1" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              1
+                            </span>
+                            <List className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Choose an AI Music Platform
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="mb-4 font-light" style={{ color: theme.textSecondary }}>
+                            Platforms like Suno or Udio can help you generate music.
+                          </p>
+                          <div className="flex flex-wrap gap-3">
                             <a
                               href="https://www.suno.ai"
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="hover:underline"
+                              className="px-4 py-2 text-sm transition-all duration-300 hover:opacity-80"
+                              style={{
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                backgroundColor: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)'
+                              }}
                             >
                               Suno
                             </a>
-                          </Badge>
-                          <Badge variant="secondary" className="text-cyan-600 dark:text-cyan-400 bg-cyan-100/60 dark:bg-cyan-950/40 border border-cyan-200 dark:border-cyan-800 backdrop-blur-sm hover:bg-cyan-200/60 dark:hover:bg-cyan-900/40 transition-all duration-300">
                             <a
                               href="https://udio.com"
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="hover:underline"
+                              className="px-4 py-2 text-sm transition-all duration-300 hover:opacity-80"
+                              style={{
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                backgroundColor: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)'
+                              }}
                             >
                               Udio
                             </a>
-                          </Badge>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
 
-                    <AccordionItem value="step2" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <PenTool className="mr-3 h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                          <span className="text-lg font-semibold">Step 2: Prepare Your Music Prompt</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="mb-4 text-slate-600 dark:text-slate-300">Describe the style, genre, mood, and any instruments you want in your music.</p>
-                        <Alert className="bg-cyan-50/80 dark:bg-cyan-950/50 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-800 backdrop-blur-sm">
-                          <AlertDescription>
-                            <strong>Example Prompt:</strong> &quot;gentle acoustic guitar melody, soft piano accompaniment; calm, uplifting, Psalm.&quot;
-                          </AlertDescription>
-                        </Alert>
-                      </AccordionContent>
-                    </AccordionItem>
+                      <AccordionItem 
+                        value="step2" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              2
+                            </span>
+                            <PenTool className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Prepare Your Music Prompt
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="mb-4 font-light" style={{ color: theme.textSecondary }}>
+                            Describe the style, genre, mood, and any instruments you want in your music.
+                          </p>
+                          <div 
+                            className="p-4"
+                            style={{ 
+                              backgroundColor: isDark ? 'rgba(212, 175, 55, 0.08)' : 'rgba(191, 161, 48, 0.08)',
+                              border: `1px solid ${theme.borderHover}`
+                            }}
+                          >
+                            <p style={{ color: theme.text }}>
+                              <strong style={{ color: theme.accent }}>Example Prompt:</strong> &quot;gentle acoustic guitar melody, soft piano accompaniment; calm, uplifting, Psalm.&quot;
+                            </p>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
 
-                    <AccordionItem value="step3" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <Download className="mr-3 h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                          <span className="text-lg font-semibold">Step 3: Generate and Download the Music</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="text-slate-600 dark:text-slate-300">Use the AI platform to generate the music. Listen to the result, iterate, and when satisfied, download the audio file. Only pick the best generation to upload to BibleChorus.com so as not to water down the quality of content.</p>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </motion.div>
-              </TabsContent>
+                      <AccordionItem 
+                        value="step3" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              3
+                            </span>
+                            <Download className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Generate and Download the Music
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="font-light" style={{ color: theme.textSecondary }}>
+                            Use the AI platform to generate the music. Listen to the result, iterate, and when satisfied, download the audio file. Only pick the best generation to upload to BibleChorus.com so as not to water down the quality of content.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </motion.div>
+                </TabsContent>
 
-              <TabsContent value="upload">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <div className="mb-8 text-center">
-                    <div className="flex items-center justify-center mb-4">
-                      <div className="p-3 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-2xl backdrop-blur-sm border border-cyan-500/20 dark:border-cyan-500/30">
-                        <UploadCloud className="w-8 h-8 text-cyan-600 dark:text-cyan-400" />
+                <TabsContent value="upload">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <div className="mb-8 text-center">
+                      <div className="flex items-center justify-center mb-6">
+                        <div 
+                          className="w-16 h-16 flex items-center justify-center"
+                          style={{ border: `1px solid ${theme.border}` }}
+                        >
+                          <UploadCloud className="w-7 h-7" style={{ color: theme.accent }} />
+                        </div>
                       </div>
+                      <h2 
+                        className="text-3xl mb-4 tracking-wide"
+                        style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                      >
+                        Upload Your Song to BibleChorus.com
+                      </h2>
+                      <p 
+                        className="text-base max-w-2xl mx-auto font-light"
+                        style={{ color: theme.textSecondary }}
+                      >
+                        Share your creation with the BibleChorus community
+                      </p>
                     </div>
-                    <h2 className="text-3xl font-bold mb-3 text-slate-900 dark:text-white">Upload Your Song to BibleChorus.com</h2>
-                    <p className="text-slate-600 dark:text-slate-300 text-lg max-w-2xl mx-auto">Share your creation with the BibleChorus community</p>
-                  </div>
 
-                  <Accordion type="single" collapsible className="w-full space-y-4">
-                    <AccordionItem value="step1" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <CheckCircle className="mr-3 h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                          <span className="text-lg font-semibold">Step 1: Prepare Your Files</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="text-slate-600 dark:text-slate-300">Ensure you have your music files ready for upload, along with metadata such as lyrics, prompts used, genre information, etc. Also create song art for your song using GPT-4o or another AI image creator.</p>
-                      </AccordionContent>
-                    </AccordionItem>
+                    <Accordion type="single" collapsible className="w-full space-y-4">
+                      <AccordionItem 
+                        value="step1" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              1
+                            </span>
+                            <CheckCircle className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Prepare Your Files
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="font-light" style={{ color: theme.textSecondary }}>
+                            Ensure you have your music files ready for upload, along with metadata such as lyrics, prompts used, genre information, etc. Also create song art for your song using GPT-4o or another AI image creator.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
 
-                    <AccordionItem value="step2" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <UploadCloud className="mr-3 h-5 w-5 text-blue-600 dark:text-blue-400" />
-                          <span className="text-lg font-semibold">Step 2: Go to the Upload Page</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="mb-4 text-slate-600 dark:text-slate-300">
-                          Navigate to the Upload Page on BibleChorus.com.
-                        </p>
-                        <Link href="/upload" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 shadow-lg">
-                          <UploadCloud className="mr-2 h-4 w-4" />
-                          Go to Upload Page
-                        </Link>
-                      </AccordionContent>
-                    </AccordionItem>
+                      <AccordionItem 
+                        value="step2" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              2
+                            </span>
+                            <UploadCloud className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Go to the Upload Page
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="mb-4 font-light" style={{ color: theme.textSecondary }}>
+                            Navigate to the Upload Page on BibleChorus.com.
+                          </p>
+                          <Link 
+                            href="/upload" 
+                            className="inline-flex items-center px-6 py-3 text-sm tracking-wide transition-all duration-300 hover:opacity-90"
+                            style={{
+                              backgroundColor: theme.accent,
+                              color: isDark ? '#050505' : '#ffffff',
+                              fontFamily: "'Manrope', sans-serif"
+                            }}
+                          >
+                            <UploadCloud className="mr-2 h-4 w-4" />
+                            Go to Upload Page
+                          </Link>
+                        </AccordionContent>
+                      </AccordionItem>
 
-                    <AccordionItem value="step3" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <User className="mr-3 h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                          <span className="text-lg font-semibold">Step 3: Fill in Song Details</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="mb-4 text-slate-600 dark:text-slate-300">Provide the song title, scripture adherence, bible verses covered, and any other required information.</p>
-                        <Alert className="bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800 backdrop-blur-sm">
-                          <AlertDescription>
-                            <strong>Example:</strong><br />
-                            Title: &apos;The Lord, My Shepherd&apos;<br />
-                            Genres: Pop, Indie, Folk<br />
-                            Etc.
-                          </AlertDescription>
-                        </Alert>
-                      </AccordionContent>
-                    </AccordionItem>
+                      <AccordionItem 
+                        value="step3" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              3
+                            </span>
+                            <User className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Fill in Song Details
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="mb-4 font-light" style={{ color: theme.textSecondary }}>
+                            Provide the song title, scripture adherence, bible verses covered, and any other required information.
+                          </p>
+                          <div 
+                            className="p-4"
+                            style={{ 
+                              backgroundColor: isDark ? 'rgba(212, 175, 55, 0.08)' : 'rgba(191, 161, 48, 0.08)',
+                              border: `1px solid ${theme.borderHover}`
+                            }}
+                          >
+                            <p style={{ color: theme.text }}>
+                              <strong style={{ color: theme.accent }}>Example:</strong><br />
+                              Title: &apos;The Lord, My Shepherd&apos;<br />
+                              Genres: Pop, Indie, Folk<br />
+                              Etc.
+                            </p>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
 
-                    <AccordionItem value="step4" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <Headphones className="mr-3 h-5 w-5 text-teal-600 dark:text-teal-400" />
-                          <span className="text-lg font-semibold">Step 4: Upload Files</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="text-slate-600 dark:text-slate-300">Upload your audio file and song art.</p>
-                      </AccordionContent>
-                    </AccordionItem>
+                      <AccordionItem 
+                        value="step4" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              4
+                            </span>
+                            <Headphones className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Upload Files
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="font-light" style={{ color: theme.textSecondary }}>
+                            Upload your audio file and song art.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
 
-                    <AccordionItem value="step5" className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 rounded-2xl px-6 py-2 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-300">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <CheckCircle className="mr-3 h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                          <span className="text-lg font-semibold">Step 5: Submit for the BibleChorus Community to Enjoy</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                        <p className="text-slate-600 dark:text-slate-300">Once all information and files are uploaded, submit your song for the BibleChorus community to enjoy. Engage with other users by commenting on songs, voting, and creating playlists.</p>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </motion.div>
-              </TabsContent>
-            </Tabs>
-          </motion.div>
+                      <AccordionItem 
+                        value="step5" 
+                        className="px-6 py-2 transition-all duration-300"
+                        style={{
+                          backgroundColor: theme.hoverBg,
+                          border: `1px solid ${theme.border}`
+                        }}
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center">
+                            <span 
+                              className="w-8 h-8 flex items-center justify-center mr-4 text-sm"
+                              style={{ 
+                                border: `1px solid ${theme.accent}`,
+                                color: theme.accent,
+                                fontFamily: "'Italiana', serif"
+                              }}
+                            >
+                              5
+                            </span>
+                            <CheckCircle className="mr-3 h-5 w-5" style={{ color: theme.accent }} />
+                            <span 
+                              className="text-lg"
+                              style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                            >
+                              Submit for the Community to Enjoy
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pl-12">
+                          <p className="font-light" style={{ color: theme.textSecondary }}>
+                            Once all information and files are uploaded, submit your song for the BibleChorus community to enjoy. Engage with other users by commenting on songs, voting, and creating playlists.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </motion.div>
+                </TabsContent>
+              </Tabs>
+            </motion.div>
+          </div>
         </div>
       </div>
     </>
