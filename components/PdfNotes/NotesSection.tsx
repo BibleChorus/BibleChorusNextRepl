@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { PdfNote } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, StickyNote, Lock } from 'lucide-react';
+import { Plus, Trash2, FileText, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ThemeColors {
@@ -96,7 +97,7 @@ export const NotesSection: React.FC<NotesSectionProps> = ({
         >
           Sign in to create and view your personal notes.
         </p>
-        <a 
+        <Link 
           href="/login"
           className="inline-block px-6 py-2 text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
           style={{ 
@@ -105,7 +106,7 @@ export const NotesSection: React.FC<NotesSectionProps> = ({
           }}
         >
           Sign In
-        </a>
+        </Link>
       </div>
     );
   }
@@ -174,7 +175,7 @@ export const NotesSection: React.FC<NotesSectionProps> = ({
           className="text-center py-12"
           style={{ border: `1px solid ${theme.borderLight}` }}
         >
-          <StickyNote 
+          <FileText 
             className="w-8 h-8 mx-auto mb-4" 
             style={{ color: theme.textMuted }} 
           />
