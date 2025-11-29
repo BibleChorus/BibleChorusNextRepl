@@ -240,10 +240,11 @@ export const JourneySong: React.FC<JourneySongProps> = ({
         style={{ originY: 0.5 }}
       />
 
+      {/* Desktop: Song art on right side (hidden on mobile) */}
       <AnimatePresence>
         {showArt && songArtUrl && (
           <motion.div
-            className="absolute right-0 top-0 bottom-0 w-24 md:w-32 pointer-events-none overflow-hidden"
+            className="absolute right-0 top-0 bottom-0 w-32 pointer-events-none overflow-hidden hidden md:block"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
@@ -264,23 +265,24 @@ export const JourneySong: React.FC<JourneySongProps> = ({
                 alt={song.title}
                 fill
                 className="object-cover"
-                sizes="(max-width: 768px) 96px, 128px"
+                sizes="128px"
               />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Desktop: Fallback when no art (hidden on mobile) */}
       {showArt && !songArtUrl && (
         <motion.div
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-lg pointer-events-none flex items-center justify-center"
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-16 h-16 rounded-lg pointer-events-none items-center justify-center hidden md:flex"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 0.3, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           transition={{ duration: 0.4, ease: easeOutExpo }}
           style={{ backgroundColor: theme.bgAlt, border: `1px solid ${theme.border}` }}
         >
-          <Music className="w-5 h-5 md:w-6 md:h-6" style={{ color: theme.textMuted }} />
+          <Music className="w-6 h-6" style={{ color: theme.textMuted }} />
         </motion.div>
       )}
 
@@ -398,7 +400,6 @@ export const JourneySong: React.FC<JourneySongProps> = ({
             initial={{ opacity: 0 }}
             animate={{ 
               opacity: isHovered || isTouched || isCurrentSong ? 1 : 0,
-              marginRight: showArt && songArtUrl ? '120px' : '0px',
               borderColor: isHovered ? `${theme.accent}80` : theme.border,
               backgroundColor: isHovered ? `${theme.accent}0d` : 'transparent'
             }}
@@ -419,6 +420,67 @@ export const JourneySong: React.FC<JourneySongProps> = ({
           </motion.button>
         )}
       </motion.div>
+
+      {/* Mobile: Song art below content (hidden on desktop) */}
+      <AnimatePresence>
+        {showArt && songArtUrl && (
+          <motion.div
+            className="md:hidden overflow-hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: easeOutExpo }}
+          >
+            <motion.div 
+              className="relative w-full aspect-square max-w-[280px] mx-auto mb-4"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.5, ease: easeOutExpo, delay: 0.1 }}
+            >
+              <motion.div
+                className="relative w-full h-full overflow-hidden"
+                style={{ border: `1px solid ${theme.border}` }}
+                initial={{ filter: 'grayscale(100%)' }}
+                animate={{ filter: isCurrentlyPlaying ? 'grayscale(0%)' : 'grayscale(100%)' }}
+                transition={{ duration: 0.8, ease: easeOutExpo }}
+              >
+                <Image
+                  src={songArtUrl}
+                  alt={song.title}
+                  fill
+                  className="object-cover"
+                  sizes="280px"
+                />
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile: Fallback when no art (hidden on desktop) */}
+      <AnimatePresence>
+        {showArt && !songArtUrl && (
+          <motion.div
+            className="md:hidden overflow-hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: easeOutExpo }}
+          >
+            <motion.div 
+              className="w-24 h-24 mx-auto mb-4 flex items-center justify-center"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 0.3 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.4, ease: easeOutExpo }}
+              style={{ backgroundColor: theme.bgAlt, border: `1px solid ${theme.border}` }}
+            >
+              <Music className="w-8 h-8" style={{ color: theme.textMuted }} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showOrigin && (
@@ -483,7 +545,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               animate={{ y: 0 }}
               exit={{ y: -10 }}
               transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-1 pb-2 pl-[52px] md:pl-[68px] pr-28 md:pr-36 flex flex-wrap items-center gap-2"
+              className="pt-1 pb-2 pl-[52px] md:pl-[68px] pr-4 md:pr-36 flex flex-wrap items-center gap-2"
             >
               <span 
                 className="text-[9px] uppercase tracking-widest"
@@ -536,7 +598,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
               animate={{ y: 0 }}
               exit={{ y: -10 }}
               transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-2 pb-6 pl-[52px] md:pl-[68px] pr-28 md:pr-36"
+              className="pt-2 pb-6 pl-[52px] md:pl-[68px] pr-4 md:pr-36"
             >
               <div 
                 className="relative pl-6"
