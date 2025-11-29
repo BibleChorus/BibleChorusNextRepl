@@ -954,7 +954,7 @@ function UploadContent() {
                 Share your scripture songs with the community
               </p>
             </div>
-            <UploadInfoDialog theme={theme} />
+            <UploadInfoDialog />
           </div>
           {progress === 100 && (
             <motion.div
@@ -981,7 +981,7 @@ function UploadContent() {
         
         <FormProvider {...form}>
           <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-            <UploadProgressBar onProgressChange={setProgress} theme={theme} />
+            <UploadProgressBar onProgressChange={setProgress} />
             
             <Tabs value={steps[currentStep]} className="w-full">
               <TabsList 
