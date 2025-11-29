@@ -92,14 +92,14 @@ export const CommentList: React.FC<CommentListProps> = ({
                 color: theme.accent
               }}
             >
-              {comment.username.charAt(0).toUpperCase()}
+              {(comment.username || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="flex-1">
               <span 
                 className="text-sm font-medium"
                 style={{ color: theme.text }}
               >
-                {comment.username}
+                {comment.username || 'Unknown User'}
               </span>
               <span 
                 className="text-xs ml-2"
