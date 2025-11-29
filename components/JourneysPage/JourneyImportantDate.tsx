@@ -9,12 +9,12 @@ import { Star, Calendar, X } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import Image from 'next/image';
 
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+
 const getImageUrl = (path: string | null | undefined): string => {
   if (!path) return '';
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  const baseUrl = process.env.NEXT_PUBLIC_CDN_URL || '';
-  if (baseUrl) return `${baseUrl}${path}`;
-  return path.startsWith('/') ? path : `/${path}`;
+  return CDN_URL ? `${CDN_URL}${path}` : (path.startsWith('/') ? path : `/${path}`);
 };
 
 interface JourneyImportantDateProps {
