@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
-import { Send } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 import 'react-quill/dist/quill.snow.css';
@@ -162,7 +162,7 @@ export const NewCommentForm: React.FC<NewCommentFormProps> = ({
               color: isDark ? '#050505' : '#ffffff',
             }}
           >
-            <Send className="w-3.5 h-3.5 mr-2" />
+            <ArrowRight className="w-3.5 h-3.5 mr-2" />
             {parentCommentId ? 'Reply' : 'Post Comment'}
           </Button>
         </div>
