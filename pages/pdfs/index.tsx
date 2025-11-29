@@ -15,6 +15,12 @@ import type { Variants } from 'framer-motion';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
+const getImageUrl = (path: string | null | undefined): string => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
+};
+
 interface PdfWithUser extends Pdf {
   username: string;
 }
@@ -140,11 +146,7 @@ export default function PdfDashboard({ pdfs }: PdfDashboardProps) {
                   {pdf.image_url && (
                     <div className="relative overflow-hidden rounded-t-2xl">
                       <Image
-                        src={
-                          pdf.image_url.startsWith('http')
-                            ? pdf.image_url
-                            : `${CDN_URL}${pdf.image_url}`
-                        }
+                        src={getImageUrl(pdf.image_url)}
                         alt={pdf.title}
                         width={320}
                         height={480}

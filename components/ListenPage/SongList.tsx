@@ -36,6 +36,12 @@ import { SongOptionsMenu } from '@/components/SongOptionsMenu';
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
+const getImageUrl = (path: string | null | undefined): string => {
+  if (!path) return '/biblechorus-icon.png';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
+};
+
 interface SongListProps {
   songs: Song[];
   isNarrowView: boolean;
@@ -489,7 +495,7 @@ const SongListItem = React.memo(function SongListItem({
       <div className={`${isNarrowView ? 'w-14 h-14 sm:w-16 sm:h-16' : 'w-16 h-16 sm:w-20 sm:h-20'} mr-3 sm:mr-4 relative flex-shrink-0`}>
         {song.song_art_url && !imageError[song.id] ? (
           <Image
-            src={`${CDN_URL}${song.song_art_url}`}
+            src={getImageUrl(song.song_art_url)}
             alt={song.title}
             layout="fill"
             objectFit="cover"

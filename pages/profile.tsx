@@ -84,6 +84,12 @@ interface Activity {
 }
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+
+const getImageUrl = (path: string | null | undefined): string => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
+};
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
 // Add this constant near the top of the file
@@ -492,7 +498,7 @@ export default function Profile() {
         <meta name="description" content={`View ${profileUser.username}'s profile, songs, playlists, and activities on BibleChorus`} />
         <meta property="og:title" content={`${profileUser.username}'s Profile | BibleChorus`} />
         <meta property="og:description" content={`View ${profileUser.username}'s profile, songs, playlists, and activities on BibleChorus`} />
-        <meta property="og:image" content={profileUser?.profile_image_url ? `${CDN_URL}${profileUser.profile_image_url}` : '/default-profile-banner.jpg'} />
+        <meta property="og:image" content={profileUser?.profile_image_url ? getImageUrl(profileUser.profile_image_url) : '/default-profile-banner.jpg'} />
         <meta property="og:type" content="profile" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="icon" href="/favicon.ico" />
@@ -566,7 +572,7 @@ export default function Profile() {
                 <div className="relative group">
                   <div className="w-48 h-48 rounded-full overflow-hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-4 border-white/12 dark:border-slate-700/40 shadow-2xl group-hover:shadow-3xl transition-all duration-500">
                   <Image
-                    src={profileUser?.profile_image_url ? `${CDN_URL}${profileUser.profile_image_url}` : DEFAULT_PROFILE_IMAGE}
+                    src={profileUser?.profile_image_url ? getImageUrl(profileUser.profile_image_url) : DEFAULT_PROFILE_IMAGE}
                     alt={`${profileUser?.username} profile`}
                     width={192}
                     height={192}
@@ -960,7 +966,7 @@ export default function Profile() {
                 </DialogHeader>
                 <div className="flex flex-col items-center">
                   <Image
-                    src={profileUser?.profile_image_url ? `${CDN_URL}${profileUser.profile_image_url}` : DEFAULT_PROFILE_IMAGE}
+                    src={profileUser?.profile_image_url ? getImageUrl(profileUser.profile_image_url) : DEFAULT_PROFILE_IMAGE}
                     alt="Current Profile Image"
                     width={200}
                     height={200}

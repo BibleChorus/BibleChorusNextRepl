@@ -66,6 +66,12 @@ export default function TopicPage() {
   };
 
   const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+  
+  const getImageUrl = (path: string | null | undefined): string => {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
+  };
 
   const handleCommentAdded = (newComment: any) => {
     setTopic((prevTopic: any) => ({
@@ -176,7 +182,7 @@ export default function TopicPage() {
         <div className="mb-6 p-4 bg-card rounded-lg shadow-sm flex items-center">
           <div className="relative w-16 h-16 flex-shrink-0 mr-4">
             <Image
-              src={topic.song.song_art_url ? `${CDN_URL}${topic.song.song_art_url}` : '/biblechorus-icon.png'}
+              src={topic.song.song_art_url ? getImageUrl(topic.song.song_art_url) : '/biblechorus-icon.png'}
               alt={topic.song.title}
               layout="fill"
               objectFit="cover"

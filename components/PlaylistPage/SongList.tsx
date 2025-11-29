@@ -8,6 +8,14 @@ import { Song } from '@/types';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { motion } from 'framer-motion';
 
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+
+const getImageUrl = (path: string | null | undefined): string => {
+  if (!path) return '/biblechorus-icon.png';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
+};
+
 interface SongListProps {
   songs: Song[];
 }
@@ -78,7 +86,6 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
   const isCurrentSong = currentSong?.id === song.id;
 
   return (
@@ -101,7 +108,7 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl blur-xl group-hover/image:blur-2xl transition-all duration-500"></div>
           <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-white/20 dark:border-slate-700/50 shadow-lg">
             <Image
-              src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
+              src={getImageUrl(song.song_art_url)}
               alt={song.title}
               layout="fill"
               objectFit="cover"

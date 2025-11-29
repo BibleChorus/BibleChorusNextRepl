@@ -48,6 +48,12 @@ import { useMusicPlayer } from '@/contexts/MusicPlayerContext'
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
+const getImageUrl = (path: string | null | undefined): string => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
+};
+
 const formatJourneySongOrigin = (origin: string): string => {
   const originLabels: Record<string, string> = {
     'prior_recording': 'Previously Written Song',
@@ -1116,7 +1122,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
               <div className="md:col-span-2 xl:col-span-4">
                 <div className="relative">
                   <Image
-                    src={song.song_art_url.startsWith('http') ? song.song_art_url : `${CDN_URL}${song.song_art_url}`}
+                    src={getImageUrl(song.song_art_url)}
                     alt={song.title}
                     width={400}
                     height={500}
@@ -1976,7 +1982,7 @@ export default function SongPage({ song: initialSong }: SongPageProps) {
           </DialogHeader>
           <div className="flex flex-col items-center">
             <Image
-              src={song.song_art_url ? `${CDN_URL}${song.song_art_url}` : '/biblechorus-icon.png'}
+              src={song.song_art_url ? getImageUrl(song.song_art_url) : '/biblechorus-icon.png'}
               alt="Current Song Art"
               width={200}
               height={200}

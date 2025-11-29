@@ -30,6 +30,12 @@ interface PlaylistPageProps {
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
+const getImageUrl = (path: string | null | undefined): string => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
+};
+
 export default function PlaylistPage({ playlist: initialPlaylist, songs: initialSongs, creatorUsername }: PlaylistPageProps) {
   const router = useRouter();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -249,7 +255,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
               <div className="relative w-full h-full rounded-3xl overflow-hidden border-2 border-white/20 dark:border-slate-700/50 shadow-2xl">
                 <Image
-                  src={playlist.cover_art_url ? `${CDN_URL}${playlist.cover_art_url}` : '/biblechorus-icon.png'}
+                  src={playlist.cover_art_url ? getImageUrl(playlist.cover_art_url) : '/biblechorus-icon.png'}
                   alt={`${playlist.name} cover art`}
                   layout="fill"
                   objectFit="cover"
@@ -444,7 +450,7 @@ export default function PlaylistPage({ playlist: initialPlaylist, songs: initial
           <div className="flex flex-col items-center space-y-6">
             <div className="relative group">
               <Image
-                src={playlist.cover_art_url ? `${CDN_URL}${playlist.cover_art_url}` : '/biblechorus-icon.png'}
+                src={playlist.cover_art_url ? getImageUrl(playlist.cover_art_url) : '/biblechorus-icon.png'}
                 alt="Current Playlist Cover Art"
                 width={200}
                 height={200}
