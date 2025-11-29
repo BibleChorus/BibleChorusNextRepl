@@ -408,8 +408,8 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image must be less than 10MB');
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
       return;
     }
 
@@ -961,7 +961,7 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
                 id="important_date_title"
                 value={importantDateFormData.title}
                 onChange={(e) => setImportantDateFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="e.g., First time leading worship"
+                placeholder="E.g., Date of baptism, marriage, birth of child, or other important date"
                 className="bg-white dark:bg-slate-800"
               />
             </div>
@@ -1055,7 +1055,7 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
                     )}
                   </Button>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Optional. Max 10MB. JPG, PNG, or WebP.
+                    Optional. Max 5MB. JPG, PNG, or WebP.
                   </p>
                 </div>
               )}
