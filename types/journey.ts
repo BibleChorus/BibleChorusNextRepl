@@ -52,6 +52,7 @@ export interface SeasonSong {
   personal_note: string | null;
   significance: string | null;
   added_date: string | null;
+  source_url: string | null;
   created_at: string;
   song?: {
     id: number;
@@ -99,6 +100,7 @@ export interface AddSeasonSongRequest {
   personal_note?: string;
   significance?: string;
   added_date?: string;
+  source_url?: string;
 }
 
 export interface UpdateJourneyProfileRequest {
