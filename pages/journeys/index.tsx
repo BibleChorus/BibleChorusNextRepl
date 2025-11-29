@@ -268,17 +268,17 @@ export default function JourneysIndex() {
     }
 
     return (
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
         <Link href="/journeys/edit">
           <Button 
             size="lg"
-            className="h-12 px-8 rounded-none text-xs tracking-[0.2em] uppercase font-medium"
+            className="h-11 sm:h-12 px-5 sm:px-8 rounded-none text-[10px] sm:text-xs tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium w-full sm:w-auto"
             style={{
               backgroundColor: theme.accent,
               color: isDark ? '#050505' : '#ffffff',
             }}
           >
-            <Edit className="w-4 h-4 mr-3" />
+            <Edit className="w-4 h-4 mr-2 sm:mr-3" />
             Edit Journey
           </Button>
         </Link>
@@ -286,15 +286,15 @@ export default function JourneysIndex() {
           <Button 
             variant="outline"
             size="lg"
-            className="h-12 px-8 rounded-none text-xs tracking-[0.2em] uppercase font-medium transition-colors"
+            className="h-11 sm:h-12 px-5 sm:px-8 rounded-none text-[10px] sm:text-xs tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium transition-colors w-full sm:w-auto"
             style={{
               borderColor: theme.borderHover,
               color: theme.text,
               backgroundColor: 'transparent',
             }}
           >
-            View Your Journey
-            <ArrowRight className="w-4 h-4 ml-3" />
+            View Journey
+            <ArrowRight className="w-4 h-4 ml-2 sm:ml-3" />
           </Button>
         </Link>
       </div>
@@ -348,12 +348,13 @@ export default function JourneysIndex() {
             transition={{ duration: 0.8 }}
             className="relative overflow-hidden pb-16 pt-24"
           >
-            <div className="container mx-auto px-6 md:px-12">
-              <div className="flex justify-end mb-12">
+            <div className="container mx-auto px-4 sm:px-6 md:px-12">
+              <div className="flex justify-center sm:justify-end mb-12">
                 <motion.div 
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
+                  className="w-full sm:w-auto"
                 >
                   {renderUserButtons()}
                 </motion.div>
@@ -408,7 +409,7 @@ export default function JourneysIndex() {
             </div>
           </motion.div>
 
-          <div className="container mx-auto px-6 md:px-12 pb-16">
+          <div className="container mx-auto px-4 sm:px-6 md:px-12 pb-16">
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
@@ -501,7 +502,7 @@ export default function JourneysIndex() {
             </motion.div>
           </div>
 
-          <div className="container mx-auto px-6 md:px-12 pb-32">
+          <div className="container mx-auto px-4 sm:px-6 md:px-12 pb-32">
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
