@@ -63,6 +63,16 @@ Preferred communication style: Simple, everyday language.
 - Automatically hidden on home page, expanded on other pages
 - Smooth slide animations using Framer Motion
 
+**Listen Page Design**:
+- Matches journeys/home page aesthetic with gold accent colors
+- Italiana serif font for "Listen" title, song titles, and section headers
+- Manrope sans-serif for metadata, artist names, and body text
+- Theme-responsive backgrounds (porcelain/void) and gold-accented action buttons
+- Song cards with gold hover borders and Bible verse references in gold
+- Filters, Sort, and Playlists panels styled with gold accents
+- Filter tags/badges use gold accent styling
+- All functionality preserved (filters, sorting, infinite scroll, playlists, player controls)
+
 ### Backend Architecture
 
 **API Layer**: Next.js API Routes (`/pages/api`)
