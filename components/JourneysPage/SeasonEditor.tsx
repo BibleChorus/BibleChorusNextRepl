@@ -108,7 +108,7 @@ const SeasonForm = memo(function SeasonForm({
           id="description"
           value={formData.description}
           onChange={(e) => handleChange('description', e.target.value)}
-          placeholder="Describe or Reflect upon this Season"
+          placeholder="Describe or Reflect upon this Season (sentences or paragraph(s))"
           className="bg-white dark:bg-slate-800 min-h-[100px]"
         />
       </div>
@@ -125,12 +125,12 @@ const SeasonForm = memo(function SeasonForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="reflection">Personal Reflection</Label>
+        <Label htmlFor="reflection">Short Quote About Season</Label>
         <Textarea
           id="reflection"
           value={formData.reflection}
           onChange={(e) => handleChange('reflection', e.target.value)}
-          placeholder="Provide a Short Quote About this Season to be Highlighted"
+          placeholder="Provide a Short Quote About this Season to be Highlighted (one or two sentences)"
           className="bg-white dark:bg-slate-800 min-h-[80px]"
         />
       </div>
