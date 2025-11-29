@@ -11,7 +11,7 @@ import Image from 'next/image';
 import { NewCommentForm } from '@/components/PdfComments/NewCommentForm';
 import { NotesSection } from '@/components/PdfNotes/NotesSection';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThumbsUp, ThumbsDown, Headphones, FileText, Share2, Sparkles, BookOpen, MessageSquare, ArrowLeft, PenLine } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Headphones, FileText, Share2, Sparkles, BookOpen, MessageSquare, ArrowLeft, Pencil } from 'lucide-react';
 import apiClient from '@/lib/apiClient';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -762,7 +762,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                 }}
               >
                 <div className="flex items-center gap-4 mb-8">
-                  <PenLine className="w-5 h-5" style={{ color: theme.accent }} />
+                  <Pencil className="w-5 h-5" style={{ color: theme.accent }} />
                   <h2 
                     className="text-xs tracking-[0.3em] uppercase"
                     style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
