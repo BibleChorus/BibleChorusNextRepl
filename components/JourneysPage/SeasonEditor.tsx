@@ -130,7 +130,7 @@ const SeasonForm = memo(function SeasonForm({
           id="reflection"
           value={formData.reflection}
           onChange={(e) => handleChange('reflection', e.target.value)}
-          placeholder="Provide a Short Highlighted Quote About this Season"
+          placeholder="Provide a Short Quote About this Season to be Highlighted"
           className="bg-white dark:bg-slate-800 min-h-[80px]"
         />
       </div>
