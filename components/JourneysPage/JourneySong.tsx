@@ -546,7 +546,7 @@ export const JourneySong: React.FC<JourneySongProps> = ({
                   className="absolute -left-3 -top-1 text-xl select-none"
                   style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 300, color: `${theme.accent}66` }}
                 >
-                  "
+                  {'"'}
                 </span>
                 <p 
                   className="text-[13px] leading-relaxed tracking-wide"

@@ -281,7 +281,7 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
                     className="text-lg md:text-xl font-serif italic leading-relaxed"
                     style={{ fontFamily: "'Italiana', serif", color: theme.textSecondary }}
                   >
-                    "{season.reflection}"
+                    {`"${season.reflection}"`}
                   </p>
                 </div>
               </motion.div>
@@ -349,7 +349,7 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
                     className="text-sm italic font-serif"
                     style={{ fontFamily: "'Italiana', serif", color: `${theme.textSecondary}80` }}
                   >
-                    Songs coming soon...
+                    {"Songs coming soon..."}
                   </p>
                 </div>
               </motion.div>

@@ -550,7 +550,7 @@ export default function JourneysIndex() {
                     className="text-sm font-light"
                     style={{ color: theme.textSecondary }}
                   >
-                    Be the first to share your musical journey!
+                    {"Be the first to share your musical journey!"}
                   </p>
                 </div>
               ) : (

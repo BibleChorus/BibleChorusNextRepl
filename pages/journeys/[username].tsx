@@ -400,8 +400,8 @@ export default function JourneyPage() {
             </h1>
             <p className="mb-8 font-light" style={{ color: theme.textSecondary }}>
               {error === 'This journey is private' 
-                ? 'The owner has not made this journey public yet.'
-                : 'We could not find the journey you are looking for.'}
+                ? "The owner has not made this journey public yet."
+                : "We could not find the journey you are looking for."}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button 
@@ -535,7 +535,7 @@ export default function JourneyPage() {
   return (
     <>
       <Head>
-        <title>{journey.title} | {journey.username}'s Journey | BibleChorus</title>
+        <title>{`${journey.title} | ${journey.username}'s Journey | BibleChorus`}</title>
         <meta name="description" content={journey.subtitle || `Explore ${journey.username}'s musical journey through scripture songs`} />
         <meta property="og:title" content={`${journey.title} | ${journey.username}'s Journey`} />
         <meta property="og:description" content={journey.subtitle || `Explore ${journey.username}'s musical journey`} />
