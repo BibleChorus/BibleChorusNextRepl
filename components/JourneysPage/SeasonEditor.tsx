@@ -108,7 +108,7 @@ const SeasonForm = memo(function SeasonForm({
           id="description"
           value={formData.description}
           onChange={(e) => handleChange('description', e.target.value)}
-          placeholder="Describe what this season meant to you..."
+          placeholder="Describe or Reflect upon this Season"
           className="bg-white dark:bg-slate-800 min-h-[100px]"
         />
       </div>
@@ -130,7 +130,7 @@ const SeasonForm = memo(function SeasonForm({
           id="reflection"
           value={formData.reflection}
           onChange={(e) => handleChange('reflection', e.target.value)}
-          placeholder="Share a reflection or testimony from this season..."
+          placeholder="Provide a Short Highlighted Quote About this Season"
           className="bg-white dark:bg-slate-800 min-h-[80px]"
         />
       </div>
