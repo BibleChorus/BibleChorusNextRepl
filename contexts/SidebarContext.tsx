@@ -1,20 +1,31 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 interface SidebarContextType {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   isMobileOpen: boolean;
   setIsMobileOpen: (isOpen: boolean) => void;
+  isHomePage: boolean;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isOpen, setIsOpen] = useState<boolean>(true); // Default to open
-  const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false); // For mobile sidebar
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState<boolean>(true);
+  const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false);
+  
+  const isHomePage = router.pathname === '/';
+  
+  useEffect(() => {
+    if (isHomePage) {
+      setIsOpen(false);
+    }
+  }, [isHomePage]);
 
   return (
-    <SidebarContext.Provider value={{ isOpen, setIsOpen, isMobileOpen, setIsMobileOpen }}>
+    <SidebarContext.Provider value={{ isOpen, setIsOpen, isMobileOpen, setIsMobileOpen, isHomePage }}>
       {children}
     </SidebarContext.Provider>
   );
