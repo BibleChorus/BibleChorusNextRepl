@@ -3,6 +3,8 @@ import db from '@/db';
 import jwt from 'jsonwebtoken';
 import { UpdateImportantDateRequest } from '@/types/journey';
 
+const CDN_URL = process.env.CDN_URL || '';
+
 function getUserIdFromRequest(req: NextApiRequest): number | null {
   const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
   if (!token) return null;
@@ -74,7 +76,13 @@ export default async function handler(
       }
 
       if (data.photo_url !== undefined) {
-        updates.photo_url = data.photo_url || null;
+        if (data.photo_url) {
+          updates.photo_url = data.photo_url.startsWith('http') 
+            ? data.photo_url 
+            : `${CDN_URL}${data.photo_url.startsWith('/') ? data.photo_url.slice(1) : data.photo_url}`;
+        } else {
+          updates.photo_url = null;
+        }
       }
 
       updates.updated_at = db.fn.now();

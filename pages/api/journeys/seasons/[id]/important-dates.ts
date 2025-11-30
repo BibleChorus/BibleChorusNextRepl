@@ -3,6 +3,8 @@ import db from '@/db';
 import jwt from 'jsonwebtoken';
 import { CreateImportantDateRequest } from '@/types/journey';
 
+const CDN_URL = process.env.CDN_URL || '';
+
 function getUserIdFromRequest(req: NextApiRequest): number | null {
   const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
   if (!token) return null;
@@ -69,13 +71,20 @@ export default async function handler(
         .max('display_order as max')
         .first();
 
+      let fullPhotoUrl: string | null = null;
+      if (data.photo_url) {
+        fullPhotoUrl = data.photo_url.startsWith('http') 
+          ? data.photo_url 
+          : `${CDN_URL}${data.photo_url.startsWith('/') ? data.photo_url.slice(1) : data.photo_url}`;
+      }
+
       const [importantDate] = await db('journey_season_important_dates')
         .insert({
           season_id: seasonId,
           title: data.title.trim(),
           description: data.description?.trim() || null,
           event_date: data.event_date,
-          photo_url: data.photo_url || null,
+          photo_url: fullPhotoUrl,
           display_order: (maxOrder?.max || 0) + 1,
         })
         .returning('*');
