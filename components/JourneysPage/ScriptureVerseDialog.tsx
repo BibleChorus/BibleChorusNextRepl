@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { BIBLE_BOOKS, BOLLS_LIFE_API_BIBLE_TRANSLATIONS } from '@/lib/constants';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
@@ -250,11 +249,11 @@ export const ScriptureVerseDialog: React.FC<ScriptureVerseDialogProps> = ({
           </Select>
         </div>
 
-        <ScrollArea className="flex-1" style={{ height: '400px' }}>
+        <div className="flex-1 overflow-y-auto min-h-0">
           <div className="p-6 md:p-10">
             {renderVerseContent()}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
