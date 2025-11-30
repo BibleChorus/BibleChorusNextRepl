@@ -21,6 +21,12 @@ interface ParsedReference {
   chapter: number;
   startVerse?: number;
   endVerse?: number;
+  originalRef: string;
+}
+
+interface VerseGroup {
+  reference: string;
+  verses: any[];
 }
 
 const BibleVersesSkeleton = () => (
@@ -35,7 +41,32 @@ const BibleVersesSkeleton = () => (
   </div>
 );
 
-function parseScriptureReference(reference: string): ParsedReference | null {
+const bookNormalizations: { [key: string]: string } = {
+  'psalm': 'Psalms',
+  'psalms': 'Psalms',
+  'song of solomon': 'Song of Solomon',
+  'song of songs': 'Song of Solomon',
+  'songs': 'Song of Solomon',
+  '1 samuel': '1 Samuel',
+  '2 samuel': '2 Samuel',
+  '1 kings': '1 Kings',
+  '2 kings': '2 Kings',
+  '1 chronicles': '1 Chronicles',
+  '2 chronicles': '2 Chronicles',
+  '1 corinthians': '1 Corinthians',
+  '2 corinthians': '2 Corinthians',
+  '1 thessalonians': '1 Thessalonians',
+  '2 thessalonians': '2 Thessalonians',
+  '1 timothy': '1 Timothy',
+  '2 timothy': '2 Timothy',
+  '1 peter': '1 Peter',
+  '2 peter': '2 Peter',
+  '1 john': '1 John',
+  '2 john': '2 John',
+  '3 john': '3 John',
+};
+
+function parseSingleReference(reference: string): ParsedReference | null {
   if (!reference || reference.trim().length === 0) return null;
   
   const trimmed = reference.trim();
@@ -46,31 +77,6 @@ function parseScriptureReference(reference: string): ParsedReference | null {
   if (!match) return null;
   
   let bookName = match[1].trim();
-  
-  const bookNormalizations: { [key: string]: string } = {
-    'psalm': 'Psalms',
-    'psalms': 'Psalms',
-    'song of solomon': 'Song of Solomon',
-    'song of songs': 'Song of Solomon',
-    'songs': 'Song of Solomon',
-    '1 samuel': '1 Samuel',
-    '2 samuel': '2 Samuel',
-    '1 kings': '1 Kings',
-    '2 kings': '2 Kings',
-    '1 chronicles': '1 Chronicles',
-    '2 chronicles': '2 Chronicles',
-    '1 corinthians': '1 Corinthians',
-    '2 corinthians': '2 Corinthians',
-    '1 thessalonians': '1 Thessalonians',
-    '2 thessalonians': '2 Thessalonians',
-    '1 timothy': '1 Timothy',
-    '2 timothy': '2 Timothy',
-    '1 peter': '1 Peter',
-    '2 peter': '2 Peter',
-    '1 john': '1 John',
-    '2 john': '2 John',
-    '3 john': '3 John',
-  };
   
   const lowerBookName = bookName.toLowerCase();
   if (bookNormalizations[lowerBookName]) {
@@ -94,7 +100,22 @@ function parseScriptureReference(reference: string): ParsedReference | null {
     chapter,
     startVerse,
     endVerse,
+    originalRef: trimmed,
   };
+}
+
+function parseMultipleReferences(referenceString: string): ParsedReference[] {
+  const references = referenceString.split(/[;,]/).map(r => r.trim()).filter(r => r.length > 0);
+  const parsed: ParsedReference[] = [];
+  
+  for (const ref of references) {
+    const result = parseSingleReference(ref);
+    if (result) {
+      parsed.push(result);
+    }
+  }
+  
+  return parsed;
 }
 
 export const ScriptureVerseDialog: React.FC<ScriptureVerseDialogProps> = ({ 
@@ -102,7 +123,7 @@ export const ScriptureVerseDialog: React.FC<ScriptureVerseDialogProps> = ({
   onClose, 
   scriptureReference 
 }) => {
-  const [verses, setVerses] = useState<any[]>([]);
+  const [verseGroups, setVerseGroups] = useState<VerseGroup[]>([]);
   const [isLoadingVerses, setIsLoadingVerses] = useState(false);
   const [translation, setTranslation] = useState('NASB');
   const [translationSearch, setTranslationSearch] = useState('');
@@ -116,15 +137,10 @@ export const ScriptureVerseDialog: React.FC<ScriptureVerseDialogProps> = ({
   }, [isOpen, translation, scriptureReference]);
 
   const fetchVerses = async () => {
-    const parsed = parseScriptureReference(scriptureReference);
-    if (!parsed) {
+    const parsedRefs = parseMultipleReferences(scriptureReference);
+    
+    if (parsedRefs.length === 0) {
       setError('Could not parse scripture reference');
-      return;
-    }
-
-    const bookIndex = BIBLE_BOOKS.indexOf(parsed.book);
-    if (bookIndex === -1) {
-      setError(`Book not found: ${parsed.book}`);
       return;
     }
 
@@ -132,37 +148,57 @@ export const ScriptureVerseDialog: React.FC<ScriptureVerseDialogProps> = ({
     setError(null);
     
     try {
-      let versesToFetch: number[] = [];
+      const allGroups: VerseGroup[] = [];
       
-      if (parsed.startVerse && parsed.endVerse) {
-        for (let v = parsed.startVerse; v <= parsed.endVerse; v++) {
-          versesToFetch.push(v);
+      for (const parsed of parsedRefs) {
+        const bookIndex = BIBLE_BOOKS.indexOf(parsed.book);
+        if (bookIndex === -1) {
+          continue;
         }
-      } else if (parsed.startVerse) {
-        versesToFetch = [parsed.startVerse];
-      } else {
-        for (let v = 1; v <= 200; v++) {
-          versesToFetch.push(v);
+        
+        let versesToFetch: number[] = [];
+        
+        if (parsed.startVerse && parsed.endVerse) {
+          for (let v = parsed.startVerse; v <= parsed.endVerse; v++) {
+            versesToFetch.push(v);
+          }
+        } else if (parsed.startVerse) {
+          versesToFetch = [parsed.startVerse];
+        } else {
+          for (let v = 1; v <= 200; v++) {
+            versesToFetch.push(v);
+          }
+        }
+
+        const response = await axios.post('/api/fetch-verses', [{
+          translation,
+          book: bookIndex + 1,
+          chapter: parsed.chapter,
+          verses: versesToFetch,
+        }]);
+
+        const fetchedVerses = response.data.flat()
+          .filter((verse: any) => verse && verse.text)
+          .map((verse: any) => ({
+            book: BIBLE_BOOKS[verse.book - 1],
+            chapter: verse.chapter,
+            verse: verse.verse,
+            text: verse.text,
+          }));
+        
+        if (fetchedVerses.length > 0) {
+          allGroups.push({
+            reference: parsed.originalRef,
+            verses: fetchedVerses,
+          });
         }
       }
-
-      const response = await axios.post('/api/fetch-verses', [{
-        translation,
-        book: bookIndex + 1,
-        chapter: parsed.chapter,
-        verses: versesToFetch,
-      }]);
-
-      const fetchedVerses = response.data.flat()
-        .filter((verse: any) => verse && verse.text)
-        .map((verse: any) => ({
-          book: BIBLE_BOOKS[verse.book - 1],
-          chapter: verse.chapter,
-          verse: verse.verse,
-          text: verse.text,
-        }));
       
-      setVerses(fetchedVerses);
+      setVerseGroups(allGroups);
+      
+      if (allGroups.length === 0) {
+        setError('No verses found for the given references');
+      }
     } catch (err) {
       console.error('Error fetching verses:', err);
       setError('Failed to fetch verses');
@@ -185,21 +221,30 @@ export const ScriptureVerseDialog: React.FC<ScriptureVerseDialogProps> = ({
       return <p className="text-red-500/80 italic">{error}</p>;
     }
 
-    if (verses.length === 0) {
+    if (verseGroups.length === 0) {
       return <p className="text-muted-foreground/60 italic">No verses found for this reference.</p>;
     }
 
     return (
-      <div className="space-y-6">
-        {verses.map((verse, index) => (
-          <div key={index}>
-            <p className="text-amber-600 dark:text-amber-400 text-xs tracking-wider mb-2 font-medium uppercase">
-              {verse.book} {verse.chapter}:{verse.verse}
-            </p>
-            <div 
-              className="text-foreground/80 leading-7 font-light text-sm md:text-base italic"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(verse.text) }}
-            />
+      <div className="space-y-8">
+        {verseGroups.map((group, groupIndex) => (
+          <div key={groupIndex} className={groupIndex > 0 ? 'pt-6 border-t border-border/30' : ''}>
+            {verseGroups.length > 1 && (
+              <h3 className="text-sm font-medium text-foreground/90 mb-4">{group.reference}</h3>
+            )}
+            <div className="space-y-4">
+              {group.verses.map((verse, verseIndex) => (
+                <div key={verseIndex}>
+                  <p className="text-amber-600 dark:text-amber-400 text-xs tracking-wider mb-2 font-medium uppercase">
+                    {verse.book} {verse.chapter}:{verse.verse}
+                  </p>
+                  <div 
+                    className="text-foreground/80 leading-7 font-light text-sm md:text-base italic"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(verse.text) }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
