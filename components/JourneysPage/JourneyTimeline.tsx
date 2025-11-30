@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes';
 import { Season, JourneyWithSeasons, SeasonSong, ImportantDate } from '@/types/journey';
 import { JourneySong } from './JourneySong';
 import { JourneyImportantDate } from './JourneyImportantDate';
+import { ScriptureVerseDialog } from './ScriptureVerseDialog';
 import { Music, BookOpen } from 'lucide-react';
 import { FaQuoteLeft as Quote } from 'react-icons/fa';
 import { format, parseISO } from 'date-fns';
@@ -110,6 +111,7 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
 }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [showScriptureDialog, setShowScriptureDialog] = useState(false);
   
   const year = season.year || new Date(season.start_date).getFullYear();
   const seasonNumber = index + 1;
@@ -226,18 +228,26 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
                 )}
 
                 {season.scripture_reference && (
-                  <motion.div
-                    variants={revealVariants}
-                    className="flex items-start gap-3 mb-6"
-                  >
-                    <BookOpen className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: theme.accent }} />
-                    <span 
-                      className="text-xs font-light tracking-wide"
-                      style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.accent}b3` }}
+                  <>
+                    <motion.button
+                      variants={revealVariants}
+                      onClick={() => setShowScriptureDialog(true)}
+                      className="flex items-start gap-3 mb-6 text-left hover:opacity-80 transition-opacity cursor-pointer group"
                     >
-                      {season.scripture_reference}
-                    </span>
-                  </motion.div>
+                      <BookOpen className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: theme.accent }} />
+                      <span 
+                        className="text-xs font-light tracking-wide underline underline-offset-2 group-hover:no-underline"
+                        style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.accent}b3` }}
+                      >
+                        {season.scripture_reference}
+                      </span>
+                    </motion.button>
+                    <ScriptureVerseDialog
+                      isOpen={showScriptureDialog}
+                      onClose={() => setShowScriptureDialog(false)}
+                      scriptureReference={season.scripture_reference}
+                    />
+                  </>
                 )}
 
                 {season.cover_image_url && (

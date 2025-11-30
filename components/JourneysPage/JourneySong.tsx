@@ -380,45 +380,51 @@ export const JourneySong: React.FC<JourneySongProps> = ({
           </div>
         </div>
 
-        <motion.span 
-          className="text-xs font-mono flex-shrink-0"
-          animate={{ 
-            color: isCurrentSong ? theme.accent : isHovered ? theme.text : theme.textSecondary 
-          }}
-          transition={{ duration: 0.3 }}
+        <motion.div
+          className={`flex items-center gap-4 flex-shrink-0 z-20 transition-transform duration-500 ease-out ${
+            showArt && songArtUrl ? 'md:-translate-x-36' : 'translate-x-0'
+          }`}
         >
-          {song.duration > 0 ? formatDuration(song.duration) : '--:--'}
-        </motion.span>
-
-        {hasLyricsOrVerses && (
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowLyrics(true);
-            }}
-            className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0 z-20"
-            initial={{ opacity: 0 }}
+          <motion.span 
+            className="text-xs font-mono flex-shrink-0"
             animate={{ 
-              opacity: isHovered || isTouched || isCurrentSong ? 1 : 0,
-              borderColor: isHovered ? `${theme.accent}80` : theme.border,
-              backgroundColor: isHovered ? `${theme.accent}0d` : 'transparent'
-            }}
-            whileHover={{
-              borderColor: theme.accent,
-              backgroundColor: `${theme.accent}1a`
+              color: isCurrentSong ? theme.accent : isHovered ? theme.text : theme.textSecondary 
             }}
             transition={{ duration: 0.3 }}
-            aria-label="View lyrics and scripture"
           >
-            <motion.div
-              animate={{ color: isHovered ? theme.accent : theme.textSecondary }}
-              whileHover={{ color: theme.accent }}
-              transition={{ duration: 0.2 }}
+            {song.duration > 0 ? formatDuration(song.duration) : '--:--'}
+          </motion.span>
+
+          {hasLyricsOrVerses && (
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowLyrics(true);
+              }}
+              className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0"
+              initial={{ opacity: 0 }}
+              animate={{ 
+                opacity: isHovered || isTouched || isCurrentSong ? 1 : 0,
+                borderColor: isHovered ? `${theme.accent}80` : theme.border,
+                backgroundColor: isHovered ? `${theme.accent}0d` : 'transparent'
+              }}
+              whileHover={{
+                borderColor: theme.accent,
+                backgroundColor: `${theme.accent}1a`
+              }}
+              transition={{ duration: 0.3 }}
+              aria-label="View lyrics and scripture"
             >
-              <BookOpen className="w-3.5 h-3.5" />
-            </motion.div>
-          </motion.button>
-        )}
+              <motion.div
+                animate={{ color: isHovered ? theme.accent : theme.textSecondary }}
+                whileHover={{ color: theme.accent }}
+                transition={{ duration: 0.2 }}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+              </motion.div>
+            </motion.button>
+          )}
+        </motion.div>
       </motion.div>
 
       {/* Mobile: Song art below content (hidden on desktop) */}

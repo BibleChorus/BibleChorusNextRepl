@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Season } from '@/types/journey';
 import { JourneySong } from './JourneySong';
+import { ScriptureVerseDialog } from './ScriptureVerseDialog';
 import { Calendar, Music, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { FaQuoteLeft as Quote } from 'react-icons/fa';
 import { format, parseISO } from 'date-fns';
@@ -55,6 +56,7 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
   alignment = 'left',
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [showScriptureDialog, setShowScriptureDialog] = useState(false);
   const theme = themeColors[season.theme_color || 'indigo'] || themeColors.indigo;
 
   const formatDateRange = () => {
@@ -134,17 +136,25 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
           )}
           
           {season.scripture_reference && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className={`flex items-start gap-3 p-4 rounded-2xl bg-gradient-to-r ${theme.bg} mb-6`}
-            >
-              <BookOpen className={`w-5 h-5 ${theme.accent} mt-0.5 flex-shrink-0`} />
-              <span className={`text-sm font-medium ${theme.accent}`}>
-                {season.scripture_reference}
-              </span>
-            </motion.div>
+            <>
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                onClick={() => setShowScriptureDialog(true)}
+                className={`flex items-start gap-3 p-4 rounded-2xl bg-gradient-to-r ${theme.bg} mb-6 w-full text-left hover:opacity-80 transition-opacity cursor-pointer`}
+              >
+                <BookOpen className={`w-5 h-5 ${theme.accent} mt-0.5 flex-shrink-0`} />
+                <span className={`text-sm font-medium ${theme.accent} underline underline-offset-2`}>
+                  {season.scripture_reference}
+                </span>
+              </motion.button>
+              <ScriptureVerseDialog
+                isOpen={showScriptureDialog}
+                onClose={() => setShowScriptureDialog(false)}
+                scriptureReference={season.scripture_reference}
+              />
+            </>
           )}
           
           {season.reflection && (

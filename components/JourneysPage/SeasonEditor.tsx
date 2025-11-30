@@ -562,7 +562,7 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
       </AnimatePresence>
 
       <div className="space-y-4">
-        {seasons.map((season) => (
+        {[...seasons].sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()).map((season) => (
           <motion.div
             key={season.id}
             layout

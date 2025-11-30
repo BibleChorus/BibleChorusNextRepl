@@ -206,7 +206,7 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
         
         {journey.bio && (
           <motion.p
-            className="mt-12 text-sm max-w-md mx-auto leading-relaxed transition-colors duration-300"
+            className="mt-12 text-sm max-w-2xl mx-auto leading-relaxed transition-colors duration-300 whitespace-pre-line"
             style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.textSecondary}b3` }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
