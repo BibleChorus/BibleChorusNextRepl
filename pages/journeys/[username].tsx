@@ -21,8 +21,6 @@ import { Pencil, Lock, ArrowLeft, Plus, Music, ChevronDown, Calendar } from 'luc
 
 import { format, parseISO } from 'date-fns';
 
-const JOURNEY_THEME_KEY = 'journey-previous-theme';
-
 interface SeasonsDropdownProps {
   seasons: Season[];
   isMobile?: boolean;
@@ -215,47 +213,18 @@ export default function JourneyPage() {
   const { username } = router.query;
   const { user, getAuthToken } = useAuth();
   const { setIsOpen } = useSidebar();
-  const { theme: userTheme, resolvedTheme, setTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [journey, setJourney] = useState<JourneyWithSeasons | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const hasAutoSwitchedTheme = useRef(false);
-  const restoreTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isOwner = user?.username === username;
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && mounted && !hasAutoSwitchedTheme.current && resolvedTheme && resolvedTheme !== 'dark') {
-      hasAutoSwitchedTheme.current = true;
-      sessionStorage.setItem(JOURNEY_THEME_KEY, userTheme || resolvedTheme);
-      setTheme('dark');
-    }
-  }, [mounted, userTheme, resolvedTheme, setTheme]);
-
-  useEffect(() => {
-    if (restoreTimeoutRef.current) {
-      clearTimeout(restoreTimeoutRef.current);
-      restoreTimeoutRef.current = null;
-    }
-    
-    return () => {
-      restoreTimeoutRef.current = setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          const previousTheme = sessionStorage.getItem(JOURNEY_THEME_KEY);
-          if (previousTheme) {
-            setTheme(previousTheme);
-            sessionStorage.removeItem(JOURNEY_THEME_KEY);
-          }
-        }
-      }, 0);
-    };
-  }, [setTheme]);
 
   const isDark = resolvedTheme === 'dark';
 

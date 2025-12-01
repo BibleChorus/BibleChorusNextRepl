@@ -74,7 +74,7 @@ function MyApp({ Component, pageProps }: AppProps & { Component: any }) {
       <AuthProvider>
         <MusicPlayerProvider>
           <SidebarProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
               <TooltipProvider>
                 <LoadingWrapper>
                   {isBarePage ? (
