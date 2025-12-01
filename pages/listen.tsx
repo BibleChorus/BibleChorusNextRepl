@@ -4,7 +4,7 @@ import useSWR from 'swr'
 import { SongList } from '@/components/ListenPage/SongList'
 import { Filters } from '@/components/ListenPage/Filters'
 import { motion, AnimatePresence } from "framer-motion"
-import { Filter, X, Info, Save, Search, Check, ListMusic, ArrowUpDown, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Expand, Shrink, PlayCircle, Edit } from "lucide-react"
+import { Filter, X, Info, Save, Search, Check, ListMusic, ArrowUpDown, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Expand, Shrink, PlayCircle, Edit, Shuffle } from "lucide-react"
 import { useTheme } from 'next-themes'
 
 import { Badge } from "@/components/ui/badge"
@@ -1409,7 +1409,7 @@ function ListenContent({
                         fontFamily: "'Manrope', sans-serif"
                       }}
                     >
-                      <ChevronUp className="h-4 w-4 mr-2" style={{ color: theme.accent }} />
+                      <Shuffle className="h-4 w-4 mr-2" style={{ color: theme.accent }} />
                       Shuffle All
                     </Button>
                     <Button
