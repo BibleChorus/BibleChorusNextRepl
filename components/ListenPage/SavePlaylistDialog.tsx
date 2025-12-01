@@ -16,9 +16,10 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { useRouter } from 'next/router';
 import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper';
-import { Trash2, ListMusic, Save } from 'lucide-react'; // Import ListMusic and Save icons
-import Image from 'next/image'; // Import Next.js Image component
+import { Trash2, ListMusic, Save } from 'lucide-react';
+import Image from 'next/image';
 import { getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils';
+import { useTheme } from 'next-themes';
 
 // Define the Song type
 type Song = {
@@ -87,6 +88,16 @@ export default function SavePlaylistDialog({
   const { handleSubmit, watch, setValue, control } = form;
   const action = watch('action');
   const router = useRouter();
+  
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const theme = {
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -342,9 +353,9 @@ export default function SavePlaylistDialog({
                               <Image
                                 src={croppedImageUrl}
                                 alt="Cover Art Preview"
-                                width={64} // Tailwind w-16 corresponds to 64px
-                                height={64} // Tailwind h-16 corresponds to 64px
-                                className="object-cover rounded"
+                                width={64}
+                                height={64}
+                                className="object-cover"
                               />
                               <Button
                                 type="button"
@@ -387,19 +398,39 @@ export default function SavePlaylistDialog({
                         <FormLabel>Select Playlist</FormLabel>
                         <FormControl>
                           <Select onValueChange={field.onChange} value={field.value || ''}>
-                            <SelectTrigger className="w-full bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-12">
+                            <SelectTrigger 
+                              className="w-full transition-all duration-300 h-12"
+                              style={{
+                                backgroundColor: theme.bgCard,
+                                border: `1px solid ${theme.border}`,
+                                color: theme.text,
+                              }}
+                            >
                               <SelectValue placeholder="Select a playlist" />
                             </SelectTrigger>
                             <SelectContent
                               side="bottom"
                               align="start"
-                              className="max-h-[300px] overflow-y-auto bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl"
+                              className="max-h-[300px] overflow-y-auto"
+                              style={{
+                                backgroundColor: theme.bgCard,
+                                border: `1px solid ${theme.border}`,
+                              }}
                             >
                               {playlists?.map((playlist: any) => (
                                 <SelectItem 
                                   key={playlist.id} 
                                   value={playlist.id.toString()}
-                                  className="hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-all duration-200 rounded-lg"
+                                  className="transition-all duration-200 cursor-pointer"
+                                  style={{
+                                    ['--hover-bg' as string]: theme.accentBgLight,
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = theme.accentBgLight;
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                  }}
                                 >
                                   <div className="flex items-center">
                                     <ListMusic className="w-4 h-4 mr-2" />

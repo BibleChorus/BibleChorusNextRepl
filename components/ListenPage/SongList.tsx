@@ -525,11 +525,10 @@ const SongListItem = React.memo(function SongListItem({
             alt={song.title}
             layout="fill"
             objectFit="cover"
-            className="rounded-xl"
             onError={() => setImageError(prev => ({ ...prev, [song.id]: true }))}
           />
         ) : (
-          <div className="w-full h-full bg-slate-200 dark:bg-slate-700 rounded-xl flex items-center justify-center text-slate-400 text-xs backdrop-blur-sm">
+          <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-400 text-xs backdrop-blur-sm">
             No Image
           </div>
         )}
@@ -628,7 +627,10 @@ const SongListItem = React.memo(function SongListItem({
           
           <button
             onClick={() => handleLocalVoteClick('Best Musically')}
-            className="flex items-center text-slate-500 hover:text-blue-500 transition-all duration-200 hover:scale-105"
+            className="flex items-center transition-all duration-200 hover:scale-105"
+            style={{ color: theme.textSecondary }}
+            onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+            onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
           >
             {getVoteIcon('Best Musically', isNarrowView)}
             <span className="font-medium">{localVoteCounts['Best Musically'] || 0}</span>
@@ -681,7 +683,7 @@ const SongListItem = React.memo(function SongListItem({
               <Badge 
                 key={`${song.id}-${genre}-${index}`} 
                 variant="secondary" 
-                className="text-xs px-2 py-0.5 border-0 rounded-md font-medium"
+                className="text-xs px-2 py-0.5 border-0 font-medium"
                 style={{ 
                   backgroundColor: theme.hoverBg, 
                   color: theme.textSecondary,
@@ -694,7 +696,7 @@ const SongListItem = React.memo(function SongListItem({
             {song.genres && song.genres.length > 3 && (
               <Badge 
                 variant="secondary" 
-                className="text-xs px-2 py-0.5 border-0 rounded-md font-medium"
+                className="text-xs px-2 py-0.5 border-0 font-medium"
                 style={{ 
                   backgroundColor: theme.hoverBg, 
                   color: theme.textSecondary,
@@ -707,7 +709,7 @@ const SongListItem = React.memo(function SongListItem({
             {song.bible_translation_used && (
               <Badge 
                 variant="outline" 
-                className="text-xs px-2 py-0.5 rounded-md font-medium"
+                className="text-xs px-2 py-0.5 font-medium"
                 style={{ 
                   borderColor: theme.borderHover, 
                   color: theme.accent,
@@ -721,7 +723,7 @@ const SongListItem = React.memo(function SongListItem({
             {song.lyrics_scripture_adherence && (
               <Badge 
                 variant="default" 
-                className="text-xs px-2 py-0.5 text-white border-0 rounded-md font-medium"
+                className="text-xs px-2 py-0.5 text-white border-0 font-medium"
                 style={{ 
                   backgroundColor: theme.accent,
                   fontFamily: "'Manrope', sans-serif"
@@ -733,7 +735,7 @@ const SongListItem = React.memo(function SongListItem({
             {song.is_continuous_passage !== undefined && (
               <Badge 
                 variant="outline" 
-                className="text-xs px-2 py-0.5 rounded-md font-medium"
+                className="text-xs px-2 py-0.5 font-medium"
                 style={{ 
                   borderColor: theme.border,
                   color: theme.textSecondary,

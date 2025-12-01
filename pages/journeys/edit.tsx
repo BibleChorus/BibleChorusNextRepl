@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +20,17 @@ import { LoginPromptDialog } from '@/components/LoginPromptDialog';
 export default function EditJourneyPage() {
   const router = useRouter();
   const { user, getAuthToken } = useAuth();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
+  };
   const [profile, setProfile] = useState<JourneyProfile | null>(null);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,14 +117,15 @@ export default function EditJourneyPage() {
         <Head>
           <title>Edit Journey | BibleChorus</title>
         </Head>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30 flex items-center justify-center">
+        <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="w-16 h-16 mx-auto mb-6 rounded-full border-4 border-slate-200 dark:border-slate-700 border-t-indigo-500"
+              className="w-16 h-16 mx-auto mb-6 border-4"
+              style={{ borderColor: theme.border, borderTopColor: theme.accent }}
             />
-            <p className="text-slate-600 dark:text-slate-400">Loading your journey...</p>
+            <p style={{ color: theme.textSecondary }}>Loading your journey...</p>
           </div>
         </div>
       </>
@@ -127,7 +140,7 @@ export default function EditJourneyPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30">
+      <div className="min-h-screen bg-background">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -135,14 +148,14 @@ export default function EditJourneyPage() {
           className="relative overflow-hidden pb-12 pt-8"
         >
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/[0.08] via-purple-400/[0.06] to-pink-400/[0.08] dark:from-indigo-400/[0.13] dark:via-purple-400/[0.1] dark:to-pink-400/[0.13]"></div>
+            <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${theme.accentBgLight} 0%, transparent 50%, ${theme.accentBgLight} 100%)` }}></div>
           </div>
           
           <div className="relative z-10 container mx-auto px-4">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
               <div className="flex items-center gap-4">
                 <Link href="/journeys">
-                  <Button variant="ghost" size="icon" className="rounded-xl">
+                  <Button variant="ghost" size="icon">
                     <ArrowLeft className="w-5 h-5" />
                   </Button>
                 </Link>
@@ -153,16 +166,20 @@ export default function EditJourneyPage() {
                     transition={{ delay: 0.1 }}
                     className="mb-1"
                   >
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-indigo-400/12 to-purple-400/12 backdrop-blur-md border border-indigo-400/14">
-                      <Sparkles className="w-3 h-3 text-indigo-500" />
-                      <span className="text-indigo-600 dark:text-indigo-400">Journey Editor</span>
+                    <span 
+                      className="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium backdrop-blur-md"
+                      style={{ backgroundColor: theme.accentBgLight, border: `1px solid ${theme.accent}20` }}
+                    >
+                      <Sparkles className="w-3 h-3" style={{ color: theme.accent }} />
+                      <span style={{ color: theme.accent }}>Journey Editor</span>
                     </span>
                   </motion.div>
                   <motion.h1 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="text-3xl font-bold text-slate-800 dark:text-slate-200"
+                    className="text-3xl font-bold"
+                    style={{ fontFamily: "'Italiana', serif", color: theme.text }}
                   >
                     {profile?.title || 'My Journey'}
                   </motion.h1>
@@ -185,17 +202,28 @@ export default function EditJourneyPage() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/40 p-1 rounded-xl">
+              <TabsList 
+                className="backdrop-blur-xl p-1"
+                style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}
+              >
                 <TabsTrigger 
                   value="seasons" 
-                  className="rounded-lg px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
+                  className="px-6"
+                  style={{ 
+                    backgroundColor: activeTab === 'seasons' ? theme.accent : 'transparent',
+                    color: activeTab === 'seasons' ? '#ffffff' : theme.textSecondary
+                  }}
                 >
                   <Calendar className="w-4 h-4 mr-2" />
                   Seasons
                 </TabsTrigger>
                 <TabsTrigger 
                   value="settings" 
-                  className="rounded-lg px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
+                  className="px-6"
+                  style={{ 
+                    backgroundColor: activeTab === 'settings' ? theme.accent : 'transparent',
+                    color: activeTab === 'settings' ? '#ffffff' : theme.textSecondary
+                  }}
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Settings

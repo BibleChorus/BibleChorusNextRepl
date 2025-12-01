@@ -61,7 +61,7 @@ export function SortOptions({ filterOptions, setFilterOptions, setIsSortExpanded
     >
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-3">
-          <div className="p-2 rounded-xl" style={{ backgroundColor: theme.accentBgLight }}>
+          <div className="p-2" style={{ backgroundColor: theme.accentBgLight }}>
             <ArrowUpDown className="h-5 w-5" style={{ color: theme.accent }} />
           </div>
           <div>
@@ -75,7 +75,7 @@ export function SortOptions({ filterOptions, setFilterOptions, setIsSortExpanded
           variant="outline"
           size="sm"
           onClick={clearSort}
-          className="flex items-center gap-2 backdrop-blur-sm transition-all duration-300 rounded-xl"
+          className="flex items-center gap-2 backdrop-blur-sm transition-all duration-300"
           style={{ 
             backgroundColor: theme.hoverBg, 
             borderColor: theme.border,
@@ -135,7 +135,7 @@ function SortSelect({ title, value, onChange, options, theme }: SortSelectProps)
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger 
-        className="w-full backdrop-blur-sm transition-all duration-300 rounded-xl h-12"
+        className="w-full backdrop-blur-sm transition-all duration-300 h-12"
         style={{ 
           backgroundColor: theme.hoverBg, 
           borderColor: theme.border,
@@ -146,7 +146,7 @@ function SortSelect({ title, value, onChange, options, theme }: SortSelectProps)
         <SelectValue placeholder={title} />
       </SelectTrigger>
       <SelectContent 
-        className="backdrop-blur-xl rounded-xl"
+        className="backdrop-blur-xl"
         style={{ 
           backgroundColor: theme.bgCard, 
           borderColor: theme.border
@@ -158,7 +158,7 @@ function SortSelect({ title, value, onChange, options, theme }: SortSelectProps)
             <SelectItem 
               key={option.value} 
               value={option.value}
-              className="transition-all duration-200 rounded-lg"
+              className="transition-all duration-200"
               style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
             >
               {option.label}

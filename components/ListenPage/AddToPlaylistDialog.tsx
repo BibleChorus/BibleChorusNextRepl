@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 import { toast } from "sonner";
 import { ListMusic } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 interface AddToPlaylistDialogProps {
   isOpen: boolean;
@@ -29,14 +30,26 @@ export function AddToPlaylistDialog({ isOpen, onClose, songId }: AddToPlaylistDi
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('');
   const { user, getAuthToken } = useAuth();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
-  // Memoize fetchUserPlaylists to prevent unnecessary re-creations
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
+  };
+
   const fetchUserPlaylists = useCallback(async () => {
     try {
       const token = await getAuthToken();
-      console.log("Fetched token for playlists:", token); // Debug log
+      console.log("Fetched token for playlists:", token);
       if (!token) {
-        console.error("No token available for fetching playlists"); // Debug log
+        console.error("No token available for fetching playlists");
         toast.error('Authentication token not found. Please log in again.');
         return;
       }
@@ -48,13 +61,13 @@ export function AddToPlaylistDialog({ isOpen, onClose, songId }: AddToPlaylistDi
       console.error('Error fetching user playlists:', error);
       toast.error('Failed to fetch playlists');
     }
-  }, [getAuthToken, user?.id]); // Added dependencies to useCallback
+  }, [getAuthToken, user?.id]);
 
   useEffect(() => {
     if (isOpen && user) {
       fetchUserPlaylists();
     }
-  }, [isOpen, user, fetchUserPlaylists]); // Included fetchUserPlaylists in dependencies
+  }, [isOpen, user, fetchUserPlaylists]);
 
   const handleAddToPlaylist = async () => {
     if (!selectedPlaylistId) {
@@ -64,19 +77,19 @@ export function AddToPlaylistDialog({ isOpen, onClose, songId }: AddToPlaylistDi
 
     try {
       const token = await getAuthToken();
-      console.log("Token for adding song:", token); // Debug log
+      console.log("Token for adding song:", token);
       if (!token) {
-        console.error("No token available for adding song"); // Debug log
+        console.error("No token available for adding song");
         toast.error('Authentication token not found. Please log in again.');
         return;
       }
       const response = await axios.post(`/api/playlists/${selectedPlaylistId}/songs`, {
         song_ids: [songId],
-        user_id: user?.id, // Add this line
+        user_id: user?.id,
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log("Add to playlist response:", response); // Debug log
+      console.log("Add to playlist response:", response);
       toast.success('Song added to playlist');
       onClose();
     } catch (error) {
@@ -95,15 +108,26 @@ export function AddToPlaylistDialog({ isOpen, onClose, songId }: AddToPlaylistDi
           </DialogDescription>
         </DialogHeader>
         <Select onValueChange={setSelectedPlaylistId} value={selectedPlaylistId}>
-          <SelectTrigger className="w-full bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-12">
+          <SelectTrigger 
+            className="w-full h-12 transition-all duration-300"
+            style={{
+              backgroundColor: theme.bgCard,
+              border: `1px solid ${theme.border}`,
+            }}
+          >
             <SelectValue placeholder="Select a playlist" />
           </SelectTrigger>
-          <SelectContent className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
+          <SelectContent 
+            style={{
+              backgroundColor: theme.bgCard,
+              border: `1px solid ${theme.border}`,
+            }}
+          >
             {playlists.map((playlist) => (
               <SelectItem 
                 key={playlist.id} 
                 value={playlist.id.toString()}
-                className="hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-all duration-200 rounded-lg"
+                className="transition-all duration-200 rounded-none focus:bg-[rgba(191,161,48,0.1)] dark:focus:bg-[rgba(212,175,55,0.1)]"
               >
                 <div className="flex items-center">
                   <ListMusic className="w-4 h-4 mr-2" />

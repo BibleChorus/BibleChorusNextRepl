@@ -162,6 +162,7 @@ function UploadContent() {
     borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
     borderAccent: isDark ? 'rgba(212, 175, 55, 0.5)' : 'rgba(191, 161, 48, 0.5)',
     hoverBg: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.08)',
     cardBorder: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
     inputBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
     selection: isDark ? '#ffffff' : '#161616',
@@ -919,6 +920,24 @@ function UploadContent() {
         .upload-description {
           color: ${theme.textSecondary} !important;
         }
+        
+        .upload-hover-item {
+          transition: background-color 0.15s ease;
+        }
+        
+        .upload-hover-item:hover {
+          background-color: ${theme.accentBgLight} !important;
+        }
+        
+        .upload-selected-item {
+          background-color: ${theme.accentBgLight} !important;
+        }
+        
+        .upload-tag {
+          background-color: ${theme.accentBgLight} !important;
+          color: ${theme.text} !important;
+          border: 1px solid ${theme.borderHover} !important;
+        }
       `}</style>
       
       <Head>
@@ -1659,7 +1678,7 @@ function UploadContent() {
 
               <TabsContent value="Bible Info">
                 <div className="flex flex-col space-y-0">
-                  <div className="flex flex-col rounded-lg border p-4">
+                  <div className="flex flex-col border p-4">
                     <FormField
                       control={form.control}
                       name="bible_books"
@@ -1704,8 +1723,8 @@ function UploadContent() {
                                     <div
                                       key={book}
                                       className={cn(
-                                        "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                                        selectedBibleBooks.includes(book) && "bg-accent"
+                                        "flex cursor-pointer items-center px-2 py-1 upload-hover-item",
+                                        selectedBibleBooks.includes(book) && "upload-selected-item"
                                       )}
                                       onClick={() => handleBibleBookToggle(book)}
                                     >
@@ -1723,7 +1742,7 @@ function UploadContent() {
                             {selectedBibleBooks.map((book) => (
                               <div
                                 key={book}
-                                className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                                className="px-2 py-1 text-sm flex items-center upload-tag"
                               >
                                 {book}
                                 <Button
@@ -1795,8 +1814,8 @@ function UploadContent() {
                                               <div
                                                 key={`${book}-${chapter}`}
                                                 className={cn(
-                                                  "flex items-center rounded-md px-2 py-1 hover:bg-accent cursor-pointer",
-                                                  (selectedChapters[book] || []).includes(chapter) && "bg-accent"
+                                                  "flex items-center px-2 py-1 cursor-pointer upload-hover-item",
+                                                  (selectedChapters[book] || []).includes(chapter) && "upload-selected-item"
                                                 )}
                                                 onClick={() => handleChapterToggle(book, chapter)}
                                               >
@@ -1819,7 +1838,7 @@ function UploadContent() {
                                 chapters.map((chapter) => (
                                   <div
                                     key={`${book}-${chapter}`}
-                                    className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                                    className="px-2 py-1 text-sm flex items-center upload-tag"
                                   >
                                     {`${book} ${chapter}`}
                                     <Button
@@ -1894,8 +1913,8 @@ function UploadContent() {
                                                 <div
                                                   key={`${book}-${chapter}-${verse.verse}`}
                                                   className={cn(
-                                                    "flex items-center rounded-md px-2 py-1 hover:bg-accent cursor-pointer",
-                                                    selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && "bg-accent"
+                                                    "flex items-center px-2 py-1 cursor-pointer upload-hover-item",
+                                                    selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && "upload-selected-item"
                                                   )}
                                                   onClick={() => handleBibleVerseToggle(`${book} ${chapter}:${verse.verse}`)}
                                                 >
@@ -1919,7 +1938,7 @@ function UploadContent() {
                             {selectedBibleVerses.map((verse) => (
                               <div
                                 key={verse}
-                                className="bg-secondary text-secondary-foreground rounded-full px-2 py-1 text-sm flex items-center"
+                                className="px-2 py-1 text-sm flex items-center upload-tag"
                               >
                                 {verse}
                                 <Button
@@ -1949,7 +1968,7 @@ function UploadContent() {
                     />
                   </div>
 
-                  <div className="flex flex-col rounded-lg border p-4">
+                  <div className="flex flex-col border p-4">
                     <FormField
                       control={form.control}
                       name="bible_translation_used"
@@ -1997,8 +2016,8 @@ function UploadContent() {
                                     <div
                                       key={translation}
                                       className={cn(
-                                        "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                                        field.value === translation && "bg-accent"
+                                        "flex cursor-pointer items-center px-2 py-1 upload-hover-item",
+                                        field.value === translation && "upload-selected-item"
                                       )}
                                       onClick={() => {
                                         field.onChange(translation)
@@ -2022,7 +2041,7 @@ function UploadContent() {
                     />
                   </div>
 
-                  <div className="flex flex-col rounded-lg border p-4 space-y-4">
+                  <div className="flex flex-col border p-4 space-y-4">
                     <FormField
                       control={form.control}
                       name="lyrics_scripture_adherence"
@@ -2083,7 +2102,7 @@ function UploadContent() {
                     )}
                   </div>
 
-                  <div className="flex flex-col rounded-lg border p-4">
+                  <div className="flex flex-col border p-4">
                     <FormField
                       control={form.control}
                       name="is_continuous_passage"
@@ -2133,7 +2152,7 @@ function UploadContent() {
                   control={form.control}
                   name="audio_file"
                   render={({ field }) => (
-                    <FormItem className="rounded-lg border p-4">
+                    <FormItem className="border p-4">
                       <FormLabel className="form-label">Audio File</FormLabel>
                       <FormControl>
                         <div className="flex items-center justify-between">
@@ -2240,7 +2259,7 @@ function UploadContent() {
                   control={form.control}
                   name="song_art_file"
                   render={({ field }) => (
-                    <FormItem className="rounded-lg border p-4">
+                    <FormItem className="border p-4">
                       <FormLabel className="form-label">Song Art</FormLabel>
                       <FormControl>
                         <div className="flex items-center justify-between">
