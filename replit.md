@@ -12,7 +12,15 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-The frontend is built with Next.js 15.3.4 (Pages Router) and TypeScript. It uses ShadCN UI (Radix UI + Tailwind CSS) for a consistent, responsive design featuring glassmorphism effects, gradient themes, dark mode, and a gold accent color palette. State management is handled by React Context API for global state, TanStack Query for server state, and React Hook Form with Zod for form validation. Framer Motion is used for animations, and visual elements like a film grain overlay and ambient orbs provide a modern editorial aesthetic. The application features distinct designs for the Home, Listen, Forum, Progress, Playlists, Song Detail, PDF Library, Profile, Upload, and How-To pages, all adhering to the gold accent and editorial aesthetic. Shared components like the layout, music player, authentication buttons, and search inputs maintain visual consistency.
+The frontend is built with Next.js 15.3.4 (Pages Router) and TypeScript. It uses ShadCN UI (Radix UI + Tailwind CSS) with a gold-themed design system featuring:
+
+**Design System:**
+- **Colors:** Gold accent (#d4af37 dark mode, #bfa130 light mode) with neutral backgrounds
+- **Typography:** Italiana serif for headings, Manrope sans-serif for body text
+- **Layout:** Sharp corners (no rounded elements), subtle borders instead of glassmorphism
+- **Theme Support:** Full dark/light mode with theme-aware inline styles
+
+State management is handled by React Context API for global state, TanStack Query for server state, and React Hook Form with Zod for form validation. Framer Motion is used for animations, and visual elements like a film grain overlay and ambient orbs provide a modern editorial aesthetic. The application features distinct designs for the Home, Listen, Forum, Progress, Playlists, Song Detail, PDF Library, Profile, Upload, and How-To pages, all adhering to the gold accent and editorial aesthetic. Shared components like the layout, music player, authentication buttons, and search inputs maintain visual consistency.
 
 ### Backend Architecture
 
