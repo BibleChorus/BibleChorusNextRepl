@@ -205,15 +205,72 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
         </motion.div>
         
         {journey.bio && (
-          <motion.p
-            className="mt-12 text-sm max-w-2xl mx-auto leading-relaxed transition-colors duration-300 whitespace-pre-line"
-            style={{ fontFamily: "'Manrope', sans-serif", color: `${theme.textSecondary}b3` }}
+          <motion.div
+            className="mt-16 max-w-2xl mx-auto transition-colors duration-300"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.6 }}
           >
-            {journey.bio}
-          </motion.p>
+            <div 
+              className="relative px-8 py-6"
+              style={{ 
+                borderLeft: `1px solid ${theme.accent}33`,
+                borderRight: `1px solid ${theme.accent}33`,
+              }}
+            >
+              <div 
+                className="absolute -top-3 left-1/2 -translate-x-1/2 px-4"
+                style={{ backgroundColor: theme.bg }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-px" style={{ backgroundColor: theme.accent }} />
+                  <div 
+                    className="w-1.5 h-1.5 rotate-45"
+                    style={{ backgroundColor: theme.accent }}
+                  />
+                  <div className="w-8 h-px" style={{ backgroundColor: theme.accent }} />
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                {journey.bio.split(/\*{3,}|\n{2,}/).filter(section => section.trim()).map((section, index, arr) => (
+                  <div key={index}>
+                    <p
+                      className="text-sm leading-[1.9] transition-colors duration-300"
+                      style={{ 
+                        fontFamily: "'Manrope', sans-serif", 
+                        color: `${theme.textSecondary}cc`,
+                        textAlign: 'center'
+                      }}
+                    >
+                      {section.trim()}
+                    </p>
+                    {index < arr.length - 1 && (
+                      <div className="flex items-center justify-center gap-3 mt-6">
+                        <div className="w-1 h-1 rounded-full" style={{ backgroundColor: `${theme.accent}66` }} />
+                        <div className="w-1 h-1 rounded-full" style={{ backgroundColor: theme.accent }} />
+                        <div className="w-1 h-1 rounded-full" style={{ backgroundColor: `${theme.accent}66` }} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              <div 
+                className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4"
+                style={{ backgroundColor: theme.bg }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-px" style={{ backgroundColor: theme.accent }} />
+                  <div 
+                    className="w-1.5 h-1.5 rotate-45"
+                    style={{ backgroundColor: theme.accent }}
+                  />
+                  <div className="w-8 h-px" style={{ backgroundColor: theme.accent }} />
+                </div>
+              </div>
+            </div>
+          </motion.div>
         )}
       </motion.div>
       
