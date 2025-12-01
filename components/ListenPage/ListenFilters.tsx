@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLa
 import { Button } from "@/components/ui/button"
 import { RefreshCw, Info, X } from "lucide-react"
 import { motion } from "framer-motion"
+import { useTheme } from 'next-themes'
 
 export interface FilterOptions {
   lyricsAdherence: "all" | "word_for_word" | "close_paraphrase" | "creative_inspiration"
@@ -19,6 +20,23 @@ interface FiltersProps {
 }
 
 export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }: FiltersProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
+  const theme = {
+    bg: isDark ? '#050505' : '#f8f5f0',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#e5e5e5' : '#161616',
+    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    accentHover: isDark ? '#e5c349' : '#d4af37',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
+    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
+    accentBgMedium: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.15)',
+  };
+
   const handleChange = (key: keyof FilterOptions, value: string) => {
     setFilterOptions((prev) => ({ ...prev, [key]: value as any }))
   }
@@ -41,12 +59,26 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
     >
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-xl">
-            <Info className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          <div 
+            className="p-2"
+            style={{ 
+              backgroundColor: theme.accentBgLight, 
+              border: `1px solid ${theme.borderHover}` 
+            }}
+          >
+            <Info className="h-5 w-5" style={{ color: theme.accent }} />
           </div>
           <div>
-            <h2 className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Filters</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <h2 
+              className="text-lg font-bold"
+              style={{ color: theme.accent, fontFamily: "'Italiana', serif" }}
+            >
+              Filters
+            </h2>
+            <p 
+              className="text-sm"
+              style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+            >
               Refine your search to find the perfect songs
             </p>
           </div>
@@ -56,7 +88,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
             variant="outline"
             size="sm"
             onClick={clearFilters}
-            className="flex items-center gap-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl"
+            className="flex items-center gap-2 transition-all duration-300"
+            style={{
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+              border: `1px solid ${theme.border}`,
+              color: theme.text,
+              fontFamily: "'Manrope', sans-serif",
+            }}
           >
             <RefreshCw className="h-4 w-4" />
             Clear Filters
@@ -64,7 +102,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           {setIsFilterExpanded && (
             <button
               onClick={() => setIsFilterExpanded(false)}
-              className="text-sm flex items-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-200 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 px-3 py-2 rounded-xl"
+              className="text-sm flex items-center transition-colors duration-200 px-3 py-2"
+              style={{
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                border: `1px solid ${theme.border}`,
+                color: theme.textSecondary,
+                fontFamily: "'Manrope', sans-serif",
+              }}
               aria-label="Close filters"
             >
               Close Filters
@@ -118,19 +162,48 @@ interface FilterSelectProps {
 }
 
 function FilterSelect({ title, value, onChange, options }: FilterSelectProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  
+  const theme = {
+    text: isDark ? '#e5e5e5' : '#161616',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+  };
+
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-12">
+      <SelectTrigger 
+        className="w-full transition-all duration-300 h-12"
+        style={{
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+          border: `1px solid ${theme.border}`,
+          color: theme.text,
+          fontFamily: "'Manrope', sans-serif",
+        }}
+      >
         <SelectValue placeholder={title} />
       </SelectTrigger>
-      <SelectContent className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
+      <SelectContent 
+        style={{
+          backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          border: `1px solid ${theme.border}`,
+        }}
+      >
         <SelectGroup>
-          <SelectLabel className="text-emerald-600 dark:text-emerald-400 font-semibold">{title}</SelectLabel>
+          <SelectLabel 
+            className="font-semibold"
+            style={{ color: theme.accent, fontFamily: "'Italiana', serif" }}
+          >
+            {title}
+          </SelectLabel>
           {options.map((option) => (
             <SelectItem 
               key={option.value} 
               value={option.value}
-              className="hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-all duration-200 rounded-lg"
+              className="transition-all duration-200"
+              style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
             >
               {option.label}
             </SelectItem>

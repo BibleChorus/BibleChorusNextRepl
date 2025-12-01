@@ -318,7 +318,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
         filterOptions.showBestLyrically || 
         filterOptions.showBestOverall || 
         filterOptions.showMySongs) && (
-        <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: theme.accentBgLight, border: `1px solid ${theme.borderHover}` }}>
+        <div className="mb-4 p-3" style={{ backgroundColor: theme.accentBgLight, border: `1px solid ${theme.borderHover}` }}>
           <div className="flex items-center gap-2 mb-2">
             <Filter className="h-3 w-3" style={{ color: theme.accent }} />
             <span className="text-xs font-medium" style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}>
@@ -327,84 +327,84 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           </div>
           <div className="flex flex-wrap gap-1">
             {filterOptions.search && (
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Search: &quot;{filterOptions.search}&quot;
               </span>
             )}
             {filterOptions.lyricsAdherence.map(value => (
-              <span key={value} className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span key={value} className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Lyrics: {value.replace(/_/g, ' ')}
               </span>
             ))}
             {filterOptions.isContinuous !== "all" && (
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Passage: {filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}
               </span>
             )}
             {filterOptions.aiMusic !== "all" && (
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Music: {filterOptions.aiMusic === "true" ? "AI Generated" : "Human Composed"}
               </span>
             )}
             {filterOptions.genres.map(genre => (
-              <span key={genre} className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span key={genre} className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Genre: {genre}
               </span>
             ))}
             {filterOptions.aiUsedForLyrics !== "all" && (
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Lyrics: {filterOptions.aiUsedForLyrics === "true" ? "AI Generated" : "Human Written"}
               </span>
             )}
             {filterOptions.musicModelUsed && (
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Model: {filterOptions.musicModelUsed}
               </span>
             )}
             {filterOptions.bibleTranslation && (
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Translation: {filterOptions.bibleTranslation}
               </span>
             )}
             {filterOptions.bibleBooks.map(book => (
-              <span key={book} className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span key={book} className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Book: {book}
               </span>
             ))}
             {Object.entries(filterOptions.bibleChapters || {}).map(([book, chapters]) =>
               chapters.map(chapter => (
-                <span key={`${book}:${chapter}`} className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+                <span key={`${book}:${chapter}`} className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                   Chapter: {book} {chapter}
                 </span>
               ))
             )}
             {filterOptions.bibleVerses.map(verse => (
-              <span key={verse} className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span key={verse} className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Verse: {verse}
               </span>
             ))}
             {filterOptions.showLikedSongs && (
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Liked Songs
               </span>
             )}
             {filterOptions.showBestMusically && (
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Best Musically
               </span>
             )}
             {filterOptions.showBestLyrically && (
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Best Lyrically
               </span>
             )}
             {filterOptions.showBestOverall && (
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 Best Overall
               </span>
             )}
             {filterOptions.showMySongs && (
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
                 My Songs
               </span>
             )}
@@ -625,7 +625,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 variant="outline"
                 role="combobox"
                 aria-expanded={openGenres}
-                className="w-full justify-between bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs"
+                className="w-full justify-between transition-all duration-300 h-8 text-xs"
+                style={{
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                  border: `1px solid ${theme.border}`,
+                  color: theme.text,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
               >
                 <div className="flex items-center">
                   <Tag className="h-3 w-3 mr-1" />
@@ -636,7 +642,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
+            <PopoverContent 
+              className="w-full p-0"
+              style={{
+                backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                border: `1px solid ${theme.border}`,
+              }}
+            >
               <div className="p-2">
                 <div className="flex items-center justify-between pb-2">
                   <Input
@@ -658,14 +670,21 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   {filteredGenres().map((genre) => (
                     <div
                       key={genre}
-                      className={cn(
-                        "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                        filterOptions.genres.includes(genre) && "bg-accent"
-                      )}
+                      className="flex cursor-pointer items-center px-2 py-1 transition-colors duration-150"
+                      style={{
+                        backgroundColor: filterOptions.genres.includes(genre) ? theme.accentBgLight : 'transparent',
+                        color: theme.text,
+                        fontFamily: "'Manrope', sans-serif",
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.accentBgLight}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filterOptions.genres.includes(genre) ? theme.accentBgLight : 'transparent'}
                       onClick={() => toggleGenre(genre)}
                     >
-                      <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                        {filterOptions.genres.includes(genre) && <Check className="h-3 w-3" />}
+                      <div 
+                        className="mr-2 h-4 w-4 flex items-center justify-center"
+                        style={{ border: `1px solid ${theme.border}` }}
+                      >
+                        {filterOptions.genres.includes(genre) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
                       </div>
                       {genre}
                     </div>
@@ -693,7 +712,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 variant="outline"
                 role="combobox"
                 aria-expanded={openLyricsAdherence}
-                className="w-full justify-between bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs"
+                className="w-full justify-between transition-all duration-300 h-8 text-xs"
+                style={{
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                  border: `1px solid ${theme.border}`,
+                  color: theme.text,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
               >
                 <div className="flex items-center">
                   <AlignJustify className="h-3 w-3 mr-1" />
@@ -704,19 +729,32 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
+            <PopoverContent 
+              className="w-full p-0"
+              style={{
+                backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                border: `1px solid ${theme.border}`,
+              }}
+            >
               <div className="p-2">
                 {lyricsAdherenceOptions.map((option) => (
                   <div
                     key={option.value}
-                    className={cn(
-                      "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                      filterOptions.lyricsAdherence.includes(option.value) && "bg-accent"
-                    )}
+                    className="flex cursor-pointer items-center px-2 py-1 transition-colors duration-150"
+                    style={{
+                      backgroundColor: filterOptions.lyricsAdherence.includes(option.value) ? theme.accentBgLight : 'transparent',
+                      color: theme.text,
+                      fontFamily: "'Manrope', sans-serif",
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.accentBgLight}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filterOptions.lyricsAdherence.includes(option.value) ? theme.accentBgLight : 'transparent'}
                     onClick={() => toggleLyricsAdherence(option.value)}
                   >
-                    <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                      {filterOptions.lyricsAdherence.includes(option.value) && <Check className="h-3 w-3" />}
+                    <div 
+                      className="mr-2 h-4 w-4 flex items-center justify-center"
+                      style={{ border: `1px solid ${theme.border}` }}
+                    >
+                      {filterOptions.lyricsAdherence.includes(option.value) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
                     </div>
                     {option.label}
                   </div>
@@ -741,7 +779,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 variant="outline"
                 role="combobox"
                 aria-expanded={openBibleBooks}
-                className="w-full justify-between bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs"
+                className="w-full justify-between transition-all duration-300 h-8 text-xs"
+                style={{
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                  border: `1px solid ${theme.border}`,
+                  color: theme.text,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
               >
                 <div className="flex items-center">
                   <BookOpen className="h-3 w-3 mr-1" />
@@ -752,7 +796,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
+            <PopoverContent 
+              className="w-full p-0"
+              style={{
+                backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                border: `1px solid ${theme.border}`,
+              }}
+            >
               <div className="p-2">
                 <div className="flex items-center justify-between pb-2">
                   <Input
@@ -774,14 +824,21 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   {filteredBibleBooks().map((book) => (
                     <div
                       key={book}
-                      className={cn(
-                        "flex cursor-pointer items-center rounded-md px-2 py-1 hover:bg-accent",
-                        filterOptions.bibleBooks.includes(book) && "bg-accent"
-                      )}
+                      className="flex cursor-pointer items-center px-2 py-1 transition-colors duration-150"
+                      style={{
+                        backgroundColor: filterOptions.bibleBooks.includes(book) ? theme.accentBgLight : 'transparent',
+                        color: theme.text,
+                        fontFamily: "'Manrope', sans-serif",
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.accentBgLight}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filterOptions.bibleBooks.includes(book) ? theme.accentBgLight : 'transparent'}
                       onClick={() => toggleBibleBook(book)}
                     >
-                      <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                        {filterOptions.bibleBooks.includes(book) && <Check className="h-3 w-3" />}
+                      <div 
+                        className="mr-2 h-4 w-4 flex items-center justify-center"
+                        style={{ border: `1px solid ${theme.border}` }}
+                      >
+                        {filterOptions.bibleBooks.includes(book) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
                       </div>
                       {book}
                     </div>
@@ -799,7 +856,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   variant="outline"
                   role="combobox"
                   aria-expanded={openChapters}
-                  className="w-full justify-between bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs"
+                  className="w-full justify-between transition-all duration-300 h-8 text-xs"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                    border: `1px solid ${theme.border}`,
+                    color: theme.text,
+                    fontFamily: "'Manrope', sans-serif",
+                  }}
                 >
                   <div className="flex items-center">
                     <Bookmark className="h-3 w-3 mr-1" />
@@ -811,8 +874,12 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-full max-w-[80vw] p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl"  // Updated here
-                style={{ maxWidth: '80vw' }}        // Added inline style
+                className="w-full max-w-[80vw] p-0"
+                style={{ 
+                  maxWidth: '80vw',
+                  backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                  border: `1px solid ${theme.border}`,
+                }}
               >
                 <div className="p-2">
                   <div className="flex items-center justify-between pb-2">
@@ -836,23 +903,30 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   </div>
                   <div className="max-h-[300px] overflow-y-auto">
                     {isLoadingChapters ? (
-                      <div>Loading chapters...</div>
+                      <div style={{ color: theme.textSecondary }}>Loading chapters...</div>
                     ) : (
                       Object.entries(availableChapters || {}).map(([book, chapters]) => (
                         <div key={book} className="mb-2">
-                          <h4 className="font-semibold mb-1">{book}</h4>
+                          <h4 className="font-semibold mb-1" style={{ color: theme.text, fontFamily: "'Italiana', serif" }}>{book}</h4>
                           <div className="flex flex-wrap gap-1">
                             {(chapters as number[]).filter(chapter => chapter.toString().includes(chapterSearch)).map((chapter) => (
                               <div
                                 key={`${book}-${chapter}`}
-                                className={cn(
-                                  "flex items-center rounded-md px-2 py-1 hover:bg-accent cursor-pointer",
-                                  (selectedChapters[book] || []).includes(chapter) && "bg-accent"
-                                )}
+                                className="flex items-center px-2 py-1 cursor-pointer transition-colors duration-150"
+                                style={{
+                                  backgroundColor: (selectedChapters[book] || []).includes(chapter) ? theme.accentBgLight : 'transparent',
+                                  color: theme.text,
+                                  fontFamily: "'Manrope', sans-serif",
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.accentBgLight}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = (selectedChapters[book] || []).includes(chapter) ? theme.accentBgLight : 'transparent'}
                                 onClick={() => handleChapterToggle(book, chapter)}
                               >
-                                <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                                  {(selectedChapters[book] || []).includes(chapter) && <Check className="h-3 w-3" />}
+                                <div 
+                                  className="mr-2 h-4 w-4 flex items-center justify-center"
+                                  style={{ border: `1px solid ${theme.border}` }}
+                                >
+                                  {(selectedChapters[book] || []).includes(chapter) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
                                 </div>
                                 {chapter}
                               </div>
@@ -875,7 +949,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   variant="outline"
                   role="combobox"
                   aria-expanded={openBibleVerses}
-                  className="w-full justify-between bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs"
+                  className="w-full justify-between transition-all duration-300 h-8 text-xs"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                    border: `1px solid ${theme.border}`,
+                    color: theme.text,
+                    fontFamily: "'Manrope', sans-serif",
+                  }}
                 >
                   <div className="flex items-center">
                     <FileText className="h-3 w-3 mr-1" />
@@ -886,7 +966,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full p-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl" style={{ maxWidth: '80vw' }}>
+              <PopoverContent 
+                className="w-full p-0" 
+                style={{ 
+                  maxWidth: '80vw',
+                  backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                  border: `1px solid ${theme.border}`,
+                }}
+              >
                 <div className="p-2">
                   <div className="flex items-center justify-between pb-2">
                     <Input
@@ -909,13 +996,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   </div>
                   <div className="max-h-[300px] overflow-y-auto">
                     {isLoadingVerses ? (
-                      <div>Loading verses...</div>
+                      <div style={{ color: theme.textSecondary }}>Loading verses...</div>
                     ) : (
                       Object.entries(bibleVerses || {}).map(([book, chapters]) => (
                         <div key={book} className="mb-4">
                           {Object.entries(chapters).map(([chapter, verses]) => (
                             <div key={`${book}-${chapter}`} className="mb-2">
-                              <h4 className="font-semibold mb-1">{`${book} ${chapter}`}</h4>
+                              <h4 className="font-semibold mb-1" style={{ color: theme.text, fontFamily: "'Italiana', serif" }}>{`${book} ${chapter}`}</h4>
                               <div className="flex flex-wrap gap-1">
                                 {(verses as any[]).filter((verse: any) =>
                                   verse.KJV_text.toLowerCase().includes(bibleVerseSearch.toLowerCase()) ||
@@ -923,14 +1010,21 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                                 ).map((verse: any) => (
                                   <div
                                     key={`${book}-${chapter}-${verse.verse}`}
-                                    className={cn(
-                                      "flex items-center rounded-md px-2 py-1 hover:bg-accent cursor-pointer",
-                                      selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && "bg-accent"
-                                    )}
+                                    className="flex items-center px-2 py-1 cursor-pointer transition-colors duration-150"
+                                    style={{
+                                      backgroundColor: selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) ? theme.accentBgLight : 'transparent',
+                                      color: theme.text,
+                                      fontFamily: "'Manrope', sans-serif",
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.accentBgLight}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) ? theme.accentBgLight : 'transparent'}
                                     onClick={() => handleBibleVerseToggle(`${book} ${chapter}:${verse.verse}`)}
                                   >
-                                    <div className="mr-2 h-4 w-4 border border-primary rounded flex items-center justify-center">
-                                      {selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && <Check className="h-3 w-3" />}
+                                    <div 
+                                      className="mr-2 h-4 w-4 flex items-center justify-center"
+                                      style={{ border: `1px solid ${theme.border}` }}
+                                    >
+                                      {selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
                                     </div>
                                     {verse.verse}
                                   </div>
@@ -961,22 +1055,51 @@ interface FilterSelectProps {
 }
 
 function FilterSelect({ title, value, onChange, options, icon }: FilterSelectProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  
+  const theme = {
+    text: isDark ? '#e5e5e5' : '#161616',
+    accent: isDark ? '#d4af37' : '#bfa130',
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    bgCard: isDark ? '#0a0a0a' : '#ffffff',
+  };
+
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border border-white/30 dark:border-slate-600/30 hover:bg-white/80 dark:hover:bg-slate-700/80 transition-all duration-300 rounded-xl h-8 text-xs">
+      <SelectTrigger 
+        className="w-full transition-all duration-300 h-8 text-xs"
+        style={{
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+          border: `1px solid ${theme.border}`,
+          color: theme.text,
+          fontFamily: "'Manrope', sans-serif",
+        }}
+      >
         <div className="flex items-center">
           {React.cloneElement(icon as React.ReactElement, { className: "h-3 w-3 mr-1" })}
           <SelectValue placeholder={title} />
         </div>
       </SelectTrigger>
-      <SelectContent className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-xl">
+      <SelectContent 
+        style={{
+          backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          border: `1px solid ${theme.border}`,
+        }}
+      >
         <SelectGroup>
-          <SelectLabel className="text-emerald-600 dark:text-emerald-400 font-semibold text-xs">{title}</SelectLabel>
+          <SelectLabel 
+            className="font-semibold text-xs"
+            style={{ color: theme.accent, fontFamily: "'Italiana', serif" }}
+          >
+            {title}
+          </SelectLabel>
           {options.map((option) => (
             <SelectItem 
               key={option.value} 
               value={option.value || '_empty_'}
-              className="text-xs hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-all duration-200 rounded-lg"
+              className="text-xs transition-all duration-200"
+              style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
             >
               {option.label}
             </SelectItem>
