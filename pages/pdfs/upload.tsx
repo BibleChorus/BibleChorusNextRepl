@@ -16,7 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import PdfUploadProgressBar from '@/components/UploadPage/PdfUploadProgressBar';
-import { Check, ChevronsUpDown, X, FileUp } from 'lucide-react';
+import { Check, ChevronsUpDown, X, Upload } from 'lucide-react';
 import { THEMES } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -251,7 +251,7 @@ export default function UploadPdf() {
                   border: `1px solid ${theme.borderHover}` 
                 }}
               >
-                <FileUp className="h-6 w-6" style={{ color: theme.accent }} />
+                <Upload className="h-6 w-6" style={{ color: theme.accent }} />
               </div>
               <div>
                 <h1 
