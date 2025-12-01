@@ -66,6 +66,7 @@ export default async function handler(
         personal_note: ss.personal_note,
         significance: ss.significance,
         added_date: ss.added_date,
+        source_url: ss.source_url,
         created_at: ss.created_at,
         song: {
           id: ss.song_id,
