@@ -457,7 +457,7 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
                           className="text-sm leading-relaxed"
                           style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
                         >
-                          Opens Google NotebookLM, where the journey creator has set up an AI-powered notebook. Ask questions, generate summaries, or explore connections across the journey's songs and scripture.
+                          Opens Google NotebookLM, where the journey creator has set up an AI-powered notebook. Ask questions, generate summaries, or explore connections across the journey&apos;s songs and scripture.
                         </p>
                       </div>
                     </div>
