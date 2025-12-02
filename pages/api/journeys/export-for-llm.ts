@@ -17,6 +17,7 @@ interface BibleVerseRequest {
 }
 
 interface ExportedJourneyData {
+  intro: string;
   journey: {
     title: string;
     subtitle: string | null;
@@ -526,7 +527,10 @@ export default async function handler(
 
     const totalSongs = timeline.filter(item => item.type === 'song').length;
 
+    const introText = `This is a personal faith journey from BibleChorus.com, a platform for Scripture-based music. The data below contains a chronological timeline of someone's spiritual journey, organized into seasons of life with associated songs, important dates, and Bible verses. Each song includes lyrics that are based on or inspired by Scripture. The "bibleVerses" section contains the actual Bible text (Legacy Standard Bible translation) for all referenced passages. Use this information to understand the person's faith story, answer questions about their journey, or explore the scriptural themes throughout their life.`;
+
     const exportData: ExportedJourneyData = {
+      intro: introText,
       journey: {
         title: profile.title,
         subtitle: profile.subtitle,
