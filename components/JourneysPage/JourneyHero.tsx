@@ -167,7 +167,7 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
         )}
         
         <motion.div 
-          className="flex items-center justify-center gap-8 transition-colors duration-300"
+          className="flex items-center justify-center gap-4 sm:gap-8 px-4 transition-colors duration-300"
           style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

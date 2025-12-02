@@ -280,15 +280,15 @@ const SeasonSection: React.FC<SeasonSectionProps> = ({
             {season.reflection && (
               <motion.div
                 variants={revealVariants}
-                className="relative mb-12"
+                className="relative mb-6 md:mb-10"
               >
                 <div 
-                  className="relative py-8 px-6"
+                  className="relative py-4 md:py-6 px-4 md:px-6"
                   style={{ borderLeft: `2px solid ${theme.accent}33` }}
                 >
-                  <Quote className="w-5 h-5 mb-4" style={{ color: `${theme.accent}4d` }} />
+                  <Quote className="w-4 h-4 md:w-5 md:h-5 mb-2 md:mb-3" style={{ color: `${theme.accent}4d` }} />
                   <p 
-                    className="text-lg md:text-xl font-serif italic leading-relaxed"
+                    className="text-base md:text-xl font-serif italic leading-relaxed"
                     style={{ fontFamily: "'Italiana', serif", color: theme.textSecondary }}
                   >
                     {`"${season.reflection}"`}
