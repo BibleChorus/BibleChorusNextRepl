@@ -19,17 +19,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const query = `
         SELECT DISTINCT book, chapter
         FROM bible_verses
-        WHERE book = ANY($1::text[])
+        WHERE LOWER(book) = ANY(SELECT LOWER(unnest($1::text[])))
         ORDER BY book, chapter
       `
       const result = await client.query(query, [bookList])
       client.release()
 
+      const bookNameMap = new Map<string, string>()
+      for (const requestedBook of bookList) {
+        bookNameMap.set(requestedBook.toLowerCase(), requestedBook)
+      }
+
       const chapters = result.rows.reduce((acc, row) => {
-        if (!acc[row.book]) {
-          acc[row.book] = []
+        const normalizedBookName = bookNameMap.get(row.book.toLowerCase()) || row.book
+        if (!acc[normalizedBookName]) {
+          acc[normalizedBookName] = []
         }
-        acc[row.book].push(row.chapter)
+        acc[normalizedBookName].push(row.chapter)
         return acc
       }, {} as Record<string, number[]>)
 

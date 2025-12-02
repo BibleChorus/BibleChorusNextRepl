@@ -15,6 +15,11 @@ interface LyricsBibleComparisonDialogProps {
   song: any;
 }
 
+interface VerseGroup {
+  reference: string;
+  verses: any[];
+}
+
 const BibleVersesSkeleton = () => (
   <div className="space-y-6">
     {[1, 2, 3].map((i) => (
@@ -29,7 +34,7 @@ const BibleVersesSkeleton = () => (
 
 const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = ({ isOpen, onClose, song }) => {
   const [viewOption, setViewOption] = useState<'both' | 'lyrics' | 'verses'>('both');
-  const [verses, setVerses] = useState<any[]>([]);
+  const [verseGroups, setVerseGroups] = useState<VerseGroup[]>([]);
   const [isLoadingVerses, setIsLoadingVerses] = useState(false);
   const [translation, setTranslation] = useState(() => {
     const validTranslations = BOLLS_LIFE_API_BIBLE_TRANSLATIONS.map(t => t.shortName);
@@ -89,24 +94,82 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, translation]);
 
+  const groupConsecutiveVerses = (bibleVerses: any[]) => {
+    if (!bibleVerses || bibleVerses.length === 0) return [];
+    
+    const groups: { book: string; chapter: number; verses: number[] }[] = [];
+    let currentGroup: { book: string; chapter: number; verses: number[] } | null = null;
+    
+    for (const verse of bibleVerses) {
+      if (
+        currentGroup &&
+        currentGroup.book === verse.book &&
+        currentGroup.chapter === verse.chapter &&
+        currentGroup.verses[currentGroup.verses.length - 1] + 1 === verse.verse
+      ) {
+        currentGroup.verses.push(verse.verse);
+      } else {
+        if (currentGroup) {
+          groups.push(currentGroup);
+        }
+        currentGroup = {
+          book: verse.book,
+          chapter: verse.chapter,
+          verses: [verse.verse],
+        };
+      }
+    }
+    
+    if (currentGroup) {
+      groups.push(currentGroup);
+    }
+    
+    return groups;
+  };
+
+  const formatGroupReference = (group: { book: string; chapter: number; verses: number[] }) => {
+    if (group.verses.length === 1) {
+      return `${group.book} ${group.chapter}:${group.verses[0]}`;
+    }
+    return `${group.book} ${group.chapter}:${group.verses[0]}-${group.verses[group.verses.length - 1]}`;
+  };
+
   const fetchVerses = async () => {
     if (!song?.bible_verses) return;
     setIsLoadingVerses(true);
     try {
-      const versesToFetch = song.bible_verses.map((verse: any) => ({
-        translation,
-        book: BIBLE_BOOKS.indexOf(verse.book) + 1,
-        chapter: verse.chapter,
-        verses: [verse.verse],
-      }));
-      const response = await axios.post('/api/fetch-verses', versesToFetch);
-      const fetchedVerses = response.data.flat().map((verse: any) => ({
-        book: BIBLE_BOOKS[verse.book - 1],
-        chapter: verse.chapter,
-        verse: verse.verse,
-        text: verse.text,
-      }));
-      setVerses(fetchedVerses);
+      const groupedVerseData = groupConsecutiveVerses(song.bible_verses);
+      const allGroups: VerseGroup[] = [];
+      
+      for (const group of groupedVerseData) {
+        const bookIndex = BIBLE_BOOKS.indexOf(group.book);
+        if (bookIndex === -1) continue;
+        
+        const response = await axios.post('/api/fetch-verses', [{
+          translation,
+          book: bookIndex + 1,
+          chapter: group.chapter,
+          verses: group.verses,
+        }]);
+        
+        const fetchedVerses = response.data.flat()
+          .filter((verse: any) => verse && verse.text)
+          .map((verse: any) => ({
+            book: BIBLE_BOOKS[verse.book - 1],
+            chapter: verse.chapter,
+            verse: verse.verse,
+            text: verse.text,
+          }));
+        
+        if (fetchedVerses.length > 0) {
+          allGroups.push({
+            reference: formatGroupReference(group),
+            verses: fetchedVerses,
+          });
+        }
+      }
+      
+      setVerseGroups(allGroups);
     } catch (error) {
       console.error('Error fetching verses:', error);
     } finally {
@@ -124,21 +187,30 @@ const LyricsBibleComparisonDialog: React.FC<LyricsBibleComparisonDialogProps> = 
       return <BibleVersesSkeleton />;
     }
 
-    if (verses.length === 0) {
+    if (verseGroups.length === 0) {
       return <p className="text-muted-foreground/60 italic">No scripture verses available.</p>;
     }
 
     return (
       <div className="space-y-8">
-        {verses.map((verse, index) => (
-          <div key={index}>
-            <p className="text-amber-600 dark:text-amber-400 text-xs tracking-wider mb-2 font-medium uppercase">
-              {verse.book} {verse.chapter}:{verse.verse}
-            </p>
-            <div 
-              className="text-foreground/80 leading-7 font-light text-sm md:text-base italic"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(verse.text) }}
-            />
+        {verseGroups.map((group, groupIndex) => (
+          <div key={groupIndex} className={groupIndex > 0 ? 'pt-6 border-t border-border/30' : ''}>
+            {verseGroups.length > 1 && (
+              <h3 className="text-sm font-medium text-foreground/90 mb-4">{group.reference}</h3>
+            )}
+            <div className="space-y-4">
+              {group.verses.map((verse, verseIndex) => (
+                <div key={verseIndex}>
+                  <p className="text-amber-600 dark:text-amber-400 text-xs tracking-wider mb-2 font-medium uppercase">
+                    {verse.book} {verse.chapter}:{verse.verse}
+                  </p>
+                  <div 
+                    className="text-foreground/80 leading-7 font-light text-sm md:text-base italic"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(verse.text) }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
