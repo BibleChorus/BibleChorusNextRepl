@@ -1,14 +1,48 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { JourneyWithSeasons } from '@/types/journey';
 import Image from 'next/image';
-import { Check } from 'lucide-react';
+import { Check, HelpCircle, X } from 'lucide-react';
 import { FaCopy, FaExternalLinkAlt } from 'react-icons/fa';
 import { toast } from 'sonner';
 import axios from 'axios';
+
+const copyToClipboard = async (text: string): Promise<boolean> => {
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (err) {
+      console.warn('Clipboard API failed, trying fallback:', err);
+    }
+  }
+  
+  try {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    textArea.style.top = '-9999px';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    
+    if (successful) {
+      return true;
+    }
+  } catch (err) {
+    console.error('Fallback copy failed:', err);
+  }
+  
+  return false;
+};
 
 interface JourneyHeroProps {
   journey: JourneyWithSeasons;
@@ -23,8 +57,8 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [hasCopied, setHasCopied] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
-  const { scrollY } = useScroll();
   const [scrollFade, setScrollFade] = useState(1);
 
   const handleCopyToClipboard = async () => {
@@ -35,11 +69,15 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
       const response = await axios.get(`/api/journeys/export-for-llm?username=${journey.username}`);
       const jsonData = JSON.stringify(response.data, null, 2);
       
-      await navigator.clipboard.writeText(jsonData);
-      setHasCopied(true);
-      toast.success('Journey data copied to clipboard! Paste it into your favorite AI assistant to explore.');
+      const success = await copyToClipboard(jsonData);
       
-      setTimeout(() => setHasCopied(false), 3000);
+      if (success) {
+        setHasCopied(true);
+        toast.success('Journey data copied to clipboard! Paste it into your favorite AI assistant to explore.');
+        setTimeout(() => setHasCopied(false), 3000);
+      } else {
+        toast.error('Could not copy to clipboard. Please try again.');
+      }
     } catch (error) {
       console.error('Error copying journey data:', error);
       toast.error('Failed to copy journey data');
@@ -232,7 +270,7 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
         </motion.div>
 
         <motion.div 
-          className="flex items-center justify-center gap-3 mt-8"
+          className="flex items-center justify-center gap-3 mt-8 relative"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.55 }}
@@ -295,7 +333,129 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
               <FaExternalLinkAlt className="w-2.5 h-2.5" />
             </a>
           )}
+
+          <button
+            onClick={() => setShowHelp(true)}
+            className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 hover:scale-110"
+            style={{ 
+              backgroundColor: `${theme.textSecondary}10`,
+              color: theme.textSecondary,
+            }}
+            title="Learn about AI features"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
         </motion.div>
+
+        <AnimatePresence>
+          {showHelp && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+              onClick={() => setShowHelp(false)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ duration: 0.3, ease: easeOutExpo }}
+                className="relative max-w-md w-full p-6"
+                style={{ 
+                  backgroundColor: theme.bgCard,
+                  border: `1px solid ${theme.border}`,
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => setShowHelp(false)}
+                  className="absolute top-4 right-4 p-1 transition-colors duration-200"
+                  style={{ color: theme.textSecondary }}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <h3 
+                  className="text-xl mb-6"
+                  style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                >
+                  AI Features
+                </h3>
+
+                <div className="space-y-5">
+                  <div className="flex gap-4">
+                    <div 
+                      className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${theme.accent}15` }}
+                    >
+                      <FaCopy className="w-4 h-4" style={{ color: theme.accent }} />
+                    </div>
+                    <div>
+                      <h4 
+                        className="text-sm font-medium mb-1.5"
+                        style={{ color: theme.text }}
+                      >
+                        Copy for AI
+                      </h4>
+                      <p 
+                        className="text-sm leading-relaxed"
+                        style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+                      >
+                        Copies the entire journey to your clipboard in a format ready for AI assistants like ChatGPT, Claude, or Gemini. Includes all seasons, songs, important dates, and Bible verses in the LSB translation.
+                      </p>
+                    </div>
+                  </div>
+
+                  {journey.notebook_lm_url && (
+                    <div className="flex gap-4">
+                      <div 
+                        className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: `${theme.accent}15` }}
+                      >
+                        <svg 
+                          viewBox="0 0 24 24" 
+                          className="w-4 h-4"
+                          fill={theme.accent}
+                        >
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 
+                          className="text-sm font-medium mb-1.5"
+                          style={{ color: theme.text }}
+                        >
+                          NotebookLM
+                        </h4>
+                        <p 
+                          className="text-sm leading-relaxed"
+                          style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+                        >
+                          Opens Google NotebookLM, where the journey creator has set up an AI-powered notebook. Ask questions, generate summaries, or explore connections across the journey's songs and scripture.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setShowHelp(false)}
+                  className="w-full mt-6 py-2.5 text-xs tracking-[0.15em] uppercase transition-all duration-300"
+                  style={{ 
+                    backgroundColor: `${theme.accent}15`,
+                    color: theme.accent,
+                    border: `1px solid ${theme.accent}33`,
+                  }}
+                >
+                  Got it
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         {journey.bio && (
           <motion.div
