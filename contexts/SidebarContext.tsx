@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 
 interface SidebarContextType {
@@ -11,22 +11,50 @@ interface SidebarContextType {
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
+const SIDEBAR_STORAGE_KEY = 'sidebar-user-preference';
+
 export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState<boolean>(true);
+  const [isOpen, setIsOpenInternal] = useState<boolean>(true);
   const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false);
   const previousPathRef = useRef<string | null>(null);
+  const userPreferenceRef = useRef<boolean>(true);
+  const isInitializedRef = useRef<boolean>(false);
   
   const isHomePage = router.pathname === '/';
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isInitializedRef.current) {
+      const savedPreference = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+      if (savedPreference !== null) {
+        const preference = savedPreference === 'true';
+        userPreferenceRef.current = preference;
+        if (router.pathname !== '/') {
+          setIsOpenInternal(preference);
+        }
+      }
+      isInitializedRef.current = true;
+    }
+  }, [router.pathname]);
+
+  const setIsOpen = useCallback((value: boolean) => {
+    setIsOpenInternal(value);
+    userPreferenceRef.current = value;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, String(value));
+    }
+  }, []);
   
   useEffect(() => {
+    if (!isInitializedRef.current) return;
+    
     const wasOnHomePage = previousPathRef.current === '/';
     const isNowOnHomePage = router.pathname === '/';
     
     if (isNowOnHomePage && !wasOnHomePage) {
-      setIsOpen(false);
+      setIsOpenInternal(false);
     } else if (!isNowOnHomePage && wasOnHomePage) {
-      setIsOpen(true);
+      setIsOpenInternal(userPreferenceRef.current);
     }
     
     previousPathRef.current = router.pathname;
