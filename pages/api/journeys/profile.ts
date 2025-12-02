@@ -53,7 +53,7 @@ export default async function handler(
       const updates: UpdateJourneyProfileRequest = req.body;
 
       const allowedFields = [
-        'title', 'subtitle', 'bio', 'cover_image_url',
+        'title', 'subtitle', 'bio', 'cover_image_url', 'notebook_lm_url',
         'is_public', 'show_song_dates', 'show_play_counts', 'layout_style'
       ];
 

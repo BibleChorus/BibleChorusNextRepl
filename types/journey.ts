@@ -5,6 +5,7 @@ export interface JourneyProfile {
   subtitle: string | null;
   bio: string | null;
   cover_image_url: string | null;
+  notebook_lm_url: string | null;
   is_public: boolean;
   show_song_dates: boolean;
   show_play_counts: boolean;
@@ -138,6 +139,7 @@ export interface UpdateJourneyProfileRequest {
   subtitle?: string;
   bio?: string;
   cover_image_url?: string;
+  notebook_lm_url?: string;
   is_public?: boolean;
   show_song_dates?: boolean;
   show_play_counts?: boolean;

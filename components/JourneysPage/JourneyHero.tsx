@@ -5,6 +5,10 @@ import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { JourneyWithSeasons } from '@/types/journey';
 import Image from 'next/image';
+import { Check } from 'lucide-react';
+import { FaCopy, FaExternalLinkAlt } from 'react-icons/fa';
+import { toast } from 'sonner';
+import axios from 'axios';
 
 interface JourneyHeroProps {
   journey: JourneyWithSeasons;
@@ -17,9 +21,32 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const [hasCopied, setHasCopied] = useState(false);
 
   const { scrollY } = useScroll();
   const [scrollFade, setScrollFade] = useState(1);
+
+  const handleCopyToClipboard = async () => {
+    if (isCopying) return;
+    
+    setIsCopying(true);
+    try {
+      const response = await axios.get(`/api/journeys/export-for-llm?username=${journey.username}`);
+      const jsonData = JSON.stringify(response.data, null, 2);
+      
+      await navigator.clipboard.writeText(jsonData);
+      setHasCopied(true);
+      toast.success('Journey data copied to clipboard! Paste it into your favorite AI assistant to explore.');
+      
+      setTimeout(() => setHasCopied(false), 3000);
+    } catch (error) {
+      console.error('Error copying journey data:', error);
+      toast.error('Failed to copy journey data');
+    } finally {
+      setIsCopying(false);
+    }
+  };
 
   useEffect(() => {
     const updateScrollFade = () => {
@@ -202,6 +229,72 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
           <div className="flex items-center gap-2">
             <span className="text-xs tracking-[0.2em] uppercase">By {journey.username}</span>
           </div>
+        </motion.div>
+
+        <motion.div 
+          className="flex items-center justify-center gap-3 mt-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.55 }}
+        >
+          <button
+            onClick={handleCopyToClipboard}
+            disabled={isCopying}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full text-xs tracking-[0.15em] uppercase transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ 
+              backgroundColor: `${theme.accent}15`,
+              color: theme.accent,
+              border: `1px solid ${theme.accent}33`,
+            }}
+            title="Copy journey data to clipboard for AI exploration"
+          >
+            {hasCopied ? (
+              <>
+                <Check className="w-3.5 h-3.5" />
+                <span>Copied</span>
+              </>
+            ) : isCopying ? (
+              <>
+                <motion.div
+                  className="w-3.5 h-3.5 border-2 rounded-full"
+                  style={{ borderColor: `${theme.accent}33`, borderTopColor: theme.accent }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                />
+                <span>Copying...</span>
+              </>
+            ) : (
+              <>
+                <FaCopy className="w-3.5 h-3.5" />
+                <span>Copy for AI</span>
+              </>
+            )}
+          </button>
+
+          {journey.notebook_lm_url && (
+            <a
+              href={journey.notebook_lm_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full text-xs tracking-[0.15em] uppercase transition-all duration-300 hover:scale-105"
+              style={{ 
+                backgroundColor: `${theme.accent}15`,
+                color: theme.accent,
+                border: `1px solid ${theme.accent}33`,
+              }}
+              title="Explore this journey in Google NotebookLM"
+            >
+              <svg 
+                viewBox="0 0 24 24" 
+                className="w-3.5 h-3.5"
+                fill="currentColor"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+              </svg>
+              <span>NotebookLM</span>
+              <FaExternalLinkAlt className="w-2.5 h-2.5" />
+            </a>
+          )}
         </motion.div>
         
         {journey.bio && (

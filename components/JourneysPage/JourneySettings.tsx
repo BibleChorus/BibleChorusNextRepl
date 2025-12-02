@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save } from 'lucide-react';
+import { FaLink as LinkIcon } from 'react-icons/fa';
 import { FaEye as Eye, FaEyeSlash as EyeOff, FaGlobe as Globe, FaCog as Settings } from 'react-icons/fa';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -31,6 +32,7 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
     title: profile.title || '',
     subtitle: profile.subtitle || '',
     bio: profile.bio || '',
+    notebook_lm_url: profile.notebook_lm_url || '',
     is_public: profile.is_public,
     show_song_dates: profile.show_song_dates,
     show_play_counts: profile.show_play_counts,
@@ -43,6 +45,7 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
       formData.title !== profile.title ||
       formData.subtitle !== (profile.subtitle || '') ||
       formData.bio !== (profile.bio || '') ||
+      formData.notebook_lm_url !== (profile.notebook_lm_url || '') ||
       formData.is_public !== profile.is_public ||
       formData.show_song_dates !== profile.show_song_dates ||
       formData.show_play_counts !== profile.show_play_counts;
@@ -171,6 +174,30 @@ export const JourneySettings: React.FC<JourneySettingsProps> = ({
                   id="show_plays"
                   checked={formData.show_play_counts}
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, show_play_counts: checked }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200/60 dark:border-slate-700/60 pt-6 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+              <LinkIcon className="w-4 h-4" />
+              External Links
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="notebook_lm_url">Google NotebookLM Link</Label>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
+                  Add a link to a shared Google NotebookLM notebook for your journey. This will display a button on your journey page allowing visitors to explore your journey with AI.
+                </p>
+                <Input
+                  id="notebook_lm_url"
+                  value={formData.notebook_lm_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notebook_lm_url: e.target.value }))}
+                  placeholder="https://notebooklm.google.com/notebook/..."
+                  className="bg-white dark:bg-slate-800"
+                  type="url"
                 />
               </div>
             </div>
