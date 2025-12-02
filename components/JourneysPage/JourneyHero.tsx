@@ -52,14 +52,36 @@ const easeOutExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
   const heroRef = useRef<HTMLDivElement>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [hasCopied, setHasCopied] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [exportedData, setExportedData] = useState<string>('');
 
   const [scrollFade, setScrollFade] = useState(1);
+
+  const handleCopyFromModal = async () => {
+    if (textAreaRef.current) {
+      textAreaRef.current.select();
+      textAreaRef.current.setSelectionRange(0, 99999);
+      
+      const success = await copyToClipboard(exportedData);
+      if (success) {
+        setHasCopied(true);
+        toast.success('Copied! Paste it into your favorite AI assistant.');
+        setTimeout(() => {
+          setHasCopied(false);
+          setShowCopyModal(false);
+        }, 1500);
+      } else {
+        toast.info('Please use Ctrl+C (or Cmd+C on Mac) to copy the selected text.');
+      }
+    }
+  };
 
   const handleCopyToClipboard = async () => {
     if (isCopying) return;
@@ -76,11 +98,12 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
         toast.success('Journey data copied to clipboard! Paste it into your favorite AI assistant to explore.');
         setTimeout(() => setHasCopied(false), 3000);
       } else {
-        toast.error('Could not copy to clipboard. Please try again.');
+        setExportedData(jsonData);
+        setShowCopyModal(true);
       }
     } catch (error) {
       console.error('Error copying journey data:', error);
-      toast.error('Failed to copy journey data');
+      toast.error('Failed to fetch journey data');
     } finally {
       setIsCopying(false);
     }
@@ -452,6 +475,104 @@ export const JourneyHero: React.FC<JourneyHeroProps> = ({ journey }) => {
                 >
                   Got it
                 </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showCopyModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
+              onClick={() => setShowCopyModal(false)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ duration: 0.3, ease: easeOutExpo }}
+                className="relative max-w-2xl w-full p-6 max-h-[80vh] flex flex-col"
+                style={{ 
+                  backgroundColor: theme.bgCard,
+                  border: `1px solid ${theme.border}`,
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => setShowCopyModal(false)}
+                  className="absolute top-4 right-4 p-1 transition-colors duration-200"
+                  style={{ color: theme.textSecondary }}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <h3 
+                  className="text-xl mb-2"
+                  style={{ fontFamily: "'Italiana', serif", color: theme.text }}
+                >
+                  Copy Journey Data
+                </h3>
+                
+                <p 
+                  className="text-sm mb-4"
+                  style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+                >
+                  Select all the text below and copy it (Ctrl+C or Cmd+C), then paste into your AI assistant.
+                </p>
+
+                <textarea
+                  ref={textAreaRef}
+                  readOnly
+                  value={exportedData}
+                  className="flex-1 min-h-[300px] p-4 text-xs font-mono resize-none focus:outline-none"
+                  style={{ 
+                    backgroundColor: theme.bgAlt,
+                    color: theme.text,
+                    border: `1px solid ${theme.border}`,
+                  }}
+                  onClick={(e) => {
+                    (e.target as HTMLTextAreaElement).select();
+                  }}
+                />
+
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={handleCopyFromModal}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs tracking-[0.15em] uppercase transition-all duration-300"
+                    style={{ 
+                      backgroundColor: theme.accent,
+                      color: theme.bg,
+                    }}
+                  >
+                    {hasCopied ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaCopy className="w-3.5 h-3.5" />
+                        <span>Copy to Clipboard</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setShowCopyModal(false)}
+                    className="px-6 py-2.5 text-xs tracking-[0.15em] uppercase transition-all duration-300"
+                    style={{ 
+                      backgroundColor: 'transparent',
+                      color: theme.textSecondary,
+                      border: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
               </motion.div>
             </motion.div>
           )}
