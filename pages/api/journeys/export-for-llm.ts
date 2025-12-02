@@ -25,6 +25,7 @@ interface ExportedJourneyData {
     totalSongs: number;
     totalSeasons: number;
     createdAt: string;
+    notebookLmUrl: string | null;
   };
   timeline: Array<{
     date: string;
@@ -424,7 +425,6 @@ export default async function handler(
           'songs.duration',
           'songs.lyrics',
           'songs.bible_translation_used',
-          'songs.bible_verses',
           'songs.genres',
           'songs.is_journey_song',
           'songs.journey_song_origin',
@@ -438,9 +438,18 @@ export default async function handler(
       for (const song of seasonSongs) {
         const songDate = song.journey_date || song.added_date || song.song_created_at;
         
-        if (song.bible_verses && Array.isArray(song.bible_verses)) {
-          allBibleVerses.push(...song.bible_verses);
-        }
+        const songVerses = await db('song_verses')
+          .join('bible_verses', 'song_verses.verse_id', 'bible_verses.id')
+          .where({ 'song_verses.song_id': song.song_id })
+          .select('bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse');
+        
+        const songBibleVerses = songVerses.map(v => ({
+          book: v.book,
+          chapter: v.chapter,
+          verse: v.verse
+        }));
+        
+        allBibleVerses.push(...songBibleVerses);
 
         timeline.push({
           type: 'song',
@@ -456,7 +465,7 @@ export default async function handler(
             personalNote: song.personal_note,
             significance: song.significance,
             bibleTranslationUsed: song.bible_translation_used,
-            bibleVerses: song.bible_verses,
+            bibleVerses: songBibleVerses,
             genres: song.genres,
             isJourneySong: song.is_journey_song,
             journeySongOrigin: song.journey_song_origin,
@@ -466,7 +475,7 @@ export default async function handler(
         });
       }
 
-      const importantDates = await db('journey_important_dates')
+      const importantDates = await db('journey_season_important_dates')
         .where({ season_id: season.id })
         .orderBy('event_date', 'asc');
 
@@ -532,6 +541,7 @@ export default async function handler(
         totalSongs,
         totalSeasons: seasons.length,
         createdAt: profile.created_at,
+        notebookLmUrl: profile.notebook_lm_url || null,
       },
       timeline: timeline.map(item => ({
         date: item.date,
