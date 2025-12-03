@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes';
 import { SeasonSong } from '@/types/journey';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { format, parseISO } from 'date-fns';
-import { BookOpen, Music } from 'lucide-react';
+import { BookOpen, Music, X } from 'lucide-react';
 import { FaExternalLinkAlt } from 'react-icons/fa';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -44,13 +44,34 @@ export const JourneySong: React.FC<JourneySongProps> = ({
   const [mounted, setMounted] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
   const [showExternalLinkDialog, setShowExternalLinkDialog] = useState(false);
+  const [showSongArtDialog, setShowSongArtDialog] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isTouched, setIsTouched] = useState(false);
+  const [songArtAspectRatio, setSongArtAspectRatio] = useState<number | null>(null);
   const song = seasonSong.song;
+
+  const songArtUrl = getImageUrl(song?.song_art_url);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (songArtUrl) {
+      const img = new window.Image();
+      img.onload = () => {
+        setSongArtAspectRatio(img.width / img.height);
+      };
+      img.src = songArtUrl;
+    }
+  }, [songArtUrl]);
+
+  const handleSongArtClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (songArtUrl) {
+      setShowSongArtDialog(true);
+    }
+  };
 
   const isDark = resolvedTheme === 'dark';
 
@@ -81,7 +102,6 @@ export const JourneySong: React.FC<JourneySongProps> = ({
   const journeySongOrigin = songAny.journey_song_origin;
   
   const showArt = isHovered || isTouched || isCurrentSong;
-  const songArtUrl = getImageUrl(song.song_art_url);
   
   const formatJourneySongOrigin = (origin: string): string => {
     const originMap: { [key: string]: string } = {
@@ -244,13 +264,14 @@ export const JourneySong: React.FC<JourneySongProps> = ({
       <AnimatePresence>
         {showArt && songArtUrl && (
           <motion.div
-            className="absolute right-0 top-0 bottom-0 w-32 pointer-events-none overflow-hidden hidden md:block"
+            className="absolute right-0 top-0 bottom-0 w-32 overflow-hidden hidden md:block cursor-pointer z-20"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.5, ease: easeOutExpo }}
+            onClick={handleSongArtClick}
           >
-            <div className="absolute inset-0 z-10" style={{ 
+            <div className="absolute inset-0 z-10 pointer-events-none" style={{ 
               background: `linear-gradient(to right, ${theme.bg}, transparent 30%)` 
             }} />
             <motion.div
@@ -438,11 +459,12 @@ export const JourneySong: React.FC<JourneySongProps> = ({
             transition={{ duration: 0.4, ease: easeOutExpo }}
           >
             <motion.div 
-              className="relative w-full aspect-square max-w-[280px] mx-auto mb-4"
+              className="relative w-full aspect-square max-w-[280px] mx-auto mb-4 cursor-pointer"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ duration: 0.5, ease: easeOutExpo, delay: 0.1 }}
+              onClick={handleSongArtClick}
             >
               <motion.div
                 className="relative w-full h-full overflow-hidden"
@@ -667,6 +689,69 @@ export const JourneySong: React.FC<JourneySongProps> = ({
                 <FaExternalLinkAlt className="w-3 h-3 mr-2" />
                 Proceed to Link
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSongArtDialog} onOpenChange={setShowSongArtDialog}>
+        <DialogContent 
+          className="p-0 overflow-hidden border-0"
+          style={{
+            maxWidth: '90vw',
+            width: 'min(90vw, 500px)',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => setShowSongArtDialog(false)}
+            className="absolute right-3 top-3 z-20 p-2 rounded-full transition-all hover:scale-110"
+            style={{ 
+              backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)',
+              color: theme.text
+            }}
+            aria-label="Close song art"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <div className="relative">
+            {songArtUrl && (
+              <div 
+                className="relative w-full"
+                style={{ 
+                  aspectRatio: songArtAspectRatio ? `${songArtAspectRatio}` : '1',
+                  maxHeight: '80vh'
+                }}
+              >
+                <Image
+                  src={songArtUrl}
+                  alt={song.title}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 500px"
+                />
+              </div>
+            )}
+            <div 
+              className="absolute bottom-0 left-0 right-0 p-4"
+              style={{ 
+                background: `linear-gradient(to top, ${isDark ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.95)'}, transparent)` 
+              }}
+            >
+              <h3 
+                className="text-lg md:text-xl font-medium"
+                style={{ color: theme.text }}
+              >
+                {song.title}
+              </h3>
+              {song.artist && (
+                <p 
+                  className="text-sm mt-1"
+                  style={{ color: theme.textSecondary }}
+                >
+                  {song.artist}
+                </p>
+              )}
             </div>
           </div>
         </DialogContent>

@@ -45,16 +45,28 @@ export const JourneyImportantDate: React.FC<JourneyImportantDateProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isTouched, setIsTouched] = useState(false);
   const [showPhotoDialog, setShowPhotoDialog] = useState(false);
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
+
+  const hasPhoto = importantDate.photo_url && importantDate.photo_url.trim().length > 0;
+  const photoUrl = hasPhoto ? getImageUrl(importantDate.photo_url) : null;
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (photoUrl) {
+      const img = new window.Image();
+      img.onload = () => {
+        setImageAspectRatio(img.width / img.height);
+      };
+      img.src = photoUrl;
+    }
+  }, [photoUrl]);
+
   const isDark = resolvedTheme === 'dark';
   
   const hasDescription = importantDate.description && importantDate.description.trim().length > 0;
-  const hasPhoto = importantDate.photo_url && importantDate.photo_url.trim().length > 0;
-  const photoUrl = hasPhoto ? getImageUrl(importantDate.photo_url) : null;
   
   const showDetails = isHovered || isTouched;
   const showPhoto = hasPhoto && (isHovered || isTouched);
@@ -274,7 +286,11 @@ export const JourneyImportantDate: React.FC<JourneyImportantDateProps> = ({
 
       <Dialog open={showPhotoDialog} onOpenChange={setShowPhotoDialog}>
         <DialogContent 
-          className="sm:max-w-2xl p-0 overflow-hidden border-0"
+          className="p-0 overflow-hidden border-0"
+          style={{
+            maxWidth: imageAspectRatio && imageAspectRatio >= 1 ? '90vw' : '600px',
+            width: imageAspectRatio && imageAspectRatio >= 1 ? 'min(90vw, 900px)' : 'min(90vw, 600px)',
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           <button
@@ -290,13 +306,19 @@ export const JourneyImportantDate: React.FC<JourneyImportantDateProps> = ({
           </button>
           <div className="relative">
             {photoUrl && (
-              <div className="relative aspect-[4/3] w-full">
+              <div 
+                className="relative w-full"
+                style={{ 
+                  aspectRatio: imageAspectRatio ? `${imageAspectRatio}` : '4/3',
+                  maxHeight: '80vh'
+                }}
+              >
                 <Image
                   src={photoUrl}
                   alt={importantDate.title}
                   fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 672px"
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 900px"
                 />
               </div>
             )}
