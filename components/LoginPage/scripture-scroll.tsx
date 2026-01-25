@@ -59,7 +59,14 @@ export function ScriptureScroll({ theme }: ScriptureScrollProps) {
 
       let isFitting = true
       for (let index of currentIndices) {
-        testDiv.innerHTML = `<h3 class="font-semibold mb-2">${scriptures[index].reference}</h3><p>${scriptures[index].verse}</p>`
+        testDiv.textContent = ''
+        const h3 = document.createElement('h3')
+        h3.className = 'font-semibold mb-2'
+        h3.textContent = scriptures[index].reference
+        const p = document.createElement('p')
+        p.textContent = scriptures[index].verse
+        testDiv.appendChild(h3)
+        testDiv.appendChild(p)
         if (testDiv.offsetHeight > cardHeight) {
           isFitting = false
           break
