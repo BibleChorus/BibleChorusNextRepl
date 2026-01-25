@@ -84,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   try {
-    const signedUrl = await getSignedUrl(s3Client, command, { 
+    const signedUrl = await getSignedUrl(s3Client as any, command, { 
       expiresIn: 3600,
       signingRegion: process.env.AWS_REGION,
     });
