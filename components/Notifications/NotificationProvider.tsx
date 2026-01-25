@@ -17,8 +17,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    // Initialize WebSocket connection
-    const socket = new WebSocket('ws://your-api-endpoint/notifications');
+    // Initialize WebSocket connection using secure protocol
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = new WebSocket(`${wsProtocol}//your-api-endpoint/notifications`);
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data) as Notification;
