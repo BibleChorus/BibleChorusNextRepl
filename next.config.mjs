@@ -53,6 +53,9 @@ export default (phase, defaultConfig) => {
   compress: true,
   reactStrictMode: true,
 
+  // Allow all dev origins for Replit proxy
+  allowedDevOrigins: ['*'],
+
   // Handle trailing slashes consistently
   trailingSlash: false,
 
