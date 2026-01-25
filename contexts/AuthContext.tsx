@@ -52,7 +52,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', authToken);
-      console.log("Token set on login:", authToken); // Debug log
     } catch (error) {
       console.error("Error storing user data:", error);
     }
