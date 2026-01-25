@@ -525,8 +525,6 @@ function UploadContent() {
         fileSize: file.size,
       });
 
-      console.log('Received signed URL:', data.signedUrl); // Add this line for debugging
-
       // Upload the file to S3
       const uploadResponse = await axios.put(data.signedUrl, file, {
         headers: {
