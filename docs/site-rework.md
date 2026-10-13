@@ -32,33 +32,3 @@ Sync GitHub source into Replit without generated edits, preserve unrelated works
 ## Known dependency maintenance
 
 The initial audit reported 52 advisories, including five critical. Compatible updates and removal of unused libraries eliminated the critical findings. The latest audit still reports advisories in CSS/glob build tooling, Next.js's bundled PostCSS, and rich-text HTML export. Those require upstream or major dependency changes; server sanitization remains enforced for rich text. A forced dependency downgrade or untested major Tailwind/Next migration is not part of this release. Review the lockfile and current advisories during follow-up dependency work.
-
-### Braces stack-exhaustion mitigation
-
-`braces@3.0.3` fixes CVE-2024-4068 but remains affected by
-[GHSA-vfj7-8cjw-p6xm / CVE-2026-93687](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm).
-That advisory currently covers every published version through 3.0.3 and lists
-no patched release. The locked consumers are Tailwind's chokidar/micromatch and
-the Next ESLint plugin's fast-glob. Replacing them requires a larger migration.
-Production installs retain the package through Tailwind peer dependencies, so the
-patch installer is a regular dependency and also works with `npm ci --omit=dev`.
-Source inspection found no application imports or request routes accepting brace
-patterns; the observed consumers process CSS/content paths during build and
-development. This exposure assessment does not establish advisory resolution.
-
-`patches/braces+3.0.3.patch` applies a local, immutable limit of 100 nested
-brace/parenthesis blocks and bounds recursive AST walkers and expansion parent
-chains. Ordinary glob/list/range behavior is retained; deeper patterns fail with
-a controlled `SyntaxError`. `patch-package --error-on-fail` applies the patch
-after installation. The dev/build/start commands verify the exact installed
-patched sources and lockfile resolution before invoking Next, including when
-npm lifecycle scripts were skipped. Dependency updates or additional braces
-copies require reviewing the patch and verifier together. Security regression
-tests exercise bounded reproducers, depth boundaries, AST cycles and real glob
-consumers without live credentials or data changes.
-
-The package keeps its genuine 3.0.3 version, registry URL and integrity. This is a
-runtime mitigation, **not** an official patched release or proof that Dependabot
-alert #241 is closed. npm audit and Dependabot may continue to report it; do not
-dismiss the alert solely because tests or a deployment pass. Remove this backport
-only after verifying a supported upstream fix or removal of the dependency.
