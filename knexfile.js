@@ -20,6 +20,10 @@ function configuration() {
           connectionString = url.toString();
         }
         const connection = parse(connectionString);
+        // Replit's managed production URL can omit the database name, and
+        // publishing restores that URL. The tracked deployment command supplies
+        // DATABASE_NAME for this case only; a database in the URL always wins.
+        if (!connection.database?.trim() && process.env.DATABASE_NAME?.trim()) connection.database = process.env.DATABASE_NAME.trim();
         if (![connection.host, connection.user, connection.database].every(value => typeof value === 'string' && value.trim())) throw new Error();
         const port = connection.port ? Number(connection.port) : 5432;
         if ((connection.port && !/^\d+$/.test(connection.port)) || !Number.isInteger(port) || port < 1 || port > 65535) throw new Error();

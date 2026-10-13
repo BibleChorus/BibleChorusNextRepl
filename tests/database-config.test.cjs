@@ -197,9 +197,27 @@ test('the tracked deployment command enables TLS without changing preview startu
   const deployment = source.split('[deployment]')[1].split(/\n\[/)[0];
   const run = deployment.match(/^run\s*=\s*(\[[^\n]+\])$/m);
   assert.ok(run, 'A tracked deployment run command must exist');
-  assert.deepEqual(JSON.parse(run[1]), ['env', 'DATABASE_REQUIRE_TLS=1', 'npm', 'run', 'start']);
+  assert.deepEqual(JSON.parse(run[1]), ['env', 'DATABASE_REQUIRE_TLS=1', 'DATABASE_NAME=neondb', 'npm', 'run', 'start']);
   assert.match(source, /^run = "npm run dev"/);
   assert.equal(source.match(/DATABASE_REQUIRE_TLS/g)?.length, 1, 'TLS must be scoped to deployment startup');
+  assert.equal(source.match(/DATABASE_NAME/g)?.length, 1, 'The database name must be scoped to deployment startup');
+});
+
+test('a managed URL without a database name uses DATABASE_NAME; a database in the URL always wins', () => {
+  for (const url of ['postgresql://owner:offline@production.example.test/', 'postgresql://owner:offline@production.example.test', 'postgresql://owner:offline@production.example.test/?sslmode=require']) {
+    const connection = configuration({ DATABASE_URL: url, DATABASE_REQUIRE_TLS: '1', DATABASE_NAME: 'neondb' }).production.connection();
+    const client = new Client(connection); // Inspect configuration only, never connect.
+    assert.equal(client.connectionParameters.database, 'neondb');
+    assert.equal(client.connectionParameters.host, 'production.example.test');
+    assert.equal(client.connectionParameters.user, 'owner');
+    assert.ok(client.connectionParameters.ssl);
+    assert.notEqual(client.connectionParameters.ssl.rejectUnauthorized, false);
+  }
+  const explicit = configuration({ DATABASE_URL: 'postgresql://owner:offline@production.example.test/app', DATABASE_NAME: 'neondb' }).production.connection();
+  assert.equal(new Client(explicit).connectionParameters.database, 'app');
+  for (const name of [undefined, '', ' ']) {
+    assert.throws(() => configuration({ DATABASE_URL: 'postgresql://owner:DO_NOT_LOG_ME@production.example.test/', DATABASE_NAME: name, PGDATABASE: 'ambient_database' }).production.connection(), error => error.message === 'DATABASE_URL must be a valid PostgreSQL connection URL with a host, user, and database.');
+  }
 });
 
 test('fresh production imports and Knex initialization work without credentials; missing runtime URL is clear', () => {

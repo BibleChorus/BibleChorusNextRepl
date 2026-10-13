@@ -60,7 +60,9 @@ settings cannot fill in its target or credentials. Published Replit processes ar
 by the tracked deployment command's `DATABASE_REQUIRE_TLS=1` marker and require
 verified TLS through the URL's `sslmode`, so
 an omitted mode or disabled SSL cannot cause an insecure production connection.
-Certificate parameters and the configured target are retained. Preview URLs keep
+Certificate parameters and the configured target are retained. The deployment
+command's `DATABASE_NAME` names the production database only when the managed URL
+omits its database path; a database in the URL always takes precedence. Preview URLs keep
 their native pg behavior; `NODE_ENV=production` alone does not force TLS on local
 Helium. The chapters API and targeted deployment script share this configuration.
 

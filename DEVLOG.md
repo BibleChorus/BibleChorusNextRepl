@@ -89,3 +89,7 @@ Clean-install CI exposed an npm peer-lock discrepancy and a patched sanitizer re
 - Reject incomplete current connection URLs rather than inheriting legacy PostgreSQL environment settings.
 - Keep Replit aligned with GitHub main before release handoff, preserving any local-only work before alignment and preparing the requested republish button without publishing automatically.
 
+## 2026-10-13 — Managed production database name
+
+- Replit's managed production `DATABASE_URL` omits the database name and publishing restores that value, so every published database request failed validation. The tracked deployment command now supplies `DATABASE_NAME=neondb`, used only when the URL has no database path.
+- The app still uses Replit's current managed URL, host, credentials, and verified TLS; no records, schema, or secrets are changed.

@@ -47,7 +47,9 @@ The app uses only the platform's current `DATABASE_URL`; incomplete connection
 details fail clearly instead of inheriting old PostgreSQL environment settings. Published Replit
 processes enable `DATABASE_REQUIRE_TLS=1` through the tracked `.replit`
 deployment command and require `sslmode=verify-full`, preserving the
-configured target and certificate parameters. Previews retain their native URL
+configured target and certificate parameters. Replit's managed production URL
+can omit the database name and publishing restores it, so the same command sets
+`DATABASE_NAME=neondb`; it is used only when the URL has no database path. Previews retain their native URL
 settings, including local Helium without SSL, even when running a production
 Next.js build. Knex resolves the URL only when a connection is needed, allowing
 builds without credentials and giving a clear runtime error when it is absent.
