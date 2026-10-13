@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { SongSelector } from "./SongSelector";
+import { JourneyOriginalsEditor } from "./JourneyOriginalsEditor";
 import {
   Plus,
   Pencil,
@@ -71,6 +72,7 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
     seasonId: number;
     song: SeasonSong;
   } | null>(null);
+  const [originalsEntry, setOriginalsEntry] = useState<SeasonSong | null>(null);
   const [songEditFormData, setSongEditFormData] = useState({
     personal_note: "",
     source_url: "",
@@ -708,6 +710,15 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
                                       <FaExternalLinkAlt className="w-3 h-3 text-primary flex-shrink-0" />
                                     )}
                                   </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="mt-1 h-8 px-0 text-xs text-primary hover:bg-transparent"
+                                    aria-label={`Manage originals for ${ss.song?.title || "song"}`}
+                                    onClick={() => setOriginalsEntry(ss)}
+                                  >
+                                    Originals{ss.originals?.length ? ` · ${ss.originals.length}` : ""}
+                                  </Button>
                                 </div>
                                 <Button
                                   variant="ghost"
@@ -888,13 +899,30 @@ export const SeasonEditor: React.FC<SeasonEditorProps> = ({
           {songSelectorSeasonId && (
             <SongSelector
               seasonId={songSelectorSeasonId}
-              onSongAdded={() => {
+              onSongAdded={(entry) => {
                 setSongSelectorSeasonId(null);
                 onRefresh();
+                setOriginalsEntry(entry);
               }}
               onClose={() => setSongSelectorSeasonId(null)}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={originalsEntry !== null}
+        onOpenChange={(open) => !open && setOriginalsEntry(null)}
+      >
+        <DialogContent className="max-h-[90dvh] w-[calc(100%_-_2rem)] max-w-2xl overflow-y-auto rounded-2xl p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="pr-6 font-serif text-2xl">Journey originals</DialogTitle>
+            <DialogDescription className="break-words">
+              {originalsEntry?.song?.title ? `Keep the story behind “${originalsEntry.song.title}” close to its finished song.` : "Keep original recordings, journal pages, images, and PDFs alongside this song."}
+            </DialogDescription>
+          </DialogHeader>
+          {originalsEntry && <JourneyOriginalsEditor key={originalsEntry.id} entry={originalsEntry} onChanged={onRefresh} />}
+          <Button variant="outline" onClick={() => setOriginalsEntry(null)}>Done</Button>
         </DialogContent>
       </Dialog>
 

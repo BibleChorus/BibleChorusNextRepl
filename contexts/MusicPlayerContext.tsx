@@ -59,6 +59,7 @@ interface MusicPlayerContextType {
   registerShuffleLoader: (
     loader: () => Promise<MusicPlayerSong[]>,
   ) => () => void;
+  registerSourceAudio: (audio: HTMLAudioElement) => () => void;
 }
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(
   undefined,
@@ -92,6 +93,7 @@ export function MusicPlayerProvider({
   const queueRevision = useRef(0);
   const countedSong = useRef<number | null>(null);
   const playAttempt = useRef(0);
+  const sourceAudio = useRef(new Set<HTMLAudioElement>());
 
   const setPlayback = useCallback((playing: boolean) => {
     playingRef.current = playing;
@@ -124,8 +126,14 @@ export function MusicPlayerProvider({
     [selectIndex],
   );
 
+  const pauseSources = useCallback((except?: HTMLAudioElement) => {
+    sourceAudio.current.forEach((audio) => {
+      if (audio !== except) audio.pause();
+    });
+  }, []);
   const resume = useCallback(() => {
     if (!audioElement?.src || !currentRef.current) return;
+    pauseSources();
     const attempt = ++playAttempt.current;
     audioElement.play().catch((error) => {
       if (attempt !== playAttempt.current) return;
@@ -135,12 +143,28 @@ export function MusicPlayerProvider({
           "This song couldn’t play. Try again or choose another song.",
         );
     });
-  }, [audioElement, setPlayback]);
+  }, [audioElement, setPlayback, pauseSources]);
   const pause = useCallback(() => {
     playAttempt.current++;
     audioElement?.pause();
     setPlayback(false);
   }, [audioElement, setPlayback]);
+  const registerSourceAudio = useCallback(
+    (audio: HTMLAudioElement) => {
+      sourceAudio.current.add(audio);
+      const onPlay = () => {
+        pause();
+        pauseSources(audio);
+      };
+      audio.addEventListener("play", onPlay);
+      return () => {
+        audio.removeEventListener("play", onPlay);
+        sourceAudio.current.delete(audio);
+        audio.pause();
+      };
+    },
+    [pause, pauseSources],
+  );
   const startSong = useCallback(
     (song: MusicPlayerSong, play: boolean, index: number) => {
       currentRef.current = song;
@@ -306,7 +330,10 @@ export function MusicPlayerProvider({
 
   useEffect(() => {
     if (!audioElement) return;
-    const onPlay = () => setPlayback(true);
+    const onPlay = () => {
+      pauseSources();
+      setPlayback(true);
+    };
     const onPause = () => setPlayback(false);
     const onEnded = () => {
       if (repeatRef.current === "one") {
@@ -363,7 +390,7 @@ export function MusicPlayerProvider({
       audioElement.removeEventListener("timeupdate", onProgress);
       audioElement.removeEventListener("error", onError);
     };
-  }, [audioElement, resume, startSong, setPlayback]);
+  }, [audioElement, resume, startSong, setPlayback, pauseSources]);
   useEffect(() => {
     if (typeof navigator === "undefined" || !navigator.mediaSession) return;
     const session = navigator.mediaSession;
@@ -416,6 +443,7 @@ export function MusicPlayerProvider({
     () => () => {
       if (!audioElement) return;
       playAttempt.current++;
+      pauseSources();
       audioElement.pause();
       audioElement.removeAttribute("src");
       audioElement.load();
@@ -424,7 +452,7 @@ export function MusicPlayerProvider({
         navigator.mediaSession.playbackState = "none";
       }
     },
-    [audioElement],
+    [audioElement, pauseSources],
   );
 
   const value = useMemo(
@@ -447,6 +475,7 @@ export function MusicPlayerProvider({
       setIsMinimized,
       updateQueue,
       registerShuffleLoader,
+      registerSourceAudio,
     }),
     [
       currentSong,
@@ -466,6 +495,7 @@ export function MusicPlayerProvider({
       isMinimized,
       updateQueue,
       registerShuffleLoader,
+      registerSourceAudio,
     ],
   );
   return (

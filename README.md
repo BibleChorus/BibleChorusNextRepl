@@ -23,7 +23,7 @@ Tests mock database, storage, and email boundaries. They verify ownership and pr
 | Music | `/listen`, `/Songs/[id]`: filtering, sorting, likes, votes, comments, Scripture/lyric comparison, sharing, artwork and metadata edits |
 | Playback | Persistent queue, shuffle, repeat, seek, minimized controls, media-session integration |
 | Contributions | `/upload`: Scripture/journey song types, human/AI attribution, Bible metadata, audio/art uploads and image cropping |
-| Journeys | `/journeys`, `/journeys/[username]`, `/journeys/edit`: public/private portfolios, seasons, songs, reflections, milestones/photos, source links, themes/layouts, likes, AI exports and NotebookLM |
+| Journeys | `/journeys`, `/journeys/[username]`, `/journeys/edit`: public/private portfolios, seasons, songs, reflections, milestones/photos, source links, private originals, themes/layouts, likes, opt-in AI exports and NotebookLM |
 | Collections | `/playlists`, `/playlists/[id]`: public/private playlists, automatic filters, saved collections, ordering, covers, editing |
 | Community | `/forum`, `/Forum/topics/[id]`: categories, topics, rich-text replies, votes, moderator locks |
 | Study | `/pdfs`, `/pdfs/[id]`, `/pdfs/upload`: uploads, text/verse extraction, reading/fullscreen, comments, ratings, private page notes and study links |
@@ -39,6 +39,7 @@ Set secrets in the deployment environment, never in committed files or Next.js c
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `NEXTAUTH_URL` for Google OAuth.
 - `DATABASE_URL` for the current managed PostgreSQL database.
 - `AWS_REGION`, `AWS_ACCESS_KEY`, `AWS_SECRET_KEY`, `AWS_S3_BUCKET_NAME` for S3.
+- Journey Originals files require a separately verified private `JOURNEY_ORIGINALS_BUCKET` and `JOURNEY_ORIGINALS_STORAGE_VERIFIED=true`. They are disabled by default. Journals need only the targeted additive table migration. See [privacy, prerequisites, and rollout](docs/journey-originals.md); no infrastructure or permissions are created automatically.
 - `CDN_URL`, `CLOUDFRONT_URL`, `NEXT_PUBLIC_CDN_URL` for existing media URL forms.
 - `NEXT_PUBLIC_BASE_URL` for public links and email destinations.
 - `SENDGRID_API_KEY` for user-requested reports.

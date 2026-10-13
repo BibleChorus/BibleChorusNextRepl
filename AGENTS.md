@@ -57,7 +57,7 @@ This document provides guidelines for AI agents (e.g., OpenAI Codex) when makin
 
 ## 8. Shared design and verification
 
-Use the shared application shell and CSS tokens. Never inject page-level CSS that overrides `body`, `.container`, navigation, or unrelated pages. Use `lib/design-system.ts` when adapting legacy inline styles, and prefer token classes for new UI. Respect reduced motion and label every icon-only control. Journey song/context panels are designed for future original-source attachments without requiring them now.
+Use the shared application shell and CSS tokens. Never inject page-level CSS that overrides `body`, `.container`, navigation, or unrelated pages. Use `lib/design-system.ts` when adapting legacy inline styles, and prefer token classes for new UI. Respect reduced motion and label every icon-only control. Journey song/context panels keep originals beside the finished song and below it on mobile; preserve existing reflections and source links.
 
 All API mutations must use the shared server authentication/ownership helpers. Preserve signed bearer compatibility, cookie sessions, and Google sessions. Do not log tokens or private content. Never remove saved S3 references through unsubmitted-file cleanup. Review `Reference/api_security_reference.md` before changing uploads, deletion, privacy, or attribution.
 
@@ -66,3 +66,7 @@ Run `npm run check` and `npm run build` before publishing changes. Offline tests
 ## 9. GitHub and Replit synchronization
 
 GitHub `main` is the source of truth. Author application, configuration, and project-documentation changes through the GitHub connection, then align Replit with that revision. Before handing over a republish button, verify identical commit and tracked-file tree, a clean tracked working directory, and zero commits ahead or behind. Preserve any Replit-only work in a recoverable snapshot and promote useful changes through GitHub before aligning; do not accumulate local merge commits or generated source documentation. Confirm the Publishing run configuration matches the GitHub-controlled deployment configuration. When the user requests a republish button, prepare it after validation and leave publication to the user.
+
+## 10. Journey Originals
+
+Read `docs/journey-originals.md` before changing originals. Each attachment starts private and belongs to a journey song entry. Delivery, lazy details, and exports authorize current owner/journey/season state. Never use public CDN/image optimization or presigned read URLs. Binary storage fails closed until separate private storage and policies are verified; do not add credentials, permissions, or paid services to unblock it. Keep original audio separate from the main queue and preserve both listening positions. Do not automatically transcribe or export originals. Apply only the targeted additive migration after verified target and deployment approval, never during install/build/start.

@@ -57,6 +57,7 @@ export interface SeasonSong {
   added_date: string | null;
   source_url: string | null;
   created_at: string;
+  originals?: JourneyOriginal[];
   song?: {
     id: number;
     title: string;
@@ -76,6 +77,32 @@ export interface SeasonSong {
     music_origin?: 'human' | 'ai' | 'ai_cover_of_human';
     ai_used_for_lyrics?: boolean;
   };
+}
+
+export type JourneyOriginalKind = 'audio' | 'journal' | 'image' | 'pdf';
+
+/** Public projection: storage bucket/key and upload keys never leave the server. */
+export interface JourneyOriginal {
+  id: number;
+  journey_entry_id: number;
+  kind: JourneyOriginalKind;
+  label: string;
+  display_order: number;
+  is_shared: boolean;
+  status: 'pending' | 'ready';
+  journal_text: string | null;
+  file_name: string | null;
+  mime_type: string | null;
+  byte_size: number | null;
+  file_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JourneyOriginalUpload {
+  url: string;
+  headers: { 'Content-Type': string };
+  expires_in: number;
 }
 
 export interface ImportantDate {

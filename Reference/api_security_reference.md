@@ -102,6 +102,16 @@ content-column adapter is required.
 
 ## Verification
 
+Journey Originals use a separate private-by-default boundary described in
+[`docs/journey-originals.md`](../docs/journey-originals.md). Current journey and
+season visibility bounds every metadata/file/export request. Pending uploads
+stay owner-only; opt-in export inclusion never bypasses access checks. Files
+require independently verified private storage and authorized API delivery,
+without public CDN keys, image optimization, or presigned read URLs. Historical
+unsubmitted-file cleanup cannot reach their separate bucket/namespace. Apply
+only `20261013000002_create_journey_originals.js` through the targeted script
+after verified deployment approval; source development did not apply it.
+
 `tests/security.test.cjs` runs real TypeScript handlers with in-memory database
 and storage mocks. It covers bearer/cookie/Google identity, forged and expired
 tokens, current ownership, same-origin writes, cookie lifecycle, Auth.js form

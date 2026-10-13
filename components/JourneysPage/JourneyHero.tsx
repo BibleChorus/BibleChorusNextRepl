@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import axios from "axios";
 import {
@@ -27,6 +27,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   journeyDate,
   journeyMediaUrl,
@@ -61,13 +63,26 @@ async function copyToClipboard(value: string): Promise<boolean> {
 export const JourneyHero: React.FC<{ journey: JourneyWithSeasons }> = ({
   journey,
 }) => {
-  const { getAuthToken } = useAuth();
+  const { getAuthToken, user } = useAuth();
   const { playSong } = useMusicPlayer();
   const [isCopying, setIsCopying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showCopy, setShowCopy] = useState(false);
+  const [showExportOptions, setShowExportOptions] = useState(false);
+  const [includeOriginals, setIncludeOriginals] = useState(false);
   const [exportedData, setExportedData] = useState("");
+  const exportRequest = useRef<AbortController | null>(null);
+  useEffect(() => {
+    exportRequest.current?.abort();
+    setExportedData("");
+    setCopied(false);
+    setShowCopy(false);
+    setShowExportOptions(false);
+    setIncludeOriginals(false);
+    setIsCopying(false);
+    return () => exportRequest.current?.abort();
+  }, [journey.username, user?.id]);
   const cover = journeyMediaUrl(journey.cover_image_url);
   const avatar = journeyMediaUrl(journey.profile_image_url);
   const notebook = safeExternalUrl(journey.notebook_lm_url);
@@ -84,15 +99,23 @@ export const JourneyHero: React.FC<{ journey: JourneyWithSeasons }> = ({
 
   const handleExport = async () => {
     if (isCopying) return;
+    const controller = new AbortController();
+    exportRequest.current = controller;
     setIsCopying(true);
     try {
       const token = await getAuthToken();
       const response = await axios.get("/api/journeys/export-for-llm", {
-        params: { username: journey.username },
+        params: {
+          username: journey.username,
+          ...(includeOriginals ? { includeOriginals: "true" } : {}),
+        },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
+        signal: controller.signal,
       });
+      if (controller.signal.aborted) return;
       const data = JSON.stringify(response.data, null, 2);
       setExportedData(data);
+      setShowExportOptions(false);
       if (await copyToClipboard(data)) {
         setCopied(true);
         toast.success(
@@ -100,10 +123,10 @@ export const JourneyHero: React.FC<{ journey: JourneyWithSeasons }> = ({
         );
       } else setShowCopy(true);
     } catch (error) {
-      console.error("Error exporting journey:", error);
+      if (controller.signal.aborted) return;
       toast.error("Could not export this journey. Please try again.");
     } finally {
-      setIsCopying(false);
+      if (exportRequest.current === controller) setIsCopying(false);
     }
   };
 
@@ -177,7 +200,10 @@ export const JourneyHero: React.FC<{ journey: JourneyWithSeasons }> = ({
               variant="ghost"
               className="h-8 px-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
               disabled={isCopying}
-              onClick={handleExport}
+              onClick={() => {
+                setIncludeOriginals(false);
+                setShowExportOptions(true);
+              }}
             >
               {isCopying ? (
                 <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
@@ -314,6 +340,45 @@ export const JourneyHero: React.FC<{ journey: JourneyWithSeasons }> = ({
           >
             Copy to clipboard
           </Button>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showExportOptions} onOpenChange={setShowExportOptions}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Copy this journey for AI</DialogTitle>
+            <DialogDescription>
+              Copy songs, scripture, reflections, dates, and existing source links.
+              Originals are excluded unless you choose to include them.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/25 p-4">
+            <Checkbox
+              id="export-originals"
+              checked={includeOriginals}
+              onCheckedChange={(checked) => setIncludeOriginals(checked === true)}
+              disabled={isCopying}
+              aria-describedby="export-originals-description"
+            />
+            <div className="min-w-0 space-y-2">
+              <Label htmlFor="export-originals" className="leading-5">
+                Include originals I can access
+              </Label>
+              <p id="export-originals-description" className="text-sm leading-relaxed text-muted-foreground">
+                Includes journal text and attachment details. File links still require
+                access to the journey. Your own private journals can be included;
+                review them before pasting into another service.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowExportOptions(false)} disabled={isCopying}>
+              Cancel
+            </Button>
+            <Button onClick={handleExport} disabled={isCopying}>
+              {isCopying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Copy className="mr-2 h-4 w-4" />}
+              {isCopying ? "Preparing…" : "Copy journey"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </header>

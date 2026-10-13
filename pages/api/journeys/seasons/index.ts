@@ -2,12 +2,14 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 import { getAuthenticatedUserId, withApiAuth } from '@/lib/server-auth';
 import { CreateSeasonRequest } from '@/types/journey';
+import { listOriginals } from '@/lib/journey-originals';
 
 
 async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  res.setHeader('Cache-Control', 'private, no-store');
   const userId = await getAuthenticatedUserId(req, res);
 
   if (!userId) {
@@ -61,6 +63,7 @@ async function handler(
             created_at: ss.song_created_at,
           },
         }));
+        for (const entry of season.songs) entry.originals = await listOriginals(entry.id, userId);
         season.song_count = seasonSongs.length;
 
         const importantDates = await db('journey_season_important_dates')
