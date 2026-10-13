@@ -62,7 +62,7 @@ test('fresh production auth bundling serves Google providers and CSRF without da
     // Explicitly isolated environment: no DATABASE_URL, PG*, Google, AWS, email,
     // or developer secrets. This test never enters an OAuth/callback workflow.
     const env = {
-      PATH: process.env.PATH || '', HOME: directory, NODE_ENV: 'production',
+      PATH: process.env.PATH || '', NODE_ENV: 'production',
       NEXT_TELEMETRY_DISABLED: '1', AUTH_TRUST_HOST: 'true',
       NEXTAUTH_SECRET: 'offline-production-auth-regression-only', NEXTAUTH_URL: authOrigin,
     };
