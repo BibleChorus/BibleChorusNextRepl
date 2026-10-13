@@ -19,6 +19,7 @@ import {
   safeExternalUrl,
 } from "./journey-utils";
 import { useAuth } from "@/contexts/AuthContext";
+import type { SeasonSong } from "@/types/journey";
 
 interface Song {
   id: number;
@@ -33,7 +34,7 @@ interface Song {
 
 interface SongSelectorProps {
   seasonId: number;
-  onSongAdded: () => void;
+  onSongAdded: (entry: SeasonSong) => void;
   onClose: () => void;
 }
 
@@ -101,7 +102,7 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
     setIsAdding(true);
     try {
       const token = await getAuthToken();
-      await axios.post(
+      const response = await axios.post<SeasonSong>(
         `/api/journeys/seasons/${seasonId}/songs`,
         {
           song_id: selectedSong.id,
@@ -113,7 +114,7 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
         },
       );
       toast.success(`"${selectedSong.title}" added to season`);
-      onSongAdded();
+      onSongAdded({ ...response.data, song: selectedSong });
     } catch (error: any) {
       console.error("Error adding song:", error);
       toast.error(error.response?.data?.error || "Failed to add song");
@@ -201,6 +202,10 @@ export const SongSelector: React.FC<SongSelectorProps> = ({
             Spotify, original post)
           </p>
         </div>
+        <p className="rounded-xl border border-border bg-muted/30 p-3 text-sm leading-relaxed text-muted-foreground">
+          After saving this song, you can add private original recordings,
+          journal text, images, and PDFs, then choose which to share.
+        </p>
 
         <div className="flex justify-end gap-3">
           <Button variant="outline" onClick={() => setSelectedSong(null)}>

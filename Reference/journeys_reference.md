@@ -1,6 +1,6 @@
 # Journeys: presentation and data contracts
 
-Journeys collect existing songs, personal reflections, scripture, and important dates into seasons of a creator's life. The 2026 interface refresh changes presentation and client behavior without migrating, deleting, or moving journey data.
+Journeys collect existing songs, personal reflections, scripture, and important dates into seasons of a creator's life. Journey Originals add private source attachments without moving or changing existing journey data.
 
 ## Routes and responsibilities
 
@@ -30,10 +30,10 @@ Song playback uses the shared music player and passes a queue of the journey's s
 
 Calendar-only journey dates must be parsed as local calendar days rather than UTC timestamps. This prevents a stored date from appearing one day earlier in western time zones. Invalid or missing dates render without throwing. Song-search and scripture requests cancel when their input or dialog state changes, preventing stale responses from replacing a newer selection.
 
-## Future original-source comparison
+## Original-source comparison
 
-The user plans to add uploads of the original music, journal, or other material that inspired a journey song. That upload feature is not implemented by the interface refresh. No source files, source records, placeholder data, migrations, or database columns are introduced.
+`JourneyOriginalsEditor` attaches audio, plain-text journals, images, and PDFs to a saved `journey_season_songs.id`. Its controls add/edit labels, reorder by keyboard, preview, recover pending uploads, remove, and explicitly share. `JourneyOriginalsViewer` lives in `JourneySplitPanel.context` after the preserved reflection and external source link. Originals stack below music on mobile. Private previews never use public CDN/image-optimizer URLs.
 
-Use `JourneySplitPanel.context` for the future source viewer alongside the finished song, keeping the existing reflection and source-link information available. An audio recording, journal text, image, or document can supply the context node without changing the playback panel. A dedicated comparison view can reuse the same layout with a wider context pane.
+Originals start private. All metadata/detail/file/export requests enforce ownership and current journey/season visibility. Bulk reads contain metadata; journal text and binary previews load on demand. Original audio pauses other streams without replacing the main queue or resetting listening positions. `JourneyHero` exports originals only after an explicit inclusion choice.
 
-Before implementing uploads, define how a source belongs to a journey song entry, how multiple sources are ordered, and how it inherits the journey's privacy. Add a migration and documented API contract for that relationship instead of overloading `source_url` or changing the meaning of existing song audio. Preserve original source assets separately from the finished song, and reuse the established presigned upload and validation utilities. Keep source-media playback distinct from the finished-song queue.
+The additive `journey_originals` table is separate from finished songs and `source_url`. Its targeted migration is an approved deployment prerequisite, never a build action. Files fail closed until independently verified private storage is available; journals do not depend on S3. Read [the complete API, storage, privacy, recovery, and rollout contract](../docs/journey-originals.md) before changing these boundaries.

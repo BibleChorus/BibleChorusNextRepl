@@ -105,3 +105,10 @@ Clean-install CI exposed an npm peer-lock discrepancy and a patched sanitizer re
 - npm audit identifies GHSA-vfj7-8cjw-p6xm in the current `braces@3.0.3` lock entry. This newer advisory has no published patched release; 3.0.3 already fixes the older CVE-2024-4068.
 - Apply a narrow version-pinned dependency patch that rejects more than 100 nested brace/parenthesis blocks and bounds AST/parent traversal. Verify exact installed patched source before dev/build/start, and fail installation when applying the patch fails.
 - Preserve ordinary glob watching, matching and range expansion with offline security and consumer regression tests. Keep the genuine package version and audit findings visible; this mitigation does not establish closure of Dependabot alert #241.
+
+## 2026-10-13 — Journey Originals
+
+- Add private-by-default original recordings, plain-text journals, images, and PDFs to saved journey song entries, preserving music-library songs, reflections, and source links.
+- Add accessible labels/reordering, explicit sharing, lazy protected previews, pending upload recovery, and independent audio positions alongside the existing song/context layout.
+- Enforce current authorization on journal details, file/range delivery, and opt-in exports. Verify declared size/type and stored signatures, then finalize to immutable private keys. Fail binary storage closed until separately verified without creating services/permissions.
+- Add a targeted additive table migration and read-only inspection/apply helper. No live migrations, storage changes, merge, or publication occurred during source development. Record validation and remaining rollout prerequisites in the draft PR and `docs/journey-originals.md`.

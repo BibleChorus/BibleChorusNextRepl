@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
+import { listOriginals } from '@/lib/journey-originals';
 import axios from 'axios';
 import { BIBLE_BOOKS } from '@/lib/constants';
 import { getAuthenticatedUserId } from '@/lib/server-auth';
@@ -351,11 +352,17 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Vary', 'Cookie, Authorization');
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { username } = req.query;
+  const includeOriginals = req.query.includeOriginals === 'true';
+  if (req.query.includeOriginals !== undefined && req.query.includeOriginals !== 'true' && req.query.includeOriginals !== 'false') {
+    return res.status(400).json({ error: 'includeOriginals must be true or false' });
+  }
 
   if (!username || typeof username !== 'string') {
     return res.status(400).json({ error: 'Username is required' });
@@ -375,7 +382,8 @@ export default async function handler(
       return res.status(404).json({ error: 'Journey not found' });
     }
 
-    const isOwner = (await getAuthenticatedUserId(req, res)) === user.id;
+    const viewerId = await getAuthenticatedUserId(req, res);
+    const isOwner = viewerId === user.id;
     if (!profile.is_public && !isOwner) {
       return res.status(403).json({ error: 'This journey is private' });
     }
@@ -465,6 +473,7 @@ export default async function handler(
             personalNote: song.personal_note,
             significance: song.significance,
             sourceUrl: song.source_url,
+            ...(includeOriginals ? { originals: (await listOriginals(song.id, viewerId, db, true)).filter(original => original.status === 'ready') } : {}),
             bibleVerses: songBibleVerses,
             journeySongOrigin: song.journey_song_origin,
             musicOrigin: song.music_origin,

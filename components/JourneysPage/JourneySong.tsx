@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import LyricsBibleComparisonDialog from "@/components/ListenPage/LyricsBibleComparisonDialog";
 import { JourneySplitPanel } from "./JourneySplitPanel";
+import { JourneyOriginalsViewer } from "./JourneyOriginalsViewer";
 import {
   formatDuration,
   formatJourneyDate,
@@ -64,7 +65,8 @@ export const JourneySong: React.FC<JourneySongProps> = ({
     seasonSong.personal_note?.trim() ||
     seasonSong.significance?.trim() ||
     song.journey_song_origin ||
-    source,
+    source ||
+    seasonSong.originals?.some((original) => original.status === "ready"),
   );
   const date = formatJourneyDate(song.journey_date || song.created_at);
 
@@ -222,6 +224,9 @@ export const JourneySong: React.FC<JourneySongProps> = ({
                     {seasonSong.significance}
                   </p>
                 </div>
+              )}
+              {Boolean(seasonSong.originals?.length) && (
+                <JourneyOriginalsViewer originals={seasonSong.originals || []} />
               )}
             </div>
           ) : undefined

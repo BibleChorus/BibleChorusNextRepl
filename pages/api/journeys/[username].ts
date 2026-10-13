@@ -2,12 +2,15 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 import { getAuthenticatedUserId, withApiAuth } from '@/lib/server-auth';
 import { JourneyWithSeasons } from '@/types/journey';
+import { listOriginals } from '@/lib/journey-originals';
 
 
 async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Vary', 'Cookie, Authorization');
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -125,6 +128,7 @@ async function handler(
           ai_used_for_lyrics: ss.song_ai_used_for_lyrics,
         },
       }));
+      for (const entry of season.songs) entry.originals = await listOriginals(entry.id, currentUserId);
 
       const importantDates = await db('journey_season_important_dates')
         .where({ season_id: season.id })

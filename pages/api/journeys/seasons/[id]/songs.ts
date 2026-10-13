@@ -2,12 +2,14 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 import { getAuthenticatedUserId, withApiAuth } from '@/lib/server-auth';
 import { AddSeasonSongRequest } from '@/types/journey';
+import { listOriginals } from '@/lib/journey-originals';
 
 
 async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  res.setHeader('Cache-Control', 'private, no-store');
   const userId = await getAuthenticatedUserId(req, res);
 
   if (!userId) {
@@ -44,6 +46,7 @@ async function handler(
         )
         .orderByRaw('COALESCE(songs.journey_date, songs.created_at) ASC');
 
+      for (const entry of songs) entry.originals = await listOriginals(entry.id, userId);
       return res.status(200).json(songs);
     } catch (error) {
       console.error('Error fetching season songs:', error);
