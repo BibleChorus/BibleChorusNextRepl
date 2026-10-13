@@ -43,7 +43,8 @@ Set secrets in the deployment environment, never in committed files or Next.js c
 - `NEXT_PUBLIC_BASE_URL` for public links and email destinations.
 - `SENDGRID_API_KEY` for user-requested reports.
 
-The app uses only the platform's current `DATABASE_URL`. Published Replit
+The app uses only the platform's current `DATABASE_URL`; incomplete connection
+details fail clearly instead of inheriting old PostgreSQL environment settings. Published Replit
 processes enable `DATABASE_REQUIRE_TLS=1` through the tracked `.replit`
 deployment command and require `sslmode=verify-full`, preserving the
 configured target and certificate parameters. Previews retain their native URL

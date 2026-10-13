@@ -86,5 +86,6 @@ Clean-install CI exposed an npm peer-lock discrepancy and a patched sanitizer re
 
 - Require certificate-validating TLS through the GitHub-controlled production run configuration while retaining the single current database URL and local preview behavior.
 - Preserve database identity and configured certificates; no records, schema, secrets, or media are changed by this correction.
+- Reject incomplete current connection URLs rather than inheriting legacy PostgreSQL environment settings.
 - Keep Replit aligned with GitHub main before release handoff, preserving any local-only work before alignment and preparing the requested republish button without publishing automatically.
 

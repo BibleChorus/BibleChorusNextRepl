@@ -55,7 +55,8 @@ connections change. Both historical database import paths share one pool.
 
 `knexfile.js` uses only the platform's current `DATABASE_URL`. Its small lazy
 connection factory keeps secret-free builds valid and fails clearly if a
-runtime connection needs a missing URL. Published Replit processes are identified
+runtime connection needs a missing or incomplete URL; legacy PostgreSQL environment
+settings cannot fill in its target or credentials. Published Replit processes are identified
 by the tracked deployment command's `DATABASE_REQUIRE_TLS=1` marker and require
 verified TLS through the URL's `sslmode`, so
 an omitted mode or disabled SSL cannot cause an insecure production connection.
