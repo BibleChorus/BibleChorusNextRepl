@@ -37,11 +37,26 @@ Set secrets in the deployment environment, never in committed files or Next.js c
 
 - `JWT_SECRET` (or legacy-compatible `NEXTAUTH_SECRET`) for app bearer sessions; `NEXTAUTH_SECRET` for Google sessions.
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `NEXTAUTH_URL` for Google OAuth.
-- `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` for the existing PostgreSQL connection.
+- A complete `PGHOST`, `PGUSER`, and `PGDATABASE` configuration (with `PGPASSWORD` and optional `PGPORT`), or `NEON_DATABASE_URL`/`DATABASE_URL` for PostgreSQL.
 - `AWS_REGION`, `AWS_ACCESS_KEY`, `AWS_SECRET_KEY`, `AWS_S3_BUCKET_NAME` for S3.
 - `CDN_URL`, `CLOUDFRONT_URL`, `NEXT_PUBLIC_CDN_URL` for existing media URL forms.
 - `NEXT_PUBLIC_BASE_URL` for public links and email destinations.
 - `SENDGRID_API_KEY` for user-requested reports.
+
+Database precedence is deterministic: complete PG fields first, then
+`DATABASE_URL`, then `NEON_DATABASE_URL`. Replit saves the previous Neon URL as
+`NEON_DATABASE_URL` after an infrastructure upgrade; `DATABASE_URL` remains the
+current target. Incomplete PG fields do not override a
+valid URL. Credentials resolve only when a connection is needed, so builds can
+run without them; a runtime request with no valid configuration fails clearly
+without guessing a local database. URL SSL/certificate parameters are preserved
+for the PostgreSQL driver. URLs without those parameters default to verified
+TLS for external hosts; exact loopback/localhost/Helium hosts and reserved local
+host suffixes (`.helium`, `.internal`, `.localhost`, `.local`) use local non-SSL
+connections, independently of `NODE_ENV`. Explicit `PGSSL` (`true`/`false` or a PostgreSQL SSL mode) takes precedence
+over `PGSSLMODE` when the selected URL has no SSL options. The original PG mode
+retains its existing TLS default when neither setting is present.
+See [Replit's database upgrade guidance](https://docs.replit.com/features/data-and-storage/development-and-production).
 
 Presigned browser uploads need bucket CORS allowing PUT and Content-Type from the app's production and preview origins. File/Blob upload length is supplied by the browser. Limits remain 200 MB for audio, 5 MB for images, and 10 MB for study PDFs. PDF uploads extract embedded text and link detected scripture references; OCR for scanned PDFs remains an operational extension, not an implemented fallback.
 
