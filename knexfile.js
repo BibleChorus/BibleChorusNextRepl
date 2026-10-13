@@ -1,38 +1,18 @@
 require('dotenv').config();
 
-module.exports = {
-  development: {
+function configuration() {
+  return {
     client: 'pg',
-    connection: {
-      host: process.env.PGHOST,
-      port: process.env.PGPORT,
-      user: process.env.PGUSER,
-      password: process.env.PGPASSWORD,
-      database: process.env.PGDATABASE,
-      ssl: { rejectUnauthorized: false }
+    // Keep imports and secret-free builds valid. Resolve at pool acquisition so
+    // missing credentials produce a clear error only when the database is used.
+    connection: () => {
+      const connectionString = process.env.DATABASE_URL?.trim();
+      if (!connectionString) throw new Error('DATABASE_URL is required to connect to the database.');
+      return { connectionString };
     },
-    migrations: {
-      directory: './db/migrations'
-    },
-    seeds: {
-      directory: './db/seeds'
-    }
-  },
-  production: {
-    client: 'pg',
-    connection: {
-      host: process.env.PGHOST,
-      port: process.env.PGPORT,
-      user: process.env.PGUSER,
-      password: process.env.PGPASSWORD,
-      database: process.env.PGDATABASE,
-      ssl: { rejectUnauthorized: false }
-    },
-    migrations: {
-      directory: './db/migrations'
-    },
-    seeds: {
-      directory: './db/seeds'
-    }
-  }
-};
+    migrations: { directory: './db/migrations' },
+    seeds: { directory: './db/seeds' },
+  };
+}
+
+module.exports = { development: configuration(), production: configuration(), test: configuration() };

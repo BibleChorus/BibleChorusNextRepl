@@ -1,9 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { Pool } from 'pg'
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-})
+import db from '@/db'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
@@ -14,16 +10,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-      const client = await pool.connect()
       const bookList = (books as string).split(',')
       const query = `
         SELECT DISTINCT book, chapter
         FROM bible_verses
-        WHERE LOWER(book) = ANY(SELECT LOWER(unnest($1::text[])))
+        WHERE LOWER(book) = ANY(SELECT LOWER(unnest(?::text[])))
         ORDER BY book, chapter
       `
-      const result = await client.query(query, [bookList])
-      client.release()
+      const result = await db.raw(query, [bookList])
 
       const bookNameMap = new Map<string, string>()
       for (const requestedBook of bookList) {

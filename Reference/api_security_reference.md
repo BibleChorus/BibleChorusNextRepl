@@ -53,6 +53,12 @@ by other content. A failed database transaction never deletes files from S3.
 translation/genre JSON with `song_verses` when song metadata or scripture
 connections change. Both historical database import paths share one pool.
 
+`knexfile.js` uses only the platform's current `DATABASE_URL`. Its small lazy
+connection factory keeps secret-free builds valid and fails clearly if a
+runtime connection needs a missing URL. The pg driver handles the URL's native
+connection and TLS settings without app overrides. The chapters API and targeted
+deployment script share this configuration.
+
 ## Private resources and restored actions
 
 Private playlists and PDFs are visible to their owners. Private PDF comments,

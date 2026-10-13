@@ -37,11 +37,17 @@ Set secrets in the deployment environment, never in committed files or Next.js c
 
 - `JWT_SECRET` (or legacy-compatible `NEXTAUTH_SECRET`) for app bearer sessions; `NEXTAUTH_SECRET` for Google sessions.
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `NEXTAUTH_URL` for Google OAuth.
-- `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` for the existing PostgreSQL connection.
+- `DATABASE_URL` for the current managed PostgreSQL database.
 - `AWS_REGION`, `AWS_ACCESS_KEY`, `AWS_SECRET_KEY`, `AWS_S3_BUCKET_NAME` for S3.
 - `CDN_URL`, `CLOUDFRONT_URL`, `NEXT_PUBLIC_CDN_URL` for existing media URL forms.
 - `NEXT_PUBLIC_BASE_URL` for public links and email destinations.
 - `SENDGRID_API_KEY` for user-requested reports.
+
+The app uses the platform's current `DATABASE_URL` directly. PostgreSQL's native
+driver interprets its connection and TLS parameters, including `sslmode`; the
+app does not override them. Knex resolves the URL only when a connection is
+needed, allowing builds without credentials and giving a clear runtime error
+when the URL is absent. See [Replit's database guidance](https://docs.replit.com/features/data-and-storage/development-and-production).
 
 Presigned browser uploads need bucket CORS allowing PUT and Content-Type from the app's production and preview origins. File/Blob upload length is supplied by the browser. Limits remain 200 MB for audio, 5 MB for images, and 10 MB for study PDFs. PDF uploads extract embedded text and link detected scripture references; OCR for scanned PDFs remains an operational extension, not an implemented fallback.
 
