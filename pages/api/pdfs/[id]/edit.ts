@@ -1,7 +1,8 @@
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
 
   if (req.method === 'PUT') {
@@ -35,3 +36,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['PUT'], owner: 'pdfs' });

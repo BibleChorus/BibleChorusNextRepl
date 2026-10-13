@@ -1,50 +1,59 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { AddToPlaylistDialog } from "@/components/ListenPage/AddToPlaylistDialog";
+import { ReportDialog } from "@/components/ReportDialog";
+import { CommentList } from "@/components/SongComments/CommentList";
+import { NewCommentForm } from "@/components/SongComments/NewCommentForm";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSub,
-  DropdownMenuSubTrigger,
   DropdownMenuSubContent,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
+import { Song, SongComment } from "@/types";
+import axios from "axios";
 import {
-  MoreVertical,
-  Heart,
-  Share2,
-  ListPlus,
-  Vote,
-  Music,
   BookOpen,
-  Star,
-  MessageCircle,
   Flag,
-  ThumbsUp,
+  Heart,
+  ListPlus,
+  MessageCircle,
+  MoreVertical,
+  Music,
+  Share2,
+  Star,
   ThumbsDown,
+  ThumbsUp,
+  Vote,
   X,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import axios from 'axios';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/router';
-import { Song, SongComment } from '@/types';
-import { ReportDialog } from '@/components/ReportDialog';
-import { AddToPlaylistDialog } from '@/components/ListenPage/AddToPlaylistDialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { CommentList } from '@/components/SongComments/CommentList';
-import { NewCommentForm } from '@/components/SongComments/NewCommentForm';
+} from "lucide-react";
+import { useRouter } from "next/router";
+import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
   const { user } = useAuth();
   const router = useRouter();
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
-  const [isAddToPlaylistDialogOpen, setIsAddToPlaylistDialogOpen] = useState(false);
+  const [isAddToPlaylistDialogOpen, setIsAddToPlaylistDialogOpen] =
+    useState(false);
   const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false);
-  const [selectedVoteType, setSelectedVoteType] = useState('');
+  const [selectedVoteType, setSelectedVoteType] = useState("");
   const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
   const [comments, setComments] = useState<SongComment[]>([]);
-  const [localCommentsCount, setLocalCommentsCount] = useState(song.comments_count || 0);
+  const [localCommentsCount, setLocalCommentsCount] = useState(
+    song.comments_count || 0,
+  );
   const [voteStates, setVoteStates] = useState({});
   const [voteCounts, setVoteCounts] = useState({});
   const [likeStates, setLikeStates] = useState({});
@@ -55,6 +64,10 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
   useEffect(() => {
     // Fetch votes
     const fetchVotes = async () => {
+      if (!user) {
+        setVoteStates({});
+        return;
+      }
       try {
         const response = await axios.get(`/api/users/${user?.id}/votes`);
         const userVotes = response.data;
@@ -67,34 +80,49 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
         });
         setVoteStates(newVoteStates);
       } catch (error) {
-        console.error('Error fetching user votes:', error);
+        console.error(
+          "Error fetching user votes:",
+          error instanceof Error ? error.message : "Unknown error",
+        );
       }
     };
 
     // Fetch likes
     const fetchLikes = async () => {
+      if (!user) {
+        setLikeStates({});
+        return;
+      }
       try {
         const response = await axios.get(`/api/users/${user?.id}/likes`);
         const userLikes = response.data;
         const newLikeStates = {};
         userLikes.forEach((like: any) => {
-          if (like.likeable_type === 'song') {
+          if (like.likeable_type === "song") {
             newLikeStates[like.likeable_id] = true;
           }
         });
         setLikeStates(newLikeStates);
       } catch (error) {
-        console.error('Error fetching user likes:', error);
+        console.error(
+          "Error fetching user likes:",
+          error instanceof Error ? error.message : "Unknown error",
+        );
       }
     };
 
     // Fetch comments count
     const fetchCommentsCount = async () => {
       try {
-        const response = await axios.get(`/api/songs/${song.id}/comments/count`);
+        const response = await axios.get(
+          `/api/songs/${song.id}/comments/count`,
+        );
         setLocalCommentsCount(response.data.count);
       } catch (error) {
-        console.error('Error fetching comments count:', error);
+        console.error(
+          "Error fetching comments count:",
+          error instanceof Error ? error.message : "Unknown error",
+        );
       }
     };
 
@@ -107,7 +135,7 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
 
   const handleLike = useCallback(async () => {
     if (!user) {
-      toast.error('You need to be logged in to like a song');
+      toast.error("You need to be logged in to like a song");
       return;
     }
 
@@ -115,12 +143,16 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
       const isLiked = likeStates[song.id];
       if (isLiked) {
         await axios.delete(`/api/likes`, {
-          data: { user_id: user.id, likeable_type: 'song', likeable_id: song.id },
+          data: {
+            user_id: user.id,
+            likeable_type: "song",
+            likeable_id: song.id,
+          },
         });
       } else {
-        await axios.post('/api/likes', {
+        await axios.post("/api/likes", {
           user_id: user.id,
-          likeable_type: 'song',
+          likeable_type: "song",
           likeable_id: song.id,
         });
       }
@@ -135,16 +167,19 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
         [song.id]: (prev[song.id] || 0) + (isLiked ? -1 : 1),
       }));
 
-      toast.success(isLiked ? 'Song unliked' : 'Song liked');
+      toast.success(isLiked ? "Song unliked" : "Song liked");
     } catch (error) {
-      console.error('Error toggling like:', error);
-      toast.error('Failed to update like status');
+      console.error(
+        "Error toggling like:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
+      toast.error("Failed to update like status");
     }
   }, [user, likeStates, song]);
 
   const handleVoteClick = (voteType: string) => {
     if (!user) {
-      toast.error('You need to be logged in to vote');
+      toast.error("You need to be logged in to vote");
       return;
     }
     setSelectedVoteType(voteType);
@@ -153,12 +188,12 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
 
   const handleVote = async (voteValue: number) => {
     if (!user) {
-      toast.error('You need to be logged in to vote');
+      toast.error("You need to be logged in to vote");
       return;
     }
 
     try {
-      await axios.post('/api/votes', {
+      await axios.post("/api/votes", {
         user_id: user.id,
         song_id: song.id,
         vote_type: selectedVoteType,
@@ -179,15 +214,20 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
         [song.id]: {
           ...(prev[song.id] || {}),
           [selectedVoteType]:
-            (prev[song.id]?.[selectedVoteType] || 0) + voteValue - (voteStates[song.id]?.[selectedVoteType] || 0),
+            (prev[song.id]?.[selectedVoteType] || 0) +
+            voteValue -
+            (voteStates[song.id]?.[selectedVoteType] || 0),
         },
       }));
 
-      toast.success('Vote submitted successfully');
+      toast.success("Vote submitted successfully");
       setIsVoteDialogOpen(false);
     } catch (error) {
-      console.error('Error submitting vote:', error);
-      toast.error('Failed to submit vote');
+      console.error(
+        "Error submitting vote:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
+      toast.error("Failed to submit vote");
     }
   };
 
@@ -206,34 +246,43 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
   const handleShare = useCallback(async () => {
     // Get the correct artist attribution, with fallbacks
     const artistAttribution = song.username;
-    
+
     const songUrl = `${window.location.origin}/Songs/${song.id}`;
     const shareTitle = `${song.title} by ${artistAttribution}`;
     const shareText = `Check out "${song.title}" by ${artistAttribution} on BibleChorus`;
-    
+
     const shareData = {
       title: shareTitle,
       text: shareText,
       url: songUrl,
     };
 
-    if (navigator.share && navigator.canShare(shareData)) {
+    if (
+      navigator.share &&
+      (!navigator.canShare || navigator.canShare(shareData))
+    ) {
       try {
         await navigator.share(shareData);
-        toast.success('Song shared successfully');
+        toast.success("Song shared successfully");
       } catch (error) {
-        if (error instanceof Error && error.name !== 'AbortError') {
-          console.error('Error sharing song:', error);
-          toast.error('Failed to share song');
+        if (error instanceof Error && error.name !== "AbortError") {
+          console.error(
+            "Error sharing song:",
+            error instanceof Error ? error.message : "Unknown error",
+          );
+          toast.error("Failed to share song");
         }
       }
     } else {
       try {
         await navigator.clipboard.writeText(`${shareText}\n${songUrl}`);
-        toast.success('Song link copied to clipboard');
+        toast.success("Song link copied to clipboard");
       } catch (error) {
-        console.error('Error copying song link:', error);
-        toast.error('Failed to copy song link');
+        console.error(
+          "Error copying song link:",
+          error instanceof Error ? error.message : "Unknown error",
+        );
+        toast.error("Failed to copy song link");
       }
     }
   }, [song.id, song.title, song.username]);
@@ -244,7 +293,10 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
       const response = await axios.get(`/api/songs/${song.id}/comments`);
       setComments(response.data);
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error(
+        "Error fetching comments:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
     }
   }, [song.id]);
 
@@ -258,7 +310,11 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
+          <Button
+            variant="ghost"
+            className="h-9 w-9 rounded-full p-0"
+            aria-label={`More options for ${song.title}`}
+          >
             <span className="sr-only">Open menu</span>
             <MoreVertical className="h-4 w-4" />
           </Button>
@@ -266,7 +322,7 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleLike}>
             <Heart className="mr-2 h-4 w-4" />
-            <span>{likeStates[song.id] ? 'Unlike' : 'Like'}</span>
+            <span>{likeStates[song.id] ? "Unlike" : "Like"}</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleShare}>
             <Share2 className="mr-2 h-4 w-4" />
@@ -282,15 +338,19 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
               <span>Vote</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => handleVoteClick('Best Musically')}>
+              <DropdownMenuItem
+                onClick={() => handleVoteClick("Best Musically")}
+              >
                 <Music className="mr-2 h-4 w-4" />
                 <span>Best Musically</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleVoteClick('Best Lyrically')}>
+              <DropdownMenuItem
+                onClick={() => handleVoteClick("Best Lyrically")}
+              >
                 <BookOpen className="mr-2 h-4 w-4" />
                 <span>Best Lyrically</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleVoteClick('Best Overall')}>
+              <DropdownMenuItem onClick={() => handleVoteClick("Best Overall")}>
                 <Star className="mr-2 h-4 w-4" />
                 <span>Best Overall</span>
               </DropdownMenuItem>
@@ -313,25 +373,41 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
       <Dialog open={isVoteDialogOpen} onOpenChange={setIsVoteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="text-center">Vote for {selectedVoteType}</DialogTitle>
-            <DialogDescription className="text-center">{song.title}</DialogDescription>
+            <DialogTitle className="text-center">
+              Vote for {selectedVoteType}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {song.title}
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4">
             {/* Voting options */}
             {getCurrentVote(selectedVoteType) !== 1 && (
-              <Button onClick={() => handleVote(1)} variant="outline" className="w-full sm:w-auto">
+              <Button
+                onClick={() => handleVote(1)}
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
                 <ThumbsUp className="mr-2 h-4 w-4" />
                 Upvote
               </Button>
             )}
             {getCurrentVote(selectedVoteType) !== -1 && (
-              <Button onClick={() => handleVote(-1)} variant="outline" className="w-full sm:w-auto">
+              <Button
+                onClick={() => handleVote(-1)}
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
                 <ThumbsDown className="mr-2 h-4 w-4" />
                 Downvote
               </Button>
             )}
             {getCurrentVote(selectedVoteType) !== 0 && (
-              <Button onClick={() => handleVote(0)} variant="outline" className="w-full sm:w-auto">
+              <Button
+                onClick={() => handleVote(0)}
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
                 <X className="mr-2 h-4 w-4" />
                 Remove Vote
               </Button>
@@ -341,7 +417,10 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
       </Dialog>
 
       {/* Comments Dialog */}
-      <Dialog open={isCommentsDialogOpen} onOpenChange={setIsCommentsDialogOpen}>
+      <Dialog
+        open={isCommentsDialogOpen}
+        onOpenChange={setIsCommentsDialogOpen}
+      >
         <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Comments</DialogTitle>
@@ -351,16 +430,19 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
           </DialogHeader>
           <div className="flex-grow overflow-y-auto pr-4">
             {user ? (
-              <NewCommentForm songId={song.id} onCommentAdded={handleCommentAdded} />
+              <NewCommentForm
+                songId={song.id}
+                onCommentAdded={handleCommentAdded}
+              />
             ) : (
               <p>Please log in to add a comment.</p>
             )}
             {isCommentsFetching ? (
               <p>Loading comments...</p>
             ) : (
-              <CommentList 
-                comments={comments} 
-                songId={song.id} 
+              <CommentList
+                comments={comments}
+                songId={song.id}
                 onCommentAdded={handleCommentAdded}
               />
             )}
@@ -373,9 +455,9 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
         isOpen={isReportDialogOpen}
         onClose={() => setIsReportDialogOpen(false)}
         songId={song.id}
-        userId={user?.id.toString() || ''}
-        username={user?.username || ''}
-        userEmail={user?.email || ''}
+        userId={user?.id.toString() || ""}
+        username={user?.username || ""}
+        userEmail={user?.email || ""}
       />
 
       <AddToPlaylistDialog
@@ -385,4 +467,4 @@ export const SongOptionsMenu: React.FC<{ song: Song }> = ({ song }) => {
       />
     </>
   );
-}; 
+};

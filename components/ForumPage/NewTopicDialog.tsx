@@ -1,18 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { ForumCategory } from '@/types';
-import dynamic from 'next/dynamic';
+  RichTextEditor,
+  richTextHasContent,
+} from "@/components/RichTextEditor";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -20,50 +10,62 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { useTheme } from 'next-themes';
-
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
-import 'react-quill/dist/quill.snow.css';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
+import { uiTheme } from "@/lib/design-system";
+import { ForumCategory } from "@/types";
+import axios from "axios";
+import { useTheme } from "next-themes";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface NewTopicDialogProps {
   onTopicCreated: (topic: any) => void;
   children?: React.ReactNode;
 }
 
-export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, children }) => {
+export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({
+  onTopicCreated,
+  children,
+}) => {
   const { user } = useAuth();
   const { resolvedTheme } = useTheme();
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [categoryId, setCategoryId] = useState<string>('');
+  const [title, setTitle] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [content, setContent] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("");
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
-  const isDark = resolvedTheme === 'dark';
+  const isDark = resolvedTheme === "dark";
 
   const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-    separator: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.2)',
-    accentGlow: isDark ? 'rgba(212, 175, 55, 0.12)' : 'rgba(191, 161, 48, 0.1)',
+    ...uiTheme,
+    separator: "hsl(var(--border))",
+    accentGlow: "hsl(var(--primary) / .1)",
   };
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get<ForumCategory[]>('/api/forum/categories');
+        const response = await axios.get<ForumCategory[]>(
+          "/api/forum/categories",
+        );
         setCategories(response.data);
       } catch (error) {
-        console.error('Error fetching categories:', error);
-        toast.error('Failed to load categories');
+        console.error(
+          "Error fetching categories:",
+          error instanceof Error ? error.message : "Unknown error",
+        );
+        toast.error("Failed to load categories");
       }
     };
 
@@ -71,8 +73,17 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, 
   }, []);
 
   const handleCreateTopic = async () => {
+    if (
+      !user ||
+      !title.trim() ||
+      !richTextHasContent(content) ||
+      !categoryId ||
+      isSubmitting
+    )
+      return;
+    setIsSubmitting(true);
     try {
-      const response = await axios.post('/api/forum/topics', {
+      const response = await axios.post("/api/forum/topics", {
         title,
         content,
         user_id: user?.id,
@@ -81,13 +92,18 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, 
 
       onTopicCreated(response.data);
       setIsOpen(false);
-      setTitle('');
-      setContent('');
-      setCategoryId('');
-      toast.success('Topic created successfully');
+      setTitle("");
+      setContent("");
+      setCategoryId("");
+      toast.success("Topic created successfully");
     } catch (error) {
-      console.error('Error creating topic:', error);
-      toast.error('Failed to create topic');
+      console.error(
+        "Error creating topic:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
+      toast.error("Failed to create topic");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -96,32 +112,35 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, 
       <DialogTrigger asChild>
         {children || <Button>Create New Topic</Button>}
       </DialogTrigger>
-      <DialogContent 
+      <DialogContent
         className="sm:max-w-[500px] rounded-2xl"
-        style={{ 
+        style={{
           backgroundColor: theme.bgCard,
-          border: `1px solid ${theme.border}`
+          border: `1px solid ${theme.border}`,
         }}
       >
         <DialogHeader>
-          <DialogTitle 
+          <DialogTitle
             className="text-2xl"
-            style={{ color: theme.text, fontFamily: "'Italiana', serif" }}
+            style={{ color: theme.text, fontFamily: "var(--font-serif)" }}
           >
             Create a New Topic
           </DialogTitle>
-          <DialogDescription 
-            style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+          <DialogDescription
+            style={{
+              color: theme.textSecondary,
+              fontFamily: "var(--font-sans)",
+            }}
           >
             Fill in the details for your new forum topic.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-5 mt-4">
           <div>
-            <label 
-              htmlFor="title" 
+            <label
+              htmlFor="title"
               className="block text-sm font-medium mb-2"
-              style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
+              style={{ color: theme.text, fontFamily: "var(--font-sans)" }}
             >
               Title
             </label>
@@ -131,88 +150,32 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, 
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="h-11 rounded-lg transition-all duration-300"
-              style={{ 
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+              style={{
+                backgroundColor: isDark
+                  ? "rgba(255, 255, 255, 0.05)"
+                  : "rgba(0, 0, 0, 0.03)",
                 borderColor: theme.border,
                 color: theme.text,
-                fontFamily: "'Manrope', sans-serif"
+                fontFamily: "var(--font-sans)",
               }}
             />
           </div>
           <div>
-            <label 
-              htmlFor="content" 
+            <label
+              htmlFor="content"
               className="block text-sm font-medium mb-2"
-              style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
+              style={{ color: theme.text, fontFamily: "var(--font-sans)" }}
             >
               Description
             </label>
-            <div 
+            <div
               className="rounded-lg overflow-hidden"
               style={{ border: `1px solid ${theme.border}` }}
             >
-              <style jsx global>{`
-                .ql-toolbar.ql-snow {
-                  border: none !important;
-                  border-bottom: 1px solid ${theme.border} !important;
-                  background: ${isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)'};
-                }
-                .ql-container.ql-snow {
-                  border: none !important;
-                  background: ${isDark ? 'rgba(255, 255, 255, 0.02)' : 'transparent'};
-                }
-                .ql-editor {
-                  color: ${theme.text} !important;
-                  font-family: 'Manrope', sans-serif !important;
-                  min-height: 120px;
-                }
-                .ql-editor.ql-blank::before {
-                  color: ${theme.textSecondary} !important;
-                  font-style: normal !important;
-                }
-                .ql-snow .ql-stroke {
-                  stroke: ${theme.textSecondary} !important;
-                }
-                .ql-snow .ql-fill {
-                  fill: ${theme.textSecondary} !important;
-                }
-                .ql-snow .ql-picker {
-                  color: ${theme.textSecondary} !important;
-                }
-                .ql-snow .ql-picker-options {
-                  background: ${theme.bgCard} !important;
-                  border-color: ${theme.border} !important;
-                }
-                .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-label {
-                  border-color: ${theme.accent} !important;
-                }
-                .ql-snow.ql-toolbar button:hover,
-                .ql-snow .ql-toolbar button:hover {
-                  color: ${theme.accent} !important;
-                }
-                .ql-snow.ql-toolbar button:hover .ql-stroke,
-                .ql-snow .ql-toolbar button:hover .ql-stroke {
-                  stroke: ${theme.accent} !important;
-                }
-                .ql-snow.ql-toolbar button:hover .ql-fill,
-                .ql-snow .ql-toolbar button:hover .ql-fill {
-                  fill: ${theme.accent} !important;
-                }
-                .ql-snow.ql-toolbar button.ql-active,
-                .ql-snow .ql-toolbar button.ql-active {
-                  color: ${theme.accent} !important;
-                }
-                .ql-snow.ql-toolbar button.ql-active .ql-stroke,
-                .ql-snow .ql-toolbar button.ql-active .ql-stroke {
-                  stroke: ${theme.accent} !important;
-                }
-                .ql-snow.ql-toolbar button.ql-active .ql-fill,
-                .ql-snow .ql-toolbar button.ql-active .ql-fill {
-                  fill: ${theme.accent} !important;
-                }
-              `}</style>
-              <ReactQuill
+              <RichTextEditor
+                label="Describe your conversation"
                 id="content"
+                readOnly={isSubmitting}
                 value={content}
                 onChange={setContent}
                 placeholder="Write your topic description..."
@@ -220,32 +183,36 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, 
             </div>
           </div>
           <div>
-            <label 
-              htmlFor="category" 
+            <label
+              htmlFor="category"
               className="block text-sm font-medium mb-2"
-              style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
+              style={{ color: theme.text, fontFamily: "var(--font-sans)" }}
             >
               Category
             </label>
             <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger 
+              <SelectTrigger
                 id="category"
                 className="h-11 rounded-lg transition-all duration-300"
-                style={{ 
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                style={{
+                  backgroundColor: isDark
+                    ? "rgba(255, 255, 255, 0.05)"
+                    : "rgba(0, 0, 0, 0.03)",
                   borderColor: theme.border,
                   color: theme.text,
-                  fontFamily: "'Manrope', sans-serif"
+                  fontFamily: "var(--font-sans)",
                 }}
               >
                 <SelectValue placeholder="Select Category" />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
-                  <SelectItem 
-                    key={category.id} 
+                  <SelectItem
+                    key={category.id}
                     value={category.id.toString()}
-                    disabled={category.name === 'Announcements' && user?.id !== 1}
+                    disabled={
+                      category.name === "Announcements" && user?.id !== 1
+                    }
                   >
                     {category.name}
                   </SelectItem>
@@ -253,14 +220,19 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, 
               </SelectContent>
             </Select>
           </div>
-          <Button 
-            onClick={handleCreateTopic} 
-            disabled={!title || !content || !categoryId}
+          <Button
+            onClick={handleCreateTopic}
+            disabled={
+              !title.trim() ||
+              !richTextHasContent(content) ||
+              !categoryId ||
+              isSubmitting
+            }
             className="w-full h-11 rounded-lg font-medium transition-all duration-300 disabled:opacity-50"
-            style={{ 
+            style={{
               backgroundColor: theme.accent,
-              color: '#ffffff',
-              fontFamily: "'Manrope', sans-serif"
+              color: "#ffffff",
+              fontFamily: "var(--font-sans)",
             }}
             onMouseEnter={(e) => {
               if (!e.currentTarget.disabled) {
@@ -271,7 +243,7 @@ export const NewTopicDialog: React.FC<NewTopicDialogProps> = ({ onTopicCreated, 
               e.currentTarget.style.backgroundColor = theme.accent;
             }}
           >
-            Create Topic
+            {isSubmitting ? "Creating…" : "Create topic"}
           </Button>
         </div>
       </DialogContent>

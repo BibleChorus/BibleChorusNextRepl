@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
-import jwt from 'jsonwebtoken';
+import { requireUser, withApiAuth } from '@/lib/server-auth';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -18,31 +18,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid vote value' });
   }
 
-  let token = req.cookies.token;
-  // Fallback to Authorization header if cookie is not present
-  if (!token && req.headers.authorization?.startsWith('Bearer ')) {
-    token = req.headers.authorization.split(' ')[1];
-  }
-
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  const user = await requireUser(req, res);
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
 
     // Start transaction
     await db.transaction(async (trx) => {
       // Check if user has already voted
       const existingVote = await trx('forum_votes')
-        .where({ user_id: decoded.userId, topic_id: id })
+        .where({ user_id: user.id, topic_id: id })
         .first();
 
       if (vote === 0) {
         // Remove vote
         if (existingVote) {
           await trx('forum_votes')
-            .where({ user_id: decoded.userId, topic_id: id })
+            .where({ user_id: user.id, topic_id: id })
             .delete();
 
           // Update vote counts
@@ -63,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           // Update existing vote
           if (existingVote.vote_value !== vote) {
             await trx('forum_votes')
-              .where({ user_id: decoded.userId, topic_id: id })
+              .where({ user_id: user.id, topic_id: id })
               .update({ vote_value: vote });
 
             // Update vote counts
@@ -84,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } else {
           // Insert new vote
           await trx('forum_votes').insert({
-            user_id: decoded.userId,
+            user_id: user.id,
             topic_id: id,
             vote_value: vote
           });
@@ -123,3 +114,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ error: 'Failed to process vote' });
   }
 }
+
+export default withApiAuth(handler, { methods: ['POST'] });

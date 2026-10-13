@@ -1,24 +1,16 @@
+import sanitizeHtml from 'sanitize-html';
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
-import jwt from 'jsonwebtoken';
+import { getAuthenticatedUserId } from '@/lib/server-auth';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
 
   if (method === 'GET') {
     // Fetch all topics
     try {
-      // Get user ID from token if available
-      let userId: number | null = null;
-      const token = req.cookies.token;
-      if (token) {
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
-          userId = decoded.userId;
-        } catch (error) {
-          // Token invalid, continue without user context
-        }
-      }
+      const userId = await getAuthenticatedUserId(req, res);
 
       const topics = await db('forum_topics')
         .join('users', 'forum_topics.user_id', 'users.id')
@@ -70,6 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } else if (method === 'POST') {
     // Create a new topic
     const { title, content, user_id, category_id } = req.body;
+    if (typeof title !== 'string' || !title.trim() || title.length > 255 || typeof content !== 'string' || !content.trim() || content.length > 200000) return res.status(400).json({ message: 'Provide a title and conversation text' });
 
     if (!user_id) {
       return res.status(401).json({ message: 'Unauthorized' });
@@ -85,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const [topic] = await db('forum_topics')
         .insert({
           title,
-          content,
+          content: sanitizeHtml(content),
           user_id,
           category_id: category_id || null,
           created_at: new Date(),
@@ -112,3 +105,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).end(`Method ${method} Not Allowed`);
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['POST'], identityFields: ['user_id'] });

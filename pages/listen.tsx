@@ -1,59 +1,88 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo, Dispatch, SetStateAction } from 'react';
-import Head from 'next/head'
-import useSWR from 'swr'
-import { SongList } from '@/components/ListenPage/SongList'
-import { Filters } from '@/components/ListenPage/Filters'
-import { motion, AnimatePresence } from "framer-motion"
-import { Filter, X, Info, Save, Search, Check, ListMusic, ArrowUpDown, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Expand, Shrink, PlayCircle, Edit, Shuffle } from "lucide-react"
-import { useTheme } from 'next-themes'
+import { Filters } from "@/components/ListenPage/Filters";
+import { SongList } from "@/components/ListenPage/SongList";
+import {
+  ArrowUpDown,
+  Check,
+  Edit,
+  Expand,
+  Filter,
+  ListMusic,
+  PlayCircle,
+  Save,
+  Search,
+  Shrink,
+  Shuffle,
+  X,
+} from "lucide-react";
+import Head from "next/head";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import useSWR from "swr";
 
-import { Badge } from "@/components/ui/badge"
-import { useMediaQuery } from "@/hooks/useMediaQuery"
-import qs from 'qs'
-import { SongListSkeleton } from '@/components/ListenPage/SongListSkeleton'
-import { useInView } from 'react-intersection-observer';
-import useSWRInfinite from 'swr/infinite';
-import { useRouter } from 'next/router'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import Image from 'next/image'
-import axios from 'axios'
-import { useAuth } from '@/contexts/AuthContext'
-import { toast } from "sonner"
-import { parsePostgresArray } from '@/lib/utils'; // Import the utility function
-import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { cn } from "@/lib/utils"
-import { TooltipProvider } from '@/components/ui/tooltip'; // Ensure the correct import path
-import SavePlaylistDialog from '@/components/ListenPage/SavePlaylistDialog'
-import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper';
-import { getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils'
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { uploadFile } from '@/lib/uploadUtils';
-import { useForm, UseFormReturn } from 'react-hook-form'; // Add this import
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
-import { SortOptions } from '@/components/ListenPage/SortOptions';
+import SavePlaylistDialog from "@/components/ListenPage/SavePlaylistDialog";
+import { SongListSkeleton } from "@/components/ListenPage/SongListSkeleton";
+import { SortOptions } from "@/components/ListenPage/SortOptions";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { TooltipProvider } from "@/components/ui/tooltip"; // Ensure the correct import path
+import {
+  CropResultMetadata,
+  ImageCropper,
+} from "@/components/UploadPage/ImageCropper";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { getExtensionFromMimeType, stripFileExtension } from "@/lib/imageUtils";
+import { uploadFile } from "@/lib/uploadUtils";
+import { cn, parsePostgresArray } from "@/lib/utils"; // Import the utility function
+import axios from "axios";
+import Image from "next/image";
+import { useRouter } from "next/router";
+import { UseFormReturn } from "react-hook-form"; // Add this import
+import { useInView } from "react-intersection-observer";
+import { toast } from "sonner";
+import useSWRInfinite from "swr/infinite";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Import User from types.ts
-import { User, Song } from '@/types'; // Ensure correct path based on your project structure
+import { Song, User } from "@/types"; // Ensure correct path based on your project structure
 
-const fetcher = (url: string) =>
-  fetch(url)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log('Raw API response data:', data);
-      return {
-        songs: data.songs.map((song: any) => ({
-          ...song,
-          duration: song.duration, // Explicitly include duration
-          genres: parsePostgresArray(song.genres), // Parse genres to an array
-        })),
-        total: data.total || 0,
-      };
-    });
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Could not load songs");
+  const data = await response.json();
+  return {
+    songs: (data.songs || []).map((song: Song) => ({
+      ...song,
+      genres: parsePostgresArray(song.genres),
+    })),
+    total: Number(data.total) || 0,
+  };
+};
 
 // Updated Song type definition
 
@@ -76,23 +105,23 @@ export type FilterOptions = {
   showBestLyrically: boolean;
   showBestOverall: boolean;
   sortBy: string;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: "asc" | "desc";
   showMySongs: boolean;
   includeJourneySongs: boolean;
 };
 
 export default function Listen() {
-  const router = useRouter()
-  const { playlistId } = router.query
+  const router = useRouter();
+  const { playlistId } = router.query;
 
-  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null)
-  const [initialLoad, setInitialLoad] = useState(true)
+  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     lyricsAdherence: [],
     isContinuous: "all",
     aiMusic: "all",
     genres: [],
-    aiUsedForLyrics: 'all',
+    aiUsedForLyrics: "all",
     musicModelUsed: "",
     title: "",
     artist: "",
@@ -105,24 +134,24 @@ export default function Listen() {
     showBestMusically: false,
     showBestLyrically: false,
     showBestOverall: false,
-    sortBy: 'mostRecent',
-    sortOrder: 'desc',
+    sortBy: "mostRecent",
+    sortOrder: "desc",
     showMySongs: false,
     includeJourneySongs: false,
-  })
+  });
 
   useEffect(() => {
-    if (playlistId && typeof playlistId === 'string' && initialLoad) {
-      setSelectedPlaylist(playlistId)
-      setFilterOptions(prev => ({ ...prev, playlist_id: playlistId }))
-      setInitialLoad(false)
+    if (playlistId && typeof playlistId === "string" && initialLoad) {
+      setSelectedPlaylist(playlistId);
+      setFilterOptions((prev) => ({ ...prev, playlist_id: playlistId }));
+      setInitialLoad(false);
     }
-  }, [playlistId, initialLoad])
+  }, [playlistId, initialLoad]);
 
   return (
     <TooltipProvider>
-      <ListenContent 
-        selectedPlaylist={selectedPlaylist} 
+      <ListenContent
+        selectedPlaylist={selectedPlaylist}
         setSelectedPlaylist={setSelectedPlaylist}
         filterOptions={filterOptions}
         setFilterOptions={setFilterOptions}
@@ -133,7 +162,7 @@ export default function Listen() {
 
 // Update the FormValues type to match SavePlaylistDialog
 type FormValues = {
-  action: 'create' | 'add';
+  action: "create" | "add";
   playlistId?: string;
   name?: string;
   description?: string;
@@ -142,43 +171,33 @@ type FormValues = {
   cover_art_url?: string;
 };
 
-function ListenContent({ 
+function ListenContent({
   selectedPlaylist: initialSelectedPlaylist,
   setSelectedPlaylist: setParentSelectedPlaylist,
   filterOptions: initialFilterOptions,
-  setFilterOptions: setParentFilterOptions
-}: { 
-  selectedPlaylist: string | null,
-  setSelectedPlaylist: (playlistId: string | null) => void,
-  filterOptions: FilterOptions,
-  setFilterOptions: Dispatch<SetStateAction<FilterOptions>>
+  setFilterOptions: setParentFilterOptions,
+}: {
+  selectedPlaylist: string | null;
+  setSelectedPlaylist: (playlistId: string | null) => void;
+  filterOptions: FilterOptions;
+  setFilterOptions: Dispatch<SetStateAction<FilterOptions>>;
 }) {
-  const router = useRouter()
-  const querySearch = router.query.search as string || ''
+  const router = useRouter();
+  const querySearch = (router.query.search as string) || "";
   const { user } = useAuth(); // useAuth already provides User | null with correct type
-  const { currentSong, isMinimized, isShuffling, queue, updateQueue, registerShuffleLoader, playSong, toggleShuffle } = useMusicPlayer();
-  const isSmallScreen = useMediaQuery("(max-width: 768px)");
-  const { resolvedTheme } = useTheme();
-  
-  const isDark = resolvedTheme === 'dark';
+  const {
+    isShuffling,
+    updateQueue,
+    registerShuffleLoader,
+    playSong,
+    toggleShuffle,
+  } = useMusicPlayer();
 
-  const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-    separator: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.2)',
-    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
-    accentBgMedium: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.15)',
-  };
-
-  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(initialSelectedPlaylist)
-  const [filterOptions, setFilterOptions] = useState<FilterOptions>(initialFilterOptions)
+  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(
+    initialSelectedPlaylist,
+  );
+  const [filterOptions, setFilterOptions] =
+    useState<FilterOptions>(initialFilterOptions);
 
   // Apply filters from query parameters on initial load
   useEffect(() => {
@@ -192,7 +211,7 @@ function ListenContent({
 
     const chapterObj: { [book: string]: number[] } = {};
     chaptersArr.forEach((c) => {
-      const [book, chapter] = c.split(':');
+      const [book, chapter] = c.split(":");
       const ch = Number(chapter);
       if (book && !Number.isNaN(ch)) {
         if (!chapterObj[book]) chapterObj[book] = [];
@@ -209,21 +228,22 @@ function ListenContent({
         bibleVerses: verses.length ? (verses as string[]) : prev.bibleVerses,
       }));
     }
-  }, [router.isReady, router.query.bibleBooks, router.query.bibleChapters, router.query.bibleVerses]);
-
-
+  }, [
+    router.isReady,
+    router.query.bibleBooks,
+    router.query.bibleChapters,
+    router.query.bibleVerses,
+  ]);
 
   // Initialize filterOptions with URL query
-  const [isFilterExpanded, setIsFilterExpanded] = useState(false)
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true)
-  const [page, setPage] = useState(1)
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
   // Debounce filter changes
-  const [debouncedFilters, setDebouncedFilters] = useState(filterOptions)
+  const [debouncedFilters, setDebouncedFilters] = useState(filterOptions);
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedFilters(filterOptions), 500)
-    return () => clearTimeout(handler)
-  }, [filterOptions])
+    const handler = setTimeout(() => setDebouncedFilters(filterOptions), 500);
+    return () => clearTimeout(handler);
+  }, [filterOptions]);
 
   // Build query string for filters
   const buildQueryString = (
@@ -231,95 +251,97 @@ function ListenContent({
     page: number,
     user: User | null,
     selectedPlaylist: string | null,
-    limit?: number
+    limit?: number,
   ) => {
-    const params = new URLSearchParams()
+    const params = new URLSearchParams();
 
     // Add filters to params
-    filters.lyricsAdherence.forEach(value => params.append('lyricsAdherence', value))
-    if (filters.isContinuous !== 'all') {
-      params.append('isContinuous', filters.isContinuous)
+    filters.lyricsAdherence.forEach((value) =>
+      params.append("lyricsAdherence", value),
+    );
+    if (filters.isContinuous !== "all") {
+      params.append("isContinuous", filters.isContinuous);
     }
-    if (filters.aiMusic !== 'all') {
-      params.append('aiMusic', filters.aiMusic)
+    if (filters.aiMusic !== "all") {
+      params.append("aiMusic", filters.aiMusic);
     }
-    filters.genres.forEach(genre => params.append('genres', genre))
-    if (filters.aiUsedForLyrics !== 'all') {
-      params.append('aiUsedForLyrics', filters.aiUsedForLyrics)
+    filters.genres.forEach((genre) => params.append("genres", genre));
+    if (filters.aiUsedForLyrics !== "all") {
+      params.append("aiUsedForLyrics", filters.aiUsedForLyrics);
     }
     if (filters.musicModelUsed) {
-      params.append('musicModelUsed', filters.musicModelUsed)
+      params.append("musicModelUsed", filters.musicModelUsed);
     }
     if (filters.title) {
-      params.append('title', filters.title)
+      params.append("title", filters.title);
     }
     if (filters.artist) {
-      params.append('artist', filters.artist)
+      params.append("artist", filters.artist);
     }
     if (filters.bibleTranslation) {
-      params.append('bibleTranslation', filters.bibleTranslation)
+      params.append("bibleTranslation", filters.bibleTranslation);
     }
-    filters.bibleBooks.forEach(book => params.append('bibleBooks', book))
+    filters.bibleBooks.forEach((book) => params.append("bibleBooks", book));
 
     if (filters.search) {
-      params.append('search', filters.search)
+      params.append("search", filters.search);
     }
 
     // Add bibleChapters to params
     Object.entries(filters.bibleChapters || {}).forEach(([book, chapters]) => {
-      chapters.forEach(chapter => {
-        params.append('bibleChapters', `${book}:${chapter}`)
-      })
-    })
+      chapters.forEach((chapter) => {
+        params.append("bibleChapters", `${book}:${chapter}`);
+      });
+    });
 
     // Add bibleVerses to params
-    filters.bibleVerses.forEach(verse => params.append('bibleVerses', verse))
+    filters.bibleVerses.forEach((verse) => params.append("bibleVerses", verse));
 
     if (selectedPlaylist) {
-      params.append('playlist_id', selectedPlaylist);
+      params.append("playlist_id", selectedPlaylist);
     }
 
     if (filters.showLikedSongs) {
-      params.append('showLikedSongs', 'true');
+      params.append("showLikedSongs", "true");
     }
 
     if (filters.showBestMusically) {
-      params.append('showBestMusically', 'true');
+      params.append("showBestMusically", "true");
     }
 
     if (filters.showBestLyrically) {
-      params.append('showBestLyrically', 'true');
+      params.append("showBestLyrically", "true");
     }
 
     if (filters.showBestOverall) {
-      params.append('showBestOverall', 'true');
+      params.append("showBestOverall", "true");
     }
 
     if (user) {
-      params.append('userId', user.id.toString());
+      params.append("userId", user.id.toString());
     }
 
-    params.append('page', page.toString())
-    params.append('limit', (limit || 20).toString())
+    params.append("page", page.toString());
+    params.append("limit", (limit || 20).toString());
 
     // Add sort options
     if (filters.sortBy) {
-      params.append('sortBy', filters.sortBy);
+      params.append("sortBy", filters.sortBy);
     }
     if (filters.sortOrder) {
-      params.append('sortOrder', filters.sortOrder);
+      params.append("sortOrder", filters.sortOrder);
     }
 
     if (filters.showMySongs && user) {
-      params.append('showMySongs', 'true');
+      params.append("showMySongs", "true");
     }
 
     if (filters.includeJourneySongs) {
-      params.append('includeJourneySongs', 'true');
+      params.append("includeJourneySongs", "true");
     }
 
-    return params.toString()
-  }
+    return params.toString();
+  };
 
   // State to track if more songs are available
   const [hasMore, setHasMore] = useState(true);
@@ -327,12 +349,11 @@ function ListenContent({
   // Fetch playlists
   const { data: userPlaylists } = useSWR(
     user ? `/api/users/${user.id}/playlists` : null,
-    (url) => axios.get(url).then(res => res.data)
+    (url) => axios.get(url).then((res) => res.data),
   );
 
-  const { data: publicPlaylists } = useSWR(
-    `/api/playlists`,
-    (url) => axios.get(url).then(res => res.data.playlists)
+  const { data: publicPlaylists } = useSWR(`/api/playlists`, (url) =>
+    axios.get(url).then((res) => res.data.playlists),
   );
 
   // Merge user playlists and public playlists and sort them
@@ -342,8 +363,12 @@ function ListenContent({
     if (user && userPlaylists) {
       // If user is logged in, merge user playlists and public playlists
       const mergedPlaylists = [...userPlaylists];
-      publicPlaylists?.forEach(publicPlaylist => {
-        if (!mergedPlaylists.some(userPlaylist => userPlaylist.id === publicPlaylist.id)) {
+      publicPlaylists?.forEach((publicPlaylist) => {
+        if (
+          !mergedPlaylists.some(
+            (userPlaylist) => userPlaylist.id === publicPlaylist.id,
+          )
+        ) {
           mergedPlaylists.push(publicPlaylist);
         }
       });
@@ -359,29 +384,23 @@ function ListenContent({
     return combinedPlaylists;
   }, [user, userPlaylists, publicPlaylists]);
 
-  const [playlistSearch, setPlaylistSearch] = useState('')
-  const [isPlaylistPopoverOpen, setIsPlaylistPopoverOpen] = useState(false)
+  const [playlistSearch, setPlaylistSearch] = useState("");
+  const [isPlaylistPopoverOpen, setIsPlaylistPopoverOpen] = useState(false);
 
-  const filteredPlaylists = playlists?.filter(playlist =>
-    playlist.name.toLowerCase().includes(playlistSearch.toLowerCase())
-  ) || []
+  const filteredPlaylists =
+    playlists?.filter((playlist) =>
+      playlist.name.toLowerCase().includes(playlistSearch.toLowerCase()),
+    ) || [];
 
   // Infinite scroll data fetching
-  const {
-    data,
-    error,
-    isValidating,
-    size,
-    setSize,
-    mutate,
-  } = useSWRInfinite(
+  const { data, error, isValidating, size, setSize, mutate } = useSWRInfinite(
     (index) =>
       `/api/songs?${buildQueryString(
         debouncedFilters,
         index + 1,
         user,
         selectedPlaylist,
-        20
+        20,
       )}`,
     fetcher,
     {
@@ -389,26 +408,31 @@ function ListenContent({
       revalidateFirstPage: false,
       onSuccess: (data) => {
         const total = data?.[0]?.total || 0;
-        const loadedSongs = data ? data.flatMap((page) => page.songs).length : 0;
+        const loadedSongs = data
+          ? data.flatMap((page) => page.songs).length
+          : 0;
         setHasMore(loadedSongs < total);
       },
-    }
-  )
+    },
+  );
 
   // Handle playlist selection
   const handlePlaylistSelect = (playlistId: string) => {
     handlePlaylistChange(playlistId);
     setIsPlaylistPopoverOpen(false);
-  }
+  };
 
   // Memoize handlePlaylistChange to prevent unnecessary re-renders and fix linter warning
-  const handlePlaylistChange = useCallback((playlistId: string | null) => {
-    setSelectedPlaylist(playlistId);
-    setParentSelectedPlaylist(playlistId);
-    setFilterOptions(prev => ({ ...prev, playlist_id: playlistId }));
-    setSize(1); // Reset pagination
-    mutate();   // Re-fetch data with new playlist selection
-  }, [mutate, setSize, setParentSelectedPlaylist]);
+  const handlePlaylistChange = useCallback(
+    (playlistId: string | null) => {
+      setSelectedPlaylist(playlistId);
+      setParentSelectedPlaylist(playlistId);
+      setFilterOptions((prev) => ({ ...prev, playlist_id: playlistId }));
+      setSize(1); // Reset pagination
+      mutate(); // Re-fetch data with new playlist selection
+    },
+    [mutate, setSize, setParentSelectedPlaylist],
+  );
 
   // Clear playlist selection
   const clearPlaylistSelection = useCallback(() => {
@@ -416,102 +440,119 @@ function ListenContent({
   }, [handlePlaylistChange]);
 
   // Songs are derived from the data fetched by SWRInfinite
-  const songs = data ? data.flatMap((page) => page.songs) : []
-  const totalSongs = data?.[0]?.total || 0
+  const songs = data ? data.flatMap((page) => page.songs) : [];
+  const totalSongs = data?.[0]?.total || 0;
 
   const fetchAllSongs = useCallback(async (): Promise<Song[]> => {
     // First fetch to get the total count
-    const countQuery = buildQueryString(debouncedFilters, 1, user, selectedPlaylist, 1)
-    const countResult = await fetcher(`/api/songs?${countQuery}`)
-    const total = countResult.total || 0
-    
+    const countQuery = buildQueryString(
+      debouncedFilters,
+      1,
+      user,
+      selectedPlaylist,
+      1,
+    );
+    const countResult = await fetcher(`/api/songs?${countQuery}`);
+    const total = countResult.total || 0;
+
     // If there are songs, fetch all of them
     if (total > 0) {
-      const allQuery = buildQueryString(debouncedFilters, 1, user, selectedPlaylist, total)
-      const result = await fetcher(`/api/songs?${allQuery}`)
-      return result.songs || []
+      const allQuery = buildQueryString(
+        debouncedFilters,
+        1,
+        user,
+        selectedPlaylist,
+        total,
+      );
+      const result = await fetcher(`/api/songs?${allQuery}`);
+      return result.songs || [];
     }
-    return []
-  }, [debouncedFilters, user, selectedPlaylist])
+    return [];
+  }, [debouncedFilters, user, selectedPlaylist]);
 
-
-  const toPlayerSong = useCallback((s: Song) => ({
-    id: s.id,
-    title: s.title,
-    artist: s.artist || s.username,
-    audioUrl: s.audio_url,
-    audio_url: s.audio_url,
-    coverArtUrl: s.song_art_url,
-    duration: s.duration,
-    lyrics: s.lyrics,
-    bible_verses: s.bible_verses,
-    bible_translation_used: s.bible_translation_used,
-    uploaded_by: s.uploaded_by,
-  }), [])
+  const toPlayerSong = useCallback(
+    (s: Song) => ({
+      id: s.id,
+      title: s.title,
+      artist: s.artist || s.username,
+      audioUrl: s.audio_url,
+      audio_url: s.audio_url,
+      coverArtUrl: s.song_art_url,
+      duration: s.duration,
+      lyrics: s.lyrics,
+      bible_verses: s.bible_verses,
+      bible_translation_used: s.bible_translation_used,
+      uploaded_by: s.uploaded_by,
+    }),
+    [],
+  );
 
   // Use refs to avoid dependency issues
-  const fetchAllSongsRef = useRef(fetchAllSongs)
-  const toPlayerSongRef = useRef(toPlayerSong)
-  const updateQueueRef = useRef(updateQueue)
-  
-  useEffect(() => {
-    fetchAllSongsRef.current = fetchAllSongs
-  }, [fetchAllSongs])
-  
-  useEffect(() => {
-    toPlayerSongRef.current = toPlayerSong
-  }, [toPlayerSong])
-  
-  useEffect(() => {
-    updateQueueRef.current = updateQueue
-  }, [updateQueue])
+  const fetchAllSongsRef = useRef(fetchAllSongs);
+  const toPlayerSongRef = useRef(toPlayerSong);
+  const updateQueueRef = useRef(updateQueue);
 
   useEffect(() => {
-    registerShuffleLoader(async () => {
-      const all = await fetchAllSongsRef.current()
-      return all.map(toPlayerSongRef.current)
-    })
-  }, [registerShuffleLoader])
+    fetchAllSongsRef.current = fetchAllSongs;
+  }, [fetchAllSongs]);
+
+  useEffect(() => {
+    toPlayerSongRef.current = toPlayerSong;
+  }, [toPlayerSong]);
+
+  useEffect(() => {
+    updateQueueRef.current = updateQueue;
+  }, [updateQueue]);
+
+  useEffect(() => {
+    return registerShuffleLoader(async () => {
+      const all = await fetchAllSongsRef.current();
+      return all.map(toPlayerSongRef.current);
+    });
+  }, [registerShuffleLoader]);
 
   // Update shuffle queue when filters or playlist change while shuffle is active
   useEffect(() => {
-    if (!isShuffling) return
-    
+    if (!isShuffling) return;
+
     // Use AbortController for proper cleanup
-    const abortController = new AbortController()
-    let timeoutId: NodeJS.Timeout
-    
+    const abortController = new AbortController();
+    let timeoutId: NodeJS.Timeout;
+
     const updateShuffleQueue = async () => {
       // Check if already aborted
-      if (abortController.signal.aborted) return
-      
+      if (abortController.signal.aborted) return;
+
       try {
-        const all = await fetchAllSongsRef.current()
-        
+        const all = await fetchAllSongsRef.current();
+
         // Check again after async operation
-        if (abortController.signal.aborted) return
-        
-        const shuffledSongs = all.map(toPlayerSongRef.current)
+        if (abortController.signal.aborted) return;
+
+        const shuffledSongs = all.map(toPlayerSongRef.current);
         // Only update if we actually have songs that match the current criteria
         if (shuffledSongs.length > 0) {
-          updateQueueRef.current(shuffledSongs)
+          updateQueueRef.current(shuffledSongs);
         }
       } catch (err) {
         // Don't log if it's an abort error
         if (!abortController.signal.aborted) {
-          console.error('Error updating shuffle queue after filter/playlist change:', err)
+          console.error(
+            "Error updating shuffle queue after filter/playlist change:",
+            err,
+          );
         }
       }
-    }
-    
+    };
+
     // Debounce the update to avoid rapid successive calls
-    timeoutId = setTimeout(updateShuffleQueue, 500)
-    
+    timeoutId = setTimeout(updateShuffleQueue, 500);
+
     return () => {
-      clearTimeout(timeoutId)
-      abortController.abort()
-    }
-  }, [isShuffling, debouncedFilters, selectedPlaylist])
+      clearTimeout(timeoutId);
+      abortController.abort();
+    };
+  }, [isShuffling, debouncedFilters, selectedPlaylist]);
 
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0,
@@ -525,59 +566,49 @@ function ListenContent({
     }
   }, [inView, hasMore, isValidating, setSize, size]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY
-      setIsHeaderVisible(scrollPosition < 50)
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   const removeFilter = (filterType: keyof FilterOptions, value?: string) => {
     setFilterOptions((prev) => {
       if (
-        filterType === 'showLikedSongs' ||
-        filterType === 'showBestMusically' ||
-        filterType === 'showBestLyrically' ||
-        filterType === 'showBestOverall' ||
-        filterType === 'showMySongs' // Add this line
+        filterType === "showLikedSongs" ||
+        filterType === "showBestMusically" ||
+        filterType === "showBestLyrically" ||
+        filterType === "showBestOverall" ||
+        filterType === "showMySongs" // Add this line
       ) {
         return {
           ...prev,
           [filterType]: false,
         };
-      } else if (filterType === 'aiUsedForLyrics') {
+      } else if (filterType === "aiUsedForLyrics") {
         return {
           ...prev,
-          aiUsedForLyrics: 'all'  // Reset to 'all' when the tag is removed
-        }
-      } else if (filterType === 'aiMusic') {
-        return {
-          ...prev,
-          aiMusic: 'all'  // Reset to 'all' when the tag is removed
-        }
-      } else if (filterType === 'lyricsAdherence' && value) {
-        return {
-          ...prev,
-          lyricsAdherence: prev.lyricsAdherence.filter(v => v !== value)
+          aiUsedForLyrics: "all", // Reset to 'all' when the tag is removed
         };
-      } else if (filterType === 'genres' && value) {
+      } else if (filterType === "aiMusic") {
         return {
           ...prev,
-          genres: prev.genres.filter(v => v !== value)
+          aiMusic: "all", // Reset to 'all' when the tag is removed
         };
-      } else if (filterType === 'bibleBooks' && value) {
+      } else if (filterType === "lyricsAdherence" && value) {
+        return {
+          ...prev,
+          lyricsAdherence: prev.lyricsAdherence.filter((v) => v !== value),
+        };
+      } else if (filterType === "genres" && value) {
+        return {
+          ...prev,
+          genres: prev.genres.filter((v) => v !== value),
+        };
+      } else if (filterType === "bibleBooks" && value) {
         // Remove the book from bibleBooks
-        const newBibleBooks = prev.bibleBooks.filter(v => v !== value);
+        const newBibleBooks = prev.bibleBooks.filter((v) => v !== value);
 
         // Remove chapters associated with the removed book
         const newBibleChapters = { ...prev.bibleChapters };
         delete newBibleChapters[value]; // Remove the key for the removed book
 
         // Remove verses associated with the removed book's chapters
-        const versesToKeep = prev.bibleVerses.filter(verse => {
+        const versesToKeep = prev.bibleVerses.filter((verse) => {
           // Keep verses that are not in the removed book
           return !verse.startsWith(`${value} `);
         });
@@ -588,9 +619,9 @@ function ListenContent({
           bibleChapters: newBibleChapters,
           bibleVerses: versesToKeep,
         };
-      } else if (filterType === 'bibleChapters' && value) {
+      } else if (filterType === "bibleChapters" && value) {
         // Remove selected chapter
-        const [book, chapter] = value.split(':');
+        const [book, chapter] = value.split(":");
         const chapters = prev.bibleChapters[book] || [];
         const newChapters = chapters.filter((ch) => ch !== Number(chapter));
         const newBibleChapters = { ...prev.bibleChapters, [book]: newChapters };
@@ -601,7 +632,7 @@ function ListenContent({
         }
 
         // Remove verses associated with the removed chapter
-        const versesToKeep = prev.bibleVerses.filter(verse => {
+        const versesToKeep = prev.bibleVerses.filter((verse) => {
           // Keep verses that are not in the removed chapter
           return !verse.startsWith(`${book} ${chapter}:`);
         });
@@ -611,118 +642,128 @@ function ListenContent({
           bibleChapters: newBibleChapters,
           bibleVerses: versesToKeep,
         };
-      } else if (filterType === 'bibleVerses' && value) {
+      } else if (filterType === "bibleVerses" && value) {
         // Remove selected verse
         return {
           ...prev,
           bibleVerses: prev.bibleVerses.filter((v) => v !== value),
         };
-      } else if (filterType === 'search') {
+      } else if (filterType === "search") {
         return {
           ...prev,
-          search: ''
+          search: "",
         };
       } else {
         return {
           ...prev,
-          [filterType]: typeof prev[filterType] === 'boolean' ? false : ''
+          [filterType]: typeof prev[filterType] === "boolean" ? false : "",
         };
       }
     });
   };
 
-  const getFilterTags = (): { type: keyof FilterOptions; label: string; value?: string }[] => {
-    const tags: { type: keyof FilterOptions; label: string; value?: string }[] = []
+  const getFilterTags = (): {
+    type: keyof FilterOptions;
+    label: string;
+    value?: string;
+  }[] => {
+    const tags: { type: keyof FilterOptions; label: string; value?: string }[] =
+      [];
 
     if (filterOptions.search) {
       tags.push({
-        type: 'search',
+        type: "search",
         label: `Search: "${filterOptions.search}"`,
         value: filterOptions.search,
-      })
+      });
     }
 
     if (filterOptions.lyricsAdherence.length > 0) {
-      filterOptions.lyricsAdherence.forEach(value => {
+      filterOptions.lyricsAdherence.forEach((value) => {
         tags.push({
-          type: 'lyricsAdherence',
-          label: `Lyrics: ${value.replace(/_/g, ' ')}`,
-          value
-        })
-      })
+          type: "lyricsAdherence",
+          label: `Lyrics: ${value.replace(/_/g, " ")}`,
+          value,
+        });
+      });
     }
 
     if (filterOptions.isContinuous !== "all") {
       tags.push({
-        type: 'isContinuous',
-        label: `Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`
-      })
+        type: "isContinuous",
+        label: `Passage: ${filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}`,
+      });
     }
 
     if (filterOptions.aiMusic !== "all") {
       tags.push({
-        type: 'aiMusic',
-        label: `Music: ${filterOptions.aiMusic === "true" ? "AI Generated" : "Human Composed"}`
-      })
+        type: "aiMusic",
+        label: `Music: ${filterOptions.aiMusic === "true" ? "AI Generated" : "Human Composed"}`,
+      });
     }
 
     if (filterOptions.genres.length > 0) {
-      filterOptions.genres.forEach(genre => {
+      filterOptions.genres.forEach((genre) => {
         tags.push({
-          type: 'genres',
+          type: "genres",
           label: `Genre: ${genre}`,
-          value: genre
-        })
-      })
+          value: genre,
+        });
+      });
     }
 
-    if (filterOptions.aiUsedForLyrics !== 'all') {
+    if (filterOptions.aiUsedForLyrics !== "all") {
       tags.push({
-        type: 'aiUsedForLyrics',
-        label: `Lyrics: ${filterOptions.aiUsedForLyrics === 'true' ? 'AI Generated' : 'Human Written'}`
-      })
+        type: "aiUsedForLyrics",
+        label: `Lyrics: ${filterOptions.aiUsedForLyrics === "true" ? "AI Generated" : "Human Written"}`,
+      });
     }
 
     if (filterOptions.musicModelUsed) {
       tags.push({
-        type: 'musicModelUsed',
-        label: `Music Model: ${filterOptions.musicModelUsed}`
-      })
+        type: "musicModelUsed",
+        label: `Music Model: ${filterOptions.musicModelUsed}`,
+      });
     }
 
     if (filterOptions.bibleTranslation) {
       tags.push({
-        type: 'bibleTranslation',
-        label: `Translation: ${filterOptions.bibleTranslation}`
-      })
+        type: "bibleTranslation",
+        label: `Translation: ${filterOptions.bibleTranslation}`,
+      });
     }
 
     if (filterOptions.bibleBooks.length > 0) {
       filterOptions.bibleBooks.forEach((book) => {
         tags.push({
-          type: 'bibleBooks',
+          type: "bibleBooks",
           label: `Book: ${book}`,
           value: book,
         });
       });
     }
 
-    if (filterOptions.bibleChapters && Object.keys(filterOptions.bibleChapters).length > 0) {
-      Object.entries(filterOptions.bibleChapters).forEach(([book, chapters]) => {
-        chapters.forEach((chapter) => {
-          tags.push({
-            type: 'bibleChapters',
-            label: `Chapter: ${book} ${chapter}`,
-            value: `${book}:${chapter}`,
+    if (
+      filterOptions.bibleChapters &&
+      Object.keys(filterOptions.bibleChapters).length > 0
+    ) {
+      Object.entries(filterOptions.bibleChapters).forEach(
+        ([book, chapters]) => {
+          chapters.forEach((chapter) => {
+            tags.push({
+              type: "bibleChapters",
+              label: `Chapter: ${book} ${chapter}`,
+              value: `${book}:${chapter}`,
+            });
           });
-        });
-      });
+        },
+      );
     }
 
     if (filterOptions.bibleVerses.length > 0) {
       filterOptions.bibleVerses.forEach((verse) => {
         tags.push({
-          type: 'bibleVerses',
+          type: "bibleVerses",
           label: `Verse: ${verse}`,
           value: verse,
         });
@@ -731,43 +772,44 @@ function ListenContent({
 
     if (filterOptions.showLikedSongs) {
       tags.push({
-        type: 'showLikedSongs',
-        label: 'Liked Songs',
+        type: "showLikedSongs",
+        label: "Liked Songs",
       });
     }
 
     if (filterOptions.showBestMusically) {
       tags.push({
-        type: 'showBestMusically',
-        label: 'Voted Best Musically',
+        type: "showBestMusically",
+        label: "Voted Best Musically",
       });
     }
 
     if (filterOptions.showBestLyrically) {
       tags.push({
-        type: 'showBestLyrically',
-        label: 'Voted Best Lyrically',
+        type: "showBestLyrically",
+        label: "Voted Best Lyrically",
       });
     }
 
     if (filterOptions.showBestOverall) {
       tags.push({
-        type: 'showBestOverall',
-        label: 'Voted Best Overall',
+        type: "showBestOverall",
+        label: "Voted Best Overall",
       });
     }
 
     if (filterOptions.showMySongs) {
       tags.push({
-        type: 'showMySongs',
-        label: 'My Songs',
+        type: "showMySongs",
+        label: "My Songs",
       });
     }
 
-    return tags
-  }
+    return tags;
+  };
 
-  const [isSavePlaylistDialogOpen, setIsSavePlaylistDialogOpen] = useState(false);
+  const [isSavePlaylistDialogOpen, setIsSavePlaylistDialogOpen] =
+    useState(false);
 
   // New state variables for image cropping
   const [isCropperOpen, setIsCropperOpen] = useState(false);
@@ -779,15 +821,16 @@ function ListenContent({
   };
 
   const buildFileFromCrop = (blob: Blob, metadata?: CropResultMetadata) => {
-    const mimeType = metadata?.mimeType || blob.type || 'image/jpeg';
+    const mimeType = metadata?.mimeType || blob.type || "image/jpeg";
     const extension = getExtensionFromMimeType(mimeType);
     const fallbackName = `playlist-cover-${Date.now()}`;
     const derivedBase = metadata?.suggestedFileName
       ? stripFileExtension(metadata.suggestedFileName)
       : metadata?.originalFileName
         ? stripFileExtension(metadata.originalFileName)
-        : '';
-    const baseName = derivedBase && derivedBase.length > 0 ? derivedBase : fallbackName;
+        : "";
+    const baseName =
+      derivedBase && derivedBase.length > 0 ? derivedBase : fallbackName;
     const fileName = metadata?.suggestedFileName || `${baseName}.${extension}`;
     return new File([blob], fileName, { type: mimeType });
   };
@@ -801,7 +844,10 @@ function ListenContent({
     setCropImageUrl(null);
   };
 
-  const handleImageCropperComplete = (blob: Blob, metadata?: CropResultMetadata) => {
+  const handleImageCropperComplete = (
+    blob: Blob,
+    metadata?: CropResultMetadata,
+  ) => {
     const file = buildFileFromCrop(blob, metadata);
     onImageCropComplete(file);
   };
@@ -810,30 +856,40 @@ function ListenContent({
   const uploadCoverArt = async (file: File) => {
     if (!user) return;
     if (!(file instanceof File)) {
-      toast.error('Invalid cover art file provided');
-      console.error('Expected File when uploading cover art but received', file);
+      toast.error("Invalid cover art file provided");
+      console.error(
+        "Expected File when uploading cover art but received",
+        file,
+      );
       return;
     }
 
     try {
-      const uploadResult = await uploadFile(file, 'image', Number(user.id), 'playlist_cover');
-      if (typeof uploadResult === 'string') {
+      const uploadResult = await uploadFile(
+        file,
+        "image",
+        Number(user.id),
+        "playlist_cover",
+      );
+      if (typeof uploadResult === "string") {
         throw new Error(uploadResult);
       }
 
       const { fileKey } = uploadResult;
-      formRef.current?.setValue('cover_art_url', fileKey, { shouldValidate: true });
-      formRef.current?.setValue('coverArtFile', file, { shouldValidate: true });
-      toast.success('Cover art uploaded');
+      formRef.current?.setValue("cover_art_url", fileKey, {
+        shouldValidate: true,
+      });
+      formRef.current?.setValue("coverArtFile", file, { shouldValidate: true });
+      toast.success("Cover art uploaded");
     } catch (error) {
-      console.error('Error uploading cover art:', error);
-      toast.error('Failed to upload cover art');
+      console.error("Error uploading cover art:", error);
+      toast.error("Failed to upload cover art");
     }
   };
 
   const handleSavePlaylist = () => {
-    setIsSavePlaylistDialogOpen(true)
-  }
+    setIsSavePlaylistDialogOpen(true);
+  };
 
   const formRef = useRef<UseFormReturn<FormValues>>(null);
 
@@ -850,728 +906,505 @@ function ListenContent({
 
   // Update parent filterOptions when local state changes
   useEffect(() => {
-    setParentFilterOptions(filterOptions)
-  }, [filterOptions, setParentFilterOptions])
+    setParentFilterOptions(filterOptions);
+  }, [filterOptions, setParentFilterOptions]);
 
   // Add this useEffect to synchronize the search term
   useEffect(() => {
     if (querySearch) {
-      setFilterOptions(prev => ({ ...prev, search: querySearch }))
+      setFilterOptions((prev) => ({ ...prev, search: querySearch }));
     }
-  }, [querySearch])
+  }, [querySearch]);
+
+  const resetFilters = () =>
+    setFilterOptions({
+      lyricsAdherence: [],
+      isContinuous: "all",
+      aiMusic: "all",
+      genres: [],
+      aiUsedForLyrics: "all",
+      musicModelUsed: "",
+      title: "",
+      artist: "",
+      bibleTranslation: "",
+      bibleBooks: [],
+      search: "",
+      bibleChapters: {},
+      bibleVerses: [],
+      showLikedSongs: false,
+      showBestMusically: false,
+      showBestLyrically: false,
+      showBestOverall: false,
+      sortBy: "mostRecent",
+      sortOrder: "desc",
+      showMySongs: false,
+      includeJourneySongs: false,
+    });
+
+  const [isStartingPlayback, setIsStartingPlayback] = useState(false);
+  const playCollection = async (shuffle: boolean) => {
+    if (isStartingPlayback) return;
+    setIsStartingPlayback(true);
+    try {
+      const allSongs = await fetchAllSongs();
+      if (!allSongs.length) {
+        toast.error("No songs to play");
+        return;
+      }
+      const playerSongs = allSongs.map(toPlayerSong);
+      updateQueue(playerSongs);
+      if (isShuffling !== shuffle) toggleShuffle();
+      playSong(
+        playerSongs[
+          shuffle ? Math.floor(Math.random() * playerSongs.length) : 0
+        ],
+        playerSongs,
+      );
+      toast.success(
+        `${shuffle ? "Shuffling" : "Playing"} ${allSongs.length} songs`,
+      );
+    } catch (failure) {
+      console.error("Error playing songs:", failure);
+      toast.error("Could not start playback. Please try again.");
+    } finally {
+      setIsStartingPlayback(false);
+    }
+  };
+
+  const activeTags = getFilterTags();
+  const activePlaylist = playlists?.find(
+    (playlist) => playlist.id.toString() === selectedPlaylist,
+  );
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen" style={{ backgroundColor: theme.bg }}>
-        <Head>
-          <title>BibleChorus - Listen</title>
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
+      <Head>
+        <title>Listen · BibleChorus</title>
+        <meta
+          name="description"
+          content="Discover Bible-inspired music by passage, genre, artist, and more."
+        />
+      </Head>
+      <main className="page-shell">
+        <header className="page-header flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+          <div>
+            <p className="page-eyebrow flex items-center gap-2">
+              <ListMusic className="h-4 w-4" /> Scripture, with a soundtrack
+            </p>
+            <h1 className="page-title">Let the Word stay with you.</h1>
+            <p className="page-description">
+              Find music for the passage you’re reading, the season you’re in,
+              or the moment you need.
+            </p>
+          </div>
+          <p className="shrink-0 text-sm text-muted-foreground">
+            {data
+              ? `${totalSongs.toLocaleString()} songs to discover`
+              : "Discover the music library"}
+          </p>
+        </header>
 
-        <motion.div
-          className="sticky z-20 backdrop-blur-2xl shadow-lg"
-          style={{ 
-            top: 'var(--top-bar-height, 4rem)',
-            backgroundColor: isDark ? 'rgba(10, 10, 10, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-            borderBottom: `1px solid ${theme.border}`
-          }}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+        <section
+          aria-label="Library controls"
+          className="surface-card mb-6 p-4 sm:p-5"
         >
-          {/* Smart Header with Filter Preview */}
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              {/* Title and Stats */}
-              <div className="flex items-center gap-4">
-                <motion.h1 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
-                  className="text-2xl lg:text-3xl font-bold"
-                  style={{ fontFamily: "'Italiana', serif", color: theme.accent }}
-                >
-                  Listen
-                </motion.h1>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  className="px-3 py-1 rounded-full"
-                  style={{ 
-                    backgroundColor: theme.accentBgLight,
-                    border: `1px solid ${theme.border}`
-                  }}
-                >
-                  <span className="text-sm font-medium" style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}>
-                    {totalSongs.toLocaleString()} songs
-                  </span>
-                </motion.div>
-              </div>
-
-              {/* Filter Preview and Quick Actions */}
-              <motion.div 
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="flex items-center gap-3"
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="relative min-w-0 flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                aria-label="Search songs"
+                placeholder="Search songs, artists, or Scripture…"
+                value={filterOptions.search}
+                onChange={(event) =>
+                  setFilterOptions((previous) => ({
+                    ...previous,
+                    search: event.target.value,
+                  }))
+                }
+                className="h-12 pl-10"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant={isFilterExpanded ? "secondary" : "outline"}
+                aria-expanded={isFilterExpanded}
+                aria-controls="listen-filters"
+                onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+                className="h-11"
               >
-                {/* Quick Action Buttons */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsFilterExpanded(!isFilterExpanded)}
-                  className="h-9 px-3 backdrop-blur-sm transition-all duration-300"
-                  style={{
-                    backgroundColor: getFilterTags().length > 0 ? theme.accentBgLight : theme.hoverBg,
-                    borderColor: getFilterTags().length > 0 ? theme.borderHover : theme.border,
-                    color: getFilterTags().length > 0 ? theme.accent : theme.text,
-                    fontFamily: "'Manrope', sans-serif"
-                  }}
-                >
-                  <Filter className="h-4 w-4 mr-2" style={{ color: getFilterTags().length > 0 ? theme.accent : theme.textSecondary }} />
-                  Filters
-                  {getFilterTags().length > 0 && (
-                    <span className="ml-2 px-1.5 py-0.5 text-xs rounded-full" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent }}>
-                      {getFilterTags().length}
-                    </span>
-                  )}
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsSortExpanded(!isSortExpanded)}
-                  className="h-9 px-3 backdrop-blur-sm transition-all duration-300"
-                  style={{
-                    backgroundColor: theme.hoverBg,
-                    borderColor: theme.border,
-                    color: theme.text,
-                    fontFamily: "'Manrope', sans-serif"
-                  }}
-                >
-                  <ArrowUpDown className="h-4 w-4 mr-2" style={{ color: theme.textSecondary }} />
-                  Sort
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsPlaylistExpanded(!isPlaylistExpanded)}
-                  className="h-9 px-3 backdrop-blur-sm transition-all duration-300"
-                  style={{
-                    backgroundColor: selectedPlaylist ? theme.accentBgLight : theme.hoverBg,
-                    borderColor: selectedPlaylist ? theme.borderHover : theme.border,
-                    color: selectedPlaylist ? theme.accent : theme.text,
-                    fontFamily: "'Manrope', sans-serif"
-                  }}
-                >
-                  <ListMusic className="h-4 w-4 mr-2" style={{ color: selectedPlaylist ? theme.accent : theme.textSecondary }} />
-                  Playlists
-                  {selectedPlaylist && (
-                    <span className="ml-2 w-2 h-2 rounded-full" style={{ backgroundColor: theme.accent }}></span>
-                  )}
-                </Button>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsNarrowView(!isNarrowView)}
-                      className="h-9 w-9 p-0 backdrop-blur-sm transition-all duration-300"
-                      style={{
-                        backgroundColor: theme.hoverBg,
-                        borderColor: theme.border,
-                        color: theme.textSecondary
-                      }}
-                    >
-                      {isNarrowView ? (
-                        <Expand className="h-4 w-4" />
-                      ) : (
-                        <Shrink className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{isNarrowView ? 'Expand view' : 'Narrow view'}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </motion.div>
+                <Filter className="mr-2 h-4 w-4" /> Filters
+                {activeTags.length > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="ml-2 rounded-full px-1.5"
+                  >
+                    {activeTags.length}
+                  </Badge>
+                )}
+              </Button>
+              <Button
+                variant={isSortExpanded ? "secondary" : "outline"}
+                aria-expanded={isSortExpanded}
+                aria-controls="listen-sort"
+                onClick={() => setIsSortExpanded(!isSortExpanded)}
+                className="h-11"
+              >
+                <ArrowUpDown className="mr-2 h-4 w-4" /> Sort
+              </Button>
+              <Button
+                variant={isPlaylistExpanded ? "secondary" : "outline"}
+                aria-expanded={isPlaylistExpanded}
+                aria-controls="listen-playlists"
+                onClick={() => setIsPlaylistExpanded(!isPlaylistExpanded)}
+                className="h-11"
+              >
+                <ListMusic className="mr-2 h-4 w-4" /> Playlists
+              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-11 w-11"
+                    onClick={() => setIsNarrowView(!isNarrowView)}
+                    aria-label={
+                      isNarrowView
+                        ? "Expand song details"
+                        : "Use compact song view"
+                    }
+                    aria-pressed={isNarrowView}
+                  >
+                    {isNarrowView ? (
+                      <Expand className="h-4 w-4" />
+                    ) : (
+                      <Shrink className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isNarrowView ? "Expand song details" : "Compact song view"}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
-
-
-
-          {/* Enhanced Filter Section */}
-          <AnimatePresence>
-            {isFilterExpanded && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="container mx-auto px-4 pb-4"
-              >
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                  className="backdrop-blur-2xl rounded-2xl shadow-xl p-6"
-                  style={{
-                    backgroundColor: theme.bgCard,
-                    border: `1px solid ${theme.border}`
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold" style={{ fontFamily: "'Italiana', serif", color: theme.accent }}>
-                      Filters & Search
-                    </h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsFilterExpanded(false)}
-                      className="h-8 w-8 p-0 rounded-lg transition-all duration-300"
-                      style={{ color: theme.textSecondary }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <Filters 
-                    filterOptions={filterOptions} 
-                    setFilterOptions={setFilterOptions}
-                    setIsFilterExpanded={setIsFilterExpanded}
-                  />
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Enhanced Sort Section */}
-          <AnimatePresence>
-            {isSortExpanded && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="container mx-auto px-4 pb-4"
-              >
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                  className="backdrop-blur-2xl rounded-2xl shadow-xl p-6"
-                  style={{
-                    backgroundColor: theme.bgCard,
-                    border: `1px solid ${theme.border}`
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold" style={{ fontFamily: "'Italiana', serif", color: theme.accent }}>
-                      Sort Options
-                    </h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsSortExpanded(false)}
-                      className="h-8 w-8 p-0 rounded-lg transition-all duration-300"
-                      style={{ color: theme.textSecondary }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <SortOptions
-                    filterOptions={filterOptions as FilterOptions}
-                    setFilterOptions={setFilterOptions}
-                    setIsSortExpanded={setIsSortExpanded}
-                  />
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Enhanced Playlist Section */}
-          <AnimatePresence>
-            {isPlaylistExpanded && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="container mx-auto px-4 pb-4"
-              >
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                  className="backdrop-blur-2xl rounded-2xl shadow-xl p-6"
-                  style={{
-                    backgroundColor: theme.bgCard,
-                    border: `1px solid ${theme.border}`
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold" style={{ fontFamily: "'Italiana', serif", color: theme.accent }}>
-                      Playlist Management
-                    </h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsPlaylistExpanded(false)}
-                      className="h-8 w-8 p-0 rounded-lg transition-all duration-300"
-                      style={{ color: theme.textSecondary }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-6">
-                    {/* Current Playlist Section */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className="flex items-center gap-3">
-                          {selectedPlaylist && (
-                            <div className="w-12 h-12 relative flex-shrink-0 group">
-                              <Image
-                                src={playlists?.find((p) => p.id.toString() === selectedPlaylist)?.cover_art_url || '/biblechorus-icon.png'}
-                                alt="Playlist cover"
-                                layout="fill"
-                                objectFit="cover"
-                                className="rounded-xl transition-transform group-hover:scale-105"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-400/16 to-purple-400/16 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            </div>
-                          )}
-                          
-                          <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" className="h-12 px-4 backdrop-blur-sm transition-all duration-300 rounded-xl min-w-[200px] justify-start" style={{ backgroundColor: theme.hoverBg, borderColor: theme.border }}>
-                                <div className="flex items-center gap-3 overflow-hidden">
-                                  <ListMusic className="h-4 w-4 flex-shrink-0" style={{ color: theme.accent }} />
-                                  <div className="flex flex-col items-start min-w-0">
-                                    <span className="font-medium text-sm truncate">
-                                      {selectedPlaylist
-                                        ? playlists?.find(p => p.id.toString() === selectedPlaylist)?.name
-                                        : 'Select Playlist'}
-                                    </span>
-                                    {selectedPlaylist && (
-                                      <span className="text-xs text-slate-500 dark:text-slate-400">
-                                        {playlists?.find(p => p.id.toString() === selectedPlaylist)?.song_count || 0} songs
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                {selectedPlaylist && (
-                                  <X
-                                    className="h-4 w-4 flex-shrink-0 hover:text-red-500 ml-auto transition-colors"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      clearPlaylistSelection();
-                                    }}
-                                  />
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80 p-0 backdrop-blur-xl rounded-2xl shadow-2xl" style={{ backgroundColor: theme.bgCard, border: `1px solid ${theme.border}` }}>
-                              <div className="p-4">
-                                <div className="flex items-center gap-2 mb-4">
-                                  <Search className="h-4 w-4" style={{ color: theme.textSecondary }} />
-                                  <Input
-                                    placeholder="Search playlists..."
-                                    value={playlistSearch}
-                                    onChange={(e) => setPlaylistSearch(e.target.value)}
-                                    className="h-9 backdrop-blur-sm rounded-lg"
-                                    style={{ backgroundColor: theme.hoverBg, borderColor: theme.border }}
-                                  />
-                                </div>
-                                <ScrollArea className="h-[300px]">
-                                  <div className="space-y-1">
-                                    {filteredPlaylists.map((playlist) => (
-                                      <motion.div
-                                        key={playlist.id}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200"
-                                        style={{
-                                          backgroundColor: selectedPlaylist === playlist.id.toString() ? theme.accentBgLight : 'transparent',
-                                          border: selectedPlaylist === playlist.id.toString() ? `1px solid ${theme.borderHover}` : '1px solid transparent'
-                                        }}
-                                        onClick={() => handlePlaylistSelect(playlist.id.toString())}
-                                      >
-                                        <div className="w-10 h-10 relative flex-shrink-0">
-                                          <Image
-                                            src={playlist.cover_art_url || '/biblechorus-icon.png'}
-                                            alt={playlist.name}
-                                            layout="fill"
-                                            objectFit="cover"
-                                            className="rounded-lg"
-                                          />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="font-medium text-sm truncate" style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}>
-                                            {playlist.name}
-                                          </div>
-                                          <div className="text-xs" style={{ color: theme.textSecondary }}>
-                                            {playlist.song_count || 0} songs
-                                          </div>
-                                        </div>
-                                        {selectedPlaylist === playlist.id.toString() && (
-                                          <Check className="h-4 w-4 flex-shrink-0" style={{ color: theme.accent }} />
-                                        )}
-                                      </motion.div>
-                                    ))}
-                                  </div>
-                                </ScrollArea>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                        
-                        {/* Quick Playlist Actions */}
-                        {selectedPlaylist && (
-                          <motion.div 
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.4 }}
-                            className="hidden sm:flex items-center gap-2"
-                          >
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-9 px-3 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm border-slate-200/50 dark:border-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-700/80"
-                            >
-                              <Edit className="h-3 w-3 mr-1" />
-                              Edit
-                            </Button>
-                          </motion.div>
-                        )}
-                      </div>
-
-                      {/* Save Button */}
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          onClick={handleSavePlaylist}
-                          className="h-12 px-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] rounded-xl font-medium"
-                          style={{ 
-                            backgroundColor: theme.accent,
-                            fontFamily: "'Manrope', sans-serif"
-                          }}
-                        >
-                          <Save className="h-4 w-4 mr-2" />
-                          Save Playlist
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        <main className="container mx-auto px-2 sm:px-4 py-6">
-          {/* Enhanced Active Filters Display */}
-          {getFilterTags().length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="backdrop-blur-xl rounded-2xl p-4 mb-6"
-              style={{ 
-                backgroundColor: theme.bgCard,
-                border: `1px solid ${theme.border}`
-              }}
+          {isFilterExpanded && (
+            <div
+              id="listen-filters"
+              className="mt-5 border-t border-border pt-5"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4" style={{ color: theme.accent }} />
-                    <span className="text-sm font-medium" style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}>
-                      Active Filters ({getFilterTags().length})
-                    </span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setFilterOptions({
-                      lyricsAdherence: [],
-                      isContinuous: "all",
-                      aiMusic: "all", 
-                      genres: [],
-                      aiUsedForLyrics: 'all',
-                      musicModelUsed: "",
-                      title: "",
-                      artist: "",
-                      bibleTranslation: "",
-                      bibleBooks: [],
-                      search: "",
-                      bibleChapters: {},
-                      bibleVerses: [],
-                      showLikedSongs: false,
-                      showBestMusically: false,
-                      showBestLyrically: false,
-                      showBestOverall: false,
-                      sortBy: 'mostRecent',
-                      sortOrder: 'desc',
-                      showMySongs: false,
-                      includeJourneySongs: false,
-                    })}
-                    className="h-8 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  >
-                    Clear All
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {getFilterTags().map((tag, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Badge 
-                        variant="secondary" 
-                        className="flex items-center gap-2 px-3 py-1.5 transition-all duration-200 rounded-lg"
-                        style={{
-                          backgroundColor: theme.accentBgLight,
-                          border: `1px solid ${theme.borderHover}`,
-                          color: theme.text
-                        }}
-                      >
-                        <span className="text-sm" style={{ fontFamily: "'Manrope', sans-serif" }}>{tag.label}</span>
-                        <button
-                          onClick={() => removeFilter(tag.type, tag.value)}
-                          className="ml-1 hover:text-red-500 transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    </motion.div>
-                  ))}
-                </div>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-base font-semibold">Find your sound</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Close filters"
+                  onClick={() => setIsFilterExpanded(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            </motion.div>
-          )}
-
-          {/* Enhanced Song List Container */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="backdrop-blur-xl rounded-3xl p-3 sm:p-6 shadow-xl"
-            style={{ 
-              backgroundColor: theme.bgCard,
-              border: `1px solid ${theme.border}`
-            }}
-          >
-            {songs.length > 0 ? (
-              <div className="space-y-4">
-                {/* Song Count and Quick Actions */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4" style={{ borderBottom: `1px solid ${theme.border}` }}>
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-lg font-semibold" style={{ color: theme.text, fontFamily: "'Italiana', serif" }}>
-                      {totalSongs.toLocaleString()} Songs
-                    </h2>
-                  </div>
-                  
-                  {/* Quick Actions */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          const allSongs = await fetchAllSongs();
-                          if (allSongs.length > 0) {
-                            const playerSongs = allSongs.map(toPlayerSong);
-                            updateQueue(playerSongs);
-                            if (!isShuffling) {
-                              toggleShuffle();
-                            }
-                            const firstSong = playerSongs[0];
-                            playSong(firstSong, playerSongs);
-                            toast.success(`Shuffling ${allSongs.length} songs`);
-                          } else {
-                            toast.error('No songs to shuffle');
-                          }
-                        } catch (error) {
-                          console.error('Error shuffling songs:', error);
-                          toast.error('Failed to shuffle songs');
-                        }
-                      }}
-                      className="h-9 px-4 backdrop-blur-sm rounded-lg transition-all duration-300"
-                      style={{ 
-                        backgroundColor: theme.hoverBg,
-                        borderColor: theme.border,
-                        color: theme.text,
-                        fontFamily: "'Manrope', sans-serif"
-                      }}
-                    >
-                      <Shuffle className="h-4 w-4 mr-2" style={{ color: theme.accent }} />
-                      Shuffle All
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          const allSongs = await fetchAllSongs();
-                          if (allSongs.length > 0) {
-                            const playerSongs = allSongs.map(toPlayerSong);
-                            updateQueue(playerSongs);
-                            if (isShuffling) {
-                              toggleShuffle();
-                            }
-                            const firstSong = playerSongs[0];
-                            playSong(firstSong, playerSongs);
-                            toast.success(`Playing ${allSongs.length} songs`);
-                          } else {
-                            toast.error('No songs to play');
-                          }
-                        } catch (error) {
-                          console.error('Error playing songs:', error);
-                          toast.error('Failed to play songs');
-                        }
-                      }}
-                      className="h-9 px-4 backdrop-blur-sm rounded-lg transition-all duration-300"
-                      style={{ 
-                        backgroundColor: theme.hoverBg,
-                        borderColor: theme.border,
-                        color: theme.text,
-                        fontFamily: "'Manrope', sans-serif"
-                      }}
-                    >
-                      <PlayCircle className="h-4 w-4 mr-2" style={{ color: theme.accent }} />
-                      Play All
-                    </Button>
-                  </div>
-                </div>
-
-                <SongList
-                  songs={songs}
-                  isNarrowView={isNarrowView}
-                  totalSongs={totalSongs}
-                  fetchAllSongs={fetchAllSongs}
-                />
-                
-                {hasMore && (
-                  <>
-                    {isValidating && <SongListSkeleton />}
-                    {/* Sentinel for infinite scroll */}
-                    <div ref={loadMoreRef} className="h-1" />
-                  </>
-                )}
-              </div>
-            ) : isValidating ? (
-              // Enhanced loading state
-              <div className="space-y-6">
-                <div className="flex items-center justify-center py-12">
-                  <div className="space-y-4 text-center">
-                    <div className="relative">
-                      <div className="animate-spin rounded-full h-16 w-16 border-4 mx-auto" style={{ borderColor: theme.border, borderTopColor: theme.accent }}></div>
-                      <div className="absolute inset-0 rounded-full animate-pulse" style={{ backgroundColor: theme.accentBgLight }}></div>
-                    </div>
-                    <p className="text-lg" style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}>Loading songs...</p>
-                  </div>
-                </div>
-                <SongListSkeleton />
-              </div>
-            ) : (
-              // Enhanced empty state
-              <div className="text-center py-16">
-                <div className="relative mb-6">
-                  <PlayCircle className="w-16 h-16 mx-auto" style={{ color: theme.textSecondary }} />
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full opacity-20" style={{ backgroundColor: theme.accent }}></div>
-                </div>
-                <h3 className="text-2xl font-semibold mb-3" style={{ color: theme.text, fontFamily: "'Italiana', serif" }}>No songs found</h3>
-                <p className="mb-6 text-lg max-w-md mx-auto" style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}>
-                  {getFilterTags().length > 0 
-                    ? "Try adjusting your filters to find more songs"
-                    : "Start exploring our collection of Bible-inspired music!"}
-                </p>
-                {getFilterTags().length > 0 && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setFilterOptions({
-                      lyricsAdherence: [],
-                      isContinuous: "all",
-                      aiMusic: "all", 
-                      genres: [],
-                      aiUsedForLyrics: 'all',
-                      musicModelUsed: "",
-                      title: "",
-                      artist: "",
-                      bibleTranslation: "",
-                      bibleBooks: [],
-                      search: "",
-                      bibleChapters: {},
-                      bibleVerses: [],
-                      showLikedSongs: false,
-                      showBestMusically: false,
-                      showBestLyrically: false,
-                      showBestOverall: false,
-                      sortBy: 'mostRecent',
-                      sortOrder: 'desc',
-                      showMySongs: false,
-                      includeJourneySongs: false,
-                    })}
-                    className="h-12 px-6 border-2 hover:scale-105 transition-all duration-300 rounded-xl"
-                    style={{ 
-                      borderColor: theme.accent, 
-                      color: theme.accent,
-                      fontFamily: "'Manrope', sans-serif"
-                    }}
-                  >
-                    Clear All Filters
-                  </Button>
-                )}
-              </div>
-            )}
-          </motion.div>
-        </main>
-
-
-
-        {/* Add SavePlaylistDialog */}
-        <SavePlaylistDialog
-          isOpen={isSavePlaylistDialogOpen}
-          onClose={() => setIsSavePlaylistDialogOpen(false)}
-          songs={songs}
-          filterOptions={filterOptions}
-          playlists={playlists}
-          user={user ? { ...user, id: user.id.toString() } : null}
-          onImageCropComplete={onImageCropComplete}
-          openImageCropper={openImageCropper}
-          formRef={formRef}
-        />
-
-        {/* Image Cropper Dialog */}
-        <Dialog
-          open={isCropperOpen}
-          onOpenChange={(open) => {
-            setIsCropperOpen(open);
-            if (!open) {
-              setCropImageUrl(null);
-            }
-          }}
-        >
-          <DialogContent>
-            {cropImageUrl && (
-              <ImageCropper
-                imageUrl={cropImageUrl}
-                onCropComplete={handleImageCropperComplete}
-                onCancel={() => {
-                  setIsCropperOpen(false);
-                  setCropImageUrl(null);
-                }}
-                maxHeight={500} // Added maxHeight prop
+              <Filters
+                filterOptions={filterOptions}
+                setFilterOptions={setFilterOptions}
+                setIsFilterExpanded={setIsFilterExpanded}
               />
+            </div>
+          )}
+          {isSortExpanded && (
+            <div id="listen-sort" className="mt-5 border-t border-border pt-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-base font-semibold">
+                  Put the favorites first
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Close sorting"
+                  onClick={() => setIsSortExpanded(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <SortOptions
+                filterOptions={filterOptions}
+                setFilterOptions={setFilterOptions}
+                setIsSortExpanded={setIsSortExpanded}
+              />
+            </div>
+          )}
+          {isPlaylistExpanded && (
+            <div
+              id="listen-playlists"
+              className="mt-5 flex flex-wrap items-center gap-3 border-t border-border pt-5"
+            >
+              <Popover
+                open={isPlaylistPopoverOpen}
+                onOpenChange={setIsPlaylistPopoverOpen}
+              >
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-11 max-w-full gap-2">
+                    <ListMusic className="h-4 w-4 shrink-0" />
+                    <span className="truncate">
+                      {activePlaylist?.name || "Choose a playlist"}
+                    </span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 max-w-[calc(100vw-2rem)] p-3">
+                  <Input
+                    aria-label="Search playlists"
+                    placeholder="Search playlists…"
+                    value={playlistSearch}
+                    onChange={(event) => setPlaylistSearch(event.target.value)}
+                    className="mb-3"
+                  />
+                  <ScrollArea className="h-72">
+                    <div className="space-y-1">
+                      {filteredPlaylists.map((playlist) => (
+                        <button
+                          type="button"
+                          key={playlist.id}
+                          onClick={() =>
+                            handlePlaylistSelect(playlist.id.toString())
+                          }
+                          className={cn(
+                            "flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            selectedPlaylist === playlist.id.toString() &&
+                              "bg-primary/10",
+                          )}
+                        >
+                          <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md">
+                            <Image
+                              src={
+                                playlist.cover_art_url ||
+                                "/biblechorus-icon.png"
+                              }
+                              alt=""
+                              fill
+                              sizes="36px"
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
+                              {playlist.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {playlist.song_count || 0} songs
+                            </p>
+                          </div>
+                          {selectedPlaylist === playlist.id.toString() && (
+                            <Check className="h-4 w-4 text-primary" />
+                          )}
+                        </button>
+                      ))}
+                      {!filteredPlaylists.length && (
+                        <p className="py-8 text-center text-sm text-muted-foreground">
+                          No playlists match your search.
+                        </p>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
+              {selectedPlaylist && (
+                <>
+                  <Button variant="ghost" onClick={clearPlaylistSelection}>
+                    <X className="mr-2 h-4 w-4" /> Clear selection
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      router.push(`/playlists/${selectedPlaylist}`)
+                    }
+                  >
+                    <Edit className="mr-2 h-4 w-4" /> Open playlist
+                  </Button>
+                </>
+              )}
+              <Button onClick={handleSavePlaylist} className="sm:ml-auto">
+                <Save className="mr-2 h-4 w-4" /> Save collection
+              </Button>
+            </div>
+          )}
+        </section>
+
+        {(activeTags.length > 0 || selectedPlaylist) && (
+          <div
+            className="mb-6 flex flex-wrap items-center gap-2"
+            aria-label="Active library filters"
+          >
+            {selectedPlaylist && (
+              <Badge variant="secondary" className="gap-2 rounded-full py-2">
+                {activePlaylist?.name || "Selected playlist"}
+                <button
+                  type="button"
+                  onClick={clearPlaylistSelection}
+                  aria-label="Remove playlist filter"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
             )}
-          </DialogContent>
-        </Dialog>
-      </div>
+            {activeTags.map((tag, index) => (
+              <Badge
+                variant="secondary"
+                key={`${tag.type}-${tag.value || index}`}
+                className="gap-2 rounded-full py-2 font-normal"
+              >
+                {tag.label}
+                <button
+                  type="button"
+                  aria-label={`Remove ${tag.label}`}
+                  onClick={() => removeFilter(tag.type, tag.value)}
+                  className="rounded-full hover:text-destructive"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            {activeTags.length > 0 && (
+              <Button size="sm" variant="ghost" onClick={resetFilters}>
+                Clear filters
+              </Button>
+            )}
+          </div>
+        )}
+
+        <section className="surface-card p-3 sm:p-6" aria-label="Songs">
+          {error && (
+            <div
+              role="alert"
+              className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4"
+            >
+              <div>
+                <h2 className="font-semibold">We couldn’t load the songs.</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Please try again in a moment.
+                </p>
+              </div>
+              <Button variant="outline" onClick={() => mutate()}>
+                Try again
+              </Button>
+            </div>
+          )}
+          {songs.length > 0 ? (
+            <>
+              <div className="mb-5 flex flex-col justify-between gap-4 border-b border-border pb-5 sm:flex-row sm:items-center">
+                <div>
+                  <h2 className="text-xl font-semibold">
+                    {activePlaylist?.name || "The music library"}
+                  </h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {totalSongs.toLocaleString()} songs
+                    {activeTags.length
+                      ? " in this collection"
+                      : ", one shared story"}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => playCollection(true)}
+                    disabled={isStartingPlayback}
+                  >
+                    <Shuffle className="mr-2 h-4 w-4" /> Shuffle
+                  </Button>
+                  <Button
+                    onClick={() => playCollection(false)}
+                    disabled={isStartingPlayback}
+                  >
+                    <PlayCircle className="mr-2 h-4 w-4" />{" "}
+                    {isStartingPlayback ? "Loading…" : "Play all"}
+                  </Button>
+                </div>
+              </div>
+              <SongList
+                songs={songs}
+                isNarrowView={isNarrowView}
+                totalSongs={totalSongs}
+                fetchAllSongs={fetchAllSongs}
+              />
+              {hasMore && (
+                <div className="mt-6">
+                  <div ref={loadMoreRef} className="h-1" />
+                  {isValidating ? (
+                    <SongListSkeleton />
+                  ) : (
+                    <div className="text-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => setSize(size + 1)}
+                      >
+                        Load more songs
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : isValidating ? (
+            <div role="status" aria-label="Loading songs">
+              <p className="mb-5 text-sm text-muted-foreground">
+                Finding your next favorite…
+              </p>
+              <SongListSkeleton />
+            </div>
+          ) : !error ? (
+            <div className="px-3 py-16 text-center">
+              <PlayCircle className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
+              <h2 className="text-xl font-semibold">
+                No songs match this collection.
+              </h2>
+              <p className="mx-auto mb-5 mt-2 max-w-md text-sm text-muted-foreground">
+                Try another passage, genre, or search to discover more music.
+              </p>
+              {activeTags.length > 0 && (
+                <Button variant="outline" onClick={resetFilters}>
+                  Clear filters
+                </Button>
+              )}
+            </div>
+          ) : null}
+        </section>
+      </main>
+      <SavePlaylistDialog
+        isOpen={isSavePlaylistDialogOpen}
+        onClose={() => setIsSavePlaylistDialogOpen(false)}
+        songs={songs}
+        filterOptions={filterOptions}
+        playlists={playlists}
+        user={user ? { ...user, id: user.id.toString() } : null}
+        onImageCropComplete={onImageCropComplete}
+        openImageCropper={openImageCropper}
+        formRef={formRef}
+      />
+      <Dialog
+        open={isCropperOpen}
+        onOpenChange={(open) => {
+          setIsCropperOpen(open);
+          if (!open) setCropImageUrl(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Playlist artwork</DialogTitle>
+            <DialogDescription>
+              Choose the part of your image to use for this collection.
+            </DialogDescription>
+          </DialogHeader>
+          {cropImageUrl && (
+            <ImageCropper
+              imageUrl={cropImageUrl}
+              onCropComplete={handleImageCropperComplete}
+              onCancel={() => {
+                setIsCropperOpen(false);
+                setCropImageUrl(null);
+              }}
+              maxHeight={500}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
-  )
+  );
 }

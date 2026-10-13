@@ -1,19 +1,20 @@
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { PlayCircle, Pause, Music, Clock, User } from 'lucide-react';
-import { formatBibleVerses } from '@/lib/utils';
-import { Song } from '@/types';
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
-import { motion } from 'framer-motion';
-import { useTheme } from 'next-themes';
+import { Badge } from "@/components/ui/badge";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { uiTheme } from "@/lib/design-system";
+import { formatBibleVerses } from "@/lib/utils";
+import { Song } from "@/types";
+import { motion } from "framer-motion";
+import { Clock, Music, Pause, PlayCircle, User } from "lucide-react";
+import { useTheme } from "next-themes";
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
 
-const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || "";
 
 const getImageUrl = (path: string | null | undefined): string => {
-  if (!path) return '/biblechorus-icon.png';
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (!path) return "/biblechorus-icon.png";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
   return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
 };
 
@@ -38,23 +39,15 @@ export const SongList: React.FC<SongListProps> = ({ songs }) => {
   );
 };
 
-const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSongs }) => {
+const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({
+  song,
+  allSongs,
+}) => {
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const isDark = resolvedTheme === "dark";
 
-  const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-  };
+  const theme = uiTheme;
 
   const handlePlayClick = () => {
     if (currentSong?.id === song.id) {
@@ -90,22 +83,22 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
           bible_verses: s.bible_verses,
           bible_translation_used: s.bible_translation_used,
           uploaded_by: s.uploaded_by,
-        }))
+        })),
       );
     }
   };
 
   const formatDuration = (seconds: number) => {
-    if (!seconds) return '';
+    if (!seconds) return "";
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const isCurrentSong = currentSong?.id === song.id;
 
   return (
-    <motion.div 
+    <motion.div
       className="group relative transition-all duration-500 overflow-hidden"
       style={{
         backgroundColor: theme.bgCard,
@@ -126,7 +119,7 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
       }}
     >
       {isCurrentSong && (
-        <div 
+        <div
           className="absolute top-0 left-0 w-1 h-full"
           style={{ backgroundColor: theme.accent }}
         />
@@ -134,7 +127,7 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
 
       <div className="relative p-5 flex flex-col md:flex-row md:items-center gap-5">
         <div className="flex-shrink-0 w-full md:w-32 h-32 relative group/image">
-          <div 
+          <div
             className="relative w-full h-full overflow-hidden"
             style={{ border: `1px solid ${theme.border}` }}
           >
@@ -143,18 +136,23 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
               alt={song.title}
               layout="fill"
               objectFit="cover"
-              className="transition-all duration-500 group-hover/image:scale-105 grayscale-[20%] group-hover/image:grayscale-0"
+              className="transition-all duration-500 group-hover/image:scale-105 "
             />
-            <div 
-              className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-all duration-300"
-              style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+            <div
+              className="absolute inset-0 flex items-center justify-center bg-black/20 sm:opacity-0 sm:group-hover/image:opacity-100 sm:group-focus-within/image:opacity-100 transition-opacity"
+              style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
             >
-              <motion.button 
+              <motion.button
                 onClick={handlePlayClick}
-                className="p-3 transition-all duration-300"
+                aria-label={
+                  isCurrentSong && isPlaying
+                    ? `Pause ${song.title}`
+                    : `Play ${song.title}`
+                }
+                className="rounded-full p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 style={{
                   backgroundColor: theme.accent,
-                  color: isDark ? '#050505' : '#ffffff',
+                  color: isDark ? "#050505" : "#ffffff",
                 }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
@@ -171,12 +169,12 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
 
         <div className="flex-grow space-y-3">
           <div className="space-y-1.5">
-            <Link 
-              href={`/Songs/${song.id}`} 
+            <Link
+              href={`/Songs/${song.id}`}
               className="block text-lg md:text-xl tracking-wide transition-colors duration-300"
-              style={{ 
+              style={{
                 fontFamily: "'Italiana', serif",
-                color: theme.text
+                color: theme.text,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.color = theme.accent;
@@ -187,25 +185,28 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
             >
               {song.title}
             </Link>
-            <div 
+            <div
               className="flex items-center gap-2 text-sm font-light"
               style={{ color: theme.textSecondary }}
             >
               <User className="w-3 h-3" />
-              <span>{song.username || 'Unknown Artist'}</span>
+              <span>{song.username || "Unknown Artist"}</span>
             </div>
           </div>
 
           {song.bible_verses && song.bible_verses.length > 0 && (
-            <div 
+            <div
               className="flex items-start gap-3 p-3"
-              style={{ 
+              style={{
                 backgroundColor: theme.hoverBg,
-                border: `1px solid ${theme.border}`
+                border: `1px solid ${theme.border}`,
               }}
             >
-              <Music className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: theme.accent }} />
-              <p 
+              <Music
+                className="w-4 h-4 mt-0.5 flex-shrink-0"
+                style={{ color: theme.accent }}
+              />
+              <p
                 className="text-sm italic font-light leading-relaxed"
                 style={{ color: theme.textSecondary }}
               >
@@ -216,7 +217,7 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
 
           <div className="flex flex-wrap items-center gap-3">
             {song.duration && (
-              <div 
+              <div
                 className="flex items-center gap-2 text-xs tracking-[0.1em] uppercase"
                 style={{ color: theme.textMuted }}
               >
@@ -227,26 +228,27 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {song.genres && song.genres.slice(0, 3).map((genre, index) => (
-              <Badge
-                key={`${song.id}-${genre}-${index}`}
-                variant="secondary"
-                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-none font-medium"
-                style={{
-                  backgroundColor: 'transparent',
-                  color: theme.textSecondary,
-                  border: `1px solid ${theme.border}`,
-                }}
-              >
-                {genre}
-              </Badge>
-            ))}
+            {song.genres &&
+              song.genres.slice(0, 3).map((genre, index) => (
+                <Badge
+                  key={`${song.id}-${genre}-${index}`}
+                  variant="secondary"
+                  className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-xl font-medium"
+                  style={{
+                    backgroundColor: "transparent",
+                    color: theme.textSecondary,
+                    border: `1px solid ${theme.border}`,
+                  }}
+                >
+                  {genre}
+                </Badge>
+              ))}
             {song.genres && song.genres.length > 3 && (
-              <Badge 
-                variant="secondary" 
-                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-none font-medium"
+              <Badge
+                variant="secondary"
+                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-xl font-medium"
                 style={{
-                  backgroundColor: 'transparent',
+                  backgroundColor: "transparent",
                   color: theme.textSecondary,
                   border: `1px solid ${theme.border}`,
                 }}
@@ -255,11 +257,11 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
               </Badge>
             )}
             {song.bible_translation_used && (
-              <Badge 
-                variant="outline" 
-                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-none font-medium"
+              <Badge
+                variant="outline"
+                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-xl font-medium"
                 style={{
-                  backgroundColor: 'transparent',
+                  backgroundColor: "transparent",
                   color: theme.accent,
                   border: `1px solid ${theme.borderHover}`,
                 }}
@@ -268,28 +270,28 @@ const SongListItem: React.FC<{ song: Song; allSongs: Song[] }> = ({ song, allSon
               </Badge>
             )}
             {song.lyrics_scripture_adherence && (
-              <Badge 
-                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-none font-medium"
+              <Badge
+                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-xl font-medium"
                 style={{
                   backgroundColor: theme.accent,
-                  color: isDark ? '#050505' : '#ffffff',
-                  border: 'none',
+                  color: isDark ? "#050505" : "#ffffff",
+                  border: "none",
                 }}
               >
-                {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
+                {song.lyrics_scripture_adherence.replace(/_/g, " ")}
               </Badge>
             )}
             {song.is_continuous_passage !== undefined && (
-              <Badge 
-                variant="outline" 
-                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-none font-medium"
+              <Badge
+                variant="outline"
+                className="text-[10px] tracking-[0.1em] uppercase px-2 py-1 rounded-xl font-medium"
                 style={{
-                  backgroundColor: 'transparent',
+                  backgroundColor: "transparent",
                   color: theme.textSecondary,
                   border: `1px solid ${theme.border}`,
                 }}
               >
-                {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
+                {song.is_continuous_passage ? "Continuous" : "Non-Continuous"}
               </Badge>
             )}
           </div>

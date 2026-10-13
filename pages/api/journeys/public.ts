@@ -1,21 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
-import jwt from 'jsonwebtoken';
+import { getAuthenticatedUserId, withApiAuth } from '@/lib/server-auth';
 import { PublicJourneyListItem } from '@/types/journey';
 
-function getUserIdFromRequest(req: NextApiRequest): number | null {
-  const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return null;
-  
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
-    return decoded.userId;
-  } catch (error) {
-    return null;
-  }
-}
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -24,7 +13,7 @@ export default async function handler(
   }
 
   try {
-    const currentUserId = getUserIdFromRequest(req);
+    const currentUserId = await getAuthenticatedUserId(req, res);
     const { limit = 20, offset = 0 } = req.query;
 
     const journeys = await db('journey_profiles')
@@ -106,3 +95,6 @@ export default async function handler(
     return res.status(500).json({ error: 'Failed to fetch public journeys' });
   }
 }
+
+
+export default withApiAuth(handler);

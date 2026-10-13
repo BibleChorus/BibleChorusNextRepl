@@ -1,25 +1,36 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from 'next-themes';
-import { SeasonSong } from '@/types/journey';
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
-import { format, parseISO } from 'date-fns';
-import { BookOpen, Music, X } from 'lucide-react';
-import { FaExternalLinkAlt } from 'react-icons/fa';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import LyricsBibleComparisonDialog from '@/components/ListenPage/LyricsBibleComparisonDialog';
-import Image from 'next/image';
-
-const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
-
-const getImageUrl = (path: string | null | undefined): string | null => {
-  if (!path) return null;
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
-};
+import React, { useState } from "react";
+import Image from "next/image";
+import {
+  BookOpen,
+  ExternalLink,
+  Music,
+  Pause,
+  Play,
+  Headphones,
+} from "lucide-react";
+import { SeasonSong } from "@/types/journey";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import LyricsBibleComparisonDialog from "@/components/ListenPage/LyricsBibleComparisonDialog";
+import { JourneySplitPanel } from "./JourneySplitPanel";
+import {
+  formatDuration,
+  formatJourneyDate,
+  humanizeOrigin,
+  journeyMediaUrl,
+  journeyPlayerSong,
+  safeExternalUrl,
+} from "./journey-utils";
+import { cn } from "@/lib/utils";
 
 interface JourneySongProps {
   seasonSong: SeasonSong;
@@ -30,732 +41,251 @@ interface JourneySongProps {
   allJourneySongs?: SeasonSong[];
 }
 
-const easeOutExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
-const springTransition = { type: "spring" as const, stiffness: 400, damping: 30 };
-
 export const JourneySong: React.FC<JourneySongProps> = ({
   seasonSong,
+  showPlayCount = false,
   showDate = true,
   trackNumber = 1,
   allJourneySongs = [],
 }) => {
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
-  const [showExternalLinkDialog, setShowExternalLinkDialog] = useState(false);
-  const [showSongArtDialog, setShowSongArtDialog] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isTouched, setIsTouched] = useState(false);
-  const [songArtAspectRatio, setSongArtAspectRatio] = useState<number | null>(null);
+  const [showSource, setShowSource] = useState(false);
+  const [showArt, setShowArt] = useState(false);
   const song = seasonSong.song;
-
-  const songArtUrl = getImageUrl(song?.song_art_url);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (songArtUrl) {
-      const img = new window.Image();
-      img.onload = () => {
-        setSongArtAspectRatio(img.width / img.height);
-      };
-      img.src = songArtUrl;
-    }
-  }, [songArtUrl]);
-
-  const handleSongArtClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (songArtUrl) {
-      setShowSongArtDialog(true);
-    }
-  };
-
-  const isDark = resolvedTheme === 'dark';
-
-  const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgAlt: isDark ? '#0a0a0a' : '#f0ede6',
-    bgCard: isDark ? '#0f0f0f' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-    borderHover: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
-    activeBg: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
-  };
-  
   if (!song) return null;
-  
-  const songAny = song as any;
-  const hasLyricsOrVerses = (songAny.lyrics && songAny.lyrics.trim().length > 0) || 
-                            (songAny.bible_verses && songAny.bible_verses.length > 0);
 
-  const isCurrentSong = currentSong?.id === song.id;
-  const isCurrentlyPlaying = isCurrentSong && isPlaying;
-  const hasPersonalNote = seasonSong.personal_note && seasonSong.personal_note.trim().length > 0;
-  const journeySongOrigin = songAny.journey_song_origin;
-  
-  const showArt = isHovered || isTouched || isCurrentSong;
-  
-  const formatJourneySongOrigin = (origin: string): string => {
-    const originMap: { [key: string]: string } = {
-      'prior_recording': 'Previously Written Song',
-      'prophetic_word': 'Prayer or Prophetic Utterance',
-      'personal_experience': 'Personal Experience',
-      'scripture_meditation': 'Scripture Meditation',
-      'worship_session': 'Worship Session',
-      'dream_vision': 'Dream or Vision',
-      'testimony': 'Testimony',
-      'prayer': 'Prayer',
-      'other': 'Other',
-    };
-    return originMap[origin] || origin?.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ') || '';
-  };
+  const art = journeyMediaUrl(song.song_art_url);
+  const source = safeExternalUrl(seasonSong.source_url);
+  const active = currentSong?.id === song.id;
+  const playing = active && isPlaying;
+  const hasLyrics = Boolean(song.lyrics?.trim() || song.bible_verses?.length);
+  const hasContext = Boolean(
+    seasonSong.personal_note?.trim() ||
+    seasonSong.significance?.trim() ||
+    song.journey_song_origin ||
+    source,
+  );
+  const date = formatJourneyDate(song.journey_date || song.created_at);
 
-  const formatMusicOrigin = (origin: string | undefined): string => {
-    const originMap: { [key: string]: string } = {
-      'human': 'Human Composed',
-      'ai': 'AI Generated',
-      'ai_cover_of_human': 'AI Cover of Human Song',
-    };
-    return originMap[origin || ''] || 'Unknown';
-  };
-
-  const formatLyricsOrigin = (aiUsed: boolean | undefined): string => {
-    return aiUsed ? 'AI Written' : 'Human Written';
-  };
-
-  const hasOrigin = journeySongOrigin && journeySongOrigin.trim().length > 0;
-  const musicOrigin = songAny.music_origin;
-  const aiUsedForLyrics = songAny.ai_used_for_lyrics;
-  const showMetadata = isHovered || isTouched || isCurrentSong;
-  const hasSourceUrl = seasonSong.source_url && seasonSong.source_url.trim().length > 0;
-  const showNote = hasPersonalNote && (isHovered || isTouched || isCurrentSong);
-  const showOrigin = hasOrigin && (isHovered || isTouched || isCurrentSong);
-
-  const handleOpenExternalLink = () => {
-    if (seasonSong.source_url) {
-      window.open(seasonSong.source_url, '_blank', 'noopener,noreferrer');
+  const handlePlay = () => {
+    if (active) {
+      if (isPlaying) pause();
+      else resume();
+      return;
     }
-    setShowExternalLinkDialog(false);
+    const queue = allJourneySongs.flatMap((item) =>
+      item.song ? [journeyPlayerSong(item.song)] : [],
+    );
+    playSong(journeyPlayerSong(song), queue.length ? queue : undefined);
   };
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatTrackNumber = (num: number) => {
-    return num.toString().padStart(2, '0');
-  };
-
-  const handlePlay = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isCurrentSong) {
-      if (isPlaying) {
-        pause();
-      } else {
-        resume();
-      }
-    } else {
-      const currentSongData = {
-        id: song.id,
-        title: song.title,
-        artist: song.artist,
-        audioUrl: song.audio_url,
-        audio_url: song.audio_url,
-        coverArtUrl: song.song_art_url || undefined,
-        duration: song.duration,
-        uploaded_by: 0,
-        lyrics: songAny.lyrics,
-        bible_verses: songAny.bible_verses,
-        bible_translation_used: songAny.bible_translation_used,
-      };
-
-      if (allJourneySongs.length > 0) {
-        const queue = allJourneySongs
-          .filter(ss => ss.song)
-          .map(ss => {
-            const s = ss.song!;
-            const sAny = s as any;
-            return {
-              id: s.id,
-              title: s.title,
-              artist: s.artist,
-              audioUrl: s.audio_url,
-              audio_url: s.audio_url,
-              coverArtUrl: s.song_art_url || undefined,
-              duration: s.duration,
-              uploaded_by: 0,
-              lyrics: sAny.lyrics,
-              bible_verses: sAny.bible_verses,
-              bible_translation_used: sAny.bible_translation_used,
-            };
-          });
-        playSong(currentSongData, queue);
-      } else {
-        playSong(currentSongData);
-      }
-    }
-  };
-
-  const handleTouchStart = () => {
-    setIsTouched(true);
-  };
-
-  const handleTouchEnd = () => {
-    setTimeout(() => setIsTouched(false), 3000);
-  };
-
-  if (!mounted) {
-    return <div className="py-6 px-3" />;
-  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: easeOutExpo }}
-      className="track-row group cursor-pointer relative overflow-hidden"
-      style={{ 
-        borderBottom: `1px solid ${theme.border}`,
-        fontFamily: "'Manrope', sans-serif"
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onClick={handlePlay}
-    >
-      <motion.div 
-        className="absolute inset-0 pointer-events-none"
-        initial={{ opacity: 0, x: '-100%' }}
-        animate={{ 
-          opacity: isHovered ? 1 : isCurrentSong ? 0.5 : 0,
-          x: isHovered ? '0%' : isCurrentSong ? '0%' : '-100%'
-        }}
-        transition={{ duration: 0.5, ease: easeOutExpo }}
-        style={{ 
-          background: `linear-gradient(90deg, ${theme.accent}08 0%, ${theme.accent}03 50%, transparent 100%)`
-        }}
-      />
-      
-      <motion.div 
-        className="absolute left-0 top-0 bottom-0 w-[2px] pointer-events-none"
-        initial={{ scaleY: 0 }}
-        animate={{ 
-          scaleY: isHovered || isCurrentSong ? 1 : 0,
-          backgroundColor: isCurrentSong ? theme.accent : `${theme.accent}80`
-        }}
-        transition={{ duration: 0.3, ease: easeOutExpo }}
-        style={{ originY: 0.5 }}
-      />
-
-      {/* Desktop: Song art on right side (hidden on mobile) */}
-      <AnimatePresence>
-        {showArt && songArtUrl && (
-          <motion.div
-            className="absolute right-0 top-0 bottom-0 w-32 overflow-hidden hidden md:block cursor-pointer z-20"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.5, ease: easeOutExpo }}
-            onClick={handleSongArtClick}
-          >
-            <div className="absolute inset-0 z-10 pointer-events-none" style={{ 
-              background: `linear-gradient(to right, ${theme.bg}, transparent 30%)` 
-            }} />
-            <motion.div
-              className="absolute inset-0"
-              initial={{ filter: 'grayscale(100%)' }}
-              animate={{ filter: isCurrentlyPlaying ? 'grayscale(0%)' : 'grayscale(100%)' }}
-              whileHover={{ filter: 'grayscale(0%)' }}
-              transition={{ duration: 0.8, ease: easeOutExpo }}
-            >
-              <Image
-                src={songArtUrl}
-                alt={song.title}
-                fill
-                className="object-cover"
-                sizes="128px"
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Desktop: Fallback when no art (hidden on mobile) */}
-      {showArt && !songArtUrl && (
-        <motion.div
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-16 h-16 rounded-lg pointer-events-none items-center justify-center hidden md:flex"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 0.3, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          transition={{ duration: 0.4, ease: easeOutExpo }}
-          style={{ backgroundColor: theme.bgAlt, border: `1px solid ${theme.border}` }}
-        >
-          <Music className="w-6 h-6" style={{ color: theme.textMuted }} />
-        </motion.div>
+    <article
+      className={cn(
+        "surface-card overflow-hidden transition-colors",
+        active && "border-primary/45 ring-1 ring-primary/10",
       )}
-
-      <motion.div 
-        className="flex items-center gap-4 md:gap-6 py-6 px-3 relative z-10"
-        animate={{ 
-          x: isHovered ? 8 : 0,
-          transition: springTransition
-        }}
-      >
-        <motion.span 
-          className="text-xs font-mono w-6 flex-shrink-0"
-          animate={{ 
-            color: isCurrentSong ? theme.accent : isHovered ? theme.text : theme.textSecondary 
-          }}
-          transition={{ duration: 0.3 }}
-        >
-          {formatTrackNumber(trackNumber)}
-        </motion.span>
-
-        <motion.button
-          onClick={handlePlay}
-          className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0"
-          animate={{
-            borderColor: isCurrentlyPlaying ? theme.accent : isHovered ? theme.accent : theme.borderHover,
-            backgroundColor: isCurrentlyPlaying ? `${theme.accent}1a` : isHovered ? `${theme.accent}0d` : 'rgba(0, 0, 0, 0)',
-            scale: isHovered && !isCurrentlyPlaying ? 1.1 : 1
-          }}
-          transition={{ duration: 0.3, ease: easeOutExpo }}
-          whileTap={{ scale: 0.95 }}
-          aria-label={isCurrentlyPlaying ? 'Pause' : 'Play'}
-        >
-          {isCurrentlyPlaying ? (
-            <div className="flex items-end gap-[2px] h-3">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  animate={{ 
-                    height: ['8px', '16px', '10px', '20px', '8px'],
-                  }}
-                  transition={{ 
-                    repeat: Infinity, 
-                    duration: 0.8 + i * 0.15,
-                    ease: "easeInOut",
-                    delay: i * 0.1
-                  }}
-                  className="w-[2px] rounded-full"
-                  style={{ height: '8px', backgroundColor: theme.accent }}
-                />
-              ))}
+    >
+      <JourneySplitPanel
+        music={
+          <div className="space-y-5">
+            <div className="flex gap-4">
+              {art ? (
+                <button
+                  onClick={() => setShowArt(true)}
+                  className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label={`View artwork for ${song.title}`}
+                >
+                  <Image
+                    src={art}
+                    alt={song.title}
+                    fill
+                    sizes="80px"
+                    className="object-cover transition-transform duration-500 hover:scale-105"
+                  />
+                </button>
+              ) : (
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-border bg-primary/10 text-primary">
+                  <Music className="h-7 w-7" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="font-mono tabular-nums">
+                    {String(trackNumber).padStart(2, "0")}
+                  </span>
+                  <span>·</span>
+                  <span>{formatDuration(song.duration)}</span>
+                  {active && (
+                    <span className="ml-auto text-primary">
+                      {playing ? "Playing" : "Paused"}
+                    </span>
+                  )}
+                </div>
+                <h3
+                  className={cn(
+                    "text-lg font-semibold leading-snug",
+                    active && "text-primary",
+                  )}
+                >
+                  {song.title}
+                </h3>
+                {song.artist && (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {song.artist}
+                  </p>
+                )}
+                {showDate && date && (
+                  <p className="mt-2 text-xs text-muted-foreground">{date}</p>
+                )}
+              </div>
             </div>
-          ) : (
-            <motion.svg 
-              className="w-3 h-3 ml-0.5"
-              animate={{ color: isCurrentSong ? theme.accent : isHovered ? theme.accent : theme.text }}
-              transition={{ duration: 0.3 }}
-              viewBox="0 0 24 24" 
-              fill="currentColor"
-            >
-              <path d="M8 5v14l11-7z" />
-            </motion.svg>
-          )}
-        </motion.button>
-
-        <div className="flex-1 min-w-0 pr-2">
-          <motion.h4 
-            className={`font-light tracking-wide break-words ${
-              song.title.length > 30 ? 'text-base sm:text-lg md:text-xl' : 'text-lg md:text-xl'
-            }`}
-            animate={{ 
-              color: isCurrentSong ? theme.accent : isHovered ? theme.accent : theme.text 
-            }}
-            transition={{ duration: 0.3, ease: easeOutExpo }}
-          >
-            {song.title}
-          </motion.h4>
-          
-          <div className="flex items-center gap-3 mt-1">
-            {showDate && (song.journey_date || song.created_at) && (
-              <motion.span 
-                className="text-[10px] uppercase tracking-widest"
-                animate={{ 
-                  color: isHovered ? theme.text : theme.textSecondary 
-                }}
-                transition={{ duration: 0.3 }}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                onClick={handlePlay}
+                variant={playing ? "secondary" : "default"}
+                aria-label={`${playing ? "Pause" : "Play"} ${song.title}`}
               >
-                {(() => {
-                  const dateStr = song.journey_date || song.created_at!;
-                  const datePart = dateStr.split('T')[0].split(' ')[0];
-                  const [year, month, day] = datePart.split('-').map(Number);
-                  return format(new Date(year, month - 1, day), 'MMMM do, yyyy');
-                })()}
-              </motion.span>
+                {playing ? (
+                  <Pause className="mr-2 h-3.5 w-3.5" />
+                ) : (
+                  <Play className="mr-2 h-3.5 w-3.5" />
+                )}
+                {playing ? "Pause" : "Listen"}
+              </Button>
+              {hasLyrics && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowLyrics(true)}
+                >
+                  <BookOpen className="mr-2 h-3.5 w-3.5" />
+                  Lyrics & scripture
+                </Button>
+              )}
+              {showPlayCount && song.play_count !== undefined && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Headphones className="h-3.5 w-3.5" />
+                  {Number(song.play_count).toLocaleString()} plays
+                </span>
+              )}
+            </div>
+            {(song.music_origin || song.ai_used_for_lyrics !== undefined) && (
+              <div className="flex flex-wrap gap-x-3 gap-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
+                {song.music_origin && (
+                  <span>Music: {humanizeOrigin(song.music_origin)}</span>
+                )}
+                {song.ai_used_for_lyrics !== undefined && (
+                  <span>
+                    Lyrics:{" "}
+                    {song.ai_used_for_lyrics ? "AI written" : "Human written"}
+                  </span>
+                )}
+              </div>
             )}
           </div>
-        </div>
-
-        <motion.div
-          className={`flex items-center gap-4 flex-shrink-0 z-20 transition-transform duration-500 ease-out ${
-            showArt && songArtUrl ? 'md:-translate-x-36' : 'translate-x-0'
-          }`}
-        >
-          <motion.span 
-            className="text-xs font-mono flex-shrink-0"
-            animate={{ 
-              color: isCurrentSong ? theme.accent : isHovered ? theme.text : theme.textSecondary 
-            }}
-            transition={{ duration: 0.3 }}
-          >
-            {song.duration > 0 ? formatDuration(song.duration) : '--:--'}
-          </motion.span>
-
-          {hasLyricsOrVerses && (
-            <motion.button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowLyrics(true);
-              }}
-              className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0"
-              initial={{ opacity: 0 }}
-              animate={{ 
-                opacity: isHovered || isTouched || isCurrentSong ? 1 : 0,
-                borderColor: isHovered ? `${theme.accent}80` : theme.border,
-                backgroundColor: isHovered ? `${theme.accent}0d` : 'transparent'
-              }}
-              whileHover={{
-                borderColor: theme.accent,
-                backgroundColor: `${theme.accent}1a`
-              }}
-              transition={{ duration: 0.3 }}
-              aria-label="View lyrics and scripture"
-            >
-              <motion.div
-                animate={{ color: isHovered ? theme.accent : theme.textSecondary }}
-                whileHover={{ color: theme.accent }}
-                transition={{ duration: 0.2 }}
-              >
-                <BookOpen className="w-3.5 h-3.5" />
-              </motion.div>
-            </motion.button>
-          )}
-        </motion.div>
-      </motion.div>
-
-      {/* Mobile: Song art below content (hidden on desktop) */}
-      <AnimatePresence>
-        {showArt && songArtUrl && (
-          <motion.div
-            className="md:hidden overflow-hidden"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.4, ease: easeOutExpo }}
-          >
-            <motion.div 
-              className="relative w-full aspect-square max-w-[280px] mx-auto mb-4 cursor-pointer"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.5, ease: easeOutExpo, delay: 0.1 }}
-              onClick={handleSongArtClick}
-            >
-              <motion.div
-                className="relative w-full h-full overflow-hidden"
-                style={{ border: `1px solid ${theme.border}` }}
-                initial={{ filter: 'grayscale(100%)' }}
-                animate={{ filter: isCurrentlyPlaying ? 'grayscale(0%)' : 'grayscale(100%)' }}
-                transition={{ duration: 0.8, ease: easeOutExpo }}
-              >
-                <Image
-                  src={songArtUrl}
-                  alt={song.title}
-                  fill
-                  className="object-cover"
-                  sizes="280px"
-                />
-              </motion.div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Mobile: Fallback when no art (hidden on desktop) */}
-      <AnimatePresence>
-        {showArt && !songArtUrl && (
-          <motion.div
-            className="md:hidden overflow-hidden"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.4, ease: easeOutExpo }}
-          >
-            <motion.div 
-              className="w-24 h-24 mx-auto mb-4 flex items-center justify-center"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 0.3 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.4, ease: easeOutExpo }}
-              style={{ backgroundColor: theme.bgAlt, border: `1px solid ${theme.border}` }}
-            >
-              <Music className="w-8 h-8" style={{ color: theme.textMuted }} />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showOrigin && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ 
-              duration: 0.5, 
-              ease: easeOutExpo,
-              opacity: { duration: 0.3 }
-            }}
-            className="overflow-hidden"
-          >
-            <motion.div 
-              initial={{ y: -10 }}
-              animate={{ y: 0 }}
-              exit={{ y: -10 }}
-              transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-2 pb-2 pl-[52px] md:pl-[68px] pr-4 flex items-center gap-3"
-            >
-              <span 
-                className="text-[11px] uppercase tracking-widest"
-                style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 400, color: `${theme.accent}99` }}
-              >
-                Origin: {formatJourneySongOrigin(journeySongOrigin)}
-              </span>
-              {hasSourceUrl && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowExternalLinkDialog(true);
-                  }}
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
-                  style={{ color: theme.accent }}
-                  aria-label="View source link"
-                >
-                  <FaExternalLinkAlt className="w-3 h-3" />
-                  <span className="text-[10px] uppercase tracking-wider font-medium">Source</span>
-                </button>
+        }
+        context={
+          hasContext ? (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                  Behind the song
+                </p>
+                {source && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-primary"
+                    onClick={() => setShowSource(true)}
+                  >
+                    View source
+                    <ExternalLink className="ml-1.5 h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              {song.journey_song_origin && (
+                <p className="text-xs font-medium text-muted-foreground">
+                  {humanizeOrigin(song.journey_song_origin)}
+                </p>
               )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showMetadata && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ 
-              duration: 0.5, 
-              ease: easeOutExpo,
-              opacity: { duration: 0.3 }
-            }}
-            className="overflow-hidden"
-          >
-            <motion.div 
-              initial={{ y: -10 }}
-              animate={{ y: 0 }}
-              exit={{ y: -10 }}
-              transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-1 pb-2 pl-[52px] md:pl-[68px] pr-4 md:pr-36 flex flex-wrap items-center gap-2"
-            >
-              <span 
-                className="text-[9px] uppercase tracking-widest"
-                style={{ 
-                  fontFamily: "'Manrope', sans-serif", 
-                  fontWeight: 400, 
-                  color: theme.textMuted,
-                  opacity: 0.7
-                }}
-              >
-                Music: {formatMusicOrigin(musicOrigin)}
-              </span>
-              <span 
-                className="text-[9px]"
-                style={{ color: theme.textMuted, opacity: 0.4 }}
-              >
-                ·
-              </span>
-              <span 
-                className="text-[9px] uppercase tracking-widest"
-                style={{ 
-                  fontFamily: "'Manrope', sans-serif", 
-                  fontWeight: 400, 
-                  color: theme.textMuted,
-                  opacity: 0.7
-                }}
-              >
-                Lyrics: {formatLyricsOrigin(aiUsedForLyrics)}
-              </span>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showNote && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ 
-              duration: 0.5, 
-              ease: easeOutExpo,
-              opacity: { duration: 0.3 }
-            }}
-            className="overflow-hidden"
-          >
-            <motion.div 
-              initial={{ y: -10 }}
-              animate={{ y: 0 }}
-              exit={{ y: -10 }}
-              transition={{ duration: 0.4, ease: easeOutExpo }}
-              className="pt-2 pb-6 pl-[52px] md:pl-[68px] pr-4 md:pr-36"
-            >
-              <div 
-                className="relative pl-6"
-                style={{ borderLeft: `1px solid ${theme.accent}33` }}
-              >
-                <span 
-                  className="absolute -left-3 -top-1 text-xl select-none"
-                  style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 300, color: `${theme.accent}66` }}
-                >
-                  {'"'}
-                </span>
-                <p 
-                  className="text-[13px] leading-relaxed tracking-wide"
-                  style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 300, fontStyle: 'italic', color: `${theme.textSecondary}b3` }}
-                >
+              {seasonSong.personal_note?.trim() && (
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/85">
                   {seasonSong.personal_note}
                 </p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+              )}
+              {seasonSong.significance?.trim() && (
+                <div className="border-l-2 border-primary/25 pl-3">
+                  <p className="whitespace-pre-wrap text-sm italic leading-relaxed text-muted-foreground">
+                    {seasonSong.significance}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : undefined
+        }
+      />
+      {showLyrics && (
         <LyricsBibleComparisonDialog
           isOpen={showLyrics}
           onClose={() => setShowLyrics(false)}
-          song={songAny}
+          song={song}
         />
-      </div>
-
-      <Dialog open={showExternalLinkDialog} onOpenChange={setShowExternalLinkDialog}>
-        <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+      )}
+      <Dialog open={showSource} onOpenChange={setShowSource}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FaExternalLinkAlt className="w-4 h-4" />
-              External Link
-            </DialogTitle>
+            <DialogTitle>Original source</DialogTitle>
             <DialogDescription>
-              External link provided by journey creator
+              This link was provided by the journey creator.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg break-all">
-              <p className="text-sm text-slate-600 dark:text-slate-400 font-mono">
-                {seasonSong.source_url}
-              </p>
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowExternalLinkDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleOpenExternalLink}
-                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
-              >
-                <FaExternalLinkAlt className="w-3 h-3 mr-2" />
-                Proceed to Link
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showSongArtDialog} onOpenChange={setShowSongArtDialog}>
-        <DialogContent 
-          className="p-0 overflow-hidden border-0"
-          style={{
-            maxWidth: '90vw',
-            width: 'min(90vw, 500px)',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={() => setShowSongArtDialog(false)}
-            className="absolute right-3 top-3 z-20 p-2 rounded-full transition-all hover:scale-110"
-            style={{ 
-              backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)',
-              color: theme.text
-            }}
-            aria-label="Close song art"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          <div className="relative">
-            {songArtUrl && (
-              <div 
-                className="relative w-full"
-                style={{ 
-                  aspectRatio: songArtAspectRatio ? `${songArtAspectRatio}` : '1',
-                  maxHeight: '80vh'
-                }}
-              >
-                <Image
-                  src={songArtUrl}
-                  alt={song.title}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, 500px"
-                />
-              </div>
-            )}
-            <div 
-              className="absolute bottom-0 left-0 right-0 p-4"
-              style={{ 
-                background: `linear-gradient(to top, ${isDark ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.95)'}, transparent)` 
-              }}
-            >
-              <h3 
-                className="text-lg md:text-xl font-medium"
-                style={{ color: theme.text }}
-              >
-                {song.title}
-              </h3>
-              {song.artist && (
-                <p 
-                  className="text-sm mt-1"
-                  style={{ color: theme.textSecondary }}
+          <p className="break-all rounded-xl border border-border bg-muted p-4 text-sm text-muted-foreground">
+            {seasonSong.source_url}
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowSource(false)}>
+              Cancel
+            </Button>
+            {source && (
+              <Button asChild>
+                <a
+                  href={source}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setShowSource(false)}
                 >
-                  {song.artist}
-                </p>
-              )}
-            </div>
+                  Open source
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </a>
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
-    </motion.div>
+      <Dialog open={showArt} onOpenChange={setShowArt}>
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-auto">
+          <DialogHeader>
+            <DialogTitle>{song.title}</DialogTitle>
+            <DialogDescription>
+              {song.artist || "Song artwork"}
+            </DialogDescription>
+          </DialogHeader>
+          {art && (
+            <div className="relative aspect-square w-full">
+              <Image
+                src={art}
+                alt={song.title}
+                fill
+                sizes="(max-width: 768px) 90vw, 600px"
+                className="object-contain"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </article>
   );
 };

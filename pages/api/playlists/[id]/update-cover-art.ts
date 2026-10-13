@@ -1,9 +1,12 @@
+import { ownedStorageKey, storageUrl } from '@/lib/storage-keys';
+import { ApiError, requireUser } from '@/lib/server-auth';
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 
 const CDN_URL = process.env.CDN_URL || '';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PUT') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -12,7 +15,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { coverArtUrl } = req.body;
 
   try {
-    const fullCoverArtUrl = `${CDN_URL}${coverArtUrl}`; // Prepend CDN_URL here
+    const user = await requireUser(req, res);
+    const fullCoverArtUrl = storageUrl(ownedStorageKey(coverArtUrl, user.id)); // Prepend CDN_URL here
 
     const updatedPlaylist = await db('playlists')
       .where({ id })
@@ -28,7 +32,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     res.status(200).json({ message: 'Playlist cover art updated successfully', updatedUrl: fullCoverArtUrl });
   } catch (error) {
+    if (error instanceof ApiError) throw error;
     console.error('Error updating playlist cover art:', error);
     res.status(500).json({ message: 'Error updating playlist cover art', error: error.message });
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['PUT'], owner: 'playlists' });

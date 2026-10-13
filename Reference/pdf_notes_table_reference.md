@@ -23,3 +23,11 @@ Stores private notes that users attach to PDFs for personal study.
 | Index Name | Columns | Type | Description |
 |------------|---------|------|-------------|
 | pdf_notes_pdf_user_idx | (pdf_id, user_id) | B-tree | Quickly fetch a user's notes for a PDF |
+
+## Server-rendered privacy
+
+The PDF detail page resolves the authenticated viewer before loading notes. Only rows matching that viewer’s `user_id` are included in page props; signed-out visitors receive an empty note list. Public comments remain visible independently of personal notes.
+
+## Storage and response compatibility
+
+The existing database stores note text in the `note` column. There is no `content` storage column. Note forms continue sending a single `note` field; no existing note rows are rewritten. The reader accepts an optional `content` response alias and displays `content ?? note`, so both adapted responses and the raw server-rendered legacy rows remain readable. After authentication restores, the reader fetches the current account’s notes and clears account-specific notes and drafts when the account changes.

@@ -1,41 +1,22 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import s3Client from '@/lib/s3';
+import { ApiError, requireUser, withApiAuth } from '@/lib/server-auth';
+import { assertUnreferencedFile, ownedStorageKey } from '@/lib/storage-keys';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
+  const user = await requireUser(req, res);
+  const values = req.body?.fileKeys;
+  if (!Array.isArray(values) || values.length > 50) throw new ApiError(400, 'Provide an array of at most 50 file keys');
+  const keys = [...new Set(values.map(value => ownedStorageKey(value, user.id)))];
+  // Validate the complete batch before touching storage. A stale unload beacon must
+  // never delete a file that was just committed by a successful submission.
+  for (const key of keys) await assertUnreferencedFile(key);
+  for (const key of keys) {
+    await s3Client.send(new DeleteObjectCommand({ Bucket: process.env.AWS_S3_BUCKET_NAME, Key: key }));
   }
-
-  let fileKeys: string[];
-
-  try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    fileKeys = body.fileKeys;
-
-    if (!fileKeys || !Array.isArray(fileKeys)) {
-      return res.status(400).json({ message: 'File keys array is required' });
-    }
-  } catch (error) {
-    console.error('Error parsing request body:', error);
-    return res.status(400).json({ message: 'Invalid request body' });
-  }
-
-  try {
-    const deletePromises = fileKeys.map(fileKey => {
-      const command = new DeleteObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: fileKey,
-      });
-      return s3Client.send(command);
-    });
-
-    await Promise.all(deletePromises);
-    
-    console.log('Files deleted successfully:', fileKeys);
-    res.status(200).json({ message: 'Files deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting files:', error);
-    res.status(500).json({ message: 'Error deleting files', error: error.message });
-  }
+  return res.status(200).json({ message: 'Files deleted successfully' });
 }
+
+export default withApiAuth(handler, { methods: ['POST'] });

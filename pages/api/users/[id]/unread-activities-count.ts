@@ -1,31 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/lib/db';
-import jwt from 'jsonwebtoken';
-import { getJwtSecret } from '@/lib/jwt';
+import { withApiAuth } from '@/lib/server-auth';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
     const { id } = req.query;
-
-    // Verify the user's authentication
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    const token = authHeader.split(' ')[1];
-    try {
-      const decoded = jwt.verify(token, getJwtSecret()) as { userId: number };
-      if (decoded.userId !== Number(id)) {
-        return res.status(403).json({ message: 'Forbidden' });
-      }
-    } catch (error) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
 
     // Fetch counts of unread activities from different tables, excluding actions by the user themselves
     const [songCommentsCount] = await db('song_comments')
@@ -76,3 +59,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['GET'], owner: 'users' });

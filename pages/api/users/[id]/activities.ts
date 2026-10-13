@@ -1,9 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/lib/db';
-import jwt from 'jsonwebtoken';
-import { getJwtSecret } from '@/lib/jwt';
+import { withApiAuth } from '@/lib/server-auth';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -13,34 +12,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
-
-    // Verify the user's authentication
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ message: 'No authorization header' });
-    }
-
-    if (!authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'Invalid authorization format' });
-    }
-
-    const token = authHeader.split(' ')[1];
-    let decoded;
-    
-    try {
-      decoded = jwt.verify(token, getJwtSecret()) as { userId: number };
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      return res.status(401).json({ 
-        message: 'Invalid token',
-        error: process.env.NODE_ENV === 'development' ? error : undefined 
-      });
-    }
-
-    // Only allow users to view their own activities
-    if (decoded.userId !== Number(id)) {
-      return res.status(403).json({ message: 'Forbidden: Cannot view other users activities' });
-    }
 
     // First, get total count
     const countResult = await db.raw(
@@ -247,3 +218,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['GET'], owner: 'users' });

@@ -1,76 +1,60 @@
-import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/router';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { useRouter } from "next/router";
 
 interface SidebarContextType {
   isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  setIsOpen: (open: boolean) => void;
   isMobileOpen: boolean;
-  setIsMobileOpen: (isOpen: boolean) => void;
+  setIsMobileOpen: (open: boolean) => void;
   isHomePage: boolean;
 }
-
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
-
-const SIDEBAR_STORAGE_KEY = 'sidebar-user-preference';
-
-export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [isOpen, setIsOpenInternal] = useState<boolean>(true);
-  const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false);
-  const previousPathRef = useRef<string | null>(null);
-  const userPreferenceRef = useRef<boolean>(true);
-  const isInitializedRef = useRef<boolean>(false);
-  
-  const isHomePage = router.pathname === '/';
-
+  const [isOpen, setOpen] = useState(true);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   useEffect(() => {
-    if (typeof window !== 'undefined' && !isInitializedRef.current) {
-      const savedPreference = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-      if (savedPreference !== null) {
-        const preference = savedPreference === 'true';
-        userPreferenceRef.current = preference;
-        if (router.pathname !== '/') {
-          setIsOpenInternal(preference);
-        }
-      }
-      isInitializedRef.current = true;
-    }
-  }, [router.pathname]);
-
-  const setIsOpen = useCallback((value: boolean) => {
-    setIsOpenInternal(value);
-    userPreferenceRef.current = value;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(SIDEBAR_STORAGE_KEY, String(value));
+    try {
+      const saved = localStorage.getItem("sidebar-user-preference");
+      if (saved !== null) setOpen(saved === "true");
+    } catch {
+      /* Keep the default navigation when storage is unavailable. */
     }
   }, []);
-  
   useEffect(() => {
-    if (!isInitializedRef.current) return;
-    
-    const wasOnHomePage = previousPathRef.current === '/';
-    const isNowOnHomePage = router.pathname === '/';
-    
-    if (isNowOnHomePage && !wasOnHomePage) {
-      setIsOpenInternal(false);
-    } else if (!isNowOnHomePage && wasOnHomePage) {
-      setIsOpenInternal(userPreferenceRef.current);
+    setIsMobileOpen(false);
+  }, [router.asPath]);
+  const setIsOpen = useCallback((value: boolean) => {
+    setOpen(value);
+    try {
+      localStorage.setItem("sidebar-user-preference", String(value));
+    } catch {
+      /* Preference remains in memory. */
     }
-    
-    previousPathRef.current = router.pathname;
-  }, [router.pathname]);
-
+  }, []);
   return (
-    <SidebarContext.Provider value={{ isOpen, setIsOpen, isMobileOpen, setIsMobileOpen, isHomePage }}>
+    <SidebarContext.Provider
+      value={{
+        isOpen,
+        setIsOpen,
+        isMobileOpen,
+        setIsMobileOpen,
+        isHomePage: router.pathname === "/",
+      }}
+    >
       {children}
     </SidebarContext.Provider>
   );
-};
-
-export const useSidebar = () => {
+}
+export function useSidebar() {
   const context = useContext(SidebarContext);
-  if (context === undefined) {
-    throw new Error('useSidebar must be used within a SidebarProvider');
-  }
+  if (!context)
+    throw new Error("useSidebar must be used within a SidebarProvider");
   return context;
-};
+}

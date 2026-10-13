@@ -1,25 +1,41 @@
-import React, { useState, useEffect, useImperativeHandle } from 'react';
+import { Button } from "@/components/ui/button";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { useForm, FormProvider, Controller } from 'react-hook-form';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
-  FormField, FormItem, FormLabel, FormControl, FormMessage,
-} from '@/components/ui/form';
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
-  Select, SelectTrigger, SelectContent, SelectItem, SelectValue,
-} from '@/components/ui/select';
-import axios from 'axios';
-import { toast } from 'sonner';
-import { useRouter } from 'next/router';
-import { ImageCropper, CropResultMetadata } from '@/components/UploadPage/ImageCropper';
-import { Trash2, ListMusic, Save } from 'lucide-react';
-import Image from 'next/image';
-import { getExtensionFromMimeType, stripFileExtension } from '@/lib/imageUtils';
-import { useTheme } from 'next-themes';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import {
+  CropResultMetadata,
+  ImageCropper,
+} from "@/components/UploadPage/ImageCropper";
+import { uiTheme } from "@/lib/design-system";
+import { getExtensionFromMimeType, stripFileExtension } from "@/lib/imageUtils";
+import axios from "axios";
+import { ListMusic, Trash2 } from "lucide-react";
+import { useTheme } from "next-themes";
+import Image from "next/image";
+import { useRouter } from "next/router";
+import React, { useEffect, useImperativeHandle, useState } from "react";
+import { Controller, FormProvider, useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 // Define the Song type
 type Song = {
@@ -53,7 +69,7 @@ type SavePlaylistDialogProps = {
 };
 
 type FormValues = {
-  action: 'create' | 'add';
+  action: "create" | "add";
   playlistId?: string;
   name?: string;
   description?: string;
@@ -63,53 +79,57 @@ type FormValues = {
 };
 
 export default function SavePlaylistDialog({
-  isOpen, onClose, songs, playlists: initialPlaylists, user, onImageCropComplete, openImageCropper, formRef,
+  isOpen,
+  onClose,
+  songs,
+  playlists: initialPlaylists,
+  user,
+  onImageCropComplete,
+  openImageCropper,
+  formRef,
 }: SavePlaylistDialogProps) {
   const [step, setStep] = useState(1);
   const [isCropperOpen, setIsCropperOpen] = useState(false);
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
 
   const [croppedImageUrl, setCroppedImageUrl] = useState<string | null>(null);
-  const [pendingImageDetails, setPendingImageDetails] = useState<{ name?: string; type?: string } | null>(null);
+  const [pendingImageDetails, setPendingImageDetails] = useState<{
+    name?: string;
+    type?: string;
+  } | null>(null);
   const [playlists, setPlaylists] = useState<any[]>(initialPlaylists);
 
   const form = useForm<FormValues>({
     defaultValues: {
-      action: 'create',
+      action: "create",
       isPublic: false,
-      name: '',
-      description: '',
-      playlistId: '',
+      name: "",
+      description: "",
+      playlistId: "",
       coverArtFile: undefined,
-      cover_art_url: '',
+      cover_art_url: "",
     },
   });
 
   const { handleSubmit, watch, setValue, control } = form;
-  const action = watch('action');
+  const action = watch("action");
   const router = useRouter();
-  
+
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-  const theme = {
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
-  };
+  const isDark = resolvedTheme === "dark";
+  const theme = { ...uiTheme };
 
   useEffect(() => {
     if (!isOpen) {
       setStep(1);
       form.reset({
-        action: 'create',
+        action: "create",
         isPublic: false,
-        name: '',
-        description: '',
-        playlistId: '',
+        name: "",
+        description: "",
+        playlistId: "",
         coverArtFile: undefined,
-        cover_art_url: '',
+        cover_art_url: "",
       });
       setCroppedImageUrl((currentUrl) => {
         if (currentUrl) {
@@ -132,13 +152,14 @@ export default function SavePlaylistDialog({
   useEffect(() => {
     if (isOpen && user) {
       // Fetch only user-created playlists when the dialog opens
-      axios.get(`/api/users/${user.id}/playlists?createdOnly=true`)
-        .then(response => {
+      axios
+        .get(`/api/users/${user.id}/playlists?createdOnly=true`)
+        .then((response) => {
           setPlaylists(response.data);
         })
-        .catch(error => {
-          console.error('Error fetching user playlists:', error);
-          toast.error('Failed to fetch playlists');
+        .catch((error) => {
+          console.error("Error fetching user playlists:", error);
+          toast.error("Failed to fetch playlists");
         });
     }
   }, [isOpen, user]);
@@ -147,12 +168,12 @@ export default function SavePlaylistDialog({
 
   const onSubmit = async (data: FormValues) => {
     if (!user) {
-      toast.error('You need to be logged in to save playlists');
+      toast.error("You need to be logged in to save playlists");
       return;
     }
 
     try {
-      if (data.action === 'create') {
+      if (data.action === "create") {
         // Handle creating new playlist
         const playlistData = {
           name: data.name,
@@ -163,34 +184,37 @@ export default function SavePlaylistDialog({
           user_id: user.id, // Include the user_id in the request
         };
 
-        const response = await axios.post('/api/playlists', playlistData);
+        const response = await axios.post("/api/playlists", playlistData);
         if (response.status === 201) {
-          toast.success('Playlist created successfully');
+          toast.success("Playlist created successfully");
           onClose();
           router.push(`/playlists/${response.data.id}`);
         } else {
-          throw new Error('Failed to create playlist');
+          throw new Error("Failed to create playlist");
         }
-      } else if (data.action === 'add') {
+      } else if (data.action === "add") {
         // Handle adding songs to existing playlist
         const playlistId = data.playlistId;
         if (!playlistId) {
-          toast.error('Please select a playlist');
+          toast.error("Please select a playlist");
           return;
         }
-        const response = await axios.post(`/api/playlists/${playlistId}/songs`, {
-          song_ids: songs.map((song) => song.id),
-        });
+        const response = await axios.post(
+          `/api/playlists/${playlistId}/songs`,
+          {
+            song_ids: songs.map((song) => song.id),
+          },
+        );
         if (response.status === 200) {
-          toast.success('Songs added to playlist');
+          toast.success("Songs added to playlist");
           onClose();
         } else {
-          throw new Error('Failed to add songs to playlist');
+          throw new Error("Failed to add songs to playlist");
         }
       }
     } catch (error) {
-      console.error('Error saving playlist:', error);
-      toast.error('Failed to save playlist');
+      console.error("Error saving playlist:", error);
+      toast.error("Failed to save playlist");
     }
   };
 
@@ -209,7 +233,10 @@ export default function SavePlaylistDialog({
     }
   };
 
-  const buildFileName = (originalName: string | undefined, mimeType: string) => {
+  const buildFileName = (
+    originalName: string | undefined,
+    mimeType: string,
+  ) => {
     const extension = getExtensionFromMimeType(mimeType);
     if (originalName && originalName.trim().length > 0) {
       const base = stripFileExtension(originalName);
@@ -219,9 +246,15 @@ export default function SavePlaylistDialog({
   };
 
   const handleCropComplete = (blob: Blob, metadata?: CropResultMetadata) => {
-    const mimeType = metadata?.mimeType || blob.type || pendingImageDetails?.type || 'image/jpeg';
-    const originalName = metadata?.originalFileName || pendingImageDetails?.name;
-    const fileName = metadata?.suggestedFileName || buildFileName(originalName, mimeType);
+    const mimeType =
+      metadata?.mimeType ||
+      blob.type ||
+      pendingImageDetails?.type ||
+      "image/jpeg";
+    const originalName =
+      metadata?.originalFileName || pendingImageDetails?.name;
+    const fileName =
+      metadata?.suggestedFileName || buildFileName(originalName, mimeType);
     const croppedFile = new File([blob], fileName, { type: mimeType });
 
     onImageCropComplete(croppedFile);
@@ -231,8 +264,8 @@ export default function SavePlaylistDialog({
       }
       return URL.createObjectURL(croppedFile);
     });
-    setValue('coverArtFile', croppedFile, { shouldValidate: true });
-    setValue('cover_art_url', '');
+    setValue("coverArtFile", croppedFile, { shouldValidate: true });
+    setValue("cover_art_url", "");
     setIsCropperOpen(false);
     setCropImageUrl(null);
     setPendingImageDetails(null);
@@ -240,8 +273,8 @@ export default function SavePlaylistDialog({
 
   const removeCoverArt = async () => {
     try {
-      await axios.post('/api/delete-file', {
-        fileKey: form.getValues('cover_art_url'),
+      await axios.post("/api/delete-file", {
+        fileKey: form.getValues("cover_art_url"),
       });
       setCroppedImageUrl((currentUrl) => {
         if (currentUrl) {
@@ -249,13 +282,13 @@ export default function SavePlaylistDialog({
         }
         return null;
       });
-      setValue('cover_art_url', '');
-      setValue('coverArtFile', undefined, { shouldValidate: true });
-      toast.success('Cover art removed');
+      setValue("cover_art_url", "");
+      setValue("coverArtFile", undefined, { shouldValidate: true });
+      toast.success("Cover art removed");
       setPendingImageDetails(null);
     } catch (error) {
-      console.error('Error removing cover art:', error);
-      toast.error('Failed to remove cover art');
+      console.error("Error removing cover art:", error);
+      toast.error("Failed to remove cover art");
     }
   };
 
@@ -265,7 +298,9 @@ export default function SavePlaylistDialog({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Save Playlist</DialogTitle>
-            <DialogDescription>Select an option to save your playlist</DialogDescription>
+            <DialogDescription>
+              Select an option to save your playlist
+            </DialogDescription>
           </DialogHeader>
 
           <FormProvider {...form}>
@@ -275,15 +310,19 @@ export default function SavePlaylistDialog({
                   <div className="flex space-x-4">
                     <Button
                       type="button"
-                      variant={watch('action') === 'create' ? 'default' : 'outline'}
-                      onClick={() => setValue('action', 'create')}
+                      variant={
+                        watch("action") === "create" ? "default" : "outline"
+                      }
+                      onClick={() => setValue("action", "create")}
                     >
                       Create New Playlist
                     </Button>
                     <Button
                       type="button"
-                      variant={watch('action') === 'add' ? 'default' : 'outline'}
-                      onClick={() => setValue('action', 'add')}
+                      variant={
+                        watch("action") === "add" ? "default" : "outline"
+                      }
+                      onClick={() => setValue("action", "add")}
                     >
                       Add to Existing Playlist
                     </Button>
@@ -292,7 +331,7 @@ export default function SavePlaylistDialog({
                     <Button
                       type="button"
                       onClick={() => setStep(2)}
-                      disabled={!watch('action')}
+                      disabled={!watch("action")}
                     >
                       Next
                     </Button>
@@ -300,12 +339,12 @@ export default function SavePlaylistDialog({
                 </>
               )}
 
-              {step === 2 && action === 'create' && (
+              {step === 2 && action === "create" && (
                 <>
                   <Controller
                     name="name"
                     control={control}
-                    rules={{ required: 'Playlist name is required' }}
+                    rules={{ required: "Playlist name is required" }}
                     render={({ field, fieldState }) => (
                       <FormItem>
                         <FormLabel>Name</FormLabel>
@@ -323,7 +362,10 @@ export default function SavePlaylistDialog({
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Input placeholder="Playlist Description" {...field} />
+                          <Input
+                            placeholder="Playlist Description"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -336,7 +378,10 @@ export default function SavePlaylistDialog({
                       <FormItem className="flex items-center justify-between">
                         <FormLabel>Public</FormLabel>
                         <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
                         </FormControl>
                       </FormItem>
                     )}
@@ -379,7 +424,11 @@ export default function SavePlaylistDialog({
                     )}
                   />
                   <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setStep(1)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setStep(1)}
+                    >
                       Back
                     </Button>
                     <Button type="submit">Save</Button>
@@ -387,18 +436,21 @@ export default function SavePlaylistDialog({
                 </>
               )}
 
-              {step === 2 && action === 'add' && (
+              {step === 2 && action === "add" && (
                 <>
                   <Controller
                     name="playlistId"
                     control={control}
-                    rules={{ required: 'Please select a playlist' }}
+                    rules={{ required: "Please select a playlist" }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Select Playlist</FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange} value={field.value || ''}>
-                            <SelectTrigger 
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || ""}
+                          >
+                            <SelectTrigger
                               className="w-full transition-all duration-300 h-12"
                               style={{
                                 backgroundColor: theme.bgCard,
@@ -418,18 +470,21 @@ export default function SavePlaylistDialog({
                               }}
                             >
                               {playlists?.map((playlist: any) => (
-                                <SelectItem 
-                                  key={playlist.id} 
+                                <SelectItem
+                                  key={playlist.id}
                                   value={playlist.id.toString()}
                                   className="transition-all duration-200 cursor-pointer"
                                   style={{
-                                    ['--hover-bg' as string]: theme.accentBgLight,
+                                    ["--hover-bg" as string]:
+                                      theme.accentBgLight,
                                   }}
                                   onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = theme.accentBgLight;
+                                    e.currentTarget.style.backgroundColor =
+                                      theme.accentBgLight;
                                   }}
                                   onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.backgroundColor =
+                                      "transparent";
                                   }}
                                 >
                                   <div className="flex items-center">
@@ -446,7 +501,11 @@ export default function SavePlaylistDialog({
                     )}
                   />
                   <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setStep(1)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setStep(1)}
+                    >
                       Back
                     </Button>
                     <Button type="submit">Add Songs</Button>
@@ -462,7 +521,9 @@ export default function SavePlaylistDialog({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Crop Cover Image</DialogTitle>
-            <DialogDescription>Adjust the image to fit the playlist cover</DialogDescription>
+            <DialogDescription>
+              Adjust the image to fit the playlist cover
+            </DialogDescription>
           </DialogHeader>
           {cropImageUrl && (
             <ImageCropper

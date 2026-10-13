@@ -1,9 +1,12 @@
+import { ownedStorageKey, storageUrl } from '@/lib/storage-keys';
+import { ApiError, requireUser } from '@/lib/server-auth';
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 
 const CDN_URL = process.env.CDN_URL || '';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query as { id: string };
 
   if (req.method !== 'PUT') {
@@ -18,7 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Prepend CDN_URL to songArtUrl, ensuring no double slashes
-    const fullSongArtUrl = `${CDN_URL}${songArtUrl.startsWith('/') ? songArtUrl.slice(1) : songArtUrl}`;
+    const user = await requireUser(req, res);
+    const fullSongArtUrl = storageUrl(ownedStorageKey(songArtUrl, user.id));
     
     await db('songs')
       .where('id', id)
@@ -28,7 +32,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     res.status(200).json({ message: 'Song art updated successfully', updatedUrl: fullSongArtUrl });
   } catch (error) {
+    if (error instanceof ApiError) throw error;
     console.error('Error updating song art:', error);
     res.status(500).json({ message: 'Error updating song art' });
   }
 }
+
+export default withApiAuth(handler, { methods: ['PUT'], owner: 'songs' });

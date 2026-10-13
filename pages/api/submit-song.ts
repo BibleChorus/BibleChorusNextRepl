@@ -1,9 +1,12 @@
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
-import db from '../../db';
+import db from '@/db';
 import { Knex } from 'knex';
 import { refreshProgressMaterializedView } from '@/lib/db-utils';
+import { requireUser } from '@/lib/server-auth';
+import { ownedStorageKey, storageUrl, assertUploadedFile } from '@/lib/storage-keys';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -31,11 +34,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     journey_song_origin,
   } = req.body;
 
-  console.log('Received request body:', req.body);
-
-  const cdnUrl = process.env.CDN_URL || '';
-  const fullAudioUrl = audio_url ? `${cdnUrl}${audio_url}` : null;
-  const fullSongArtUrl = song_art_url ? `${cdnUrl}${song_art_url}` : null;
+  const user = await requireUser(req, res);
+  const audioKey = ownedStorageKey(audio_url, user.id);
+  const artKey = song_art_url ? ownedStorageKey(song_art_url, user.id) : null;
+  const fullAudioUrl = storageUrl(audioKey);
+  const fullSongArtUrl = artKey ? storageUrl(artKey) : null;
 
   const validAdherenceOptions = ['word_for_word', 'close_paraphrase', 'creative_inspiration', 'somewhat_connected', 'no_connection'];
   const adherenceMapping: Record<string, string> = {
@@ -115,6 +118,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 
+  await assertUploadedFile(audioKey, 'audio');
+  if (artKey) await assertUploadedFile(artKey, 'image');
   const trx = await db.transaction();
   let songId: { id: number } | undefined;
 
@@ -148,8 +153,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error('Failed to insert song or invalid song ID');
     }
 
-    const songId = insertedSong.id;
-    console.log('Inserted song ID:', songId);
+    songId = insertedSong;
+    const insertedSongId = insertedSong.id;
+    console.log('Inserted song ID:', insertedSongId);
 
     // Save Bible verse connections if provided (even for journey songs with optional verses)
     if (bible_verses) {
@@ -184,12 +190,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } else {
         await trx('song_verses').insert(
           verseData.map(verse => ({ 
-            song_id: songId,
+            song_id: insertedSongId,
             verse_id: verse.id 
           }))
         );
 
-        await updateBibleVerses(trx, songId, {
+        await updateBibleVerses(trx, insertedSongId, {
           ...req.body,
           music_ai_generated: finalMusicAiGenerated,
           lyrics_scripture_adherence: mappedAdherence,
@@ -204,21 +210,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await refreshProgressMaterializedView();
     }
     
-    res.status(200).json({ message: 'Song submitted successfully', songId: songId });
+    res.status(200).json({ message: 'Song submitted successfully', songId: insertedSongId });
   } catch (error) {
     await trx.rollback();
     console.error('Error submitting song:', error);
     if (error instanceof Error) {
       res.status(500).json({ 
         message: 'Error submitting song', 
-        error: error.message, 
-        stack: error.stack,
-        verseReferences: bible_verses,
-        query: bible_verses ? trx('bible_verses')
-          .whereRaw(`CONCAT(book, ' ', chapter, ':', verse) IN (${bible_verses.split(',').map(() => '?').join(',')})`, bible_verses.split(',').map((v: string) => v.trim()))
-          .select('id', 'book', 'chapter', 'verse')
-          .toString() : null,
-        songId: songId
       });
     } else {
       res.status(500).json({ message: 'Error submitting song', error: 'An unknown error occurred' });
@@ -284,3 +282,6 @@ async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData
     }
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['POST'], identityFields: ['uploaded_by'] });

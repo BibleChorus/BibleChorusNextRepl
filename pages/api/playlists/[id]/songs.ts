@@ -1,3 +1,4 @@
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 import { parsePostgresArray } from '@/lib/utils';
@@ -7,7 +8,7 @@ interface AuthenticatedRequest extends NextApiRequest {
   user?: { id: number };
 }
 
-export default async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { id } = req.query;
   const playlistId = Number(id);
 
@@ -59,3 +60,6 @@ export default async function handler(req: AuthenticatedRequest, res: NextApiRes
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['POST'], owner: 'playlists', identityFields: ['user_id'] });

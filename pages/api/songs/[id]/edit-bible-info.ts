@@ -1,17 +1,24 @@
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next'
 import db from '@/db'
+import { syncSongScripture } from '@/lib/song-scripture';
+import { refreshProgressMaterializedView } from '@/lib/db-utils';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PUT') {
     return res.status(405).json({ message: 'Method not allowed' })
   }
 
   const { id } = req.query
   const { bible_translation_used, is_continuous_passage, bible_verses } = req.body
+  if (!Array.isArray(bible_verses) || !bible_verses.every(verse => typeof verse === 'string') || bible_verses.length > 5000) {
+    return res.status(400).json({ message: 'Provide valid Bible verse references' });
+  }
 
   try {
     // Start a transaction
     await db.transaction(async (trx) => {
+      const previousVerseIds = await trx('song_verses').where('song_id', id).pluck('verse_id');
       // Update the song's Bible information
       await trx('songs')
         .where('id', id)
@@ -61,8 +68,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }))
 
-      await trx('song_verses').insert(verseEntries)
+      if (verseEntries.length) await trx('song_verses').insert(verseEntries).onConflict(['song_id', 'verse_id']).ignore();
+      await syncSongScripture(trx, Number(id), previousVerseIds);
     })
+    await refreshProgressMaterializedView();
 
     // Fetch updated Bible verses
     const updatedVerses = await db('song_verses')
@@ -76,3 +85,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ message: 'Error updating Bible information', error: error.message })
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['PUT'], owner: 'songs' });

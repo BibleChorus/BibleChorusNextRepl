@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import axios from 'axios';
+import axios from "axios";
+import { Flag } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface ReportDialogProps {
@@ -14,44 +21,75 @@ interface ReportDialogProps {
   userEmail: string;
 }
 
-export function ReportDialog({ isOpen, onClose, songId, userId, username, userEmail }: ReportDialogProps) {
-  const [reportText, setReportText] = useState('');
-
-  const handleSubmit = async () => {
+export function ReportDialog({ isOpen, onClose, songId }: ReportDialogProps) {
+  const [reportText, setReportText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  useEffect(() => {
+    if (!isOpen) setReportText("");
+  }, [isOpen]);
+  const submit = async () => {
+    if (!reportText.trim() || isSubmitting) return;
+    setIsSubmitting(true);
     try {
-      await axios.post('/api/report-song', {
-        songId,
-        userId,
-        username,
-        userEmail,
-        reportText
-      });
-      toast.success('Report submitted successfully');
+      // The server derives reporter attribution from the authenticated session.
+      await axios.post("/api/report-song", { songId, reportText });
+      toast.success("Report submitted. Thank you for helping the community.");
       onClose();
-    } catch (error) {
-      console.error('Error submitting report:', error);
-      toast.error('Failed to submit report');
+    } catch (failure) {
+      console.error(
+        "Error submitting report:",
+        failure instanceof Error ? failure.message : "Unknown error",
+      );
+      toast.error("Could not submit the report. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open && !isSubmitting) onClose();
+      }}
+    >
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Report Song</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Flag className="h-5 w-5 text-primary" />
+            Report a song
+          </DialogTitle>
           <DialogDescription>
-            Please provide details about why you&apos;re reporting this song. For example, explain whether the song is incorrectly described, linked to incorrect Bible verses, or is not consistent with this site&apos;s purpose.
+            Tell us what needs attention: a description, a Scripture connection,
+            or something that doesn’t belong in the community.
           </DialogDescription>
         </DialogHeader>
-        <Textarea
-          value={reportText}
-          onChange={(e) => setReportText(e.target.value)}
-          placeholder="Enter your report here..."
-          className="min-h-[100px]"
-        />
-        <div className="flex justify-end space-x-2 mt-4">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit}>Submit Report</Button>
+        <div className="space-y-2">
+          <label
+            htmlFor={`song-report-${songId}`}
+            className="text-sm font-medium"
+          >
+            What would you like us to review?
+          </label>
+          <Textarea
+            id={`song-report-${songId}`}
+            value={reportText}
+            onChange={(event) => setReportText(event.target.value)}
+            placeholder="Share enough detail for us to understand the concern…"
+            className="min-h-[140px]"
+            maxLength={10000}
+            disabled={isSubmitting}
+          />
+        </div>
+        <div className="mt-2 flex justify-end gap-3">
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button
+            onClick={submit}
+            disabled={!reportText.trim() || isSubmitting}
+          >
+            {isSubmitting ? "Submitting…" : "Submit report"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
