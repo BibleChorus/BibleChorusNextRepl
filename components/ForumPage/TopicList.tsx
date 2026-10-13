@@ -1,3 +1,5 @@
+import DOMPurify from "isomorphic-dompurify";
+import parseHtml from "html-react-parser";
 import { Badge } from "@/components/ui/badge";
 import { CategoryIconName, categoryIcons } from "@/lib/categoryIcons";
 import { Topic } from "@/types";
@@ -5,6 +7,17 @@ import { ArrowUpRight, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { VoteButtons } from "./VoteButtons";
+
+/** Excerpts contain legacy HTML; show its text while leaving saved content untouched. */
+function previewText(value: string) {
+  const spaced = value.replace(
+    /<\/(?:p|div|li|h[1-6]|blockquote)>|<br\s*\/?>/gi,
+    " ",
+  );
+  return parseHtml(
+    DOMPurify.sanitize(spaced, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }),
+  );
+}
 
 export const TopicList: React.FC<{ topics: Topic[] }> = ({ topics }) => (
   <div className="space-y-3">
@@ -61,7 +74,7 @@ export const TopicList: React.FC<{ topics: Topic[] }> = ({ topics }) => (
               </h2>
               {topic.preview && (
                 <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                  {topic.preview}
+                  {previewText(topic.preview)}
                 </p>
               )}
             </Link>
