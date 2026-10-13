@@ -756,7 +756,6 @@ export const getServerSideProps: GetServerSideProps = async ({
     );
     if (
       !playlist.is_public &&
-      !playlist.is_auto &&
       Number(playlist.user_id) !== viewer?.id
     ) {
       return { notFound: true };
