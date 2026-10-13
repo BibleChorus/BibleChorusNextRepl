@@ -93,3 +93,9 @@ Clean-install CI exposed an npm peer-lock discrepancy and a patched sanitizer re
 
 - Replit's managed production `DATABASE_URL` omits the database name and publishing restores that value, so every published database request failed validation. The tracked deployment command now supplies `DATABASE_NAME=neondb`, used only when the URL has no database path.
 - The app still uses Replit's current managed URL, host, credentials, and verified TLS; no records, schema, or secrets are changed.
+
+## 2026-10-13 — Production authentication and current music attribution
+
+- Bundle Auth.js through Next's supported package transpilation so production Google sign-in can resolve Next server imports correctly.
+- Exercise the real production authentication bridge after a fresh build, including provider and CSRF endpoints, using synthetic configuration without live credentials or database access.
+- Add the observed Suno V6 model to the upload selector so current recordings can retain accurate attribution.

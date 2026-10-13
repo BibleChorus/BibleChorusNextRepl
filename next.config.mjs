@@ -41,6 +41,8 @@ export default (phase, defaultConfig) => {
 
     // Server secrets stay in runtime process.env; never inline them in client bundles.
     // Replit runs next start, so use the standard server output.
+    // Bundle Auth.js so Next resolves its extensionless next/* imports at build time.
+    transpilePackages: ["next-auth"],
     poweredByHeader: false, // Remove X-Powered-By header for security
 
     // Performance optimizations
