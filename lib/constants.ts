@@ -61,6 +61,7 @@ export const THEMES = [
 ];
 
 export const AI_MUSIC_MODELS = [
+  'Suno V6',
   'Suno 5.0',
   'Suno 4.5',
   'Suno 4.0',
