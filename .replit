@@ -1,6 +1,6 @@
 run = "npm run dev"
 entrypoint = "index.js"
-modules = ["nodejs-22", "postgresql-16", "python-base-3.13"]
+modules = ["nodejs-22", "python-base-3.13", "postgresql-16"]
 hidden = [".config", "package-lock.json", ".next", ".swc"]
 
 [nix]
@@ -11,7 +11,7 @@ NEXT_TELEMETRY_DISABLED = "1"
 
 [deployment]
 build = ["npm", "run", "build"]
-run = ["env", "DATABASE_REQUIRE_TLS=1", "npm", "run", "start"]
+run = ["env", "DATABASE_REQUIRE_TLS=1", "DATABASE_NAME=neondb", "npm", "run", "start"]
 deploymentTarget = "cloudrun"
 
 [[ports]]

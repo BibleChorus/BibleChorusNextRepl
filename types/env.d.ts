@@ -6,6 +6,7 @@ declare namespace NodeJS {
     CDN_URL?: string;
     DATABASE_URL?: string;
     DATABASE_REQUIRE_TLS?: string;
+    DATABASE_NAME?: string;
     JWT_SECRET?: string;
     AWS_S3_BUCKET_NAME?: string;
     AWS_REGION?: string;
