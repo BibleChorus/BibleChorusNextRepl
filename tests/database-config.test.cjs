@@ -7,74 +7,67 @@ const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 const { Client } = require('pg');
 const ts = require('typescript');
-const { getDatabaseConnection } = require('../lib/database-config');
 
-const pgFields = { PGHOST: 'original.example.test', PGPORT: '5433', PGUSER: 'original_owner', PGPASSWORD: 'offline-test-password', PGDATABASE: 'original_database' };
-const current = 'postgresql://current_owner:offline-current@current.example.test/current_database';
-const previous = 'postgresql://previous_owner:offline-previous@previous.neon.tech/previous_database?sslmode=require';
+// Execute the real Knex configuration with an isolated environment; no pool is
+// connected and no credentials from the developer's environment are inspected.
+function configuration(env) {
+  const result = { exports: {} };
+  vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../knexfile.js'), 'utf8'), {
+    module: result, process: { env },
+    require(name) { assert.equal(name, 'dotenv'); return { config() {} }; },
+  });
+  return result.exports;
+}
 
-test('complete legacy PG configuration preserves its target, port, credentials, and existing TLS default', () => {
-  const config = getDatabaseConnection(pgFields);
-  assert.deepEqual(config, { host: pgFields.PGHOST, port: 5433, user: pgFields.PGUSER, password: pgFields.PGPASSWORD, database: pgFields.PGDATABASE, ssl: { rejectUnauthorized: false } });
-  assert.equal(getDatabaseConnection({ ...pgFields, PGPORT: undefined }).port, 5432);
-});
+const current = 'postgresql://current_owner:offline-current@current.example.test/current_database?sslmode=verify-full';
 
-test('current DATABASE_URL wins over archived Neon; complete PG fields retain precedence', () => {
-  assert.equal(getDatabaseConnection({ DATABASE_URL: current, NEON_DATABASE_URL: previous }).connectionString, current);
-  assert.equal(getDatabaseConnection({ NEON_DATABASE_URL: previous }).connectionString, previous);
-  assert.equal(getDatabaseConnection({ PGHOST: 'incomplete-host', DATABASE_URL: current }).connectionString, current);
-  assert.equal(getDatabaseConnection({ ...pgFields, DATABASE_URL: current, NEON_DATABASE_URL: previous }).host, pgFields.PGHOST);
-  assert.throws(() => getDatabaseConnection({ DATABASE_URL: 'invalid-current-target', NEON_DATABASE_URL: previous }), /Invalid DATABASE_URL/);
-});
-
-test('local Helium/loopback URLs work without SSL even in production; external lookalikes retain verified TLS', () => {
-  for (const host of ['helium', 'db.helium', 'db.replit.internal', 'localhost', '127.0.0.1', '[::1]', 'db.localhost', 'db.local']) {
-    const config = getDatabaseConnection({ DATABASE_URL: `postgresql://owner:offline@${host}/app`, NODE_ENV: 'production' });
-    assert.equal(config.ssl, false, host);
-  }
-  for (const host of ['helium.example.test', 'nothelium', 'localhost.example.test', 'db.internal.example.test', 'current.neon.tech']) {
-    const config = getDatabaseConnection({ DATABASE_URL: `postgresql://owner:offline@${host}/app`, NODE_ENV: 'development' });
-    assert.deepEqual(config.ssl, { rejectUnauthorized: true }, host);
-  }
-});
-
-test('URL SSL modes are preserved for the real pg parser and override conflicting PG SSL flags', () => {
-  for (const [mode, secure] of [['disable', false], ['require', true], ['verify-ca', true], ['verify-full', true]]) {
-    const url = `${current}?sslmode=${mode}`;
-    const config = getDatabaseConnection({ DATABASE_URL: url, PGSSL: secure ? 'false' : 'true' });
-    assert.equal(config.connectionString, url); assert.equal(Object.hasOwn(config, 'ssl'), false);
-    const client = new Client(config); // Inspection only; never call connect().
-    if (secure) { assert.ok(client.connectionParameters.ssl); assert.notEqual(client.connectionParameters.ssl.rejectUnauthorized, false); }
-    else assert.equal(client.connectionParameters.ssl, false);
-  }
-  const localExplicitTls = getDatabaseConnection({ DATABASE_URL: 'postgresql://owner:offline@helium/app?sslmode=verify-full' });
-  assert.ok(new Client(localExplicitTls).connectionParameters.ssl);
-  assert.deepEqual(getDatabaseConnection({ DATABASE_URL: `${current}?sslmode=` }).ssl, { rejectUnauthorized: true });
-});
-
-test('explicit PGSSL and PGSSLMODE options remain effective without changing targets', () => {
-  for (const value of ['false', '0', 'off', 'disable']) assert.equal(getDatabaseConnection({ ...pgFields, PGSSL: value }).ssl, false);
-  for (const value of ['true', '1', 'on', 'require', 'verify-full']) assert.equal(getDatabaseConnection({ ...pgFields, PGSSL: value }).ssl, true);
-  assert.equal(getDatabaseConnection({ DATABASE_URL: current, PGSSL: 'false', PGSSLMODE: 'verify-full' }).ssl, false);
-  assert.equal(getDatabaseConnection({ DATABASE_URL: current, PGSSLMODE: 'verify-full' }).ssl, true);
-  assert.deepEqual(getDatabaseConnection({ DATABASE_URL: current, PGSSLMODE: 'no-verify' }).ssl, { rejectUnauthorized: false });
-  assert.throws(() => getDatabaseConnection({ ...pgFields, PGSSL: 'invalid' }), /Invalid PGSSL/);
-});
-
-test('missing or malformed configuration fails clearly without URLs, passwords, or guessed local targets', () => {
-  for (const env of [{}, { PGPORT: '5432' }, { DATABASE_URL: 'postgresql://host/database' }, { DATABASE_URL: 'postgresql://owner:DO_NOT_LOG_ME@' }, { DATABASE_URL: 'postgresql://owner:DO_NOT_LOG_ME@host/database?sslmode=invalid' }, { ...pgFields, PGPORT: 'DO_NOT_LOG_ME' }]) {
-    assert.throws(() => getDatabaseConnection(env), error => !error.message.includes('DO_NOT_LOG_ME') && !error.message.includes('postgresql://'));
+test('the current DATABASE_URL is passed directly to pg, and URL resolution remains lazy', () => {
+  const env = {}; const config = configuration(env);
+  env.DATABASE_URL = current;
+  for (const environment of ['development', 'production', 'test']) {
+    const connection = config[environment].connection();
+    assert.equal(connection.connectionString, current);
+    assert.deepEqual(Object.keys(connection), ['connectionString']);
+    const client = new Client(connection); // Inspect native parsing; never connect.
+    assert.equal(client.connectionParameters.host, 'current.example.test');
+    assert.equal(client.connectionParameters.database, 'current_database');
+    assert.equal(client.connectionParameters.user, 'current_owner');
+    assert.ok(client.connectionParameters.ssl);
+    assert.notEqual(client.connectionParameters.ssl.rejectUnauthorized, false);
   }
 });
 
-test('fresh production imports and Knex initialization work without database credentials; validation is lazy', () => {
+test('saved Neon and individual PG variables never select a fallback database', () => {
+  const old = { NEON_DATABASE_URL: 'postgresql://old:DO_NOT_LOG_ME@old.neon.tech/old_database', PGHOST: 'old-host', PGUSER: 'old-owner', PGDATABASE: 'old-database', PGPASSWORD: 'DO_NOT_LOG_ME' };
+  const config = configuration(old);
+  assert.throws(() => config.production.connection(), error => error.message === 'DATABASE_URL is required to connect to the database.');
+  old.DATABASE_URL = current;
+  assert.equal(config.production.connection().connectionString, current);
+});
+
+test('native URL TLS modes control local and external connections without app overrides', () => {
+  for (const [url, secure] of [
+    ['postgresql://owner:offline@helium/app?sslmode=disable', false],
+    ['postgresql://owner:offline@helium/app?sslmode=verify-full', true],
+    ['postgresql://owner:offline@external.example.test/app?sslmode=disable', false],
+    [current, true],
+  ]) {
+    const connection = configuration({ DATABASE_URL: url, NODE_ENV: 'production' }).production.connection();
+    assert.equal(Object.hasOwn(connection, 'ssl'), false);
+    const ssl = new Client(connection).connectionParameters.ssl;
+    if (secure) { assert.ok(ssl); assert.notEqual(ssl.rejectUnauthorized, false); }
+    else assert.equal(ssl, false);
+  }
+});
+
+test('fresh production imports and Knex initialization work without credentials; missing runtime URL is clear', () => {
   const root = path.resolve(__dirname, '..');
   const script = `
     const assert = require('node:assert/strict');
     const config = require(${JSON.stringify(path.join(root, 'knexfile.js'))});
     const db = require(${JSON.stringify(path.join(root, 'db.js'))});
     assert.equal(typeof config.production.connection, 'function');
-    assert.throws(() => config.production.connection(), /Database configuration is missing or incomplete/);
+    assert.throws(() => config.production.connection(), error => error.message === 'DATABASE_URL is required to connect to the database.');
     db.destroy().then(() => process.stdout.write('lazy configuration verified'));
   `;
   const result = spawnSync(process.execPath, ['-e', script], { cwd: os.tmpdir(), env: { NODE_ENV: 'production', PATH: process.env.PATH || '' }, encoding: 'utf8' });

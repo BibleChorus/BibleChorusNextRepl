@@ -53,15 +53,11 @@ by other content. A failed database transaction never deletes files from S3.
 translation/genre JSON with `song_verses` when song metadata or scripture
 connections change. Both historical database import paths share one pool.
 
-`lib/database-config.js` resolves a complete legacy PG configuration before
-`DATABASE_URL`, then the legacy `NEON_DATABASE_URL`. Knex resolves it lazily, allowing
-secret-free builds while refusing an unspecified runtime database. Existing URL
-SSL options are left to pg; external URLs without them use verified TLS unless explicitly
-configured through `PGSSL`/`PGSSLMODE`. Known local Helium/loopback hosts and
-reserved local hostname suffixes use non-SSL connections, without relying on
-`NODE_ENV`. Original PG configuration retains its
-existing default. The chapters API and targeted deployment script use this same
-configuration and do not create a separate database target.
+`knexfile.js` uses only the platform's current `DATABASE_URL`. Its small lazy
+connection factory keeps secret-free builds valid and fails clearly if a
+runtime connection needs a missing URL. The pg driver handles the URL's native
+connection and TLS settings without app overrides. The chapters API and targeted
+deployment script share this configuration.
 
 ## Private resources and restored actions
 
