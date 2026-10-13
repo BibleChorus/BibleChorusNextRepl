@@ -21,7 +21,7 @@ The added moderator lock migration is additive and idempotent. Check whether the
 
 ## Verification and deployment
 
-Run `npm ci`, `npm run check`, and `npm run build`. Tests run offline with mocked authentication/database/storage boundaries; they never touch production content. GitHub CI uses Node 20, matching Replit's runtime.
+Run `npm ci`, `npm run check`, and `npm run build`. Tests run offline with mocked authentication/database/storage boundaries; they never touch production content. GitHub CI and Replit use Node 22 LTS, matching the patched sanitizer's runtime requirement.
 
 For local visual inspection with existing public data, run the built app on port 5080 and `node scripts/read-only-preview.mjs`; open port 4100. The QA proxy strips credentials and blocks mutations. It is not the production server and must never be used as a deployment command. Local SSR routes that require PostgreSQL need separate environment verification in Replit.
 

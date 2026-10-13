@@ -4,7 +4,7 @@ A community for Scripture-inspired music and musical journeys of faith. Built wi
 
 ## Run and verify
 
-Use Node 20. Install the locked dependencies and run the offline checks:
+Use Node 22.12 or later (Node 22 LTS is configured for Replit and CI). Install the locked dependencies and run the offline checks:
 
 ```sh
 npm ci
