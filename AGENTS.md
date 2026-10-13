@@ -62,3 +62,7 @@ Use the shared application shell and CSS tokens. Never inject page-level CSS tha
 All API mutations must use the shared server authentication/ownership helpers. Preserve signed bearer compatibility, cookie sessions, and Google sessions. Do not log tokens or private content. Never remove saved S3 references through unsubmitted-file cleanup. Review `Reference/api_security_reference.md` before changing uploads, deletion, privacy, or attribution.
 
 Run `npm run check` and `npm run build` before publishing changes. Offline tests must not use live database/storage/email credentials. Historical migrations are not a fresh-database bootstrap; never run them as part of build/start or casually reset migration history. See `docs/site-rework.md` for controlled deployment and preview requirements.
+
+## 9. GitHub and Replit synchronization
+
+GitHub `main` is the source of truth. Author application, configuration, and project-documentation changes through the GitHub connection, then align Replit with that revision. Before handing over a republish button, verify identical commit and tracked-file tree, a clean tracked working directory, and zero commits ahead or behind. Preserve any Replit-only work in a recoverable snapshot and promote useful changes through GitHub before aligning; do not accumulate local merge commits or generated source documentation. Confirm the Publishing run configuration matches the GitHub-controlled deployment configuration. When the user requests a republish button, prepare it after validation and leave publication to the user.

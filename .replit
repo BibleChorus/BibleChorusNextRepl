@@ -11,7 +11,7 @@ NEXT_TELEMETRY_DISABLED = "1"
 
 [deployment]
 build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
+run = ["env", "DATABASE_REQUIRE_TLS=1", "npm", "run", "start"]
 deploymentTarget = "cloudrun"
 
 [[ports]]

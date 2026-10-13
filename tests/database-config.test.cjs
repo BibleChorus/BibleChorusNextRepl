@@ -13,7 +13,7 @@ const ts = require('typescript');
 function configuration(env) {
   const result = { exports: {} };
   vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../knexfile.js'), 'utf8'), {
-    module: result, process: { env },
+    module: result, process: { env }, URL,
     require(name) { assert.equal(name, 'dotenv'); return { config() {} }; },
   });
   return result.exports;
@@ -60,6 +60,67 @@ test('native URL TLS modes control local and external connections without app ov
   }
 });
 
+test('published Replit processes require verified TLS when the current URL omits or disables it', () => {
+  for (const query of ['', '?ssl=false', '?ssl=0', '?sslmode=disable', '?sslmode=no-verify', '?sslmode=disable&sslmode=disable', '?sslmode=require&uselibpqcompat=true']) {
+    const connection = configuration({ DATABASE_URL: `postgresql://owner:offline@production.example.test/app${query}`, DATABASE_REQUIRE_TLS: '1' }).production.connection();
+    const url = new URL(connection.connectionString);
+    assert.equal(url.searchParams.get('sslmode'), 'verify-full');
+    assert.equal(url.searchParams.getAll('sslmode').length, 1);
+    assert.equal(url.searchParams.has('ssl'), false);
+    const client = new Client(connection); // Inspect configuration only, never connect.
+    assert.ok(client.connectionParameters.ssl);
+    assert.notEqual(client.connectionParameters.ssl.rejectUnauthorized, false);
+    assert.equal(client.connectionParameters.host, 'production.example.test');
+    assert.equal(client.connectionParameters.database, 'app');
+  }
+});
+
+test('published TLS retains stronger mode, certificate files, credentials, and non-TLS URL settings', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'biblechorus-tls-test-'));
+  try {
+    const files = { sslrootcert: ['root.crt', 'offline-root-certificate'], sslcert: ['client.crt', 'offline-client-certificate'], sslkey: ['client.key', 'offline-client-key'] };
+    const url = new URL('postgresql://owner:p%40ss%2Fword@production.example.test:5434/app?sslmode=verify-full&application_name=BibleChorus&channel_binding=require');
+    for (const [parameter, [name, content]] of Object.entries(files)) {
+      const filename = path.join(directory, name); fs.writeFileSync(filename, content); url.searchParams.set(parameter, filename);
+    }
+    const connection = configuration({ DATABASE_URL: url.toString(), DATABASE_REQUIRE_TLS: '1' }).production.connection();
+    const normalized = new URL(connection.connectionString);
+    assert.equal(normalized.username, url.username); assert.equal(normalized.password, url.password);
+    assert.equal(normalized.searchParams.get('application_name'), 'BibleChorus');
+    assert.equal(normalized.searchParams.get('channel_binding'), 'require');
+    const client = new Client(connection);
+    assert.equal(client.connectionParameters.ssl.ca, 'offline-root-certificate');
+    assert.equal(client.connectionParameters.ssl.cert, 'offline-client-certificate');
+    assert.equal(client.connectionParameters.ssl.key, 'offline-client-key');
+    assert.notEqual(client.connectionParameters.ssl.rejectUnauthorized, false);
+    assert.equal(client.connectionParameters.password, 'p@ss/word');
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+});
+
+test('NODE_ENV=production previews keep local Helium non-SSL settings and malformed deployment URLs fail without secrets', () => {
+  for (const marker of [undefined, '0']) {
+    const url = 'postgresql://owner:offline@helium/app?sslmode=disable';
+    const connection = configuration({ DATABASE_URL: url, NODE_ENV: 'production', DATABASE_REQUIRE_TLS: marker }).production.connection();
+    assert.equal(connection.connectionString, url);
+    assert.equal(new Client(connection).connectionParameters.ssl, false);
+  }
+  const implicit = configuration({ DATABASE_URL: 'postgresql://owner:offline@helium/app', NODE_ENV: 'production' }).production.connection();
+  assert.equal(new Client(implicit).connectionParameters.ssl, false);
+  for (const url of ['postgresql://owner:DO_NOT_LOG_ME@', 'https://owner:DO_NOT_LOG_ME@example.test/app']) {
+    assert.throws(() => configuration({ DATABASE_URL: url, DATABASE_REQUIRE_TLS: '1' }).production.connection(), error => error.message === 'DATABASE_URL must be a valid PostgreSQL connection URL.');
+  }
+});
+
+test('the tracked deployment command enables TLS without changing preview startup', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../.replit'), 'utf8');
+  const deployment = source.split('[deployment]')[1].split(/\n\[/)[0];
+  const run = deployment.match(/^run\s*=\s*(\[[^\n]+\])$/m);
+  assert.ok(run, 'A tracked deployment run command must exist');
+  assert.deepEqual(JSON.parse(run[1]), ['env', 'DATABASE_REQUIRE_TLS=1', 'npm', 'run', 'start']);
+  assert.match(source, /^run = "npm run dev"/);
+  assert.equal(source.match(/DATABASE_REQUIRE_TLS/g)?.length, 1, 'TLS must be scoped to deployment startup');
+});
+
 test('fresh production imports and Knex initialization work without credentials; missing runtime URL is clear', () => {
   const root = path.resolve(__dirname, '..');
   const script = `
@@ -70,7 +131,7 @@ test('fresh production imports and Knex initialization work without credentials;
     assert.throws(() => config.production.connection(), error => error.message === 'DATABASE_URL is required to connect to the database.');
     db.destroy().then(() => process.stdout.write('lazy configuration verified'));
   `;
-  const result = spawnSync(process.execPath, ['-e', script], { cwd: os.tmpdir(), env: { NODE_ENV: 'production', PATH: process.env.PATH || '' }, encoding: 'utf8' });
+  const result = spawnSync(process.execPath, ['-e', script], { cwd: os.tmpdir(), env: { NODE_ENV: 'production', DATABASE_REQUIRE_TLS: '1', PATH: process.env.PATH || '' }, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr); assert.match(result.stdout, /lazy configuration verified/);
 });
 

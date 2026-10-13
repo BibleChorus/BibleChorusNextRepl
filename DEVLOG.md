@@ -82,3 +82,9 @@ Reworked the application shell and all main sections around a shared warm design
 Added shared server authentication and ownership checks, verified upload metadata, preservation-aware file cleanup, private study notes, moderator locking, and corrected OAuth cookie/form handling. Updated compatible security dependencies and removed unused storage/UUID libraries. Added offline regression checks, CI, and deployment documentation. Source changes do not run legacy migrations or mutate production records.
 
 Clean-install CI exposed an npm peer-lock discrepancy and a patched sanitizer requiring Node 22. Updated the lock with the deployment-compatible npm resolver, made its YAML peer explicit, and aligned CI/Replit on Node 22 while preserving the existing Python module.
+## 2026-10-13 — Production database TLS and source synchronization
+
+- Require certificate-validating TLS through the GitHub-controlled production run configuration while retaining the single current database URL and local preview behavior.
+- Preserve database identity and configured certificates; no records, schema, secrets, or media are changed by this correction.
+- Keep Replit aligned with GitHub main before release handoff, preserving any local-only work before alignment and preparing the requested republish button without publishing automatically.
+
