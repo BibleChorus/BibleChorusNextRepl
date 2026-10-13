@@ -43,11 +43,16 @@ Set secrets in the deployment environment, never in committed files or Next.js c
 - `NEXT_PUBLIC_BASE_URL` for public links and email destinations.
 - `SENDGRID_API_KEY` for user-requested reports.
 
-The app uses the platform's current `DATABASE_URL` directly. PostgreSQL's native
-driver interprets its connection and TLS parameters, including `sslmode`; the
-app does not override them. Knex resolves the URL only when a connection is
-needed, allowing builds without credentials and giving a clear runtime error
-when the URL is absent. See [Replit's database guidance](https://docs.replit.com/features/data-and-storage/development-and-production).
+The app uses only the platform's current `DATABASE_URL`; incomplete connection
+details fail clearly instead of inheriting old PostgreSQL environment settings. Published Replit
+processes enable `DATABASE_REQUIRE_TLS=1` through the tracked `.replit`
+deployment command and require `sslmode=verify-full`, preserving the
+configured target and certificate parameters. Previews retain their native URL
+settings, including local Helium without SSL, even when running a production
+Next.js build. Knex resolves the URL only when a connection is needed, allowing
+builds without credentials and giving a clear runtime error when it is absent.
+See [Replit's database guidance](https://docs.replit.com/features/data-and-storage/development-and-production)
+and [pg's SSL URL behavior](https://node-postgres.com/features/ssl).
 
 Presigned browser uploads need bucket CORS allowing PUT and Content-Type from the app's production and preview origins. File/Blob upload length is supplied by the browser. Limits remain 200 MB for audio, 5 MB for images, and 10 MB for study PDFs. PDF uploads extract embedded text and link detected scripture references; OCR for scanned PDFs remains an operational extension, not an implemented fallback.
 
