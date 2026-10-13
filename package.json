@@ -3,16 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 5000 --hostname 0.0.0.0",
-    "build": "next build",
-    "start": "next start --port 3000 --hostname 0.0.0.0",
+    "dev": "node scripts/verify-braces-patch.cjs && next dev --port 5000 --hostname 0.0.0.0",
+    "build": "node scripts/verify-braces-patch.cjs && next build",
+    "start": "node scripts/verify-braces-patch.cjs && next start --port 3000 --hostname 0.0.0.0",
     "lint": "eslint . --ext .js,.ts,.tsx --ignore-path .gitignore",
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
     "knex": "knex",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.*",
-    "check": "npm run lint && npm run typecheck && npm test"
+    "check": "npm run lint && npm run typecheck && npm test",
+    "postinstall": "patch-package --error-on-fail && node scripts/verify-braces-patch.cjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.651.1",
@@ -72,6 +73,7 @@
     "next": "^15.3.4",
     "next-auth": "^5.0.0-beta.29",
     "next-themes": "^0.3.0",
+    "patch-package": "8.0.1",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^5.3.31",
     "pg": "^8.13.0",

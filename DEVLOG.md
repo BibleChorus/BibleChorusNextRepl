@@ -99,3 +99,9 @@ Clean-install CI exposed an npm peer-lock discrepancy and a patched sanitizer re
 - Bundle Auth.js through Next's supported package transpilation so production Google sign-in can resolve Next server imports correctly.
 - Exercise the real production authentication bridge after a fresh build, including provider and CSRF endpoints, using synthetic configuration without live credentials or database access.
 - Add the observed Suno V6 model to the upload selector so current recordings can retain accurate attribution.
+
+## 2026-10-13 — Braces stack-exhaustion mitigation
+
+- npm audit identifies GHSA-vfj7-8cjw-p6xm in the current `braces@3.0.3` lock entry. This newer advisory has no published patched release; 3.0.3 already fixes the older CVE-2024-4068.
+- Apply a narrow version-pinned dependency patch that rejects more than 100 nested brace/parenthesis blocks and bounds AST/parent traversal. Verify exact installed patched source before dev/build/start, and fail installation when applying the patch fails.
+- Preserve ordinary glob watching, matching and range expansion with offline security and consumer regression tests. Keep the genuine package version and audit findings visible; this mitigation does not establish closure of Dependabot alert #241.
