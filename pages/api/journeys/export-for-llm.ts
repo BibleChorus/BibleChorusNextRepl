@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 import axios from 'axios';
 import { BIBLE_BOOKS } from '@/lib/constants';
+import { getAuthenticatedUserId } from '@/lib/server-auth';
 
 interface TimelineItem {
   type: 'season_start' | 'season_end' | 'song' | 'important_date';
@@ -374,13 +375,14 @@ export default async function handler(
       return res.status(404).json({ error: 'Journey not found' });
     }
 
-    if (!profile.is_public) {
+    const isOwner = (await getAuthenticatedUserId(req, res)) === user.id;
+    if (!profile.is_public && !isOwner) {
       return res.status(403).json({ error: 'This journey is private' });
     }
 
-    const seasons = await db('seasons')
-      .where({ user_id: user.id, is_visible: true })
-      .orderBy('display_order', 'asc');
+    const seasonsQuery = db('seasons').where({ user_id: user.id }).orderBy('display_order', 'asc');
+    if (!isOwner) seasonsQuery.where({ is_visible: true });
+    const seasons = await seasonsQuery;
 
     const timeline: TimelineItem[] = [];
     const allBibleVerses: { book: string; chapter: number; verse: number }[] = [];
@@ -462,6 +464,7 @@ export default async function handler(
             lyrics: song.lyrics,
             personalNote: song.personal_note,
             significance: song.significance,
+            sourceUrl: song.source_url,
             bibleVerses: songBibleVerses,
             journeySongOrigin: song.journey_song_origin,
             musicOrigin: song.music_origin,

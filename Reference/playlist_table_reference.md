@@ -81,3 +81,7 @@ This table stores information about user-created playlists, including metadata a
 
 - Consider implementing a cleanup process for playlists that have been empty for an extended period.
 - Implement a background job to periodically update auto playlists based on their criteria.
+
+## Page visibility and cover replacement
+
+The playlist detail page checks visibility before loading songs: public and automatic playlists are visible, while private playlists require the authenticated owner. Replacing cover art uploads and commits the replacement without deleting the previous asset beforehand, preserving the existing cover if upload or metadata persistence fails.

@@ -1,7 +1,8 @@
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next'
 import db from '@/db'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
       const { user_id, song_id, vote_type } = req.query
@@ -60,3 +61,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }
+
+export default withApiAuth(handler, { methods: ['POST'], identityFields: ['user_id'] });

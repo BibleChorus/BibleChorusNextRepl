@@ -1,7 +1,9 @@
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
-import db from '@/db';  // This should be the correct path
+import db from '@/db';
+import submitSong from '@/pages/api/submit-song';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
 
   switch (req.method) {
@@ -17,52 +19,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       break;
 
-    case 'POST':
+    case 'POST': {
+      // Keep this historical route usable without maintaining a second, weaker
+      // submission pipeline or writing the removed `genre` column.
+      const { genre, ...body } = req.body;
+      req.body = {
+        ...body,
+        genres: Array.isArray(body.genres) ? body.genres : typeof genre === 'string' && genre.trim() ? [genre.trim()] : [],
+      };
+      const json = res.json.bind(res);
+      const status = res.status.bind(res);
+      res.status = code => status(code === 200 ? 201 : code);
+      res.json = data => json(data?.songId ? { id: data.songId } : data);
       try {
-        const {
-          title,
-          artist,
-          audio_url,
-          uploaded_by,
-          ai_used_for_lyrics,
-          music_ai_generated,
-          bible_translation_used,
-          genre,
-          lyrics_scripture_adherence,
-          is_continuous_passage,
-          lyrics,
-          lyric_ai_prompt,
-          music_ai_prompt,
-          music_model_used,
-          song_art_url
-        } = req.body;
-
-        const [id] = await db('songs').insert({
-          title,
-          artist,
-          audio_url,
-          uploaded_by,
-          ai_used_for_lyrics,
-          music_ai_generated,
-          bible_translation_used,
-          genre,
-          lyrics_scripture_adherence,
-          is_continuous_passage,
-          lyrics,
-          lyric_ai_prompt,
-          music_ai_prompt,
-          music_model_used,
-          song_art_url
-        }).returning('id');
-
-        res.status(201).json({ id });
-      } catch (error) {
-        res.status(500).json({ message: 'Error creating song', error });
+        await submitSong(req, res);
+      } finally {
+        res.json = json;
+        res.status = status;
       }
       break;
+    }
 
     default:
       res.setHeader('Allow', ['GET', 'POST']);
       res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+export default withApiAuth(handler, { methods: ['POST'], owner: 'users', identityFields: ['uploaded_by'] });

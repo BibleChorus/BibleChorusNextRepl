@@ -1,10 +1,11 @@
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../../lib/db'; // Corrected import path
 
 // Update: Use process.env.CDN_URL for server-side environment variables
 const CDN_URL = process.env.CDN_URL || '';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
 
   if (method === 'GET') {
@@ -97,3 +98,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).end(`Method ${method} Not Allowed`);
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['POST'], identityFields: ['user_id'] });

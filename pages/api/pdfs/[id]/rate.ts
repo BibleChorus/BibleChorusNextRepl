@@ -1,9 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
-import jwt from 'jsonwebtoken';
-import { getJwtSecret } from '@/lib/jwt';
+import { requireUser, withApiAuth } from '@/lib/server-auth';
+import { requireReadablePdf } from '@/lib/resource-access';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query as { id: string };
 
   if (req.method !== 'POST') {
@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     value?: number;
   };
 
-  if (!category || typeof value !== 'number') {
+  if (!category || ![-1, 0, 1].includes(value as number)) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
 
@@ -24,18 +24,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'Invalid category' });
   }
 
-  let token = req.cookies.token;
-  if (!token && req.headers.authorization?.startsWith('Bearer ')) {
-    token = req.headers.authorization.split(' ')[1];
-  }
-
-  if (!token) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
+  const user = await requireUser(req, res);
+  await requireReadablePdf(Number(id), user);
 
   try {
-    const decoded = jwt.verify(token, getJwtSecret()) as { userId: number };
-    const user_id = decoded.userId;
+    const user_id = user.id;
 
     const existing = await db('pdf_ratings')
       .where({ pdf_id: id, user_id })
@@ -67,3 +60,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ message: 'Error submitting vote' });
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['POST'] });

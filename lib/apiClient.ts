@@ -1,3 +1,4 @@
+import { attachApiToken } from './client-auth';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
 // Base configuration shared across requests
@@ -10,10 +11,6 @@ const config: AxiosRequestConfig = {
 // Create a typed Axios instance
 const apiClient: AxiosInstance = axios.create(config);
 
-// You can add interceptors here if needed
-// apiClient.interceptors.response.use(
-//   (response) => response,
-//   (error) => Promise.reject(error)
-// );
+apiClient.interceptors.request.use(attachApiToken);
 
 export default apiClient;

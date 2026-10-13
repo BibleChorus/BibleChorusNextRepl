@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ChevronUp, ChevronDown } from 'lucide-react';
-import axios from 'axios';
-import { useAuth } from '@/contexts/AuthContext';
-import { LoginPromptDialog } from '@/components/LoginPromptDialog';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import { useTheme } from 'next-themes';
+import { LoginPromptDialog } from "@/components/LoginPromptDialog";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { uiTheme } from "@/lib/design-system";
+import { cn } from "@/lib/utils";
+import axios from "axios";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useTheme } from "next-themes";
+import React, { useState } from "react";
+import { toast } from "sonner";
 
 interface VoteButtonsProps {
   itemId: number;
-  itemType: 'topic' | 'comment';
+  itemType: "topic" | "comment";
   initialUpvotes: number;
   initialDownvotes: number;
   initialUserVote?: number;
@@ -23,7 +24,7 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
   initialUpvotes,
   initialDownvotes,
   initialUserVote = 0,
-  onVoteUpdate
+  onVoteUpdate,
 }) => {
   const { user, getAuthToken } = useAuth();
   const { resolvedTheme } = useTheme();
@@ -33,21 +34,13 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
   const [isVoting, setIsVoting] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  const isDark = resolvedTheme === 'dark';
+  const isDark = resolvedTheme === "dark";
 
   const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-    accentGlow: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.12)',
-    downvote: isDark ? '#b91c1c' : '#dc2626',
-    downvoteGlow: isDark ? 'rgba(185, 28, 28, 0.15)' : 'rgba(220, 38, 38, 0.12)',
+    ...uiTheme,
+    accentGlow: "hsl(var(--primary) / .1)",
+    downvote: "hsl(var(--destructive))",
+    downvoteGlow: "hsl(var(--destructive) / .1)",
   };
 
   const handleVote = async (voteValue: number) => {
@@ -62,14 +55,21 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
     const newVote = userVote === voteValue ? 0 : voteValue;
 
     try {
-      const endpoint = itemType === 'topic' 
-        ? `/api/forum/topics/${itemId}/vote`
-        : `/api/forum/comments/${itemId}/vote`;
+      const endpoint =
+        itemType === "topic"
+          ? `/api/forum/topics/${itemId}/vote`
+          : `/api/forum/comments/${itemId}/vote`;
 
       const token = await getAuthToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+      const config = token
+        ? { headers: { Authorization: `Bearer ${token}` } }
+        : {};
       const response = await axios.post(endpoint, { vote: newVote }, config);
-      const { upvotes: newUpvotes, downvotes: newDownvotes, userVote: newUserVote } = response.data;
+      const {
+        upvotes: newUpvotes,
+        downvotes: newDownvotes,
+        userVote: newUserVote,
+      } = response.data;
 
       setUpvotes(newUpvotes);
       setDownvotes(newDownvotes);
@@ -79,8 +79,8 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
         onVoteUpdate(newUpvotes, newDownvotes, newUserVote);
       }
     } catch (error) {
-      console.error('Error voting:', error);
-      toast.error('Failed to register vote');
+      console.error("Error voting:", error);
+      toast.error("Failed to register vote");
     } finally {
       setIsVoting(false);
     }
@@ -90,24 +90,26 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
 
   return (
     <>
-      <div 
+      <div
         className="flex items-center gap-1 backdrop-blur-sm rounded-full px-2 py-1"
         style={{
-          backgroundColor: isDark ? 'rgba(10, 10, 10, 0.8)' : 'rgba(255, 255, 255, 0.9)',
-          border: `1px solid ${theme.border}`
+          backgroundColor: isDark
+            ? "rgba(10, 10, 10, 0.8)"
+            : "rgba(255, 255, 255, 0.9)",
+          border: `1px solid ${theme.border}`,
         }}
       >
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Upvote"
+          aria-pressed={userVote === 1}
           onClick={() => handleVote(1)}
           disabled={isVoting}
-          className={cn(
-            "h-7 w-7 p-0 rounded-full transition-all duration-300"
-          )}
+          className={cn("h-7 w-7 p-0 rounded-full transition-all duration-300")}
           style={{
-            backgroundColor: userVote === 1 ? theme.accent : 'transparent',
-            color: userVote === 1 ? '#ffffff' : theme.textSecondary
+            backgroundColor: userVote === 1 ? theme.accent : "transparent",
+            color: userVote === 1 ? "#ffffff" : theme.textSecondary,
           }}
           onMouseEnter={(e) => {
             if (userVote !== 1) {
@@ -117,7 +119,7 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
           }}
           onMouseLeave={(e) => {
             if (userVote !== 1) {
-              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.backgroundColor = "transparent";
               e.currentTarget.style.color = theme.textSecondary;
             }
           }}
@@ -128,8 +130,13 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
         <span
           className="text-sm font-bold min-w-[1.5rem] text-center transition-all duration-300"
           style={{
-            color: score > 0 ? theme.accent : score < 0 ? theme.downvote : theme.textSecondary,
-            fontFamily: "'Manrope', sans-serif"
+            color:
+              score > 0
+                ? theme.accent
+                : score < 0
+                  ? theme.downvote
+                  : theme.textSecondary,
+            fontFamily: "'Manrope', sans-serif",
           }}
         >
           {score}
@@ -138,14 +145,14 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Downvote"
+          aria-pressed={userVote === -1}
           onClick={() => handleVote(-1)}
           disabled={isVoting}
-          className={cn(
-            "h-7 w-7 p-0 rounded-full transition-all duration-300"
-          )}
+          className={cn("h-7 w-7 p-0 rounded-full transition-all duration-300")}
           style={{
-            backgroundColor: userVote === -1 ? theme.downvote : 'transparent',
-            color: userVote === -1 ? '#ffffff' : theme.textSecondary
+            backgroundColor: userVote === -1 ? theme.downvote : "transparent",
+            color: userVote === -1 ? "#ffffff" : theme.textSecondary,
           }}
           onMouseEnter={(e) => {
             if (userVote !== -1) {
@@ -155,7 +162,7 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
           }}
           onMouseLeave={(e) => {
             if (userVote !== -1) {
-              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.backgroundColor = "transparent";
               e.currentTarget.style.color = theme.textSecondary;
             }
           }}

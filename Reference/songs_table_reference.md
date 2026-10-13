@@ -1,5 +1,12 @@
 # Songs Table
 
+Song edits, artwork changes, and deletion require the verified uploader. New
+submissions derive `uploaded_by` from the session and verify the stored audio
+and artwork before committing metadata. `lib/song-scripture.ts` keeps coverage
+arrays and translation/genre caches synchronized after metadata or verse edits.
+Storage cleanup follows a successful deletion transaction and retains shared
+files. See [API authentication and file preservation](api_security_reference.md).
+
 ## Purpose
 This table stores information about individual songs, including metadata, lyrics, and details about AI involvement in creation. It also includes a search vector for efficient full-text search capabilities.
 

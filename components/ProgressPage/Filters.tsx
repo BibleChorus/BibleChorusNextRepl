@@ -1,71 +1,79 @@
-"use client"
+"use client";
 
-import { Dispatch, SetStateAction, useState } from "react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Button } from "@/components/ui/button"
-import { Check, ChevronsUpDown, X, RefreshCw, Info } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { motion } from "framer-motion"
-import { useTheme } from "next-themes"
+import { uiTheme } from "@/lib/design-system";
+
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Check, ChevronsUpDown, Info, RefreshCw, X } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Dispatch, SetStateAction, useState } from "react";
 
 export interface FilterOptions {
-  lyricsAdherence: string[]
-  isContinuous: "all" | "true" | "false"
-  aiMusic: "all" | "true" | "false"
+  lyricsAdherence: string[];
+  isContinuous: "all" | "true" | "false";
+  aiMusic: "all" | "true" | "false";
 }
 
 interface FiltersProps {
-  filterOptions: FilterOptions
-  setFilterOptions: Dispatch<SetStateAction<FilterOptions>>
-  setIsFilterExpanded: Dispatch<SetStateAction<boolean>>
+  filterOptions: FilterOptions;
+  setFilterOptions: Dispatch<SetStateAction<FilterOptions>>;
+  setIsFilterExpanded: Dispatch<SetStateAction<boolean>>;
 }
 
-export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }: FiltersProps) {
-  const [openLyricsAdherence, setOpenLyricsAdherence] = useState(false)
-  const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === 'dark'
+export function Filters({
+  filterOptions,
+  setFilterOptions,
+  setIsFilterExpanded,
+}: FiltersProps) {
+  const [openLyricsAdherence, setOpenLyricsAdherence] = useState(false);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
-  const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-  }
+  const theme = uiTheme;
 
   const handleChange = (key: keyof FilterOptions, value: any) => {
-    setFilterOptions((prev) => ({ ...prev, [key]: value }))
-  }
+    setFilterOptions((prev) => ({ ...prev, [key]: value }));
+  };
 
   const lyricsAdherenceOptions = [
     { value: "word_for_word", label: "Word for Word" },
     { value: "close_paraphrase", label: "Close Paraphrase" },
     { value: "creative_inspiration", label: "Creative Inspiration" },
-  ]
+  ];
 
   const toggleLyricsAdherence = (value: string) => {
-    const currentValues = filterOptions.lyricsAdherence
+    const currentValues = filterOptions.lyricsAdherence;
     const newValues = currentValues.includes(value)
       ? currentValues.filter((v) => v !== value)
-      : [...currentValues, value]
-    handleChange('lyricsAdherence', newValues)
-  }
+      : [...currentValues, value];
+    handleChange("lyricsAdherence", newValues);
+  };
 
   const clearFilters = () => {
     setFilterOptions({
       lyricsAdherence: [],
       isContinuous: "all",
       aiMusic: "all",
-    })
-  }
+    });
+  };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -77,16 +85,18 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
         className="absolute top-0 right-0 -mt-2 -mr-2 w-8 h-8 flex items-center justify-center transition-all duration-200 rounded-full backdrop-blur-sm shadow-lg z-10"
         style={{
           color: theme.textSecondary,
-          backgroundColor: isDark ? 'rgba(10, 10, 10, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: isDark
+            ? "rgba(10, 10, 10, 0.9)"
+            : "rgba(255, 255, 255, 0.9)",
           border: `1px solid ${theme.border}`,
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = theme.borderHover
-          e.currentTarget.style.color = theme.accent
+          e.currentTarget.style.borderColor = theme.borderHover;
+          e.currentTarget.style.color = theme.accent;
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = theme.border
-          e.currentTarget.style.color = theme.textSecondary
+          e.currentTarget.style.borderColor = theme.border;
+          e.currentTarget.style.color = theme.textSecondary;
         }}
         aria-label="Close filters"
       >
@@ -95,24 +105,29 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
 
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-3">
-          <div 
+          <div
             className="p-2 rounded-xl"
-            style={{ 
-              backgroundColor: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.15)',
+            style={{
+              backgroundColor: isDark
+                ? "rgba(212, 175, 55, 0.15)"
+                : "rgba(191, 161, 48, 0.15)",
             }}
           >
             <Info className="h-5 w-5" style={{ color: theme.accent }} />
           </div>
           <div>
-            <h2 
+            <h2
               className="text-lg font-bold"
               style={{ color: theme.accent, fontFamily: "'Italiana', serif" }}
             >
               Filters
             </h2>
-            <p 
+            <p
               className="text-sm"
-              style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
+              style={{
+                color: theme.textSecondary,
+                fontFamily: "'Manrope', sans-serif",
+              }}
             >
               Adjust filters to refine your view of Bible coverage progress
             </p>
@@ -125,7 +140,9 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
             onClick={clearFilters}
             className="flex items-center gap-2 backdrop-blur-sm transition-all duration-300 rounded-xl"
             style={{
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+              backgroundColor: isDark
+                ? "rgba(255, 255, 255, 0.05)"
+                : "rgba(0, 0, 0, 0.03)",
               border: `1px solid ${theme.border}`,
               color: theme.text,
               fontFamily: "'Manrope', sans-serif",
@@ -137,7 +154,10 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Popover open={openLyricsAdherence} onOpenChange={setOpenLyricsAdherence}>
+        <Popover
+          open={openLyricsAdherence}
+          onOpenChange={setOpenLyricsAdherence}
+        >
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -145,7 +165,9 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               aria-expanded={openLyricsAdherence}
               className="w-full justify-between backdrop-blur-sm transition-all duration-300 rounded-xl h-12"
               style={{
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                backgroundColor: isDark
+                  ? "rgba(255, 255, 255, 0.05)"
+                  : "rgba(0, 0, 0, 0.03)",
                 border: `1px solid ${theme.border}`,
                 color: theme.text,
                 fontFamily: "'Manrope', sans-serif",
@@ -157,13 +179,15 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent 
-            className="w-80 max-w-[calc(100vw-2rem)] p-0 backdrop-blur-xl rounded-xl" 
+          <PopoverContent
+            className="w-80 max-w-[calc(100vw-2rem)] p-0 backdrop-blur-xl rounded-xl"
             style={{
-              backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              backgroundColor: isDark
+                ? "rgba(10, 10, 10, 0.95)"
+                : "rgba(255, 255, 255, 0.95)",
               border: `1px solid ${theme.border}`,
             }}
-            side="bottom" 
+            side="bottom"
             align="center"
             sideOffset={4}
             avoidCollisions={true}
@@ -174,36 +198,48 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 <div
                   key={option.value}
                   className={cn(
-                    "flex cursor-pointer items-center rounded-xl px-3 py-2 transition-all duration-200"
+                    "flex cursor-pointer items-center rounded-xl px-3 py-2 transition-all duration-200",
                   )}
                   style={{
-                    backgroundColor: filterOptions.lyricsAdherence.includes(option.value) 
-                      ? isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.15)'
-                      : 'transparent',
+                    backgroundColor: filterOptions.lyricsAdherence.includes(
+                      option.value,
+                    )
+                      ? isDark
+                        ? "rgba(212, 175, 55, 0.15)"
+                        : "rgba(191, 161, 48, 0.15)"
+                      : "transparent",
                   }}
                   onMouseEnter={(e) => {
                     if (!filterOptions.lyricsAdherence.includes(option.value)) {
-                      e.currentTarget.style.backgroundColor = isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)'
+                      e.currentTarget.style.backgroundColor = isDark
+                        ? "rgba(212, 175, 55, 0.1)"
+                        : "rgba(191, 161, 48, 0.1)";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!filterOptions.lyricsAdherence.includes(option.value)) {
-                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.backgroundColor = "transparent";
                     }
                   }}
                   onClick={() => toggleLyricsAdherence(option.value)}
                 >
-                  <div 
+                  <div
                     className="mr-3 h-4 w-4 border-2 rounded flex items-center justify-center"
                     style={{ borderColor: theme.accent }}
                   >
                     {filterOptions.lyricsAdherence.includes(option.value) && (
-                      <Check className="h-3 w-3" style={{ color: theme.accent }} />
+                      <Check
+                        className="h-3 w-3"
+                        style={{ color: theme.accent }}
+                      />
                     )}
                   </div>
-                  <span 
+                  <span
                     className="text-sm font-medium"
-                    style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
+                    style={{
+                      color: theme.text,
+                      fontFamily: "'Manrope', sans-serif",
+                    }}
                   >
                     {option.label}
                   </span>
@@ -215,7 +251,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
         <FilterSelect
           title="Passage Type"
           value={filterOptions.isContinuous}
-          onChange={(value) => handleChange('isContinuous', value)}
+          onChange={(value) => handleChange("isContinuous", value)}
           options={[
             { value: "all", label: "All Passage Types" },
             { value: "true", label: "Continuous" },
@@ -227,7 +263,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
         <FilterSelect
           title="Music Source"
           value={filterOptions.aiMusic}
-          onChange={(value) => handleChange('aiMusic', value)}
+          onChange={(value) => handleChange("aiMusic", value)}
           options={[
             { value: "all", label: "All Music Sources" },
             { value: "true", label: "AI Generated" },
@@ -238,35 +274,44 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
         />
       </div>
     </motion.div>
-  )
+  );
 }
 
 interface FilterSelectProps {
-  title: string
-  value: string
-  onChange: (value: string) => void
-  options: { value: string; label: string }[]
+  title: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
   theme: {
-    bg: string
-    bgCard: string
-    text: string
-    textSecondary: string
-    accent: string
-    accentHover: string
-    border: string
-    borderHover: string
-    hoverBg: string
-  }
-  isDark: boolean
+    bg: string;
+    bgCard: string;
+    text: string;
+    textSecondary: string;
+    accent: string;
+    accentHover: string;
+    border: string;
+    borderHover: string;
+    hoverBg: string;
+  };
+  isDark: boolean;
 }
 
-function FilterSelect({ title, value, onChange, options, theme, isDark }: FilterSelectProps) {
+function FilterSelect({
+  title,
+  value,
+  onChange,
+  options,
+  theme,
+  isDark,
+}: FilterSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger 
+      <SelectTrigger
         className="w-full backdrop-blur-sm transition-all duration-300 rounded-xl h-12"
         style={{
-          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+          backgroundColor: isDark
+            ? "rgba(255, 255, 255, 0.05)"
+            : "rgba(0, 0, 0, 0.03)",
           border: `1px solid ${theme.border}`,
           color: theme.text,
           fontFamily: "'Manrope', sans-serif",
@@ -274,10 +319,12 @@ function FilterSelect({ title, value, onChange, options, theme, isDark }: Filter
       >
         <SelectValue placeholder={title} />
       </SelectTrigger>
-      <SelectContent 
+      <SelectContent
         className="w-80 max-w-[calc(100vw-2rem)] backdrop-blur-xl rounded-xl"
         style={{
-          backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          backgroundColor: isDark
+            ? "rgba(10, 10, 10, 0.95)"
+            : "rgba(255, 255, 255, 0.95)",
           border: `1px solid ${theme.border}`,
         }}
         position="popper"
@@ -288,18 +335,18 @@ function FilterSelect({ title, value, onChange, options, theme, isDark }: Filter
         collisionPadding={8}
       >
         <SelectGroup>
-          <SelectLabel 
+          <SelectLabel
             className="font-semibold"
             style={{ color: theme.accent, fontFamily: "'Italiana', serif" }}
           >
             {title}
           </SelectLabel>
           {options.map((option) => (
-            <SelectItem 
-              key={option.value} 
+            <SelectItem
+              key={option.value}
               value={option.value}
               className="transition-all duration-200 rounded-lg"
-              style={{ 
+              style={{
                 color: theme.text,
                 fontFamily: "'Manrope', sans-serif",
               }}
@@ -310,5 +357,5 @@ function FilterSelect({ title, value, onChange, options, theme, isDark }: Filter
         </SelectGroup>
       </SelectContent>
     </Select>
-  )
+  );
 }

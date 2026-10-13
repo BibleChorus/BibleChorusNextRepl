@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { useTheme } from 'next-themes';
+import React, { useEffect, useRef, useState } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { useTheme } from "next-themes";
 
 export const FilmGrain: React.FC = () => {
   return (
-    <div 
+    <div
       className="fixed inset-0 pointer-events-none z-50 opacity-[0.02]"
       style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
       }}
     />
   );
@@ -22,20 +22,22 @@ export const CustomCursor: React.FC = () => {
   const [isClient, setIsClient] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
-  const isDark = resolvedTheme === 'dark';
-  const accentColor = isDark ? '#d4af37' : '#bfa130';
-  const borderColor = isDark ? 'rgba(229, 229, 229, 0.3)' : 'rgba(22, 22, 22, 0.3)';
+  const isDark = resolvedTheme === "dark";
+  const accentColor = isDark ? "#d4af37" : "#bfa130";
+  const borderColor = isDark
+    ? "rgba(229, 229, 229, 0.3)"
+    : "rgba(22, 22, 22, 0.3)";
 
   useEffect(() => {
     setIsClient(true);
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     setIsTouchDevice(isTouch);
-    
+
     if (isTouch) return;
 
     setPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-    
-    document.body.classList.add('journey-cursor-active');
+
+    document.body.classList.add("journey-cursor-active");
 
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
@@ -44,11 +46,11 @@ export const CustomCursor: React.FC = () => {
     const handleHoverStart = (e: Event) => {
       const target = e.target as HTMLElement;
       if (
-        target.closest('button') ||
-        target.closest('a') ||
-        target.closest('[data-hover]') ||
-        target.closest('.track-row') ||
-        target.closest('.hover-trigger')
+        target.closest("button") ||
+        target.closest("a") ||
+        target.closest("[data-hover]") ||
+        target.closest(".track-row") ||
+        target.closest(".hover-trigger")
       ) {
         setIsHovering(true);
       }
@@ -56,15 +58,15 @@ export const CustomCursor: React.FC = () => {
 
     const handleHoverEnd = () => setIsHovering(false);
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseover', handleHoverStart);
-    document.addEventListener('mouseout', handleHoverEnd);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseover", handleHoverStart);
+    document.addEventListener("mouseout", handleHoverEnd);
 
     return () => {
-      document.body.classList.remove('journey-cursor-active');
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseover', handleHoverStart);
-      document.removeEventListener('mouseout', handleHoverEnd);
+      document.body.classList.remove("journey-cursor-active");
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseover", handleHoverStart);
+      document.removeEventListener("mouseout", handleHoverEnd);
     };
   }, []);
 
@@ -74,7 +76,8 @@ export const CustomCursor: React.FC = () => {
     <>
       <style jsx global>{`
         .journey-cursor-active,
-        .journey-cursor-active *:not([data-journey-dialog]):not([data-journey-dialog] *) {
+        .journey-cursor-active
+          *:not([data-journey-dialog]):not([data-journey-dialog] *) {
           cursor: none !important;
         }
         [data-journey-dialog],
@@ -86,26 +89,26 @@ export const CustomCursor: React.FC = () => {
         className="fixed top-0 left-0 w-3 h-3 rounded-full pointer-events-none z-[9999]"
         style={{ backgroundColor: accentColor }}
         initial={false}
-        animate={{ 
-          x: position.x - 6, 
+        animate={{
+          x: position.x - 6,
           y: position.y - 6,
-          opacity: 1
+          opacity: 1,
         }}
-        transition={{ type: 'spring', stiffness: 800, damping: 35, mass: 0.3 }}
+        transition={{ type: "spring", stiffness: 800, damping: 35, mass: 0.3 }}
       />
       <motion.div
         className="fixed top-0 left-0 rounded-full pointer-events-none z-[9998] border"
         initial={false}
-        animate={{ 
-          x: position.x - (isHovering ? 30 : 18), 
+        animate={{
+          x: position.x - (isHovering ? 30 : 18),
           y: position.y - (isHovering ? 30 : 18),
           width: isHovering ? 60 : 36,
           height: isHovering ? 60 : 36,
           opacity: 1,
-          backgroundColor: isHovering ? `${accentColor}26` : 'transparent',
-          borderColor: isHovering ? `${accentColor}80` : borderColor
+          backgroundColor: isHovering ? `${accentColor}26` : "transparent",
+          borderColor: isHovering ? `${accentColor}80` : borderColor,
         }}
-        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
       />
     </>
   );
@@ -119,53 +122,65 @@ export const AmbientOrbs: React.FC = () => {
     setMounted(true);
   }, []);
 
-  const isDark = resolvedTheme === 'dark';
-  
+  const isDark = resolvedTheme === "dark";
+
   const orbColors = {
-    primary: isDark ? 'rgba(212, 175, 55, 0.08)' : 'rgba(191, 161, 48, 0.06)',
-    secondary: isDark ? 'rgba(160, 160, 160, 0.05)' : 'rgba(100, 100, 100, 0.04)',
-    tertiary: isDark ? 'rgba(229, 229, 229, 0.03)' : 'rgba(50, 50, 50, 0.02)',
+    primary: isDark ? "rgba(212, 175, 55, 0.08)" : "rgba(191, 161, 48, 0.06)",
+    secondary: isDark
+      ? "rgba(160, 160, 160, 0.05)"
+      : "rgba(100, 100, 100, 0.04)",
+    tertiary: isDark ? "rgba(229, 229, 229, 0.03)" : "rgba(50, 50, 50, 0.02)",
   };
 
   if (!mounted) return null;
 
   return (
     <>
-      <motion.div 
+      <motion.div
         className="fixed top-0 left-0 w-96 h-96 rounded-full pointer-events-none z-[-1]"
         style={{
           background: orbColors.primary,
-          filter: 'blur(120px)'
+          filter: "blur(120px)",
         }}
         animate={{
           y: [0, -30, 0],
           x: [0, 20, 0],
         }}
-        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
       />
-      <motion.div 
+      <motion.div
         className="fixed bottom-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none z-[-1]"
         style={{
           background: orbColors.secondary,
-          filter: 'blur(120px)'
+          filter: "blur(120px)",
         }}
         animate={{
           y: [0, 30, 0],
           x: [0, -20, 0],
         }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 2,
+        }}
       />
-      <motion.div 
+      <motion.div
         className="fixed top-1/2 right-1/4 w-72 h-72 rounded-full pointer-events-none z-[-1]"
         style={{
           background: orbColors.tertiary,
-          filter: 'blur(100px)'
+          filter: "blur(100px)",
         }}
         animate={{
           y: [0, 20, 0],
           x: [0, -15, 0],
         }}
-        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
+        transition={{
+          duration: 18,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 5,
+        }}
       />
     </>
   );
@@ -184,25 +199,25 @@ export const ScrollProgress: React.FC<ScrollProgressProps> = () => {
     setMounted(true);
   }, []);
 
-  const height = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+  const height = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
   const smoothHeight = useSpring(height, { stiffness: 100, damping: 30 });
 
-  const isDark = resolvedTheme === 'dark';
-  const trackColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-  const progressColor = isDark ? '#ffffff' : '#161616';
+  const isDark = resolvedTheme === "dark";
+  const trackColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)";
+  const progressColor = isDark ? "#ffffff" : "#161616";
 
   if (!mounted) return null;
 
   return (
-    <div 
+    <div
       className="fixed left-8 top-1/2 -translate-y-1/2 h-64 w-[1px] hidden lg:block z-30"
       style={{ backgroundColor: trackColor }}
     >
-      <motion.div 
+      <motion.div
         className="w-full origin-top"
-        style={{ 
+        style={{
           height: smoothHeight,
-          backgroundColor: progressColor
+          backgroundColor: progressColor,
         }}
       />
     </div>
@@ -213,7 +228,9 @@ interface JourneyLayoutWrapperProps {
   children: React.ReactNode;
 }
 
-export const JourneyLayoutWrapper: React.FC<JourneyLayoutWrapperProps> = ({ children }) => {
+export const JourneyLayoutWrapper: React.FC<JourneyLayoutWrapperProps> = ({
+  children,
+}) => {
   const { resolvedTheme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -222,20 +239,20 @@ export const JourneyLayoutWrapper: React.FC<JourneyLayoutWrapperProps> = ({ chil
     setMounted(true);
   }, []);
 
-  const isDark = resolvedTheme === 'dark';
+  const isDark = resolvedTheme === "dark";
 
   const themeStyles = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    text: isDark ? '#e5e5e5' : '#161616',
-    scrollbarTrack: isDark ? '#0a0a0a' : '#f0ede6',
-    scrollbar: isDark ? '#333' : '#ccc',
-    selection: isDark ? '#ffffff' : '#161616',
-    selectionText: isDark ? '#000000' : '#ffffff',
+    bg: isDark ? "#050505" : "#f8f5f0",
+    text: isDark ? "#e5e5e5" : "#161616",
+    scrollbarTrack: isDark ? "#0a0a0a" : "#f0ede6",
+    scrollbar: isDark ? "#333" : "#ccc",
+    selection: isDark ? "#ffffff" : "#161616",
+    selectionText: isDark ? "#000000" : "#ffffff",
   };
 
   if (!mounted) {
     return (
-      <div 
+      <div
         className="min-h-screen bg-[#050505] text-[#e5e5e5] font-sans antialiased"
         style={{ fontFamily: "'Manrope', sans-serif" }}
       >
@@ -245,10 +262,10 @@ export const JourneyLayoutWrapper: React.FC<JourneyLayoutWrapperProps> = ({ chil
   }
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="min-h-screen font-sans antialiased"
-      style={{ 
+      style={{
         fontFamily: "'Manrope', sans-serif",
         backgroundColor: themeStyles.bg,
         color: themeStyles.text,
@@ -290,15 +307,15 @@ export const JourneyLayoutWrapper: React.FC<JourneyLayoutWrapperProps> = ({ chil
           transform: scale(1);
         }
       `}</style>
-      
+
       <FilmGrain />
       <CustomCursor />
       <AmbientOrbs />
-      <ScrollProgress containerRef={containerRef as React.RefObject<HTMLElement>} />
-      
-      <div className="journey-page">
-        {children}
-      </div>
+      <ScrollProgress
+        containerRef={containerRef as React.RefObject<HTMLElement>}
+      />
+
+      <div className="journey-page">{children}</div>
     </div>
   );
 };

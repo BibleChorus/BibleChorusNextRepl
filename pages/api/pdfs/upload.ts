@@ -1,9 +1,12 @@
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import s3Client from '@/lib/s3';
 import db from '@/db';
 import { Knex } from 'knex';
 import { BIBLE_BOOKS } from '@/lib/constants';
+import { requireUser } from '@/lib/server-auth';
+import { ownedStorageKey, storageUrl, assertUploadedFile } from '@/lib/storage-keys';
 
 // Helper to convert a readable stream to a Buffer
 async function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
@@ -15,7 +18,7 @@ async function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
   });
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
@@ -57,9 +60,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'Missing required fields', missingFields });
   }
 
+  const user = await requireUser(req, res);
+  const pdfKey = ownedStorageKey(pdf_url, user.id);
+  const imageKey = image_url ? ownedStorageKey(image_url, user.id) : null;
+  await assertUploadedFile(pdfKey, 'pdf');
+  if (imageKey) await assertUploadedFile(imageKey, 'image');
+
   try {
     // Retrieve PDF from S3
-    const fileKey = pdf_url.replace(process.env.CDN_URL || '', '').replace(/^\/+/, '');
+    const fileKey = pdfKey;
     const getCmd = new GetObjectCommand({
       Bucket: process.env.AWS_S3_BUCKET_NAME,
       Key: fileKey
@@ -109,14 +118,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const trx = await db.transaction();
     try {
-      const cdnUrl = process.env.CDN_URL || '';
-      const fullUrl = pdf_url.startsWith('http') ? pdf_url : `${cdnUrl}${pdf_url}`;
+      const fullUrl = storageUrl(pdfKey);
       const [inserted] = await trx('pdfs')
         .insert({
           title,
           author: author || null,
           file_url: fullUrl,
-          image_url: image_url ? `${cdnUrl}${image_url.replace(/^\/+/, '')}` : null,
+          image_url: imageKey ? storageUrl(imageKey) : null,
           notebook_lm_url: notebook_lm_url || null,
           summary: summary || null,
           ai_assisted: ai_assisted || false,
@@ -183,3 +191,6 @@ async function updateBibleVerses(
     }
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['POST'], identityFields: ['uploaded_by'] });

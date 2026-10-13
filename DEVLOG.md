@@ -74,3 +74,11 @@
 - Restyled forum vote buttons to a compact horizontal layout.
 - Updated forum comment boxes with glassmorphism borders and spacing.
 - Tweaked the forum text editor styling for a cleaner look.
+
+## 2026-10-13 — Application rework
+
+Reworked the application shell and all main sections around a shared warm design, clearer hierarchy, responsive controls, and accessible navigation. Journey songs now sit alongside their reflections in an extensible comparison panel; existing source links, themes, editing, and data remain available. Music playback uses stable queue occurrence identity and nonblocking load states. Unified query/database clients and removed duplicate ambient styling and shadow type stubs.
+
+Added shared server authentication and ownership checks, verified upload metadata, preservation-aware file cleanup, private study notes, moderator locking, and corrected OAuth cookie/form handling. Updated compatible security dependencies and removed unused storage/UUID libraries. Added offline regression checks, CI, and deployment documentation. Source changes do not run legacy migrations or mutate production records.
+
+Clean-install CI exposed an npm peer-lock discrepancy and a patched sanitizer requiring Node 22. Updated the lock with the deployment-compatible npm resolver, made its YAML peer explicit, and aligned CI/Replit on Node 22 while preserving the existing Python module.

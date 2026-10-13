@@ -1,11 +1,4 @@
-import React from 'react';
-
-const LoadingSpinner: React.FC = () => {
-  return (
-    <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
-    </div>
-  );
-};
-
-export default LoadingSpinner;
+/** Route progress stays out of the way of playback and background data refreshes. */
+export default function LoadingSpinner() {
+  return <div role="progressbar" aria-label="Loading page" className="pointer-events-none fixed inset-x-0 top-0 z-[90] h-1 overflow-hidden bg-primary/15"><div className="h-full w-1/3 animate-pulse rounded-r-full bg-primary" /></div>;
+}

@@ -1,12 +1,12 @@
-import React, { useMemo, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import dynamic from 'next/dynamic';
-
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
-import 'react-quill/dist/quill.snow.css';
+import {
+  RichTextEditor,
+  richTextHasContent,
+} from "@/components/RichTextEditor";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
+import React, { useState } from "react";
+import { toast } from "sonner";
 
 interface NewCommentFormProps {
   songId: number;
@@ -14,23 +14,30 @@ interface NewCommentFormProps {
   parentCommentId?: number;
 }
 
-export const NewCommentForm: React.FC<NewCommentFormProps> = ({ songId, onCommentAdded, parentCommentId }) => {
+export const NewCommentForm: React.FC<NewCommentFormProps> = ({
+  songId,
+  onCommentAdded,
+  parentCommentId,
+}) => {
   const { user, getAuthToken } = useAuth();
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddComment = async () => {
+    if (!richTextHasContent(content) || isSubmitting) return;
     if (!user) {
-      toast.error('You must be logged in to add a comment');
+      toast.error("You must be logged in to add a comment");
       return;
     }
 
     const token = await getAuthToken();
 
     if (!token) {
-      toast.error('Your session has expired. Please log in again.');
+      toast.error("Your session has expired. Please log in again.");
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const response = await axios.post(
         `/api/songs/${songId}/comments`,
@@ -40,41 +47,42 @@ export const NewCommentForm: React.FC<NewCommentFormProps> = ({ songId, onCommen
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       onCommentAdded(response.data);
-      setContent('');
-      toast.success('Comment added successfully!');
+      setContent("");
+      toast.success("Comment added successfully!");
     } catch (error) {
-      console.error('Error adding comment:', error);
+      console.error(
+        "Error adding comment:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
       if (axios.isAxiosError(error) && error.response?.status === 401) {
-        toast.error('You must be logged in to add a comment');
+        toast.error("You must be logged in to add a comment");
         return;
       }
-      toast.error('Failed to add comment');
+      toast.error("Failed to add comment");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const isContentEmpty = useMemo(() => {
-    if (!content) {
-      return true;
-    }
-
-    const textContent = content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-    return textContent.length === 0;
-  }, [content]);
-
   return (
     <div className="mb-6">
-      <div className="border rounded-md mb-2">
-        <ReactQuill
+      <div className="mb-2">
+        <RichTextEditor
+          label="Your comment on this song"
+          readOnly={isSubmitting}
           value={content}
           onChange={setContent}
           className="[&_.ql-editor]:min-h-[100px]"
         />
       </div>
-      <Button onClick={handleAddComment} disabled={isContentEmpty}>
-        {parentCommentId ? 'Reply' : 'Add Comment'}
+      <Button
+        onClick={handleAddComment}
+        disabled={!richTextHasContent(content) || isSubmitting}
+      >
+        {isSubmitting ? "Posting…" : parentCommentId ? "Reply" : "Add comment"}
       </Button>
     </div>
   );

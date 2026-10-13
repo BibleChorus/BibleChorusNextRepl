@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
-import jwt from 'jsonwebtoken';
+import { getAuthenticatedUserId } from '@/lib/server-auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
@@ -9,17 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (method === 'GET') {
     try {
-      // Get user ID from token if available
-      let userId: number | null = null;
-      const token = req.cookies.token;
-      if (token) {
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
-          userId = decoded.userId;
-        } catch (error) {
-          // Token invalid, continue without user context
-        }
-      }
+      const userId = await getAuthenticatedUserId(req, res);
 
       const topic = await db('forum_topics')
         .join('users', 'forum_topics.user_id', 'users.id')
@@ -29,6 +19,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (!topic) {
         return res.status(404).json({ message: 'Topic not found' });
+      }
+      if (topic.song_id) {
+        topic.song = await db('songs').leftJoin('users', 'songs.uploaded_by', 'users.id')
+          .where('songs.id', topic.song_id).select('songs.*', 'users.username').first();
       }
 
       // Get user's vote for the topic

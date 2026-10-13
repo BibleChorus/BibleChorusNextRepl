@@ -1,9 +1,11 @@
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import s3Client from '@/lib/s3';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID as uuidv4 } from 'node:crypto';
 import formidable from 'formidable';
 import fs from 'fs';
+import { requireUser } from '@/lib/server-auth';
 
 export const config = {
   api: {
@@ -20,36 +22,35 @@ interface File extends formidable.File {
   originalFilename: string | null;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const form = formidable();
+  const user = await requireUser(req, res);
+  const form = formidable({ maxFileSize: 5 * 1024 * 1024, maxFiles: 1, allowEmptyFiles: false });
 
   form.parse(req, async (err, fields: Fields, files: formidable.Files) => {
     if (err) {
       console.error('Error parsing form:', err);
-      return res.status(500).json({ message: 'Error parsing form' });
+      return res.status(400).json({ message: 'Choose an image smaller than 5MB' });
     }
 
-    const file = files.file && !Array.isArray(files.file) ? files.file as File : undefined;
+    const file = (Array.isArray(files.file) ? files.file[0] : files.file) as File | undefined;
 
     if (!file) {
       return res.status(400).json({ message: 'No file provided' });
     }
 
-    const userId = fields.userId && !Array.isArray(fields.userId) ? fields.userId : undefined;
-
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-
     try {
+      if (!file.mimetype?.startsWith('image/') || file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({ message: 'Choose an image smaller than 5MB' });
+      }
       const fileContent = await fs.promises.readFile(file.filepath);
-      const fileExtension = file.originalFilename?.split('.').pop() || 'jpg';
+      const candidateExtension = file.originalFilename?.split('.').pop() || 'jpg';
+      const fileExtension = /^[a-zA-Z0-9]{1,10}$/.test(candidateExtension) ? candidateExtension : 'jpg';
       const fileName = `${uuidv4()}.${fileExtension}`;
-      const fileKey = `uploads/${userId}/song_art/${fileName}`;
+      const fileKey = `uploads/${user.id}/song_art/${fileName}`;
 
       const command = new PutObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -67,8 +68,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } finally {
       // Clean up the temporary file
       if (file.filepath) {
-        await fs.promises.unlink(file.filepath);
+        await fs.promises.unlink(file.filepath).catch(() => undefined);
       }
     }
   });
 }
+
+export default withApiAuth(handler, { methods: ['POST'] });

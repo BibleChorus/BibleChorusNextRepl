@@ -1,10 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 import sanitizeHtml from 'sanitize-html';
-import jwt from 'jsonwebtoken';
-import { getJwtSecret } from '@/lib/jwt';
+import { requireUser, withApiAuth } from '@/lib/server-auth';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
   const songId = Number(req.query.id);
 
@@ -27,26 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(500).json({ message: 'Error fetching comments' });
     }
   } else if (method === 'POST') {
-    const authHeader = req.headers.authorization;
-    let token = req.cookies?.token;
-
-    if (!token && authHeader?.startsWith('Bearer ')) {
-      token = authHeader.split(' ')[1];
-    }
-
-    if (!token) {
-      return res.status(401).json({ message: 'Authentication required to post comments' });
-    }
-
-    let authenticatedUserId: number;
-
-    try {
-      const decoded = jwt.verify(token, getJwtSecret()) as { userId: number };
-      authenticatedUserId = decoded.userId;
-    } catch (error) {
-      console.error('Invalid or expired token when adding song comment:', error);
-      return res.status(401).json({ message: 'Authentication required to post comments' });
-    }
+    const authenticatedUserId = (await requireUser(req, res)).id;
 
     const { comment, parent_comment_id } = req.body;
 
@@ -55,6 +35,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
+      if (!(await db('songs').where({ id: songId }).first())) return res.status(404).json({ message: 'Song not found' });
+      if (parent_comment_id && !(await db('song_comments').where({ id: parent_comment_id, song_id: songId }).first())) {
+        return res.status(400).json({ message: 'Reply must belong to this song' });
+      }
       const sanitizedComment = sanitizeHtml(comment, {
         allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
         allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, '*': ['class'] },
@@ -90,3 +74,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).end(`Method ${method} Not Allowed`);
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['POST'] });

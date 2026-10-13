@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
-import dynamic from 'next/dynamic';
-import { ArrowRight } from 'lucide-react';
-
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
-import 'react-quill/dist/quill.snow.css';
+import {
+  RichTextEditor,
+  richTextHasContent,
+} from "@/components/RichTextEditor";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
+import { ArrowRight } from "lucide-react";
+import React, { useState } from "react";
+import { toast } from "sonner";
 
 interface ThemeColors {
   bg: string;
@@ -34,21 +34,27 @@ interface NewCommentFormProps {
   isDark: boolean;
 }
 
-export const NewCommentForm: React.FC<NewCommentFormProps> = ({ 
-  pdfId, 
-  onCommentAdded, 
+export const NewCommentForm: React.FC<NewCommentFormProps> = ({
+  pdfId,
+  onCommentAdded,
   parentCommentId,
   theme,
-  isDark
+  isDark,
 }) => {
   const { user } = useAuth();
-  const [content, setContent] = useState('');
-  const [page, setPage] = useState<number | ''>('');
+  const [content, setContent] = useState("");
+  const [page, setPage] = useState<number | "">("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddComment = async () => {
-    if (!content.trim() || isSubmitting) return;
-    
+    if (
+      !user ||
+      !richTextHasContent(content) ||
+      isSubmitting ||
+      (page !== "" && (!Number.isInteger(page) || page <= 0))
+    )
+      return;
+
     setIsSubmitting(true);
     try {
       const response = await axios.post(`/api/pdfs/${pdfId}/comments`, {
@@ -58,12 +64,15 @@ export const NewCommentForm: React.FC<NewCommentFormProps> = ({
         page_number: page || null,
       });
       onCommentAdded(response.data);
-      setContent('');
-      setPage('');
-      toast.success('Comment added successfully!');
+      setContent("");
+      setPage("");
+      toast.success("Comment added successfully!");
     } catch (error) {
-      console.error('Error adding comment:', error);
-      toast.error('Failed to add comment');
+      console.error(
+        "Error adding comment:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
+      toast.error("Failed to add comment");
     } finally {
       setIsSubmitting(false);
     }
@@ -71,99 +80,71 @@ export const NewCommentForm: React.FC<NewCommentFormProps> = ({
 
   return (
     <div className="mb-6 space-y-4">
-      <style jsx global>{`
-        .pdf-comment-editor .ql-toolbar {
-          border: 1px solid ${theme.border} !important;
-          border-bottom: none !important;
-          background: ${theme.bgAlt} !important;
-        }
-        .pdf-comment-editor .ql-container {
-          border: 1px solid ${theme.border} !important;
-          background: transparent !important;
-          font-family: 'Manrope', sans-serif !important;
-        }
-        .pdf-comment-editor .ql-editor {
-          min-height: 120px !important;
-          color: ${theme.text} !important;
-          font-size: 0.9375rem !important;
-          line-height: 1.6 !important;
-        }
-        .pdf-comment-editor .ql-editor.ql-blank::before {
-          color: ${theme.textMuted} !important;
-          font-style: normal !important;
-        }
-        .pdf-comment-editor .ql-stroke {
-          stroke: ${theme.textSecondary} !important;
-        }
-        .pdf-comment-editor .ql-fill {
-          fill: ${theme.textSecondary} !important;
-        }
-        .pdf-comment-editor .ql-picker {
-          color: ${theme.textSecondary} !important;
-        }
-        .pdf-comment-editor .ql-picker-options {
-          background: ${theme.bgCard} !important;
-          border: 1px solid ${theme.border} !important;
-        }
-        .pdf-comment-editor .ql-toolbar button:hover .ql-stroke,
-        .pdf-comment-editor .ql-toolbar button.ql-active .ql-stroke {
-          stroke: ${theme.accent} !important;
-        }
-        .pdf-comment-editor .ql-toolbar button:hover .ql-fill,
-        .pdf-comment-editor .ql-toolbar button.ql-active .ql-fill {
-          fill: ${theme.accent} !important;
-        }
-      `}</style>
-      
       <div className="pdf-comment-editor">
-        <ReactQuill
+        <RichTextEditor
+          label="Your comment on this study resource"
+          readOnly={isSubmitting}
           value={content}
           onChange={setContent}
           placeholder="Share your thoughts..."
           modules={{
             toolbar: [
-              ['bold', 'italic', 'underline'],
-              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-              ['link'],
-              ['clean']
-            ]
+              ["bold", "italic", "underline"],
+              [{ list: "ordered" }, { list: "bullet" }],
+              ["link"],
+              ["clean"],
+            ],
           }}
         />
       </div>
-      
+
       <div className="flex items-center gap-4">
         <div className="flex-shrink-0">
-          <label 
+          <label
+            htmlFor={`pdf-comment-page-${pdfId}-${parentCommentId || "new"}`}
             className="block text-[10px] tracking-[0.15em] uppercase mb-1.5"
             style={{ color: theme.textMuted }}
           >
             Page Reference
           </label>
           <Input
+            id={`pdf-comment-page-${pdfId}-${parentCommentId || "new"}`}
+            min={1}
+            step={1}
             type="number"
             value={page}
-            onChange={(e) => setPage(e.target.value ? Number(e.target.value) : '')}
+            onChange={(e) =>
+              setPage(e.target.value ? Number(e.target.value) : "")
+            }
             placeholder="#"
-            className="w-20 h-10 rounded-none bg-transparent text-center"
+            className="w-20 h-10 rounded-xl bg-transparent text-center"
             style={{
               borderColor: theme.border,
               color: theme.text,
             }}
           />
         </div>
-        
+
         <div className="flex-1 flex justify-end items-end">
-          <Button 
-            onClick={handleAddComment} 
-            disabled={!content.trim() || isSubmitting}
-            className="h-10 px-6 rounded-none text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300 disabled:opacity-50"
+          <Button
+            onClick={handleAddComment}
+            disabled={
+              !richTextHasContent(content) ||
+              isSubmitting ||
+              (page !== "" && (!Number.isInteger(page) || page <= 0))
+            }
+            className="h-10 px-6 rounded-xl text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300 disabled:opacity-50"
             style={{
               backgroundColor: theme.accent,
-              color: isDark ? '#050505' : '#ffffff',
+              color: "hsl(var(--primary-foreground))",
             }}
           >
             <ArrowRight className="w-3.5 h-3.5 mr-2" />
-            {parentCommentId ? 'Reply' : 'Post Comment'}
+            {isSubmitting
+              ? "Posting…"
+              : parentCommentId
+                ? "Reply"
+                : "Post comment"}
           </Button>
         </div>
       </div>

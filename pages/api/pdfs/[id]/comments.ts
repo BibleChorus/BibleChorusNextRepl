@@ -1,10 +1,14 @@
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 import sanitizeHtml from 'sanitize-html';
+import { getAuthenticatedUser, readId } from '@/lib/server-auth';
+import { requireReadablePdf } from '@/lib/resource-access';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
-  const pdfId = Number(req.query.id);
+  const pdfId = readId(req.query.id, 'PDF ID');
+  await requireReadablePdf(pdfId, await getAuthenticatedUser(req, res));
 
   if (method === 'GET') {
     try {
@@ -26,11 +30,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } else if (method === 'POST') {
     const { comment, parent_comment_id, user_id, page_number } = req.body;
 
-    if (!user_id || !comment) {
+    if (!user_id || typeof comment !== 'string' || !comment.trim() || comment.length > 100000) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
     try {
+      if (parent_comment_id && !(await db('pdf_comments').where({ id: parent_comment_id, pdf_id: pdfId }).first())) {
+        return res.status(400).json({ message: 'Reply must belong to this PDF' });
+      }
       const sanitizedComment = sanitizeHtml(comment, {
         allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
         allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, '*': ['class'] },
@@ -59,3 +66,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).end(`Method ${method} Not Allowed`);
   }
 }
+
+
+export default withApiAuth(handler, { methods: ['POST'], identityFields: ['user_id'] });

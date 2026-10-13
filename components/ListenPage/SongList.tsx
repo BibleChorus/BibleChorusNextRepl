@@ -1,45 +1,58 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
-import { Badge } from '@/components/ui/badge'
-import { PlayCircle, MoreVertical, Heart, Share2, ListPlus, Edit, Trash2, Flag, Vote, Music, BookOpen, Star, ThumbsUp, ThumbsDown, X, Play, Pause, MessageCircle } from 'lucide-react'
-import { useRouter } from 'next/router'
-import { motion } from 'framer-motion'
-import { useTheme } from 'next-themes'
-import { formatBibleVerses } from '@/lib/utils'
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { useAuth } from '@/contexts/AuthContext'
-import axios from 'axios'
-import { toast } from "sonner"
-import { MusicFilled, BookOpenFilled, StarFilled } from '@/components/ui/custom-icons'
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext'
-import { CommentList } from '@/components/SongComments/CommentList';
-import { NewCommentForm } from '@/components/SongComments/NewCommentForm';
-import { SongComment, Song } from '@/types';
-import { ReportDialog } from '@/components/ReportDialog';
-import { AddToPlaylistDialog } from './AddToPlaylistDialog';
-import Image from 'next/image' // Import Next.js Image component
-import LyricsBibleComparisonDialog from './LyricsBibleComparisonDialog';
-import { BookOpenText } from 'lucide-react';
-import { SongOptionsMenu } from '@/components/SongOptionsMenu';
+import { uiTheme } from "@/lib/design-system";
 
-const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
+import { ReportDialog } from "@/components/ReportDialog";
+import { CommentList } from "@/components/SongComments/CommentList";
+import { NewCommentForm } from "@/components/SongComments/NewCommentForm";
+import { SongOptionsMenu } from "@/components/SongOptionsMenu";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  BookOpenFilled,
+  MusicFilled,
+  StarFilled,
+} from "@/components/ui/custom-icons";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { formatBibleVerses } from "@/lib/utils";
+import { Song, SongComment } from "@/types";
+import axios from "axios";
+import { motion } from "framer-motion";
+import {
+  BookOpen,
+  BookOpenText,
+  Heart,
+  MessageCircle,
+  Music,
+  Pause,
+  Play,
+  Star,
+  ThumbsDown,
+  ThumbsUp,
+  X,
+} from "lucide-react";
+import { useTheme } from "next-themes";
+import Image from "next/image"; // Import Next.js Image component
+import Link from "next/link";
+import { useRouter } from "next/router";
+import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
+import LyricsBibleComparisonDialog from "./LyricsBibleComparisonDialog";
+
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || "";
 
 const getImageUrl = (path: string | null | undefined): string => {
-  if (!path) return '/biblechorus-icon.png';
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (!path) return "/biblechorus-icon.png";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
   return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
 };
 
@@ -67,139 +80,157 @@ interface VoteCounts {
 }
 
 const formatDuration = (seconds: number): string => {
-  if (typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) {
-    return '0:00';
+  if (typeof seconds !== "number" || isNaN(seconds) || seconds < 0) {
+    return "0:00";
   }
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 };
 
-export const SongList = React.memo(function SongList({ songs, isNarrowView, totalSongs, fetchAllSongs }: SongListProps) {
-  const [voteStates, setVoteStates] = useState<VoteState>({})
-  const [likeStates, setLikeStates] = useState<LikeState>({})
-  const [likeCounts, setLikeCounts] = useState<Record<number, number>>({})
-  const [voteCounts, setVoteCounts] = useState<VoteCounts>({})
-  const { user } = useAuth()
+export const SongList = React.memo(function SongList({
+  songs,
+  isNarrowView,
+  totalSongs,
+  fetchAllSongs,
+}: SongListProps) {
+  const [voteStates, setVoteStates] = useState<VoteState>({});
+  const [likeStates, setLikeStates] = useState<LikeState>({});
+  const [likeCounts, setLikeCounts] = useState<Record<number, number>>({});
+  const [voteCounts, setVoteCounts] = useState<VoteCounts>({});
+  const { user } = useAuth();
 
   const fetchUserVotes = useCallback(async () => {
-    if (!user) return
+    if (!user) return;
     try {
-      const response = await axios.get(`/api/users/${user.id}/votes`)
-      const userVotes = response.data
-      const newVoteStates: VoteState = {}
+      const response = await axios.get(`/api/users/${user.id}/votes`);
+      const userVotes = response.data;
+      const newVoteStates: VoteState = {};
       userVotes.forEach((vote: any) => {
         if (!newVoteStates[vote.song_id]) {
-          newVoteStates[vote.song_id] = {}
+          newVoteStates[vote.song_id] = {};
         }
-        newVoteStates[vote.song_id][vote.vote_type] = vote.vote_value
-      })
-      setVoteStates(newVoteStates)
+        newVoteStates[vote.song_id][vote.vote_type] = vote.vote_value;
+      });
+      setVoteStates(newVoteStates);
     } catch (error) {
-      console.error('Error fetching user votes:', error)
+      console.error("Error fetching user votes:", error);
     }
-  }, [user])
+  }, [user]);
 
   const fetchUserLikes = useCallback(async () => {
-    if (!user) return
+    if (!user) return;
     try {
-      const response = await axios.get(`/api/users/${user.id}/likes`)
-      const userLikes = response.data
-      const newLikeStates: LikeState = {}
+      const response = await axios.get(`/api/users/${user.id}/likes`);
+      const userLikes = response.data;
+      const newLikeStates: LikeState = {};
       userLikes.forEach((like: any) => {
-        if (like.likeable_type === 'song') {
-          newLikeStates[like.likeable_id] = true
+        if (like.likeable_type === "song") {
+          newLikeStates[like.likeable_id] = true;
         }
-      })
-      setLikeStates(newLikeStates)
+      });
+      setLikeStates(newLikeStates);
     } catch (error) {
-      console.error('Error fetching user likes:', error)
+      console.error("Error fetching user likes:", error);
     }
-  }, [user])
+  }, [user]);
 
   const fetchLikeCounts = useCallback(async () => {
     try {
-      const response = await axios.get('/api/likes/count')
-      setLikeCounts(response.data)
+      const response = await axios.get("/api/likes/count");
+      setLikeCounts(response.data);
     } catch (error) {
-      console.error('Error fetching like counts:', error)
+      console.error("Error fetching like counts:", error);
     }
-  }, [])
+  }, []);
 
   const fetchVoteCounts = useCallback(async () => {
     try {
-      const response = await axios.get('/api/votes/count')
-      setVoteCounts(response.data)
+      const response = await axios.get("/api/votes/count");
+      setVoteCounts(response.data);
     } catch (error) {
-      console.error('Error fetching vote counts:', error)
+      console.error("Error fetching vote counts:", error);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchLikeCounts()
-    fetchVoteCounts()
-    
+    fetchLikeCounts();
+    fetchVoteCounts();
+
     if (user) {
-      fetchUserVotes()
-      fetchUserLikes()
+      fetchUserVotes();
+      fetchUserLikes();
     }
-  }, [user, fetchLikeCounts, fetchVoteCounts, fetchUserVotes, fetchUserLikes])
+  }, [user, fetchLikeCounts, fetchVoteCounts, fetchUserVotes, fetchUserLikes]);
 
-  const handleLike = useCallback(async (song: Song) => {
-    if (!user) {
-      toast.error('You need to be logged in to like a song')
-      return
-    }
-
-    try {
-      const isLiked = likeStates[song.id]
-      if (isLiked) {
-        await axios.delete(`/api/likes`, {
-          data: { user_id: user.id, likeable_type: 'song', likeable_id: song.id }
-        })
-      } else {
-        await axios.post('/api/likes', {
-          user_id: user.id,
-          likeable_type: 'song',
-          likeable_id: song.id
-        })
+  const handleLike = useCallback(
+    async (song: Song) => {
+      if (!user) {
+        toast.error("You need to be logged in to like a song");
+        return;
       }
 
-      setLikeStates(prev => ({
-        ...prev,
-        [song.id]: !isLiked
-      }))
+      try {
+        const isLiked = likeStates[song.id];
+        if (isLiked) {
+          await axios.delete(`/api/likes`, {
+            data: {
+              user_id: user.id,
+              likeable_type: "song",
+              likeable_id: song.id,
+            },
+          });
+        } else {
+          await axios.post("/api/likes", {
+            user_id: user.id,
+            likeable_type: "song",
+            likeable_id: song.id,
+          });
+        }
 
-      // Update like count
-      setLikeCounts(prev => ({
-        ...prev,
-        [song.id]: (prev[song.id] || 0) + (isLiked ? -1 : 1)
-      }))
+        setLikeStates((prev) => ({
+          ...prev,
+          [song.id]: !isLiked,
+        }));
 
-      toast.success(isLiked ? 'Song unliked' : 'Song liked')
-    } catch (error) {
-      console.error('Error toggling like:', error)
-      toast.error('Failed to update like status')
-    }
-  }, [user, likeStates])
+        // Update like count
+        setLikeCounts((prev) => ({
+          ...prev,
+          [song.id]: (prev[song.id] || 0) + (isLiked ? -1 : 1),
+        }));
 
-  const handleVoteClick = useCallback(async (song: Song, voteType: string, voteValue: number) => {
-    setVoteStates(prevStates => ({
-      ...prevStates,
-      [song.id]: {
-        ...prevStates[song.id],
-        [voteType]: voteValue
+        toast.success(isLiked ? "Song unliked" : "Song liked");
+      } catch (error) {
+        console.error("Error toggling like:", error);
+        toast.error("Failed to update like status");
       }
-    }))
+    },
+    [user, likeStates],
+  );
 
-    setVoteCounts(prevCounts => ({
-      ...prevCounts,
-      [song.id]: {
-        ...prevCounts[song.id],
-        [voteType]: (prevCounts[song.id]?.[voteType] || 0) + voteValue - (voteStates[song.id]?.[voteType] || 0)
-      }
-    }))
-  }, [voteStates])
+  const handleVoteClick = useCallback(
+    async (song: Song, voteType: string, voteValue: number) => {
+      setVoteStates((prevStates) => ({
+        ...prevStates,
+        [song.id]: {
+          ...prevStates[song.id],
+          [voteType]: voteValue,
+        },
+      }));
+
+      setVoteCounts((prevCounts) => ({
+        ...prevCounts,
+        [song.id]: {
+          ...prevCounts[song.id],
+          [voteType]:
+            (prevCounts[song.id]?.[voteType] || 0) +
+            voteValue -
+            (voteStates[song.id]?.[voteType] || 0),
+        },
+      }));
+    },
+    [voteStates],
+  );
 
   return (
     <div className="space-y-2">
@@ -221,8 +252,8 @@ export const SongList = React.memo(function SongList({ songs, isNarrowView, tota
         />
       ))}
     </div>
-  )
-})
+  );
+});
 
 const SongListItem = React.memo(function SongListItem({
   song,
@@ -236,69 +267,68 @@ const SongListItem = React.memo(function SongListItem({
   handleLike,
   handleVoteClick,
   isNarrowView,
-  commentsCount
+  commentsCount,
 }: {
-  song: Song,
-  songs: Song[],
-  totalSongs: number,
-  fetchAllSongs: () => Promise<Song[]>,
-  likeCounts: Record<number, number>,
-  voteCounts: VoteCounts,
-  likeStates: LikeState,
-  voteStates: VoteState,
-  handleLike: (song: Song) => Promise<void>,
-  handleVoteClick: (song: Song, voteType: string, voteValue: number) => Promise<void>,
-  isNarrowView: boolean,
-  commentsCount: number
+  song: Song;
+  songs: Song[];
+  totalSongs: number;
+  fetchAllSongs: () => Promise<Song[]>;
+  likeCounts: Record<number, number>;
+  voteCounts: VoteCounts;
+  likeStates: LikeState;
+  voteStates: VoteState;
+  handleLike: (song: Song) => Promise<void>;
+  handleVoteClick: (
+    song: Song,
+    voteType: string,
+    voteValue: number,
+  ) => Promise<void>;
+  isNarrowView: boolean;
+  commentsCount: number;
 }) {
-  const [imageError, setImageError] = useState<Record<number, boolean>>({})
-  const router = useRouter()
-  const { user } = useAuth()
-  const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false)
-  const [selectedVoteType, setSelectedVoteType] = useState<string>('')
-  const [localVoteCounts, setLocalVoteCounts] = useState(voteCounts[song.id] || {})
-  const [localVoteStates, setLocalVoteStates] = useState(voteStates[song.id] || {})
-  const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer()
+  const [imageError, setImageError] = useState<Record<number, boolean>>({});
+  const router = useRouter();
+  const { user } = useAuth();
+  const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false);
+  const [selectedVoteType, setSelectedVoteType] = useState<string>("");
+  const [localVoteCounts, setLocalVoteCounts] = useState(
+    voteCounts[song.id] || {},
+  );
+  const [localVoteStates, setLocalVoteStates] = useState(
+    voteStates[song.id] || {},
+  );
+  const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
   const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
   const [comments, setComments] = useState<SongComment[]>([]);
   const [localCommentsCount, setLocalCommentsCount] = useState(commentsCount);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
-  const [isAddToPlaylistDialogOpen, setIsAddToPlaylistDialogOpen] = useState(false);
+  const [isAddToPlaylistDialogOpen, setIsAddToPlaylistDialogOpen] =
+    useState(false);
   const [isLyricsBibleDialogOpen, setIsLyricsBibleDialogOpen] = useState(false);
-  
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
 
-  const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
-    accentBgMedium: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.15)',
-  };
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const theme = { ...uiTheme, accentBgMedium: "hsl(var(--primary) / .15)" };
 
   const fetchComments = useCallback(async () => {
     try {
       const response = await axios.get(`/api/songs/${song.id}/comments`);
       setComments(response.data);
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error("Error fetching comments:", error);
     }
   }, [song.id]);
 
   useEffect(() => {
     const fetchCommentsCount = async () => {
       try {
-        const response = await axios.get(`/api/songs/${song.id}/comments/count`);
+        const response = await axios.get(
+          `/api/songs/${song.id}/comments/count`,
+        );
         setLocalCommentsCount(response.data.count);
       } catch (error) {
-        console.error('Error fetching comments count:', error);
+        console.error("Error fetching comments count:", error);
       }
     };
 
@@ -315,7 +345,9 @@ const SongListItem = React.memo(function SongListItem({
     setComments((prevComments) => {
       const updatedComments = [...prevComments];
       if (newComment.parent_comment_id) {
-        const parentIndex = updatedComments.findIndex(c => c.id === newComment.parent_comment_id);
+        const parentIndex = updatedComments.findIndex(
+          (c) => c.id === newComment.parent_comment_id,
+        );
         if (parentIndex !== -1) {
           updatedComments.splice(parentIndex + 1, 0, newComment);
         } else {
@@ -329,69 +361,67 @@ const SongListItem = React.memo(function SongListItem({
     setLocalCommentsCount((prevCount) => prevCount + 1);
   };
 
-
-
   useEffect(() => {
-    setLocalVoteCounts(voteCounts[song.id] || {})
-    setLocalVoteStates(voteStates[song.id] || {})
-  }, [voteCounts, voteStates, song.id])
+    setLocalVoteCounts(voteCounts[song.id] || {});
+    setLocalVoteStates(voteStates[song.id] || {});
+  }, [voteCounts, voteStates, song.id]);
 
   const handleLocalVoteClick = (voteType: string) => {
     if (!user) {
-      toast.error('You need to be logged in to vote')
-      return
+      toast.error("You need to be logged in to vote");
+      return;
     }
-    setSelectedVoteType(voteType)
-    setIsVoteDialogOpen(true)
-  }
+    setSelectedVoteType(voteType);
+    setIsVoteDialogOpen(true);
+  };
 
   const handleVote = async (value: string) => {
     if (!user) {
-      toast.error('You need to be logged in to vote')
-      return
+      toast.error("You need to be logged in to vote");
+      return;
     }
 
-    const voteValue = value === 'up' ? 1 : value === 'down' ? -1 : 0
-    
+    const voteValue = value === "up" ? 1 : value === "down" ? -1 : 0;
+
     try {
-      const response = await axios.post('/api/votes', {
+      const response = await axios.post("/api/votes", {
         user_id: user.id,
         song_id: song.id,
         vote_type: selectedVoteType,
-        vote_value: voteValue
-      })
+        vote_value: voteValue,
+      });
 
       // Update local state
-      setLocalVoteStates(prev => ({
+      setLocalVoteStates((prev) => ({
         ...prev,
-        [selectedVoteType]: voteValue
-      }))
+        [selectedVoteType]: voteValue,
+      }));
 
-      setLocalVoteCounts(prev => ({
+      setLocalVoteCounts((prev) => ({
         ...prev,
-        [selectedVoteType]: response.data.count
-      }))
+        [selectedVoteType]: response.data.count,
+      }));
 
       // Update parent state
-      handleVoteClick(song, selectedVoteType, voteValue)
+      handleVoteClick(song, selectedVoteType, voteValue);
 
-      toast.success('Vote submitted successfully')
+      toast.success("Vote submitted successfully");
     } catch (error) {
-      console.error('Error submitting vote:', error)
-      toast.error('Failed to submit vote')
+      console.error("Error submitting vote:", error);
+      toast.error("Failed to submit vote");
     }
 
-    setIsVoteDialogOpen(false)
-  }
+    setIsVoteDialogOpen(false);
+  };
 
   const getCurrentVote = (voteType: string): number => {
     return localVoteStates[voteType] || 0;
   };
 
   const getVoteLabel = (value: number): string => {
-    if (value === 1) return 'Upvoted';
-    if (value === -1) return 'Downvoted';
-    return 'No vote';
+    if (value === 1) return "Upvoted";
+    if (value === -1) return "Downvoted";
+    return "No vote";
   };
 
   const getVoteIcon = (voteType: string, isNarrow: boolean = false) => {
@@ -399,27 +429,27 @@ const SongListItem = React.memo(function SongListItem({
     const isUpvoted = voteValue === 1;
 
     const iconProps = {
-      className: isNarrow ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1',
+      className: isNarrow ? "h-3 w-3 mr-1" : "h-4 w-4 mr-1",
     };
 
     if (isUpvoted) {
       switch (voteType) {
-        case 'Best Musically':
-          return <MusicFilled {...iconProps} style={{ color: '#3b82f6' }} />;
-        case 'Best Lyrically':
-          return <BookOpenFilled {...iconProps} style={{ color: '#22c55e' }} />;
-        case 'Best Overall':
-          return <StarFilled {...iconProps} style={{ color: '#eab308' }} />;
+        case "Best Musically":
+          return <MusicFilled {...iconProps} style={{ color: "#3b82f6" }} />;
+        case "Best Lyrically":
+          return <BookOpenFilled {...iconProps} style={{ color: "#22c55e" }} />;
+        case "Best Overall":
+          return <StarFilled {...iconProps} style={{ color: "#eab308" }} />;
         default:
           return null;
       }
     } else {
       switch (voteType) {
-        case 'Best Musically':
+        case "Best Musically":
           return <Music {...iconProps} />;
-        case 'Best Lyrically':
+        case "Best Lyrically":
           return <BookOpen {...iconProps} />;
-        case 'Best Overall':
+        case "Best Overall":
           return <Star {...iconProps} />;
         default:
           return null;
@@ -438,19 +468,19 @@ const SongListItem = React.memo(function SongListItem({
     if (navigator.share && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData);
-        toast.success('Song shared successfully');
+        toast.success("Song shared successfully");
       } catch (error) {
-        console.error('Error sharing song:', error);
-        toast.error('Failed to share song');
+        console.error("Error sharing song:", error);
+        toast.error("Failed to share song");
       }
     } else {
       // Fallback to copying the link
       try {
         await navigator.clipboard.writeText(songUrl);
-        toast.success('Song link copied to clipboard');
+        toast.success("Song link copied to clipboard");
       } catch (error) {
-        console.error('Error copying song link:', error);
-        toast.error('Failed to copy song link');
+        console.error("Error copying song link:", error);
+        toast.error("Failed to copy song link");
       }
     }
   }, [song]);
@@ -468,7 +498,7 @@ const SongListItem = React.memo(function SongListItem({
         try {
           queueSongs = await fetchAllSongs();
         } catch (error) {
-          console.error('Error fetching all songs:', error);
+          console.error("Error fetching all songs:", error);
         }
       }
 
@@ -498,53 +528,62 @@ const SongListItem = React.memo(function SongListItem({
           bible_verses: s.bible_verses,
           bible_translation_used: s.bible_translation_used,
           uploaded_by: s.uploaded_by,
-        }))
+        })),
       );
     }
   };
 
   return (
     <motion.div
-      className={`flex items-center p-2 sm:p-3 backdrop-blur-xl rounded-2xl shadow-lg relative overflow-hidden group song-card transition-all duration-300 ${isNarrowView ? 'h-[70px] sm:h-[80px]' : 'min-h-[110px]'}`}
+      className={`flex items-center p-3 sm:p-4 rounded-xl relative overflow-hidden group song-card transition-colors duration-200 ${isNarrowView ? "h-[70px] sm:h-[80px]" : "min-h-[110px]"}`}
       style={{
         backgroundColor: theme.bgCard,
         border: `1px solid ${theme.border}`,
       }}
-      whileHover={{ 
-        scale: 1.01, 
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-        borderColor: theme.borderHover
-      }}
+      whileHover={{ borderColor: theme.borderHover }}
       transition={{ duration: 0.3 }}
     >
       {/* Song Art with Play/Pause Button */}
-      <div className={`${isNarrowView ? 'w-14 h-14 sm:w-16 sm:h-16' : 'w-16 h-16 sm:w-20 sm:h-20'} mr-3 sm:mr-4 relative flex-shrink-0`}>
+      <div
+        className={`${isNarrowView ? "w-14 h-14 sm:w-16 sm:h-16" : "w-16 h-16 sm:w-20 sm:h-20"} mr-3 sm:mr-4 relative flex-shrink-0`}
+      >
         {song.song_art_url && !imageError[song.id] ? (
           <Image
             src={getImageUrl(song.song_art_url)}
             alt={song.title}
             layout="fill"
             objectFit="cover"
-            onError={() => setImageError(prev => ({ ...prev, [song.id]: true }))}
+            onError={() =>
+              setImageError((prev) => ({ ...prev, [song.id]: true }))
+            }
           />
         ) : (
-          <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-400 text-xs backdrop-blur-sm">
-            No Image
+          <div className="w-full h-full rounded-lg bg-secondary flex items-center justify-center text-muted-foreground text-xs">
+            ♫
           </div>
         )}
-        <div 
-          className={`absolute inset-0 flex items-center justify-center 
-            ${currentSong?.id === song.id ? 'bg-black bg-opacity-50' : 'bg-black bg-opacity-50 opacity-0 group-hover:opacity-100'} 
+        <div
+          className={`absolute inset-0 flex items-center justify-center
+            ${currentSong?.id === song.id ? "bg-black bg-opacity-50" : "bg-black/35 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"}
             transition-opacity duration-300`}
         >
           <button
-            className="text-white p-1 sm:p-2"
+            className="rounded-full text-white p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label={
+              currentSong?.id === song.id && isPlaying
+                ? `Pause ${song.title}`
+                : `Play ${song.title}`
+            }
             onClick={handlePlayClick}
           >
             {currentSong?.id === song.id && isPlaying ? (
-              <Pause className={`${isNarrowView ? 'h-5 w-5 sm:h-6 sm:w-6' : 'h-7 w-7 sm:h-8 sm:w-8'}`} />
+              <Pause
+                className={`${isNarrowView ? "h-5 w-5 sm:h-6 sm:w-6" : "h-7 w-7 sm:h-8 sm:w-8"}`}
+              />
             ) : (
-              <Play className={`${isNarrowView ? 'h-5 w-5 sm:h-6 sm:w-6' : 'h-7 w-7 sm:h-8 sm:w-8'}`} />
+              <Play
+                className={`${isNarrowView ? "h-5 w-5 sm:h-6 sm:w-6" : "h-7 w-7 sm:h-8 sm:w-8"}`}
+              />
             )}
           </button>
         </div>
@@ -556,120 +595,172 @@ const SongListItem = React.memo(function SongListItem({
         {/* Duration */}
         <div className="absolute bottom-1 right-1 inline-flex items-center bg-black bg-opacity-50 rounded px-1 py-0.5">
           <span className="text-white text-xs">
-            {typeof song.duration === 'number' ? formatDuration(song.duration) : '0:00'}
+            {typeof song.duration === "number"
+              ? formatDuration(song.duration)
+              : "0:00"}
           </span>
         </div>
       </div>
 
       {/* Song Details */}
       <div className="flex-1 min-w-0 flex flex-col justify-center">
-        <div className={`flex items-start justify-between ${isNarrowView ? 'mb-1' : 'mb-2'}`}>
+        <div
+          className={`flex items-start justify-between ${isNarrowView ? "mb-1" : "mb-2"}`}
+        >
           <Link href={`/Songs/${song.id}`} className="flex-1 min-w-0">
-            <h2 
-              className={`font-semibold transition-colors duration-200 truncate ${isNarrowView ? 'text-sm' : 'text-base sm:text-lg'}`}
-              style={{ 
-                color: theme.text, 
-                fontFamily: "'Italiana', serif"
+            <h2
+              className={`font-semibold transition-colors duration-200 truncate ${isNarrowView ? "text-sm" : "text-base sm:text-lg"}`}
+              style={{
+                color: theme.text,
+                fontFamily: "'Italiana', serif",
               }}
-              onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-              onMouseLeave={(e) => e.currentTarget.style.color = theme.text}
+              onMouseEnter={(e) => (e.currentTarget.style.color = theme.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = theme.text)}
             >
               {song.title}
             </h2>
           </Link>
           {!isNarrowView && (
             <button
+              aria-label={`Compare lyrics and Scripture for ${song.title}`}
+              aria-haspopup="dialog"
               onClick={() => setIsLyricsBibleDialogOpen(true)}
               className="transition-colors duration-200 ml-3 flex-shrink-0"
               style={{ color: theme.textSecondary }}
-              onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-              onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+              onMouseEnter={(e) => (e.currentTarget.style.color = theme.accent)}
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = theme.textSecondary)
+              }
             >
               <BookOpenText className="h-5 w-5" />
             </button>
           )}
         </div>
-        
+
         {/* Artist and Bible Verses Row */}
-        <div className={`flex items-center text-xs ${isNarrowView ? 'mb-1' : 'mb-2'}`}>
+        <div
+          className={`flex items-center text-xs ${isNarrowView ? "mb-1" : "mb-2"}`}
+        >
           <button
             onClick={() => router.push(`/profile?id=${song.uploaded_by}`)}
             className="hover:underline transition-colors duration-200 truncate font-medium"
-            style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
-            onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-            onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+            style={{
+              color: theme.textSecondary,
+              fontFamily: "'Manrope', sans-serif",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = theme.accent)}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = theme.textSecondary)
+            }
           >
-            {song.username || 'Unknown User'}
+            {song.username || "Unknown User"}
           </button>
           {song.bible_verses && song.bible_verses.length > 0 && (
             <>
-              <span className="mx-2" style={{ color: theme.border }}>•</span>
-              <span className="font-medium italic overflow-hidden overflow-ellipsis whitespace-nowrap flex-shrink min-w-0" style={{ color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span className="mx-2" style={{ color: theme.border }}>
+                •
+              </span>
+              <span
+                className="font-medium italic overflow-hidden overflow-ellipsis whitespace-nowrap flex-shrink min-w-0"
+                style={{
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 {formatBibleVerses(song.bible_verses)}
               </span>
             </>
           )}
         </div>
-        
+
         {/* Action Buttons Row - Compact for narrow view */}
-        <div className={`flex items-center ${isNarrowView ? 'gap-2 text-xs' : 'gap-3 text-sm flex-wrap'} ${isNarrowView ? 'mt-0' : 'mt-2'}`} style={{ fontFamily: "'Manrope', sans-serif" }}>
+        <div
+          className={`flex items-center ${isNarrowView ? "gap-2 text-xs" : "gap-3 text-sm flex-wrap"} ${isNarrowView ? "mt-0" : "mt-2"}`}
+          style={{ fontFamily: "'Manrope', sans-serif" }}
+        >
           <button
+            aria-label={`${likeStates[song.id] ? "Unlike" : "Like"} ${song.title}; ${likeCounts[song.id] || 0} likes`}
+            aria-pressed={Boolean(likeStates[song.id])}
             onClick={() => handleLike(song)}
             className="flex items-center text-slate-500 hover:text-red-500 transition-all duration-200 hover:scale-105"
           >
             <Heart
-              className={`${isNarrowView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1.5'} ${
-                likeStates[song.id] ? 'fill-current text-red-500' : ''
+              className={`${isNarrowView ? "h-3 w-3 mr-1" : "h-4 w-4 mr-1.5"} ${
+                likeStates[song.id] ? "fill-current text-red-500" : ""
               }`}
             />
             <span className="font-medium">{likeCounts[song.id] || 0}</span>
           </button>
-          
+
           <button
-            onClick={() => handleLocalVoteClick('Best Musically')}
+            aria-label={`Vote for ${song.title} as best musically; current score ${localVoteCounts["Best Musically"] || 0}`}
+            aria-haspopup="dialog"
+            onClick={() => handleLocalVoteClick("Best Musically")}
             className="flex items-center transition-all duration-200 hover:scale-105"
             style={{ color: theme.textSecondary }}
-            onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-            onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+            onMouseEnter={(e) => (e.currentTarget.style.color = theme.accent)}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = theme.textSecondary)
+            }
           >
-            {getVoteIcon('Best Musically', isNarrowView)}
-            <span className="font-medium">{localVoteCounts['Best Musically'] || 0}</span>
+            {getVoteIcon("Best Musically", isNarrowView)}
+            <span className="font-medium">
+              {localVoteCounts["Best Musically"] || 0}
+            </span>
           </button>
-          
+
           <button
-            onClick={() => handleLocalVoteClick('Best Lyrically')}
+            aria-label={`Vote for ${song.title} as best lyrically; current score ${localVoteCounts["Best Lyrically"] || 0}`}
+            aria-haspopup="dialog"
+            onClick={() => handleLocalVoteClick("Best Lyrically")}
             className="flex items-center text-slate-500 hover:text-green-500 transition-all duration-200 hover:scale-105"
           >
-            {getVoteIcon('Best Lyrically', isNarrowView)}
-            <span className="font-medium">{localVoteCounts['Best Lyrically'] || 0}</span>
+            {getVoteIcon("Best Lyrically", isNarrowView)}
+            <span className="font-medium">
+              {localVoteCounts["Best Lyrically"] || 0}
+            </span>
           </button>
-          
+
           <button
-            onClick={() => handleLocalVoteClick('Best Overall')}
+            aria-label={`Vote for ${song.title} as best overall; current score ${localVoteCounts["Best Overall"] || 0}`}
+            aria-haspopup="dialog"
+            onClick={() => handleLocalVoteClick("Best Overall")}
             className="flex items-center text-slate-500 hover:text-yellow-500 transition-all duration-200 hover:scale-105"
           >
-            {getVoteIcon('Best Overall', isNarrowView)}
-            <span className="font-medium">{localVoteCounts['Best Overall'] || 0}</span>
+            {getVoteIcon("Best Overall", isNarrowView)}
+            <span className="font-medium">
+              {localVoteCounts["Best Overall"] || 0}
+            </span>
           </button>
-          
+
           <button
+            aria-label={`Read ${localCommentsCount} comments on ${song.title}`}
+            aria-haspopup="dialog"
             onClick={() => setIsCommentsDialogOpen(true)}
             className="flex items-center transition-all duration-200 hover:scale-105"
             style={{ color: theme.textSecondary }}
-            onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-            onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+            onMouseEnter={(e) => (e.currentTarget.style.color = theme.accent)}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = theme.textSecondary)
+            }
           >
-            <MessageCircle className={`${isNarrowView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-1.5'}`} />
+            <MessageCircle
+              className={`${isNarrowView ? "h-3 w-3 mr-1" : "h-4 w-4 mr-1.5"}`}
+            />
             <span className="font-medium">{localCommentsCount}</span>
           </button>
-          
+
           {isNarrowView && (
             <button
+              aria-label={`Compare lyrics and Scripture for ${song.title}`}
+              aria-haspopup="dialog"
               onClick={() => setIsLyricsBibleDialogOpen(true)}
               className="flex items-center transition-colors duration-200 ml-auto"
               style={{ color: theme.textSecondary }}
-              onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-              onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+              onMouseEnter={(e) => (e.currentTarget.style.color = theme.accent)}
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = theme.textSecondary)
+              }
             >
               <BookOpenText className="h-3 w-3" />
             </button>
@@ -679,71 +770,72 @@ const SongListItem = React.memo(function SongListItem({
         {/* Enhanced Tags / Badges - More compact layout */}
         {!isNarrowView && (
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {song.genres && song.genres.slice(0, 3).map((genre, index) => (
-              <Badge 
-                key={`${song.id}-${genre}-${index}`} 
-                variant="secondary" 
-                className="text-xs px-2 py-0.5 border-0 font-medium"
-                style={{ 
-                  backgroundColor: theme.hoverBg, 
-                  color: theme.textSecondary,
-                  fontFamily: "'Manrope', sans-serif"
-                }}
-              >
-                {genre}
-              </Badge>
-            ))}
+            {song.genres &&
+              song.genres.slice(0, 3).map((genre, index) => (
+                <Badge
+                  key={`${song.id}-${genre}-${index}`}
+                  variant="secondary"
+                  className="text-xs px-2 py-0.5 border-0 font-medium"
+                  style={{
+                    backgroundColor: theme.hoverBg,
+                    color: theme.textSecondary,
+                    fontFamily: "'Manrope', sans-serif",
+                  }}
+                >
+                  {genre}
+                </Badge>
+              ))}
             {song.genres && song.genres.length > 3 && (
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="text-xs px-2 py-0.5 border-0 font-medium"
-                style={{ 
-                  backgroundColor: theme.hoverBg, 
+                style={{
+                  backgroundColor: theme.hoverBg,
                   color: theme.textSecondary,
-                  fontFamily: "'Manrope', sans-serif"
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
                 +{song.genres.length - 3}
               </Badge>
             )}
             {song.bible_translation_used && (
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 className="text-xs px-2 py-0.5 font-medium"
-                style={{ 
-                  borderColor: theme.borderHover, 
+                style={{
+                  borderColor: theme.borderHover,
                   color: theme.accent,
                   backgroundColor: theme.accentBgLight,
-                  fontFamily: "'Manrope', sans-serif"
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
                 {song.bible_translation_used}
               </Badge>
             )}
             {song.lyrics_scripture_adherence && (
-              <Badge 
-                variant="default" 
+              <Badge
+                variant="default"
                 className="text-xs px-2 py-0.5 text-white border-0 font-medium"
-                style={{ 
+                style={{
                   backgroundColor: theme.accent,
-                  fontFamily: "'Manrope', sans-serif"
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
-                {song.lyrics_scripture_adherence.replace(/_/g, ' ')}
+                {song.lyrics_scripture_adherence.replace(/_/g, " ")}
               </Badge>
             )}
             {song.is_continuous_passage !== undefined && (
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 className="text-xs px-2 py-0.5 font-medium"
-                style={{ 
+                style={{
                   borderColor: theme.border,
                   color: theme.textSecondary,
                   backgroundColor: theme.hoverBg,
-                  fontFamily: "'Manrope', sans-serif"
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
-                {song.is_continuous_passage ? 'Continuous' : 'Non-Continuous'}
+                {song.is_continuous_passage ? "Continuous" : "Non-Continuous"}
               </Badge>
             )}
           </div>
@@ -759,24 +851,40 @@ const SongListItem = React.memo(function SongListItem({
       <Dialog open={isVoteDialogOpen} onOpenChange={setIsVoteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="text-center">Vote for {selectedVoteType}</DialogTitle>
-            <DialogDescription className="text-center">{song.title}</DialogDescription>
+            <DialogTitle className="text-center">
+              Vote for {selectedVoteType}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {song.title}
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4">
             {getCurrentVote(selectedVoteType) !== 1 && (
-              <Button onClick={() => handleVote('up')} variant="outline" className="w-full sm:w-auto">
+              <Button
+                onClick={() => handleVote("up")}
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
                 <ThumbsUp className="mr-2 h-4 w-4" />
                 Upvote
               </Button>
             )}
             {getCurrentVote(selectedVoteType) !== -1 && (
-              <Button onClick={() => handleVote('down')} variant="outline" className="w-full sm:w-auto">
+              <Button
+                onClick={() => handleVote("down")}
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
                 <ThumbsDown className="mr-2 h-4 w-4" />
                 Downvote
               </Button>
             )}
             {getCurrentVote(selectedVoteType) !== 0 && (
-              <Button onClick={() => handleVote('0')} variant="outline" className="w-full sm:w-auto">
+              <Button
+                onClick={() => handleVote("0")}
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
                 <X className="mr-2 h-4 w-4" />
                 Remove Vote
               </Button>
@@ -789,7 +897,10 @@ const SongListItem = React.memo(function SongListItem({
       </Dialog>
 
       {/* Comments Dialog */}
-      <Dialog open={isCommentsDialogOpen} onOpenChange={setIsCommentsDialogOpen}>
+      <Dialog
+        open={isCommentsDialogOpen}
+        onOpenChange={setIsCommentsDialogOpen}
+      >
         <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Comments</DialogTitle>
@@ -836,7 +947,7 @@ const SongListItem = React.memo(function SongListItem({
         song={song}
       />
     </motion.div>
-  )
-})
+  );
+});
 
-export default SongList
+export default SongList;

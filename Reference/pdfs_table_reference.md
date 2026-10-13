@@ -43,3 +43,7 @@ These environment variables control PDF storage in AWS S3:
 - `AWS_REGION` – AWS region of the bucket.
 - `AWS_ACCESS_KEY` and `AWS_SECRET_KEY` – credentials used by the server.
 - `CDN_URL` – optional base URL when serving uploaded PDFs.
+
+## Page visibility
+
+The study library lists public PDFs plus the signed-in viewer’s own uploads. The detail page returns `notFound` for private PDFs unless the authenticated viewer is their uploader. These checks use the shared server authentication resolver before serializing content.

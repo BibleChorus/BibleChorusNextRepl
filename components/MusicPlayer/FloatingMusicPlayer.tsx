@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import {
   Play,
   Pause,
@@ -9,33 +10,33 @@ import {
   Repeat1,
   Shuffle,
   ListMusic,
-  X,
-  Minimize2,
   Maximize2,
+  Minimize2,
   BookOpenText,
-  MoreVertical,
-} from 'lucide-react';
-import Image from 'next/image';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { useSidebar } from '@/contexts/SidebarContext';
-import LyricsBibleComparisonDialog from '@/components/ListenPage/LyricsBibleComparisonDialog';
-import Link from 'next/link';
-import { SongOptionsMenu } from '@/components/SongOptionsMenu';
-import { Song } from '@/types';
-import { useTheme } from 'next-themes';
+} from "lucide-react";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { useSidebar } from "@/contexts/SidebarContext";
+import { useRouter } from "next/router";
+import LyricsBibleComparisonDialog from "@/components/ListenPage/LyricsBibleComparisonDialog";
+import { SongOptionsMenu } from "@/components/SongOptionsMenu";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { mediaUrl } from "@/lib/media";
+import { cn } from "@/lib/utils";
+import type { Song } from "@/types";
 
-interface MusicPlayerSong extends Partial<Song> {
-  id: number;
-  title: string;
-  artist?: string;
-  coverArtUrl?: string;
-  audio_url: string;
-  uploaded_by: number;
+function timeLabel(time: number) {
+  const safe = Number.isFinite(time) ? Math.max(0, time) : 0;
+  return `${Math.floor(safe / 60)}:${String(Math.floor(safe % 60)).padStart(2, "0")}`;
 }
-
 export default function FloatingMusicPlayer() {
   const {
     currentSong,
+    currentIndex,
     isPlaying,
     pause,
     resume,
@@ -51,423 +52,287 @@ export default function FloatingMusicPlayer() {
     isMinimized,
     setIsMinimized,
   } = useMusicPlayer();
-
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-
-  const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-  };
-
-  const [currentTime, setCurrentTime] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(0);
-  const [isQueueVisible, setIsQueueVisible] = useState(false);
-  const [isLyricsBibleDialogOpen, setIsLyricsBibleDialogOpen] = useState(false);
-  const queueListRef = useRef<HTMLDivElement>(null);
-
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  const isSmallMobile = useMediaQuery('(max-width: 400px)');
   const { isOpen } = useSidebar();
-
-  const leftOffset = isMobile ? 'left-0' : isOpen ? 'left-64' : 'left-16';
-
+  const router = useRouter();
+  const [progress, setProgress] = useState({ time: 0, duration: 0 });
+  const [queueOpen, setQueueOpen] = useState(false);
+  const [lyricsOpen, setLyricsOpen] = useState(false);
   useEffect(() => {
-    if (audioElement) {
-      const handleTimeUpdate = () => {
-        setCurrentTime(audioElement.currentTime);
-        setDuration(audioElement.duration || 0);
-      };
-      audioElement.addEventListener('timeupdate', handleTimeUpdate);
-      return () => {
-        audioElement.removeEventListener('timeupdate', handleTimeUpdate);
-      };
-    }
-  }, [audioElement]);
-
-  const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = Number(event.target.value);
-    if (audioElement) {
-      audioElement.currentTime = newTime;
-    }
-    setCurrentTime(newTime);
-  };
-
-  const formatTime = (time: number): string => {
-    const minutes = Math.floor(time / 60) || 0;
-    const seconds = Math.floor(time % 60) || 0;
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
-
-  useEffect(() => {
-    console.log('Current Song:', currentSong);
-  }, [currentSong]);
-
-  const getSongForOptions = (song: MusicPlayerSong): Song => {
-    return {
-      id: song.id,
-      title: song.title,
-      artist: song.artist || '',
-      audio_url: song.audio_url,
-      uploaded_by: song.uploaded_by,
-      username: '',
-      genres: [],
-      created_at: '',
-      duration: 0,
-      song_art_url: song.coverArtUrl,
-      ai_used_for_lyrics: false,
-      music_ai_generated: false,
+    if (!audioElement) return;
+    const update = () =>
+      setProgress({
+        time: audioElement.currentTime || 0,
+        duration: Number.isFinite(audioElement.duration)
+          ? audioElement.duration
+          : 0,
+      });
+    update();
+    audioElement.addEventListener("timeupdate", update);
+    audioElement.addEventListener("loadedmetadata", update);
+    audioElement.addEventListener("emptied", update);
+    return () => {
+      audioElement.removeEventListener("timeupdate", update);
+      audioElement.removeEventListener("loadedmetadata", update);
+      audioElement.removeEventListener("emptied", update);
     };
-  };
-
+  }, [audioElement, currentSong?.id]);
   if (!currentSong) return null;
-
-  const controlButtonStyle = {
-    color: theme.textSecondary,
-    transition: 'all 0.2s ease',
+  const optionsSong: Song = {
+    username: "",
+    genres: [],
+    created_at: "",
+    duration: 0,
+    ai_used_for_lyrics: false,
+    music_ai_generated: false,
+    ...currentSong,
+    artist: currentSong.artist || "",
+    song_art_url: currentSong.coverArtUrl,
   };
-
-  const activeControlStyle = {
-    color: theme.accent,
-  };
-
+  const left =
+    router.pathname === "/login" ? "" : isOpen ? "lg:left-64" : "lg:left-20";
   return (
     <>
-      {isMobile && isMinimized ? (
-        <div 
-          className="fixed bottom-0 left-0 right-0 z-50 transition-colors duration-300"
-          style={{ 
-            backgroundColor: theme.bg,
-            borderTop: `1px solid ${theme.border}`,
-          }}
-        >
-          <div className="container mx-auto px-2 py-1 flex items-center justify-between">
-            <button 
-              onClick={() => setIsMinimized(false)} 
-              className="p-1 transition-colors duration-200"
-              style={controlButtonStyle}
-              onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-              onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
-            <div className="flex items-center space-x-1">
-              <button 
-                onClick={previous} 
-                className="p-1 transition-colors duration-200"
-                style={controlButtonStyle}
-                onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-                onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
-              >
-                <SkipBack className="w-5 h-5" />
-              </button>
-              <button 
-                onClick={isPlaying ? pause : resume} 
-                className="p-1 transition-colors duration-200"
-                style={{ color: theme.accent }}
-              >
-                {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-              </button>
-              <button 
-                onClick={next} 
-                className="p-1 transition-colors duration-200"
-                style={controlButtonStyle}
-                onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-                onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
-              >
-                <SkipForward className="w-5 h-5" />
-              </button>
-            </div>
-            <div className={`flex-grow ${isSmallMobile ? 'max-w-[80px]' : 'max-w-[120px]'} ml-2`}>
-              <input
-                type="range"
-                min="0"
-                max={duration}
-                value={currentTime}
-                onChange={handleTimeChange}
-                className="w-full h-1"
-                style={{
-                  accentColor: theme.accent,
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div
-          className={`fixed bottom-0 ${leftOffset} right-0 z-50 transition-all duration-300`}
-          style={{ 
-            backgroundColor: theme.bg,
-            borderTop: `1px solid ${theme.border}`,
-          }}
-        >
-          <div
-            className={`container mx-auto px-4 py-2 ${
-              isMobile ? 'flex flex-col space-y-2' : 'flex items-center justify-between'
-            }`}
-          >
-            {isMobile && (
-              <button 
-                onClick={() => setIsMinimized(true)} 
-                className="absolute top-2 right-2 p-1 transition-colors duration-200"
-                style={controlButtonStyle}
-                onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-                onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
-              >
-                <Minimize2 className="w-5 h-5" />
-              </button>
-            )}
-            <div
-              className={`flex ${
-                isMobile
-                  ? 'flex-col items-center space-y-2'
-                  : 'items-center justify-between w-full'
-              }`}
-            >
-              <div className="flex items-center">
-                <div className="w-12 h-12 relative mr-3">
-                  <Image
-                    src={currentSong.coverArtUrl || '/default-cover.jpg'}
-                    alt={currentSong.title}
-                    layout="fill"
-                    objectFit="cover"
-                    className="rounded"
-                    style={{ 
-                      border: `1px solid ${theme.border}`,
-                    }}
-                  />
-                </div>
-                <div>
-                  <Link 
-                    href={`/Songs/${currentSong.id}`}
-                    className="text-sm font-semibold hover:underline transition-colors duration-200"
-                    style={{ color: theme.text }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-                    onMouseLeave={(e) => e.currentTarget.style.color = theme.text}
-                  >
-                    {currentSong.title}
-                  </Link>
+      <section
+        aria-label="Music player"
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 shadow-[0_-8px_30px_rgba(0,0,0,.06)] backdrop-blur-xl",
+          left,
+        )}
+      >
+        <div className="mx-auto max-w-[1500px] px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 sm:px-6">
+          <div className="flex items-center gap-4">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+                <Image
+                  src={mediaUrl(currentSong.coverArtUrl, "/default-cover.jpg")}
+                  fill
+                  sizes="48px"
+                  className="object-cover"
+                  alt=""
+                />
+              </div>
+              <div className="min-w-0">
+                <Link
+                  href={`/Songs/${currentSong.id}`}
+                  className="block truncate text-sm font-semibold hover:text-primary"
+                >
+                  {currentSong.title}
+                </Link>
+                {currentSong.uploaded_by > 0 ? (
                   <Link
                     href={`/profile?id=${currentSong.uploaded_by}`}
-                    className="text-xs hover:underline block transition-colors duration-200"
-                    style={{ color: theme.textSecondary }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-                    onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
+                    className="block truncate text-xs text-muted-foreground hover:text-primary"
                   >
                     {currentSong.artist}
                   </Link>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={toggleShuffle}
-                  className="p-2 relative transition-all duration-200"
-                  style={isShuffling ? activeControlStyle : controlButtonStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-                  onMouseLeave={(e) => {
-                    if (!isShuffling) e.currentTarget.style.color = theme.textSecondary;
-                  }}
-                >
-                  <Shuffle className="w-5 h-5" />
-                </button>
-                <button 
-                  onClick={previous} 
-                  className="p-2 transition-colors duration-200"
-                  style={controlButtonStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-                  onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
-                >
-                  <SkipBack className="w-6 h-6" />
-                </button>
-                <button
-                  onClick={isPlaying ? pause : resume}
-                  className="p-2 transition-colors duration-200"
-                  style={{ color: theme.accent }}
-                >
-                  {isPlaying ? (
-                    <Pause className="w-8 h-8" />
-                  ) : (
-                    <Play className="w-8 h-8" />
-                  )}
-                </button>
-                <button 
-                  onClick={next} 
-                  className="p-2 transition-colors duration-200"
-                  style={controlButtonStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-                  onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
-                >
-                  <SkipForward className="w-6 h-6" />
-                </button>
-                <button
-                  onClick={toggleRepeat}
-                  className="p-2 relative transition-all duration-200"
-                  style={repeatMode !== 'none' ? activeControlStyle : controlButtonStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-                  onMouseLeave={(e) => {
-                    if (repeatMode === 'none') e.currentTarget.style.color = theme.textSecondary;
-                  }}
-                >
-                  {repeatMode === 'one' ? (
-                    <Repeat1 className="w-5 h-5" />
-                  ) : (
-                    <Repeat className="w-5 h-5" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setIsQueueVisible(!isQueueVisible)}
-                  className="p-2 transition-colors duration-200"
-                  style={isQueueVisible ? activeControlStyle : controlButtonStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-                  onMouseLeave={(e) => {
-                    if (!isQueueVisible) e.currentTarget.style.color = theme.textSecondary;
-                  }}
-                >
-                  <ListMusic className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setIsLyricsBibleDialogOpen(true)}
-                  className="p-2 transition-colors duration-200"
-                  style={controlButtonStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
-                  onMouseLeave={(e) => e.currentTarget.style.color = theme.textSecondary}
-                >
-                  <BookOpenText className="w-5 h-5" />
-                </button>
-                <div className="relative">
-                  <SongOptionsMenu song={getSongForOptions(currentSong)} />
-                </div>
+                ) : (
+                  <p className="truncate text-xs text-muted-foreground">
+                    {currentSong.artist}
+                  </p>
+                )}
               </div>
             </div>
-
-            <div className="flex items-center w-full">
-              <span 
-                className="text-xs mr-2 w-10 text-right"
-                style={{ color: theme.textSecondary }}
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                className={cn(
+                  "icon-button hidden sm:inline-flex",
+                  isShuffling && "bg-primary/10 text-primary",
+                )}
+                onClick={toggleShuffle}
+                title="Shuffle"
+                aria-label="Shuffle"
+                aria-pressed={isShuffling}
               >
-                {formatTime(currentTime)}
-              </span>
-              <input
-                type="range"
-                min="0"
-                max={duration}
-                value={currentTime}
-                onChange={handleTimeChange}
-                className="w-full"
-                style={{
-                  accentColor: theme.accent,
-                }}
-              />
-              <span 
-                className="text-xs ml-2 w-10"
-                style={{ color: theme.textSecondary }}
+                <Shuffle className="h-4 w-4" />
+              </button>
+              <button
+                className="icon-button hidden sm:inline-flex"
+                onClick={previous}
+                aria-label="Previous song"
               >
-                {formatTime(duration)}
-              </span>
+                <SkipBack className="h-5 w-5" />
+              </button>
+              <button
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={isPlaying ? pause : resume}
+                aria-label={isPlaying ? "Pause" : "Play"}
+              >
+                {isPlaying ? (
+                  <Pause className="h-5 w-5" />
+                ) : (
+                  <Play className="h-5 w-5" />
+                )}
+              </button>
+              <button
+                className="icon-button"
+                onClick={next}
+                aria-label="Next song"
+              >
+                <SkipForward className="h-5 w-5" />
+              </button>
+              <button
+                className={cn(
+                  "icon-button hidden sm:inline-flex",
+                  repeatMode !== "none" && "bg-primary/10 text-primary",
+                )}
+                onClick={toggleRepeat}
+                title={`Repeat: ${repeatMode}`}
+                aria-label={`Repeat: ${repeatMode}`}
+                aria-pressed={repeatMode !== "none"}
+              >
+                {repeatMode === "one" ? (
+                  <Repeat1 className="h-4 w-4" />
+                ) : (
+                  <Repeat className="h-4 w-4" />
+                )}
+              </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {isQueueVisible && (
-        <div
-          className={`fixed bottom-[60px] ${leftOffset} right-0 max-h-[50vh] z-50 transition-all duration-300 flex flex-col`}
-          style={{ 
-            backgroundColor: theme.bg,
-            border: `1px solid ${theme.border}`,
-          }}
-        >
-          <div 
-            className="sticky top-0 z-10 p-4 flex items-center justify-between"
-            style={{ 
-              backgroundColor: theme.bg,
-              borderBottom: `1px solid ${theme.border}`,
-            }}
-          >
-            <h3 
-              className="text-lg font-semibold"
-              style={{ color: theme.text }}
+            <div className="hidden shrink-0 items-center gap-1 md:flex">
+              <button
+                className="icon-button"
+                onClick={() => setQueueOpen(true)}
+                title="Up next"
+                aria-label="Open playback queue"
+              >
+                <ListMusic className="h-5 w-5" />
+              </button>
+              <button
+                className="icon-button"
+                onClick={() => setLyricsOpen(true)}
+                title="Lyrics & scripture"
+                aria-label="Compare lyrics and scripture"
+              >
+                <BookOpenText className="h-5 w-5" />
+              </button>
+              <SongOptionsMenu song={optionsSong} />
+            </div>
+            <button
+              className="icon-button"
+              onClick={() => setIsMinimized(!isMinimized)}
+              aria-label={isMinimized ? "Expand player" : "Minimize player"}
             >
-              Up Next ({queue.length} songs)
-            </h3>
-            <button 
-              onClick={() => setIsQueueVisible(false)} 
-              className="p-1 rounded transition-colors duration-200"
-              style={controlButtonStyle}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = theme.accent;
-                e.currentTarget.style.backgroundColor = theme.hoverBg;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = theme.textSecondary;
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              <X className="w-5 h-5" />
+              {isMinimized ? (
+                <Maximize2 className="h-4 w-4" />
+              ) : (
+                <Minimize2 className="h-4 w-4" />
+              )}
             </button>
           </div>
-          <div ref={queueListRef} className="flex-1 overflow-y-auto">
-            <div className="p-4">
-              {queue.map((song, index) => (
-                <div
-                  key={song.id}
-                  className="flex items-center py-2 rounded px-2 -mx-2 cursor-pointer transition-all duration-200"
-                  style={{ 
-                    backgroundColor: currentSong?.id === song.id ? theme.hoverBg : 'transparent',
-                    color: currentSong?.id === song.id ? theme.accent : theme.text,
-                  }}
-                  onClick={() => playSong(song)}
-                  onMouseEnter={(e) => {
-                    if (currentSong?.id !== song.id) {
-                      e.currentTarget.style.backgroundColor = theme.hoverBg;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (currentSong?.id !== song.id) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                >
-                  <div 
-                    className="mr-3 text-sm"
-                    style={{ color: theme.textSecondary }}
-                  >
-                    {index + 1}.
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="truncate">{song.title}</div>
-                    <div 
-                      className="text-xs truncate"
-                      style={{ color: theme.textSecondary }}
-                    >
-                      {song.artist}
-                    </div>
-                  </div>
-                  <Play 
-                    className="w-4 h-4 flex-shrink-0 ml-2" 
-                    style={{ color: theme.accent }}
-                  />
-                </div>
-              ))}
-            </div>
+          <div
+            className={cn(
+              "mt-2 flex items-center gap-3 text-[10px] tabular-nums text-muted-foreground",
+              isMinimized && "hidden",
+            )}
+          >
+            <span>{timeLabel(progress.time)}</span>
+            <input
+              type="range"
+              aria-label="Seek playback position"
+              min={0}
+              max={progress.duration || 0}
+              step="0.1"
+              value={Math.min(progress.time, progress.duration)}
+              disabled={!progress.duration}
+              onChange={(event) => {
+                if (audioElement)
+                  audioElement.currentTime = Number(event.target.value);
+              }}
+              className="h-4 min-w-0 flex-1 cursor-pointer"
+            />
+            <span>{timeLabel(progress.duration)}</span>
           </div>
+          {!isMinimized && (
+            <div className="mt-1 flex justify-center gap-1 md:hidden">
+              <button
+                className="icon-button"
+                onClick={previous}
+                aria-label="Previous song"
+              >
+                <SkipBack className="h-4 w-4" />
+              </button>
+              <button
+                className={cn("icon-button", isShuffling && "text-primary")}
+                onClick={toggleShuffle}
+                aria-label="Shuffle"
+                aria-pressed={isShuffling}
+              >
+                <Shuffle className="h-4 w-4" />
+              </button>
+              <button
+                className={cn(
+                  "icon-button",
+                  repeatMode !== "none" && "text-primary",
+                )}
+                onClick={toggleRepeat}
+                aria-label={`Repeat: ${repeatMode}`}
+              >
+                {repeatMode === "one" ? (
+                  <Repeat1 className="h-4 w-4" />
+                ) : (
+                  <Repeat className="h-4 w-4" />
+                )}
+              </button>
+              <button
+                className="icon-button"
+                onClick={() => setQueueOpen(true)}
+                aria-label="Open playback queue"
+              >
+                <ListMusic className="h-4 w-4" />
+              </button>
+              <button
+                className="icon-button"
+                onClick={() => setLyricsOpen(true)}
+                aria-label="Compare lyrics and scripture"
+              >
+                <BookOpenText className="h-4 w-4" />
+              </button>
+              <SongOptionsMenu song={optionsSong} />
+            </div>
+          )}
         </div>
-      )}
-
-      {currentSong && (
-        <LyricsBibleComparisonDialog
-          isOpen={isLyricsBibleDialogOpen}
-          onClose={() => setIsLyricsBibleDialogOpen(false)}
-          song={currentSong}
-        />
-      )}
+      </section>
+      <Dialog open={queueOpen} onOpenChange={setQueueOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogTitle className="font-serif text-2xl">Up next</DialogTitle>
+          <DialogDescription>
+            {queue.length} songs in your listening queue.
+          </DialogDescription>
+          <div className="max-h-[55vh] space-y-1 overflow-y-auto">
+            {queue.map((song, index) => (
+              <button
+                key={`${song.id}-${index}`}
+                onClick={() => playSong(song, undefined, index)}
+                aria-current={index === currentIndex ? "true" : undefined}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-muted",
+                  index === currentIndex && "bg-primary/10 text-primary",
+                )}
+              >
+                <span className="w-5 text-xs text-muted-foreground">
+                  {index + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{song.title}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {song.artist}
+                  </p>
+                </div>
+                <Play className="h-4 w-4 shrink-0" />
+              </button>
+            ))}
+            {!queue.length && (
+              <p className="py-6 text-sm text-muted-foreground">
+                Choose another song to keep listening.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      <LyricsBibleComparisonDialog
+        isOpen={lyricsOpen}
+        onClose={() => setLyricsOpen(false)}
+        song={currentSong}
+      />
     </>
   );
 }

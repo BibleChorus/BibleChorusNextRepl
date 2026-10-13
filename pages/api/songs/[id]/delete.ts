@@ -1,95 +1,39 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import s3Client from '@/lib/s3';
-import { Knex } from 'knex';
+import type { Knex } from 'knex';
 import { refreshProgressMaterializedView } from '@/lib/db-utils';
+import { requireUser, withApiAuth } from '@/lib/server-auth';
+import { assertUnreferencedFile, ownedStorageKey } from '@/lib/storage-keys';
 
-const CDN_URL = process.env.CDN_URL || '';
-
-// Add this function to extract the file key from the URL
-function extractFileKey(url: string): string {
-  const decodedUrl = decodeURIComponent(url);
-  return decodedUrl.replace(CDN_URL, '').replace(/^\/+/, '');
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'DELETE') {
-    return res.status(405).json({ message: 'Method not allowed' });
+async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'DELETE') return res.status(405).json({ message: 'Method not allowed' });
+  const user = await requireUser(req, res);
+  const id = Number(req.query.id);
+  // Storage cannot participate in a PostgreSQL rollback. Commit the authorized
+  // database change first; preserve all files if it fails, and retain shared files.
+  const song = await db.transaction(async trx => {
+    const record = await trx('songs').where({ id, uploaded_by: user.id }).forUpdate().first();
+    if (!record) return null;
+    await updateBibleVerses(trx, id, record);
+    await trx('song_verses').where({ song_id: id }).delete();
+    await trx('songs').where({ id, uploaded_by: user.id }).delete();
+    return record;
+  });
+  if (!song) return res.status(404).json({ message: 'Song not found' });
+  await refreshProgressMaterializedView();
+  for (const value of [song.song_art_url, song.audio_url].filter(Boolean)) {
+    try {
+      const key = ownedStorageKey(value, user.id);
+      await assertUnreferencedFile(key);
+      await s3Client.send(new DeleteObjectCommand({ Bucket: process.env.AWS_S3_BUCKET_NAME, Key: key }));
+    } catch (error) {
+      // A retained object is preferable to lost files or a misleading deletion failure.
+      console.error('Song deleted; retaining a referenced or unavailable storage object:', error);
+    }
   }
-
-  const { id } = req.query;
-  console.log('Deleting song with ID:', id);
-
-  const trx = await db.transaction();
-
-  try {
-    // Fetch the song data
-    const song = await trx('songs').where('id', id).first();
-    if (!song) {
-      await trx.rollback();
-      return res.status(404).json({ message: 'Song not found' });
-    }
-    console.log('Song data:', song);
-
-    // Delete song art from S3
-    if (song.song_art_url) {
-      const fileKey = extractFileKey(song.song_art_url);
-      const deleteCommand = new DeleteObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: fileKey,
-      });
-      await s3Client.send(deleteCommand);
-      console.log('Deleted song art from S3:', fileKey);
-    }
-
-    // Delete audio file from S3
-    if (song.audio_url) {
-      const audioFileKey = extractFileKey(song.audio_url);
-      const deleteAudioCommand = new DeleteObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: audioFileKey,
-      });
-      await s3Client.send(deleteAudioCommand);
-      console.log('Deleted audio file from S3:', audioFileKey);
-    }
-
-    // Update bible_verses table
-    await updateBibleVerses(trx, Number(id), song);
-
-    // Delete song_verses entries
-    await trx('song_verses').where('song_id', id).delete();
-
-    // Delete the song
-    await trx('songs').where('id', id).delete();
-
-    await refreshProgressMaterializedView(); // Add this line
-    await trx.commit();
-    res.status(200).json({ message: 'Song deleted successfully' });
-  } catch (error) {
-    await trx.rollback();
-    console.error('Error deleting song:', error);
-    
-    let errorMessage = 'Error deleting song';
-    let statusCode = 500;
-
-    if (error instanceof Error) {
-      errorMessage = error.message;
-      console.error('Error stack:', error.stack);
-    }
-
-    if (error.code) {
-      console.error('Error code:', error.code);
-      errorMessage += ` (Code: ${error.code})`;
-    }
-
-    if (error.detail) {
-      console.error('Error detail:', error.detail);
-      errorMessage += ` - ${error.detail}`;
-    }
-
-    res.status(statusCode).json({ message: errorMessage, error: error.toString() });
-  }
+  return res.status(200).json({ message: 'Song deleted successfully' });
 }
 
 async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData: any) {
@@ -99,6 +43,9 @@ async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData
 
   // Update this line to use 'genres' instead of 'genre' and ensure it's an array
   const genres = songData.genres || [];
+
+  const adherenceColumn = `${songData.lyrics_scripture_adherence}_song_ids`;
+  const validAdherenceColumns = ['word_for_word_song_ids', 'close_paraphrase_song_ids', 'creative_inspiration_song_ids', 'somewhat_connected_song_ids', 'no_connection_song_ids'];
 
   for (const verseId of verseIds) {
     const updateObj: any = {
@@ -121,11 +68,12 @@ async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData
       non_continuous_passage_song_ids: !songData.is_continuous_passage
         ? trx.raw('array_remove(non_continuous_passage_song_ids, ?)', [songId])
         : trx.raw('non_continuous_passage_song_ids'),
-      [songData.lyrics_scripture_adherence + '_song_ids']: trx.raw(
-        `array_remove(${songData.lyrics_scripture_adherence}_song_ids, ?)`,
-        [songId]
-      ),
+
     };
+
+    if (validAdherenceColumns.includes(adherenceColumn)) {
+      updateObj[adherenceColumn] = trx.raw(`array_remove(${adherenceColumn}, ?)`, [songId]);
+    }
 
     // Update translation_song_ids
     await trx('bible_verses')
@@ -179,3 +127,5 @@ async function updateBibleVerses(trx: Knex.Transaction, songId: number, songData
     }
   }
 }
+
+export default withApiAuth(handler, { methods: ['DELETE'], owner: 'songs' });

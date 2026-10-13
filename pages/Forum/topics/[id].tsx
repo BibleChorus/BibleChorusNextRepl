@@ -1,397 +1,268 @@
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
-import { CommentList } from '@/components/ForumPage/CommentList';
-import { NewCommentForm } from '@/components/ForumPage/NewCommentForm';
-import Head from 'next/head';
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
-import { Button } from '@/components/ui/button';
-import { Play, Pause, ArrowLeft, Lock } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import ReactHtmlParser from 'html-react-parser';
-import { Badge } from '@/components/ui/badge';
-import { cn } from "@/lib/utils";
-import { motion } from 'framer-motion';
-import { useTheme } from 'next-themes';
+import { CommentList } from "@/components/ForumPage/CommentList";
+import { NewCommentForm } from "@/components/ForumPage/NewCommentForm";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import axios from "axios";
+import ReactHtmlParser from "html-react-parser";
+import DOMPurify from "isomorphic-dompurify";
+import { ArrowLeft, Lock, MessageSquare, Pause, Play } from "lucide-react";
+import Head from "next/head";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || "";
+const getImageUrl = (path: string) =>
+  /^https?:\/\//.test(path) ? path : CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
 
 export default function TopicPage() {
-  const router = useRouter();
-  const { id } = router.query;
+  const {
+    query: { id },
+  } = useRouter();
   const { user } = useAuth();
-  const { resolvedTheme } = useTheme();
-  const [topic, setTopic] = useState<any>(null);
   const { playSong, currentSong, isPlaying, pause, resume } = useMusicPlayer();
+  const [topic, setTopic] = useState<any>(null);
   const [isLocked, setIsLocked] = useState(false);
-
-  const isDark = resolvedTheme === 'dark';
-
-  const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-    separator: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.2)',
-    accentGlow: isDark ? 'rgba(212, 175, 55, 0.12)' : 'rgba(191, 161, 48, 0.1)',
-  };
+  const [loadError, setLoadError] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isLocking, setIsLocking] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      const fetchTopic = async () => {
-        try {
-          const response = await axios.get(`/api/forum/topics/${id}`);
-          setTopic(response.data);
-          setIsLocked(response.data.is_locked);
-        } catch (error) {
-          console.error('Error fetching topic:', error);
+    if (!id) return;
+    const controller = new AbortController();
+    setTopic(null);
+    setLoadError(false);
+    axios
+      .get(`/api/forum/topics/${id}`, { signal: controller.signal })
+      .then((response) => {
+        setTopic(response.data);
+        setIsLocked(response.data.is_locked);
+      })
+      .catch((failure) => {
+        if (!controller.signal.aborted) {
+          console.error("Error fetching topic:", failure);
+          setLoadError(true);
         }
-      };
-      fetchTopic();
-    }
-  }, [id]);
-
-  if (!topic) {
-    return (
-      <div 
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: theme.bg }}
-      >
-        <div className="space-y-4 text-center">
-          <div 
-            className="animate-spin rounded-full h-12 w-12 border-4 mx-auto"
-            style={{ 
-              borderColor: theme.border,
-              borderTopColor: theme.accent
-            }}
-          />
-          <p style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}>
-            Loading...
-          </p>
-        </div>
-      </div>
-    );
-  }
+      });
+    return () => controller.abort();
+  }, [id, refreshKey]);
 
   const handlePlayClick = () => {
-    if (topic.song) {
-      if (currentSong?.id === topic.song.id) {
-        if (isPlaying) {
-          pause();
-        } else {
-          resume();
-        }
-      } else {
-        playSong({
-          id: topic.song.id,
-          title: topic.song.title,
-          artist: topic.song.artist || topic.song.username,
-          audioUrl: topic.song.audio_url,
-          audio_url: topic.song.audio_url,
-          coverArtUrl: topic.song.song_art_url,
-          duration: topic.song.duration,
-          uploaded_by: topic.song.uploaded_by,
-        });
-      }
+    if (!topic?.song) return;
+    if (currentSong?.id === topic.song.id) {
+      if (isPlaying) pause();
+      else resume();
+      return;
     }
+    playSong({
+      id: topic.song.id,
+      title: topic.song.title,
+      artist: topic.song.artist || topic.song.username,
+      audioUrl: topic.song.audio_url,
+      audio_url: topic.song.audio_url,
+      coverArtUrl: topic.song.song_art_url,
+      duration: topic.song.duration,
+      uploaded_by: topic.song.uploaded_by,
+    });
   };
-
-  const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
-  
-  const getImageUrl = (path: string | null | undefined): string => {
-    if (!path) return '';
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    return CDN_URL ? `${CDN_URL}${path}` : `/${path}`;
-  };
-
-  const handleCommentAdded = (newComment: any) => {
-    setTopic((prevTopic: any) => ({
-      ...prevTopic,
-      comments: [newComment, ...prevTopic.comments],
+  const handleCommentAdded = (comment: any) =>
+    setTopic((previous: any) => ({
+      ...previous,
+      comments: [comment, ...(previous.comments || [])],
     }));
-  };
-
   const handleLockTopic = async () => {
+    setIsLocking(true);
     try {
       await axios.patch(`/api/forum/topics/${id}/lock`);
       setIsLocked(true);
-    } catch (error) {
-      console.error('Error locking topic:', error);
+      toast.success("Conversation locked");
+    } catch (failure) {
+      console.error("Error locking topic:", failure);
+      toast.error("Could not lock the conversation");
+    } finally {
+      setIsLocking(false);
     }
   };
 
-  const richTextStyles = {
-    prose: cn(
-      "prose dark:prose-invert max-w-none",
-      "prose-a:underline",
-      "prose-ol:list-decimal prose-ul:list-disc",
-      "prose-h1:text-2xl prose-h1:font-bold prose-h1:mb-4",
-      "prose-h2:text-xl prose-h2:font-bold prose-h2:mb-3",
-      "prose-h3:text-lg prose-h3:font-bold prose-h3:mb-2",
-      "prose-ol:my-4 prose-ul:my-4",
-      "prose-ol:pl-4 prose-ul:pl-4"
-    )
-  };
-
   return (
-    <div 
-      className="min-h-screen transition-colors duration-300"
-      style={{ backgroundColor: theme.bg }}
-    >
+    <>
       <Head>
-        <title>{topic.title} - BibleChorus Forum</title>
-        <link rel="icon" href="/favicon.ico" />
+        <title>
+          {topic ? `${topic.title} · Community` : "Community"} · BibleChorus
+        </title>
       </Head>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="relative overflow-hidden pb-20 pt-12"
-      >
-        <div className="absolute inset-0">
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: isDark 
-                ? 'radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 50%)'
-                : 'radial-gradient(ellipse at 50% 0%, rgba(191, 161, 48, 0.06) 0%, transparent 50%)'
-            }}
-          />
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: 'radial-gradient(circle at 50% 120%, rgba(212, 175, 55, 0.05), transparent 60%)'
-            }}
-          />
-        </div>
-
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight"
-            style={{ color: theme.text, fontFamily: "'Italiana', serif" }}
-          >
-            {topic.title}
-          </motion.h1>
-          {topic.category && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="mt-4"
+      <main className="page-shell max-w-5xl">
+        <Button asChild variant="ghost" className="mb-6 -ml-3">
+          <Link href="/forum">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to the conversation
+          </Link>
+        </Button>
+        {loadError ? (
+          <div role="alert" className="surface-card p-10 text-center">
+            <h1 className="text-xl font-semibold">
+              This conversation couldn’t load.
+            </h1>
+            <p className="mb-5 mt-2 text-muted-foreground">
+              It may be unavailable. You can try again or return to the
+              community.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => setRefreshKey((key) => key + 1)}
             >
-              <Badge 
-                className="px-4 py-1.5 text-sm font-medium rounded-full"
-                style={{ 
-                  backgroundColor: theme.accentGlow,
-                  color: theme.accent,
-                  border: `1px solid ${theme.borderHover}`,
-                  fontFamily: "'Manrope', sans-serif"
-                }}
-              >
-                {topic.category}
-              </Badge>
-            </motion.div>
-          )}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="mt-4 text-lg"
-            style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
-          >
-            Posted by <span style={{ color: theme.text, fontWeight: 500 }}>{topic.username}</span> on {new Date(topic.created_at).toLocaleDateString()}
-          </motion.p>
-        </div>
-      </motion.div>
-
-      <div className="container mx-auto px-4 -mt-12 relative z-20 pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="backdrop-blur-2xl rounded-2xl shadow-2xl p-6 md:p-10"
-          style={{ 
-            backgroundColor: isDark ? 'rgba(10, 10, 10, 0.9)' : 'rgba(255, 255, 255, 0.95)',
-            border: `1px solid ${theme.border}`
-          }}
-        >
-          <div className="mb-6">
-            <Link href="/forum">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center rounded-lg transition-all duration-300"
-                style={{ 
-                  borderColor: theme.border,
-                  color: theme.text,
-                  fontFamily: "'Manrope', sans-serif"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = theme.accent;
-                  e.currentTarget.style.color = theme.accent;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = theme.border;
-                  e.currentTarget.style.color = theme.text;
-                }}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Forum
-              </Button>
-            </Link>
+              Try again
+            </Button>
           </div>
-
-          <div 
-            className={richTextStyles.prose}
-            style={{ 
-              color: theme.text,
-              fontFamily: "'Manrope', sans-serif"
-            }}
+        ) : !topic ? (
+          <div
+            role="status"
+            aria-label="Loading conversation"
+            className="space-y-6"
           >
-            <style jsx global>{`
-              .prose a {
-                color: ${theme.accent};
-              }
-              .prose a:hover {
-                color: ${theme.accentHover};
-              }
-              .prose h1, .prose h2, .prose h3, .prose h4 {
-                font-family: 'Italiana', serif;
-                color: ${theme.text};
-              }
-              .prose p, .prose li {
-                color: ${theme.text};
-              }
-            `}</style>
-            {ReactHtmlParser(topic.content)}
+            <Skeleton className="h-12 w-3/4" />
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-72 rounded-2xl" />
           </div>
-
-          {topic.song && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="mt-8 mb-6 p-4 rounded-xl shadow-sm flex items-center transition-all duration-300"
-              style={{ 
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-                border: `1px solid ${theme.border}`
-              }}
-            >
-              <div className="relative w-16 h-16 flex-shrink-0 mr-4 rounded-lg overflow-hidden">
-                <Image
-                  src={topic.song.song_art_url ? getImageUrl(topic.song.song_art_url) : '/biblechorus-icon.png'}
-                  alt={topic.song.title}
-                  layout="fill"
-                  objectFit="cover"
-                />
-              </div>
-              <div className="flex-grow">
-                <h3 
-                  className="text-lg font-semibold"
-                  style={{ color: theme.text, fontFamily: "'Italiana', serif" }}
-                >
-                  {topic.song.title}
-                </h3>
-                <p 
-                  className="text-sm"
-                  style={{ color: theme.textSecondary, fontFamily: "'Manrope', sans-serif" }}
-                >
-                  {topic.song.artist || topic.song.username}
-                </p>
-              </div>
-              <Button
-                onClick={handlePlayClick}
-                variant="outline"
-                size="icon"
-                className="ml-4 rounded-full transition-all duration-300"
-                style={{ 
-                  borderColor: theme.accent,
-                  color: theme.accent
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme.accent;
-                  e.currentTarget.style.color = '#ffffff';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = theme.accent;
-                }}
-              >
-                {currentSong?.id === topic.song.id && isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
+        ) : (
+          <>
+            <header className="page-header">
+              <div className="mb-4 flex items-center gap-2">
+                {topic.category && (
+                  <Badge variant="secondary" className="rounded-full">
+                    {topic.category}
+                  </Badge>
                 )}
-              </Button>
-            </motion.div>
-          )}
-
-          <div 
-            className="h-px my-8"
-            style={{ 
-              background: `linear-gradient(to right, transparent, ${theme.separator}, transparent)`
-            }}
-          />
-
-          <h2 
-            className="text-2xl font-semibold mb-6"
-            style={{ color: theme.text, fontFamily: "'Italiana', serif" }}
-          >
-            Comments
-          </h2>
-
-          {user && (
-            <NewCommentForm
-              topicId={topic.id}
-              onCommentAdded={handleCommentAdded}
-            />
-          )}
-
-          <CommentList 
-            comments={topic.comments || []} 
-            topicId={topic.id}
-            onCommentAdded={handleCommentAdded}
-          />
-
-          {user?.is_moderator && !isLocked && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="mt-8 pt-6"
-              style={{ borderTop: `1px solid ${theme.border}` }}
-            >
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleLockTopic}
-                className="flex items-center gap-2 transition-all duration-300"
-                style={{ 
-                  color: theme.textSecondary,
-                  fontFamily: "'Manrope', sans-serif"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = theme.accent;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = theme.textSecondary;
-                }}
-              >
-                <Lock className="h-4 w-4" /> Lock Topic
-              </Button>
-            </motion.div>
-          )}
-        </motion.div>
-      </div>
-    </div>
+                {isLocked && (
+                  <Badge variant="outline" className="gap-1 rounded-full">
+                    <Lock className="h-3 w-3" /> Locked
+                  </Badge>
+                )}
+              </div>
+              <h1 className="page-title">{topic.title}</h1>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Shared by{" "}
+                <span className="font-medium text-foreground">
+                  {topic.username}
+                </span>
+                <span className="mx-2">·</span>
+                <time dateTime={topic.created_at}>
+                  {new Date(topic.created_at).toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </time>
+              </p>
+            </header>
+            <article className="surface-card p-6 sm:p-8">
+              <div className="prose max-w-none break-words dark:prose-invert prose-a:text-primary prose-headings:text-foreground">
+                {ReactHtmlParser(DOMPurify.sanitize(topic.content || ""))}
+              </div>
+              {topic.song && (
+                <div className="mt-8 flex items-center gap-4 rounded-xl border border-border bg-muted/40 p-4">
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
+                    <Image
+                      src={
+                        topic.song.song_art_url
+                          ? getImageUrl(topic.song.song_art_url)
+                          : "/biblechorus-icon.png"
+                      }
+                      alt=""
+                      fill
+                      sizes="64px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="mb-1 text-xs text-muted-foreground">
+                      A song for this conversation
+                    </p>
+                    <Link
+                      href={`/Songs/${topic.song.id}`}
+                      className="line-clamp-2 font-semibold hover:text-primary"
+                    >
+                      {topic.song.title}
+                    </Link>
+                    <p className="mt-1 truncate text-sm text-muted-foreground">
+                      {topic.song.artist || topic.song.username}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0 rounded-full"
+                    onClick={handlePlayClick}
+                    aria-label={
+                      currentSong?.id === topic.song.id && isPlaying
+                        ? `Pause ${topic.song.title}`
+                        : `Play ${topic.song.title}`
+                    }
+                  >
+                    {currentSong?.id === topic.song.id && isPlaying ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              )}
+            </article>
+            <section className="mt-10">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <h2 className="flex items-center gap-2 text-xl font-semibold">
+                  <MessageSquare className="h-5 w-5 text-primary" /> Join the
+                  conversation{" "}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    ({topic.comments?.length || 0})
+                  </span>
+                </h2>
+                {user?.is_moderator && !isLocked && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isLocking}
+                    onClick={handleLockTopic}
+                  >
+                    <Lock className="mr-2 h-4 w-4" />{" "}
+                    {isLocking ? "Locking…" : "Lock topic"}
+                  </Button>
+                )}
+              </div>
+              {isLocked ? (
+                <p className="mb-6 rounded-xl border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
+                  This conversation is locked. You can still read the discussion
+                  below.
+                </p>
+              ) : user ? (
+                <NewCommentForm
+                  topicId={topic.id}
+                  onCommentAdded={handleCommentAdded}
+                />
+              ) : (
+                <div className="surface-card mb-6 flex flex-wrap items-center justify-between gap-3 p-5">
+                  <p className="text-sm text-muted-foreground">
+                    Sign in to share your thoughts with the community.
+                  </p>
+                  <Button asChild variant="outline">
+                    <Link href="/login">Sign in to reply</Link>
+                  </Button>
+                </div>
+              )}
+              <CommentList
+                comments={topic.comments || []}
+                topicId={topic.id}
+                onCommentAdded={handleCommentAdded}
+                canReply={!isLocked}
+              />
+            </section>
+          </>
+        )}
+      </main>
+    </>
   );
 }

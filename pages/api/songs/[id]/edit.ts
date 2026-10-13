@@ -1,11 +1,25 @@
+import { withApiAuth } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next'
 import db from '@/db'
+import { z } from 'zod';
+import { syncSongScripture } from '@/lib/song-scripture';
+import { refreshProgressMaterializedView } from '@/lib/db-utils';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+const updateSchema = z.object({
+  title: z.string().trim().min(1).max(255).optional(),
+  artist: z.string().max(255).nullable().optional(),
+  genres: z.array(z.string().max(100)).min(1).max(100).optional(),
+  lyrics: z.string().max(200000).optional(),
+  lyrics_scripture_adherence: z.enum(['word_for_word', 'close_paraphrase', 'creative_inspiration', 'somewhat_connected', 'no_connection']).optional(),
+});
+
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query
 
   if (req.method === 'PUT') {
-    const { title, artist, genres, lyrics, lyrics_scripture_adherence } = req.body
+    const parsed = updateSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: 'Provide valid song details' });
+    const { title, artist, genres, lyrics, lyrics_scripture_adherence } = parsed.data;
 
     try {
       const updateData: any = {}
@@ -20,7 +34,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ message: 'No data provided for update' })
       }
 
-      await db('songs').where('id', id).update(updateData)
+      await db.transaction(async trx => {
+        await trx('songs').where('id', id).update(updateData);
+        await syncSongScripture(trx, Number(id));
+      });
+      await refreshProgressMaterializedView();
       res.status(200).json({ message: 'Song updated successfully' })
     } catch (error) {
       console.error('Error updating song:', error)
@@ -31,3 +49,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }
+
+export default withApiAuth(handler, { methods: ['PUT'], owner: 'songs' });

@@ -54,3 +54,11 @@ This document provides guidelines for AI agents (e.g., OpenAI Codex) when makin
 - Database tables for this feature include `pdfs`, `pdf_comments`, `pdf_notes`, `pdf_ratings`, and `pdf_verses`. Any schema updates must be made via Knex migrations and documented in the Reference directory.
 - Keep Zod schemas for any new forms and validate API input accordingly.
 - Consider performance implications: rendering very large PDFs may require pagination or streaming.
+
+## 8. Shared design and verification
+
+Use the shared application shell and CSS tokens. Never inject page-level CSS that overrides `body`, `.container`, navigation, or unrelated pages. Use `lib/design-system.ts` when adapting legacy inline styles, and prefer token classes for new UI. Respect reduced motion and label every icon-only control. Journey song/context panels are designed for future original-source attachments without requiring them now.
+
+All API mutations must use the shared server authentication/ownership helpers. Preserve signed bearer compatibility, cookie sessions, and Google sessions. Do not log tokens or private content. Never remove saved S3 references through unsubmitted-file cleanup. Review `Reference/api_security_reference.md` before changing uploads, deletion, privacy, or attribution.
+
+Run `npm run check` and `npm run build` before publishing changes. Offline tests must not use live database/storage/email credentials. Historical migrations are not a fresh-database bootstrap; never run them as part of build/start or casually reset migration history. See `docs/site-rework.md` for controlled deployment and preview requirements.

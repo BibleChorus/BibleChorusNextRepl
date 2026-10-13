@@ -1,221 +1,160 @@
-import React from 'react';
-import { useRouter } from 'next/router';
-import { Upload, Map, List, MessageSquare, Headphones, User, HelpCircle, FileText, X, TrendingUp } from 'lucide-react';
-import { PanelLeftClose } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useSidebar } from '@/contexts/SidebarContext';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from 'next-themes';
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import {
+  Headphones,
+  Map,
+  ListMusic,
+  TrendingUp,
+  MessageSquare,
+  FileText,
+  Upload,
+  User,
+  HelpCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from "lucide-react";
+import { useSidebar } from "@/contexts/SidebarContext";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
-const menuItems = [
-  { name: 'Upload Songs', icon: Upload, href: '/upload' },
-  { name: 'Progress Map', icon: TrendingUp, href: '/progress' },
-  { name: 'Journeys', icon: Map, href: '/journeys' },
-  { name: 'Playlists', icon: List, href: '/playlists' },
-  { name: 'Forum', icon: MessageSquare, href: '/forum' },
-  { name: 'Listen', icon: Headphones, href: '/listen' },
-  { name: 'Bible Study', icon: FileText, href: '/pdfs' },
-  { name: 'Profile', icon: User, href: '/profile' },
-  { name: 'How To', icon: HelpCircle, href: '/how-to' },
+const sections = [
+  {
+    label: "Discover",
+    links: [
+      { label: "Listen", href: "/listen", icon: Headphones },
+      { label: "Journeys", href: "/journeys", icon: Map },
+      { label: "Playlists", href: "/playlists", icon: ListMusic },
+      { label: "Scripture coverage", href: "/progress", icon: TrendingUp },
+    ],
+  },
+  {
+    label: "Connect & create",
+    links: [
+      { label: "Forum", href: "/forum", icon: MessageSquare },
+      { label: "Bible study", href: "/pdfs", icon: FileText },
+      { label: "Upload a song", href: "/upload", icon: Upload },
+    ],
+  },
+  {
+    label: "Your space",
+    links: [
+      { label: "Profile", href: "/profile", icon: User },
+      { label: "How to", href: "/how-to", icon: HelpCircle },
+    ],
+  },
 ];
 
-const Sidebar: React.FC = () => {
+export default function Sidebar() {
   const { isOpen, setIsOpen, isMobileOpen, setIsMobileOpen } = useSidebar();
-  const { resolvedTheme } = useTheme();
   const router = useRouter();
-
-  const isDark = resolvedTheme === 'dark';
-
-  const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-    separator: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.2)',
-  };
-
-  const handleItemClick = (href: string) => {
-    router.push(href);
-    setIsMobileOpen(false);
-  };
-
-  const isVisible = isMobileOpen || isOpen;
-
+  const navigation = (expanded: boolean) => (
+    <nav aria-label="Main navigation" className="space-y-7">
+      {sections.map((section) => (
+        <div key={section.label}>
+          <p
+            className={cn(
+              "mb-2 px-3 text-[10px] font-semibold uppercase tracking-[.17em] text-muted-foreground",
+              !expanded && "sr-only",
+            )}
+          >
+            {section.label}
+          </p>
+          <div className="space-y-1">
+            {section.links.map(({ label, href, icon: Icon }) => {
+              const active =
+                router.pathname === href ||
+                router.pathname.startsWith(`${href}/`) ||
+                (href === "/listen" && router.pathname.startsWith("/Songs/")) ||
+                (href === "/forum" && router.pathname.startsWith("/Forum/"));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setIsMobileOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  title={!expanded ? label : undefined}
+                  className={cn(
+                    "flex min-h-11 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
+                    active
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    !expanded && "justify-center",
+                  )}
+                >
+                  <Icon
+                    className="h-[18px] w-[18px] shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span className={!expanded ? "sr-only" : ""}>{label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+  const brand = (expanded: boolean) => (
+    <Link
+      href="/"
+      className="flex h-[72px] items-center gap-3 px-2"
+      aria-label="BibleChorus home"
+    >
+      <Image src="/biblechorus-icon.png" width={36} height={36} alt="" />
+      <span
+        className={cn(
+          "font-serif text-xl tracking-tight",
+          !expanded && "sr-only",
+        )}
+      >
+        BibleChorus
+      </span>
+    </Link>
+  );
   return (
     <>
-      <AnimatePresence>
-        {isMobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[54] lg:hidden"
-            onClick={() => setIsMobileOpen(false)}
-          />
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 hidden flex-col border-r border-border bg-card px-3 lg:flex",
+          isOpen ? "w-64" : "w-20",
         )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div
-            initial={{ opacity: 0, x: -300 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -300 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed top-0 left-0 h-full w-64 z-[55]"
-            style={{ backgroundColor: theme.bg }}
-          >
-            <div 
-              className="absolute inset-0 border-r"
-              style={{ 
-                backgroundColor: theme.bg,
-                borderColor: theme.border
-              }}
-            />
-            
-            <div className="relative p-4 h-full overflow-y-auto">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  setIsMobileOpen(false);
-                  setIsOpen(false);
-                }}
-                className="absolute top-4 right-4 p-2 rounded-lg transition-all duration-300"
-                style={{ 
-                  color: theme.textSecondary,
-                  border: `1px solid ${theme.border}`,
-                  backgroundColor: 'transparent'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = theme.borderHover;
-                  e.currentTarget.style.color = theme.accent;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = theme.border;
-                  e.currentTarget.style.color = theme.textSecondary;
-                }}
-              >
-                {isMobileOpen ? <X className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-              </motion.button>
-
-              <div className="h-12"></div>
-              
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Link 
-                  href="/" 
-                  className="flex items-center py-3 px-4 mb-6 rounded-lg cursor-pointer transition-all duration-300 h-12"
-                  style={{ 
-                    color: theme.text,
-                    border: `1px solid ${theme.border}`,
-                    backgroundColor: 'transparent'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = theme.borderHover;
-                    e.currentTarget.style.backgroundColor = theme.hoverBg;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = theme.border;
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <div className="w-6 h-6 flex items-center justify-center">
-                    <Image
-                      src="/biblechorus-icon.png"
-                      alt="BibleChorus"
-                      width={24}
-                      height={24}
-                      className="flex-shrink-0"
-                    />
-                  </div>
-                  <span 
-                    className="ml-4 text-lg tracking-wide"
-                    style={{ 
-                      fontFamily: "'Italiana', serif",
-                      color: theme.accent
-                    }}
-                  >
-                    BibleChorus
-                  </span>
-                </Link>
-              </motion.div>
-              
-              <div 
-                className="h-px mb-6"
-                style={{ 
-                  background: `linear-gradient(to right, transparent, ${theme.separator}, transparent)`
-                }}
-              />
-              
-              {menuItems.map((item, index) => (
-                <motion.div
-                  key={item.name}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  whileHover={{ scale: 1.02 }}
-                  className="mb-2"
-                >
-                  <div
-                    onClick={() => handleItemClick(item.href)}
-                    className="group flex items-center py-3 px-4 rounded-lg cursor-pointer transition-all duration-300 h-12 relative"
-                    style={{ 
-                      color: theme.text,
-                      border: `1px solid ${theme.border}`,
-                      backgroundColor: 'transparent'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = theme.borderHover;
-                      e.currentTarget.style.backgroundColor = theme.hoverBg;
-                      const accent = e.currentTarget.querySelector('.accent-line') as HTMLElement;
-                      if (accent) accent.style.opacity = '1';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = theme.border;
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      const accent = e.currentTarget.querySelector('.accent-line') as HTMLElement;
-                      if (accent) accent.style.opacity = '0';
-                    }}
-                  >
-                    <div 
-                      className="accent-line absolute left-0 top-0 w-[2px] h-full rounded-l-lg transition-opacity duration-300"
-                      style={{ 
-                        backgroundColor: theme.accent,
-                        opacity: 0
-                      }}
-                    />
-                    
-                    <div className="w-6 h-6 flex items-center justify-center relative z-10">
-                      <item.icon 
-                        className="h-5 w-5 flex-shrink-0 transition-colors duration-300" 
-                        style={{ color: theme.accent }}
-                      />
-                    </div>
-                    <span 
-                      className="ml-4 font-medium relative z-10"
-                      style={{ fontFamily: "'Manrope', sans-serif" }}
-                    >
-                      {item.name}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      >
+        {brand(isOpen)}
+        <div className="flex-1 overflow-y-auto py-6">{navigation(isOpen)}</div>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={isOpen ? "Collapse navigation" : "Expand navigation"}
+          className="my-4 flex min-h-11 items-center justify-center gap-3 rounded-xl border border-border px-3 text-xs text-muted-foreground hover:bg-muted"
+        >
+          {isOpen ? (
+            <PanelLeftClose className="h-4 w-4" />
+          ) : (
+            <PanelLeftOpen className="h-4 w-4" />
+          )}
+          {isOpen && "A little more room"}
+        </button>
+      </aside>
+      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+        <SheetContent
+          side="left"
+          id="mobile-navigation"
+          className="w-72 overflow-y-auto bg-card px-5"
+        >
+          <SheetTitle className="sr-only">BibleChorus navigation</SheetTitle>
+          <SheetDescription className="sr-only">
+            Explore music, journeys, and community.
+          </SheetDescription>
+          {brand(true)}
+          <div className="py-5">{navigation(true)}</div>
+        </SheetContent>
+      </Sheet>
     </>
   );
-};
-
-export default Sidebar;
+}

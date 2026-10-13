@@ -1,89 +1,128 @@
-"use client"
+"use client";
 
-import React, { Dispatch, SetStateAction, useState, useCallback, useEffect } from "react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Button } from "@/components/ui/button"
-import { Check, ChevronsUpDown, X, RefreshCw, Info, Mic, Music, Bot, Search, Tag, Book, AlignJustify, FileText, BookOpen, ChevronDown, Bookmark, Heart, Star, User, Filter, Map } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { motion } from "framer-motion"
-import { useTheme } from 'next-themes'
-import { Input } from "@/components/ui/input"
-import { GENRES, BIBLE_BOOKS, BIBLE_TRANSLATIONS, AI_MUSIC_MODELS } from "@/lib/constants"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Switch } from "@/components/ui/switch"
-import { useQuery } from '@tanstack/react-query'
-import axios from 'axios'
+import { uiTheme } from "@/lib/design-system";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from "@/components/ui/tooltip";
+import {
+  AI_MUSIC_MODELS,
+  BIBLE_BOOKS,
+  BIBLE_TRANSLATIONS,
+  GENRES,
+} from "@/lib/constants";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { motion } from "framer-motion";
+import {
+  AlignJustify,
+  Book,
+  Bookmark,
+  BookOpen,
+  Bot,
+  Check,
+  ChevronDown,
+  FileText,
+  Filter,
+  Heart,
+  Info,
+  Map,
+  Mic,
+  Music,
+  RefreshCw,
+  Search,
+  Star,
+  Tag,
+  User,
+} from "lucide-react";
+import { useTheme } from "next-themes";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 export interface FilterOptions {
-  lyricsAdherence: string[]
-  isContinuous: "all" | "true" | "false"
-  aiMusic: "all" | "true" | "false"
-  genres: string[]
-  aiUsedForLyrics: "all" | "true" | "false"  // Updated from boolean
-  musicModelUsed: string
-  title: string
-  artist: string
-  bibleTranslation: string
-  bibleBooks: string[]
-  bibleChapters: { [book: string]: number[] }
-  bibleVerses: string[]
-  search: string
+  lyricsAdherence: string[];
+  isContinuous: "all" | "true" | "false";
+  aiMusic: "all" | "true" | "false";
+  genres: string[];
+  aiUsedForLyrics: "all" | "true" | "false"; // Updated from boolean
+  musicModelUsed: string;
+  title: string;
+  artist: string;
+  bibleTranslation: string;
+  bibleBooks: string[];
+  bibleChapters: { [book: string]: number[] };
+  bibleVerses: string[];
+  search: string;
   showLikedSongs?: boolean;
   showBestMusically?: boolean;
   showBestLyrically?: boolean;
   showBestOverall?: boolean;
   sortBy: string;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: "asc" | "desc";
   showMySongs: boolean;
   includeJourneySongs?: boolean;
 }
 
 interface FiltersProps {
-  filterOptions: FilterOptions
-  setFilterOptions: Dispatch<SetStateAction<FilterOptions>>
-  setIsFilterExpanded: Dispatch<SetStateAction<boolean>>
+  filterOptions: FilterOptions;
+  setFilterOptions: Dispatch<SetStateAction<FilterOptions>>;
+  setIsFilterExpanded: Dispatch<SetStateAction<boolean>>;
 }
 
-export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }: FiltersProps) {
-  const [openLyricsAdherence, setOpenLyricsAdherence] = useState(false)
-  const [openGenres, setOpenGenres] = useState(false)
-  const [genreSearch, setGenreSearch] = useState('')
-  const [openBibleBooks, setOpenBibleBooks] = useState(false)
-  const [bibleBookSearch, setBibleBookSearch] = useState('')
-  const [currentTab, setCurrentTab] = useState("AI Info")
-  
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+export function Filters({
+  filterOptions,
+  setFilterOptions,
+  setIsFilterExpanded,
+}: FiltersProps) {
+  const [openLyricsAdherence, setOpenLyricsAdherence] = useState(false);
+  const [openGenres, setOpenGenres] = useState(false);
+  const [genreSearch, setGenreSearch] = useState("");
+  const [openBibleBooks, setOpenBibleBooks] = useState(false);
+  const [bibleBookSearch, setBibleBookSearch] = useState("");
+  const [currentTab, setCurrentTab] = useState("AI Info");
 
-  const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    borderHover: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(191, 161, 48, 0.3)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-    accentBgLight: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(191, 161, 48, 0.1)',
-    accentBgMedium: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(191, 161, 48, 0.15)',
-  };
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const theme = { ...uiTheme, accentBgMedium: "hsl(var(--primary) / .15)" };
 
   // State for Bible books
-  const [openChapters, setOpenChapters] = useState(false)
-  const [chapterSearch, setChapterSearch] = useState('')
-  const [selectedChapters, setSelectedChapters] = useState<{ [book: string]: number[] }>(filterOptions.bibleChapters || {})
+  const [openChapters, setOpenChapters] = useState(false);
+  const [chapterSearch, setChapterSearch] = useState("");
+  const [selectedChapters, setSelectedChapters] = useState<{
+    [book: string]: number[];
+  }>(filterOptions.bibleChapters || {});
 
   // State for verses
-  const [openBibleVerses, setOpenBibleVerses] = useState(false)
-  const [bibleVerseSearch, setBibleVerseSearch] = useState('')
-  const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>(filterOptions.bibleVerses || [])
+  const [openBibleVerses, setOpenBibleVerses] = useState(false);
+  const [bibleVerseSearch, setBibleVerseSearch] = useState("");
+  const [selectedBibleVerses, setSelectedBibleVerses] = useState<string[]>(
+    filterOptions.bibleVerses || [],
+  );
 
   // Add state for user interactions
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -94,8 +133,8 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       setIsSmallScreen(window.innerWidth < 768); // Adjust breakpoint as needed
     };
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Function to handle Like and Vote Type filters
@@ -117,13 +156,16 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
   }, [filterOptions.bibleVerses]);
 
   const handleChange = (key: keyof FilterOptions, value: any) => {
-    const actualValue = value === '_empty_' ? '' : value;
+    const actualValue = value === "_empty_" ? "" : value;
 
     setFilterOptions((prev) => {
       const updatedFilters = { ...prev, [key]: actualValue };
 
       // If bibleBooks is cleared, reset bibleChapters and bibleVerses
-      if (key === 'bibleBooks' && (value === '' || (Array.isArray(value) && value.length === 0))) {
+      if (
+        key === "bibleBooks" &&
+        (value === "" || (Array.isArray(value) && value.length === 0))
+      ) {
         updatedFilters.bibleChapters = {};
         updatedFilters.bibleVerses = [];
         setSelectedChapters({});
@@ -131,13 +173,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       }
 
       // Synchronize the search term
-      if (key === 'search') {
-        setFilterOptions((prev) => ({ ...prev, search: value }))
+      if (key === "search") {
+        setFilterOptions((prev) => ({ ...prev, search: value }));
       }
 
       return updatedFilters;
     });
-  }
+  };
 
   const lyricsAdherenceOptions = [
     { value: "word_for_word", label: "Word for Word" },
@@ -145,35 +187,35 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
     { value: "creative_inspiration", label: "Creative Inspiration" },
     { value: "somewhat_connected", label: "Somewhat Connected" },
     { value: "no_connection", label: "No Connection" },
-  ]
+  ];
 
   const toggleLyricsAdherence = (value: string) => {
-    const currentValues = filterOptions.lyricsAdherence
+    const currentValues = filterOptions.lyricsAdherence;
     const newValues = currentValues.includes(value)
       ? currentValues.filter((v) => v !== value)
-      : [...currentValues, value]
-    handleChange('lyricsAdherence', newValues)
-  }
+      : [...currentValues, value];
+    handleChange("lyricsAdherence", newValues);
+  };
 
   const filteredGenres = useCallback(() => {
-    return GENRES.filter(genre =>
-      genre.toLowerCase().includes(genreSearch.toLowerCase())
-    )
-  }, [genreSearch])
+    return GENRES.filter((genre) =>
+      genre.toLowerCase().includes(genreSearch.toLowerCase()),
+    );
+  }, [genreSearch]);
 
   const toggleGenre = (genre: string) => {
-    const currentGenres = filterOptions.genres
+    const currentGenres = filterOptions.genres;
     const newGenres = currentGenres.includes(genre)
       ? currentGenres.filter((g) => g !== genre)
-      : [...currentGenres, genre]
-    handleChange('genres', newGenres)
-  }
+      : [...currentGenres, genre];
+    handleChange("genres", newGenres);
+  };
 
   const filteredBibleBooks = useCallback(() => {
-    return BIBLE_BOOKS.filter(book =>
-      book.toLowerCase().includes(bibleBookSearch.toLowerCase())
-    )
-  }, [bibleBookSearch])
+    return BIBLE_BOOKS.filter((book) =>
+      book.toLowerCase().includes(bibleBookSearch.toLowerCase()),
+    );
+  }, [bibleBookSearch]);
 
   const toggleBibleBook = (book: string) => {
     const currentBooks = filterOptions.bibleBooks;
@@ -181,15 +223,19 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       ? currentBooks.filter((b) => b !== book)
       : [...currentBooks, book];
 
-    handleChange('bibleBooks', newBooks);
+    handleChange("bibleBooks", newBooks);
 
     // If no books are selected, clear chapters and verses
     if (newBooks.length === 0) {
       setSelectedChapters({});
       setSelectedBibleVerses([]);
-      setFilterOptions((prev) => ({ ...prev, bibleChapters: {}, bibleVerses: [] }));
+      setFilterOptions((prev) => ({
+        ...prev,
+        bibleChapters: {},
+        bibleVerses: [],
+      }));
     }
-  }
+  };
 
   const clearFilters = () => {
     setFilterOptions({
@@ -210,24 +256,24 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       showBestMusically: false,
       showBestLyrically: false,
       showBestOverall: false,
-      sortBy: 'mostRecent',
-      sortOrder: 'desc',
+      sortBy: "mostRecent",
+      sortOrder: "desc",
       showMySongs: false,
       includeJourneySongs: false,
-    })
-  }
+    });
+  };
 
   const { data: availableChapters, isLoading: isLoadingChapters } = useQuery({
-    queryKey: ['chapters', filterOptions.bibleBooks],
+    queryKey: ["chapters", filterOptions.bibleBooks],
     queryFn: async () => {
-      if (filterOptions.bibleBooks.length === 0) return {}
-      const response = await axios.get('/api/chapters', {
-        params: { books: filterOptions.bibleBooks.join(',') }
-      })
-      return response.data
+      if (filterOptions.bibleBooks.length === 0) return {};
+      const response = await axios.get("/api/chapters", {
+        params: { books: filterOptions.bibleBooks.join(",") },
+      });
+      return response.data;
     },
     enabled: filterOptions.bibleBooks.length > 0,
-  })
+  });
 
   const handleChapterToggle = (book: string, chapter: number) => {
     setSelectedChapters((prev) => {
@@ -245,7 +291,10 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
 
       // Update filterOptions
       setFilterOptions((prevFilters) => {
-        const updatedFilters = { ...prevFilters, bibleChapters: updatedChapters };
+        const updatedFilters = {
+          ...prevFilters,
+          bibleChapters: updatedChapters,
+        };
 
         // If no chapters are selected, clear verses
         if (Object.keys(updatedChapters).length === 0) {
@@ -258,43 +307,48 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
 
       return updatedChapters;
     });
-  }
+  };
 
   const { data: bibleVerses, isLoading: isLoadingVerses } = useQuery({
-    queryKey: ['bibleVerses', filterOptions.bibleBooks, selectedChapters],
+    queryKey: ["bibleVerses", filterOptions.bibleBooks, selectedChapters],
     queryFn: async () => {
-      if (filterOptions.bibleBooks.length === 0) return {}
+      if (filterOptions.bibleBooks.length === 0) return {};
       const verses = await Promise.all(
-        filterOptions.bibleBooks.flatMap(book => 
-          (selectedChapters[book] || []).map(chapter => 
-            axios.get('/api/bible-verses', { params: { book, chapter } })
-          )
-        )
+        filterOptions.bibleBooks.flatMap((book) =>
+          (selectedChapters[book] || []).map((chapter) =>
+            axios.get("/api/bible-verses", { params: { book, chapter } }),
+          ),
+        ),
       );
-      return verses.reduce((acc, response) => {
-        const verses = response.data;
-        if (verses.length > 0) {
-          const book = verses[0].book;
-          const chapter = verses[0].chapter;
-          if (!acc[book]) acc[book] = {};
-          acc[book][chapter] = verses;
-        }
-        return acc;
-      }, {} as Record<string, Record<number, any[]>>);
+      return verses.reduce(
+        (acc, response) => {
+          const verses = response.data;
+          if (verses.length > 0) {
+            const book = verses[0].book;
+            const chapter = verses[0].chapter;
+            if (!acc[book]) acc[book] = {};
+            acc[book][chapter] = verses;
+          }
+          return acc;
+        },
+        {} as Record<string, Record<number, any[]>>,
+      );
     },
-    enabled: filterOptions.bibleBooks.length > 0 && Object.keys(selectedChapters).length > 0,
-  })
+    enabled:
+      filterOptions.bibleBooks.length > 0 &&
+      Object.keys(selectedChapters).length > 0,
+  });
 
   const handleBibleVerseToggle = (verse: string) => {
     const updatedVerses = selectedBibleVerses.includes(verse)
-      ? selectedBibleVerses.filter(v => v !== verse)
-      : [...selectedBibleVerses, verse]
-    setSelectedBibleVerses(updatedVerses)
-    setFilterOptions(prev => ({ ...prev, bibleVerses: updatedVerses }))
-  }
+      ? selectedBibleVerses.filter((v) => v !== verse)
+      : [...selectedBibleVerses, verse];
+    setSelectedBibleVerses(updatedVerses);
+    setFilterOptions((prev) => ({ ...prev, bibleVerses: updatedVerses }));
+  };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -302,109 +356,245 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       className="space-y-2"
     >
       {/* Active Filters Display */}
-      {(filterOptions.search || 
-        filterOptions.lyricsAdherence.length > 0 || 
-        filterOptions.isContinuous !== "all" || 
-        filterOptions.aiMusic !== "all" || 
-        filterOptions.genres.length > 0 || 
-        filterOptions.aiUsedForLyrics !== "all" || 
-        filterOptions.musicModelUsed || 
-        filterOptions.bibleTranslation || 
-        filterOptions.bibleBooks.length > 0 || 
-        Object.keys(filterOptions.bibleChapters || {}).length > 0 || 
-        filterOptions.bibleVerses.length > 0 || 
-        filterOptions.showLikedSongs || 
-        filterOptions.showBestMusically || 
-        filterOptions.showBestLyrically || 
-        filterOptions.showBestOverall || 
+      {(filterOptions.search ||
+        filterOptions.lyricsAdherence.length > 0 ||
+        filterOptions.isContinuous !== "all" ||
+        filterOptions.aiMusic !== "all" ||
+        filterOptions.genres.length > 0 ||
+        filterOptions.aiUsedForLyrics !== "all" ||
+        filterOptions.musicModelUsed ||
+        filterOptions.bibleTranslation ||
+        filterOptions.bibleBooks.length > 0 ||
+        Object.keys(filterOptions.bibleChapters || {}).length > 0 ||
+        filterOptions.bibleVerses.length > 0 ||
+        filterOptions.showLikedSongs ||
+        filterOptions.showBestMusically ||
+        filterOptions.showBestLyrically ||
+        filterOptions.showBestOverall ||
         filterOptions.showMySongs) && (
-        <div className="mb-4 p-3" style={{ backgroundColor: theme.accentBgLight, border: `1px solid ${theme.borderHover}` }}>
+        <div
+          className="mb-4 p-3"
+          style={{
+            backgroundColor: theme.accentBgLight,
+            border: `1px solid ${theme.borderHover}`,
+          }}
+        >
           <div className="flex items-center gap-2 mb-2">
             <Filter className="h-3 w-3" style={{ color: theme.accent }} />
-            <span className="text-xs font-medium" style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}>
+            <span
+              className="text-xs font-medium"
+              style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
+            >
               Current Filters
             </span>
           </div>
           <div className="flex flex-wrap gap-1">
             {filterOptions.search && (
-              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 Search: &quot;{filterOptions.search}&quot;
               </span>
             )}
-            {filterOptions.lyricsAdherence.map(value => (
-              <span key={value} className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
-                Lyrics: {value.replace(/_/g, ' ')}
+            {filterOptions.lyricsAdherence.map((value) => (
+              <span
+                key={value}
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
+                Lyrics: {value.replace(/_/g, " ")}
               </span>
             ))}
             {filterOptions.isContinuous !== "all" && (
-              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
-                Passage: {filterOptions.isContinuous === "true" ? "Continuous" : "Non-continuous"}
+              <span
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
+                Passage:{" "}
+                {filterOptions.isContinuous === "true"
+                  ? "Continuous"
+                  : "Non-continuous"}
               </span>
             )}
             {filterOptions.aiMusic !== "all" && (
-              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
-                Music: {filterOptions.aiMusic === "true" ? "AI Generated" : "Human Composed"}
+              <span
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
+                Music:{" "}
+                {filterOptions.aiMusic === "true"
+                  ? "AI Generated"
+                  : "Human Composed"}
               </span>
             )}
-            {filterOptions.genres.map(genre => (
-              <span key={genre} className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+            {filterOptions.genres.map((genre) => (
+              <span
+                key={genre}
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 Genre: {genre}
               </span>
             ))}
             {filterOptions.aiUsedForLyrics !== "all" && (
-              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
-                Lyrics: {filterOptions.aiUsedForLyrics === "true" ? "AI Generated" : "Human Written"}
+              <span
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
+                Lyrics:{" "}
+                {filterOptions.aiUsedForLyrics === "true"
+                  ? "AI Generated"
+                  : "Human Written"}
               </span>
             )}
             {filterOptions.musicModelUsed && (
-              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 Model: {filterOptions.musicModelUsed}
               </span>
             )}
             {filterOptions.bibleTranslation && (
-              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 Translation: {filterOptions.bibleTranslation}
               </span>
             )}
-            {filterOptions.bibleBooks.map(book => (
-              <span key={book} className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+            {filterOptions.bibleBooks.map((book) => (
+              <span
+                key={book}
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 Book: {book}
               </span>
             ))}
-            {Object.entries(filterOptions.bibleChapters || {}).map(([book, chapters]) =>
-              chapters.map(chapter => (
-                <span key={`${book}:${chapter}`} className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
-                  Chapter: {book} {chapter}
-                </span>
-              ))
+            {Object.entries(filterOptions.bibleChapters || {}).map(
+              ([book, chapters]) =>
+                chapters.map((chapter) => (
+                  <span
+                    key={`${book}:${chapter}`}
+                    className="inline-flex items-center px-2 py-1 text-xs"
+                    style={{
+                      backgroundColor: theme.accentBgMedium,
+                      color: theme.accent,
+                      fontFamily: "'Manrope', sans-serif",
+                    }}
+                  >
+                    Chapter: {book} {chapter}
+                  </span>
+                )),
             )}
-            {filterOptions.bibleVerses.map(verse => (
-              <span key={verse} className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+            {filterOptions.bibleVerses.map((verse) => (
+              <span
+                key={verse}
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 Verse: {verse}
               </span>
             ))}
             {filterOptions.showLikedSongs && (
-              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 Liked Songs
               </span>
             )}
             {filterOptions.showBestMusically && (
-              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 Best Musically
               </span>
             )}
             {filterOptions.showBestLyrically && (
-              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 Best Lyrically
               </span>
             )}
             {filterOptions.showBestOverall && (
-              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 Best Overall
               </span>
             )}
             {filterOptions.showMySongs && (
-              <span className="inline-flex items-center px-2 py-1 text-xs" style={{ backgroundColor: theme.accentBgMedium, color: theme.accent, fontFamily: "'Manrope', sans-serif" }}>
+              <span
+                className="inline-flex items-center px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: theme.accentBgMedium,
+                  color: theme.accent,
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
                 My Songs
               </span>
             )}
@@ -415,12 +605,17 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
       <div className="flex flex-col sm:flex-row items-center justify-between mb-2 space-y-2 sm:space-y-0">
         <div className="flex items-center justify-between w-full sm:w-auto">
           <div className="flex items-center space-x-1">
-            <h2 className="text-sm font-semibold" style={{ color: theme.text, fontFamily: "'Italiana', serif" }}>Filters</h2>
+            <h2
+              className="text-sm font-semibold"
+              style={{ color: theme.text, fontFamily: "'Italiana', serif" }}
+            >
+              Filters
+            </h2>
             <Popover>
-              <PopoverTrigger>
+              <PopoverTrigger aria-label="About song filters">
                 <Info className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-pointer" />
               </PopoverTrigger>
-              <PopoverContent>
+              <PopoverContent aria-label="About song filters">
                 <p className="text-xs">
                   Adjust filters to refine your song list.
                 </p>
@@ -448,8 +643,10 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               <Button
                 variant={filterOptions.showLikedSongs ? "secondary" : "outline"}
                 size="icon"
-                className="h-6 w-6"
-                onClick={() => toggleUserFilter('showLikedSongs')}
+                className="h-9 w-9"
+                aria-label="Show my liked songs"
+                aria-pressed={filterOptions.showLikedSongs}
+                onClick={() => toggleUserFilter("showLikedSongs")}
               >
                 <Heart className="h-3 w-3" />
               </Button>
@@ -463,10 +660,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={filterOptions.showBestMusically ? "secondary" : "outline"}
+                variant={
+                  filterOptions.showBestMusically ? "secondary" : "outline"
+                }
                 size="icon"
-                className="h-6 w-6"
-                onClick={() => toggleUserFilter('showBestMusically')}
+                className="h-9 w-9"
+                aria-label="Show songs I voted best musically"
+                aria-pressed={filterOptions.showBestMusically}
+                onClick={() => toggleUserFilter("showBestMusically")}
               >
                 <Music className="h-3 w-3" />
               </Button>
@@ -479,10 +680,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={filterOptions.showBestLyrically ? "secondary" : "outline"}
+                variant={
+                  filterOptions.showBestLyrically ? "secondary" : "outline"
+                }
                 size="icon"
-                className="h-6 w-6"
-                onClick={() => toggleUserFilter('showBestLyrically')}
+                className="h-9 w-9"
+                aria-label="Show songs I voted best lyrically"
+                aria-pressed={filterOptions.showBestLyrically}
+                onClick={() => toggleUserFilter("showBestLyrically")}
               >
                 <BookOpen className="h-3 w-3" />
               </Button>
@@ -495,10 +700,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={filterOptions.showBestOverall ? "secondary" : "outline"}
+                variant={
+                  filterOptions.showBestOverall ? "secondary" : "outline"
+                }
                 size="icon"
-                className="h-6 w-6"
-                onClick={() => toggleUserFilter('showBestOverall')}
+                className="h-9 w-9"
+                aria-label="Show songs I voted best overall"
+                aria-pressed={filterOptions.showBestOverall}
+                onClick={() => toggleUserFilter("showBestOverall")}
               >
                 <Star className="h-3 w-3" />
               </Button>
@@ -514,8 +723,10 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
               <Button
                 variant={filterOptions.showMySongs ? "secondary" : "outline"}
                 size="icon"
-                className="h-6 w-6"
-                onClick={() => toggleUserFilter('showMySongs')}
+                className="h-9 w-9"
+                aria-label="Show my uploaded songs"
+                aria-pressed={filterOptions.showMySongs}
+                onClick={() => toggleUserFilter("showMySongs")}
               >
                 <User className="h-3 w-3" />
               </Button>
@@ -529,10 +740,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={filterOptions.includeJourneySongs ? "secondary" : "outline"}
+                variant={
+                  filterOptions.includeJourneySongs ? "secondary" : "outline"
+                }
                 size="icon"
-                className="h-6 w-6"
-                onClick={() => toggleUserFilter('includeJourneySongs')}
+                className="h-9 w-9"
+                aria-label="Include journey songs"
+                aria-pressed={filterOptions.includeJourneySongs}
+                onClick={() => toggleUserFilter("includeJourneySongs")}
               >
                 <Map className="h-3 w-3" />
               </Button>
@@ -577,7 +792,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           <FilterSelect
             title="Lyrics Source"
             value={filterOptions.aiUsedForLyrics}
-            onChange={(value) => handleChange('aiUsedForLyrics', value)}
+            onChange={(value) => handleChange("aiUsedForLyrics", value)}
             options={[
               { value: "all", label: "All Lyrics Sources" },
               { value: "true", label: "AI Generated" },
@@ -588,7 +803,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           <FilterSelect
             title="Music Source"
             value={filterOptions.aiMusic}
-            onChange={(value) => handleChange('aiMusic', value)}
+            onChange={(value) => handleChange("aiMusic", value)}
             options={[
               { value: "all", label: "All Music Sources" },
               { value: "true", label: "AI Generated" },
@@ -600,10 +815,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           <FilterSelect
             title="AI Music Model"
             value={filterOptions.musicModelUsed}
-            onChange={(value) => handleChange('musicModelUsed', value)}
+            onChange={(value) => handleChange("musicModelUsed", value)}
             options={[
               { value: "", label: "All Models" },
-              ...AI_MUSIC_MODELS.map(model => ({ value: model, label: model }))
+              ...AI_MUSIC_MODELS.map((model) => ({
+                value: model,
+                label: model,
+              })),
             ]}
             icon={<Bot className="h-4 w-4 mr-2" />}
           />
@@ -615,7 +833,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
             <Input
               placeholder="Search songs..."
               value={filterOptions.search}
-              onChange={(e) => handleChange('search', e.target.value)}
+              onChange={(e) => handleChange("search", e.target.value)}
               className="pl-6 h-7 text-xs"
             />
           </div>
@@ -627,7 +845,9 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 aria-expanded={openGenres}
                 className="w-full justify-between transition-all duration-300 h-8 text-xs"
                 style={{
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                  backgroundColor: isDark
+                    ? "rgba(255, 255, 255, 0.05)"
+                    : "rgba(0, 0, 0, 0.03)",
                   border: `1px solid ${theme.border}`,
                   color: theme.text,
                   fontFamily: "'Manrope', sans-serif",
@@ -642,10 +862,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent 
+            <PopoverContent
+              aria-label="Choose music genres"
               className="w-full p-0"
               style={{
-                backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                backgroundColor: isDark
+                  ? "rgba(10, 10, 10, 0.95)"
+                  : "rgba(255, 255, 255, 0.95)",
                 border: `1px solid ${theme.border}`,
               }}
             >
@@ -660,7 +883,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleChange('genres', [])}
+                    onClick={() => handleChange("genres", [])}
                     className="h-7 text-xs"
                   >
                     Clear
@@ -668,26 +891,43 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 </div>
                 <div className="max-h-[200px] overflow-y-auto">
                   {filteredGenres().map((genre) => (
-                    <div
+                    <button
+                      type="button"
+                      aria-pressed={filterOptions.genres.includes(genre)}
                       key={genre}
                       className="flex cursor-pointer items-center px-2 py-1 transition-colors duration-150"
                       style={{
-                        backgroundColor: filterOptions.genres.includes(genre) ? theme.accentBgLight : 'transparent',
+                        backgroundColor: filterOptions.genres.includes(genre)
+                          ? theme.accentBgLight
+                          : "transparent",
                         color: theme.text,
                         fontFamily: "'Manrope', sans-serif",
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.accentBgLight}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filterOptions.genres.includes(genre) ? theme.accentBgLight : 'transparent'}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          theme.accentBgLight)
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          filterOptions.genres.includes(genre)
+                            ? theme.accentBgLight
+                            : "transparent")
+                      }
                       onClick={() => toggleGenre(genre)}
                     >
-                      <div 
+                      <div
                         className="mr-2 h-4 w-4 flex items-center justify-center"
                         style={{ border: `1px solid ${theme.border}` }}
                       >
-                        {filterOptions.genres.includes(genre) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
+                        {filterOptions.genres.includes(genre) && (
+                          <Check
+                            className="h-3 w-3"
+                            style={{ color: theme.accent }}
+                          />
+                        )}
                       </div>
                       {genre}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -699,14 +939,20 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           <FilterSelect
             title="Bible Translation"
             value={filterOptions.bibleTranslation}
-            onChange={(value) => handleChange('bibleTranslation', value)}
+            onChange={(value) => handleChange("bibleTranslation", value)}
             options={[
               { value: "", label: "All Translations" },
-              ...BIBLE_TRANSLATIONS.map(translation => ({ value: translation, label: translation }))
+              ...BIBLE_TRANSLATIONS.map((translation) => ({
+                value: translation,
+                label: translation,
+              })),
             ]}
             icon={<Book className="h-4 w-4 mr-2" />}
           />
-          <Popover open={openLyricsAdherence} onOpenChange={setOpenLyricsAdherence}>
+          <Popover
+            open={openLyricsAdherence}
+            onOpenChange={setOpenLyricsAdherence}
+          >
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -714,7 +960,9 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 aria-expanded={openLyricsAdherence}
                 className="w-full justify-between transition-all duration-300 h-8 text-xs"
                 style={{
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                  backgroundColor: isDark
+                    ? "rgba(255, 255, 255, 0.05)"
+                    : "rgba(0, 0, 0, 0.03)",
                   border: `1px solid ${theme.border}`,
                   color: theme.text,
                   fontFamily: "'Manrope', sans-serif",
@@ -729,35 +977,59 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent 
+            <PopoverContent
+              aria-label="Choose lyrics Scripture adherence"
               className="w-full p-0"
               style={{
-                backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                backgroundColor: isDark
+                  ? "rgba(10, 10, 10, 0.95)"
+                  : "rgba(255, 255, 255, 0.95)",
                 border: `1px solid ${theme.border}`,
               }}
             >
               <div className="p-2">
                 {lyricsAdherenceOptions.map((option) => (
-                  <div
+                  <button
+                    type="button"
+                    aria-pressed={filterOptions.lyricsAdherence.includes(
+                      option.value,
+                    )}
                     key={option.value}
                     className="flex cursor-pointer items-center px-2 py-1 transition-colors duration-150"
                     style={{
-                      backgroundColor: filterOptions.lyricsAdherence.includes(option.value) ? theme.accentBgLight : 'transparent',
+                      backgroundColor: filterOptions.lyricsAdherence.includes(
+                        option.value,
+                      )
+                        ? theme.accentBgLight
+                        : "transparent",
                       color: theme.text,
                       fontFamily: "'Manrope', sans-serif",
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.accentBgLight}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filterOptions.lyricsAdherence.includes(option.value) ? theme.accentBgLight : 'transparent'}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor =
+                        theme.accentBgLight)
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor =
+                        filterOptions.lyricsAdherence.includes(option.value)
+                          ? theme.accentBgLight
+                          : "transparent")
+                    }
                     onClick={() => toggleLyricsAdherence(option.value)}
                   >
-                    <div 
+                    <div
                       className="mr-2 h-4 w-4 flex items-center justify-center"
                       style={{ border: `1px solid ${theme.border}` }}
                     >
-                      {filterOptions.lyricsAdherence.includes(option.value) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
+                      {filterOptions.lyricsAdherence.includes(option.value) && (
+                        <Check
+                          className="h-3 w-3"
+                          style={{ color: theme.accent }}
+                        />
+                      )}
                     </div>
                     {option.label}
-                  </div>
+                  </button>
                 ))}
               </div>
             </PopoverContent>
@@ -765,7 +1037,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
           <FilterSelect
             title="Passage Type"
             value={filterOptions.isContinuous}
-            onChange={(value) => handleChange('isContinuous', value)}
+            onChange={(value) => handleChange("isContinuous", value)}
             options={[
               { value: "all", label: "All Passage Types" },
               { value: "true", label: "Continuous" },
@@ -781,7 +1053,9 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 aria-expanded={openBibleBooks}
                 className="w-full justify-between transition-all duration-300 h-8 text-xs"
                 style={{
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                  backgroundColor: isDark
+                    ? "rgba(255, 255, 255, 0.05)"
+                    : "rgba(0, 0, 0, 0.03)",
                   border: `1px solid ${theme.border}`,
                   color: theme.text,
                   fontFamily: "'Manrope', sans-serif",
@@ -796,10 +1070,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent 
+            <PopoverContent
+              aria-label="Choose Bible books"
               className="w-full p-0"
               style={{
-                backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                backgroundColor: isDark
+                  ? "rgba(10, 10, 10, 0.95)"
+                  : "rgba(255, 255, 255, 0.95)",
                 border: `1px solid ${theme.border}`,
               }}
             >
@@ -814,7 +1091,7 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleChange('bibleBooks', [])}
+                    onClick={() => handleChange("bibleBooks", [])}
                     className="h-7 text-xs"
                   >
                     Clear
@@ -822,26 +1099,43 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 </div>
                 <div className="max-h-[200px] overflow-y-auto">
                   {filteredBibleBooks().map((book) => (
-                    <div
+                    <button
+                      type="button"
+                      aria-pressed={filterOptions.bibleBooks.includes(book)}
                       key={book}
                       className="flex cursor-pointer items-center px-2 py-1 transition-colors duration-150"
                       style={{
-                        backgroundColor: filterOptions.bibleBooks.includes(book) ? theme.accentBgLight : 'transparent',
+                        backgroundColor: filterOptions.bibleBooks.includes(book)
+                          ? theme.accentBgLight
+                          : "transparent",
                         color: theme.text,
                         fontFamily: "'Manrope', sans-serif",
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.accentBgLight}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filterOptions.bibleBooks.includes(book) ? theme.accentBgLight : 'transparent'}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          theme.accentBgLight)
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          filterOptions.bibleBooks.includes(book)
+                            ? theme.accentBgLight
+                            : "transparent")
+                      }
                       onClick={() => toggleBibleBook(book)}
                     >
-                      <div 
+                      <div
                         className="mr-2 h-4 w-4 flex items-center justify-center"
                         style={{ border: `1px solid ${theme.border}` }}
                       >
-                        {filterOptions.bibleBooks.includes(book) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
+                        {filterOptions.bibleBooks.includes(book) && (
+                          <Check
+                            className="h-3 w-3"
+                            style={{ color: theme.accent }}
+                          />
+                        )}
                       </div>
                       {book}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -858,7 +1152,9 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   aria-expanded={openChapters}
                   className="w-full justify-between transition-all duration-300 h-8 text-xs"
                   style={{
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                    backgroundColor: isDark
+                      ? "rgba(255, 255, 255, 0.05)"
+                      : "rgba(0, 0, 0, 0.03)",
                     border: `1px solid ${theme.border}`,
                     color: theme.text,
                     fontFamily: "'Manrope', sans-serif",
@@ -874,10 +1170,13 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                 </Button>
               </PopoverTrigger>
               <PopoverContent
+                aria-label="Choose Bible chapters"
                 className="w-full max-w-[80vw] p-0"
-                style={{ 
-                  maxWidth: '80vw',
-                  backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                style={{
+                  maxWidth: "80vw",
+                  backgroundColor: isDark
+                    ? "rgba(10, 10, 10, 0.95)"
+                    : "rgba(255, 255, 255, 0.95)",
                   border: `1px solid ${theme.border}`,
                 }}
               >
@@ -887,14 +1186,17 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                       placeholder="Search chapters..."
                       value={chapterSearch}
                       onChange={(e) => setChapterSearch(e.target.value)}
-                            className="mr-2 h-7 text-xs"
+                      className="mr-2 h-7 text-xs"
                     />
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setSelectedChapters({})
-                        setFilterOptions(prev => ({ ...prev, bibleChapters: {} }))
+                        setSelectedChapters({});
+                        setFilterOptions((prev) => ({
+                          ...prev,
+                          bibleChapters: {},
+                        }));
                       }}
                       className="h-7 text-xs"
                     >
@@ -903,37 +1205,82 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   </div>
                   <div className="max-h-[300px] overflow-y-auto">
                     {isLoadingChapters ? (
-                      <div style={{ color: theme.textSecondary }}>Loading chapters...</div>
+                      <div style={{ color: theme.textSecondary }}>
+                        Loading chapters...
+                      </div>
                     ) : (
-                      Object.entries(availableChapters || {}).map(([book, chapters]) => (
-                        <div key={book} className="mb-2">
-                          <h4 className="font-semibold mb-1" style={{ color: theme.text, fontFamily: "'Italiana', serif" }}>{book}</h4>
-                          <div className="flex flex-wrap gap-1">
-                            {(chapters as number[]).filter(chapter => chapter.toString().includes(chapterSearch)).map((chapter) => (
-                              <div
-                                key={`${book}-${chapter}`}
-                                className="flex items-center px-2 py-1 cursor-pointer transition-colors duration-150"
-                                style={{
-                                  backgroundColor: (selectedChapters[book] || []).includes(chapter) ? theme.accentBgLight : 'transparent',
-                                  color: theme.text,
-                                  fontFamily: "'Manrope', sans-serif",
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.accentBgLight}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = (selectedChapters[book] || []).includes(chapter) ? theme.accentBgLight : 'transparent'}
-                                onClick={() => handleChapterToggle(book, chapter)}
-                              >
-                                <div 
-                                  className="mr-2 h-4 w-4 flex items-center justify-center"
-                                  style={{ border: `1px solid ${theme.border}` }}
-                                >
-                                  {(selectedChapters[book] || []).includes(chapter) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
-                                </div>
-                                {chapter}
-                              </div>
-                            ))}
+                      Object.entries(availableChapters || {}).map(
+                        ([book, chapters]) => (
+                          <div key={book} className="mb-2">
+                            <h4
+                              className="font-semibold mb-1"
+                              style={{
+                                color: theme.text,
+                                fontFamily: "'Italiana', serif",
+                              }}
+                            >
+                              {book}
+                            </h4>
+                            <div className="flex flex-wrap gap-1">
+                              {(chapters as number[])
+                                .filter((chapter) =>
+                                  chapter.toString().includes(chapterSearch),
+                                )
+                                .map((chapter) => (
+                                  <button
+                                    type="button"
+                                    aria-label={`${book} chapter ${chapter}`}
+                                    aria-pressed={(
+                                      selectedChapters[book] || []
+                                    ).includes(chapter)}
+                                    key={`${book}-${chapter}`}
+                                    className="flex items-center px-2 py-1 cursor-pointer transition-colors duration-150"
+                                    style={{
+                                      backgroundColor: (
+                                        selectedChapters[book] || []
+                                      ).includes(chapter)
+                                        ? theme.accentBgLight
+                                        : "transparent",
+                                      color: theme.text,
+                                      fontFamily: "'Manrope', sans-serif",
+                                    }}
+                                    onMouseEnter={(e) =>
+                                      (e.currentTarget.style.backgroundColor =
+                                        theme.accentBgLight)
+                                    }
+                                    onMouseLeave={(e) =>
+                                      (e.currentTarget.style.backgroundColor = (
+                                        selectedChapters[book] || []
+                                      ).includes(chapter)
+                                        ? theme.accentBgLight
+                                        : "transparent")
+                                    }
+                                    onClick={() =>
+                                      handleChapterToggle(book, chapter)
+                                    }
+                                  >
+                                    <div
+                                      className="mr-2 h-4 w-4 flex items-center justify-center"
+                                      style={{
+                                        border: `1px solid ${theme.border}`,
+                                      }}
+                                    >
+                                      {(selectedChapters[book] || []).includes(
+                                        chapter,
+                                      ) && (
+                                        <Check
+                                          className="h-3 w-3"
+                                          style={{ color: theme.accent }}
+                                        />
+                                      )}
+                                    </div>
+                                    {chapter}
+                                  </button>
+                                ))}
+                            </div>
                           </div>
-                        </div>
-                      ))
+                        ),
+                      )
                     )}
                   </div>
                 </div>
@@ -951,7 +1298,9 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   aria-expanded={openBibleVerses}
                   className="w-full justify-between transition-all duration-300 h-8 text-xs"
                   style={{
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                    backgroundColor: isDark
+                      ? "rgba(255, 255, 255, 0.05)"
+                      : "rgba(0, 0, 0, 0.03)",
                     border: `1px solid ${theme.border}`,
                     color: theme.text,
                     fontFamily: "'Manrope', sans-serif",
@@ -966,11 +1315,14 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent 
-                className="w-full p-0" 
-                style={{ 
-                  maxWidth: '80vw',
-                  backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              <PopoverContent
+                aria-label="Choose Bible verses"
+                className="w-full p-0"
+                style={{
+                  maxWidth: "80vw",
+                  backgroundColor: isDark
+                    ? "rgba(10, 10, 10, 0.95)"
+                    : "rgba(255, 255, 255, 0.95)",
                   border: `1px solid ${theme.border}`,
                 }}
               >
@@ -986,8 +1338,11 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setSelectedBibleVerses([])
-                        setFilterOptions(prev => ({ ...prev, bibleVerses: [] }))
+                        setSelectedBibleVerses([]);
+                        setFilterOptions((prev) => ({
+                          ...prev,
+                          bibleVerses: [],
+                        }));
                       }}
                       className="h-7 text-xs"
                     >
@@ -996,44 +1351,101 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
                   </div>
                   <div className="max-h-[300px] overflow-y-auto">
                     {isLoadingVerses ? (
-                      <div style={{ color: theme.textSecondary }}>Loading verses...</div>
+                      <div style={{ color: theme.textSecondary }}>
+                        Loading verses...
+                      </div>
                     ) : (
-                      Object.entries(bibleVerses || {}).map(([book, chapters]) => (
-                        <div key={book} className="mb-4">
-                          {Object.entries(chapters).map(([chapter, verses]) => (
-                            <div key={`${book}-${chapter}`} className="mb-2">
-                              <h4 className="font-semibold mb-1" style={{ color: theme.text, fontFamily: "'Italiana', serif" }}>{`${book} ${chapter}`}</h4>
-                              <div className="flex flex-wrap gap-1">
-                                {(verses as any[]).filter((verse: any) =>
-                                  verse.KJV_text.toLowerCase().includes(bibleVerseSearch.toLowerCase()) ||
-                                  `${verse.book} ${verse.chapter}:${verse.verse}`.toLowerCase().includes(bibleVerseSearch.toLowerCase())
-                                ).map((verse: any) => (
-                                  <div
-                                    key={`${book}-${chapter}-${verse.verse}`}
-                                    className="flex items-center px-2 py-1 cursor-pointer transition-colors duration-150"
+                      Object.entries(bibleVerses || {}).map(
+                        ([book, chapters]) => (
+                          <div key={book} className="mb-4">
+                            {Object.entries(chapters).map(
+                              ([chapter, verses]) => (
+                                <div
+                                  key={`${book}-${chapter}`}
+                                  className="mb-2"
+                                >
+                                  <h4
+                                    className="font-semibold mb-1"
                                     style={{
-                                      backgroundColor: selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) ? theme.accentBgLight : 'transparent',
                                       color: theme.text,
-                                      fontFamily: "'Manrope', sans-serif",
+                                      fontFamily: "'Italiana', serif",
                                     }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.accentBgLight}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) ? theme.accentBgLight : 'transparent'}
-                                    onClick={() => handleBibleVerseToggle(`${book} ${chapter}:${verse.verse}`)}
-                                  >
-                                    <div 
-                                      className="mr-2 h-4 w-4 flex items-center justify-center"
-                                      style={{ border: `1px solid ${theme.border}` }}
-                                    >
-                                      {selectedBibleVerses.includes(`${book} ${chapter}:${verse.verse}`) && <Check className="h-3 w-3" style={{ color: theme.accent }} />}
-                                    </div>
-                                    {verse.verse}
+                                  >{`${book} ${chapter}`}</h4>
+                                  <div className="flex flex-wrap gap-1">
+                                    {(verses as any[])
+                                      .filter(
+                                        (verse: any) =>
+                                          verse.KJV_text.toLowerCase().includes(
+                                            bibleVerseSearch.toLowerCase(),
+                                          ) ||
+                                          `${verse.book} ${verse.chapter}:${verse.verse}`
+                                            .toLowerCase()
+                                            .includes(
+                                              bibleVerseSearch.toLowerCase(),
+                                            ),
+                                      )
+                                      .map((verse: any) => (
+                                        <button
+                                          type="button"
+                                          aria-label={`${book} ${chapter}:${verse.verse}`}
+                                          aria-pressed={selectedBibleVerses.includes(
+                                            `${book} ${chapter}:${verse.verse}`,
+                                          )}
+                                          key={`${book}-${chapter}-${verse.verse}`}
+                                          className="flex items-center px-2 py-1 cursor-pointer transition-colors duration-150"
+                                          style={{
+                                            backgroundColor:
+                                              selectedBibleVerses.includes(
+                                                `${book} ${chapter}:${verse.verse}`,
+                                              )
+                                                ? theme.accentBgLight
+                                                : "transparent",
+                                            color: theme.text,
+                                            fontFamily: "'Manrope', sans-serif",
+                                          }}
+                                          onMouseEnter={(e) =>
+                                            (e.currentTarget.style.backgroundColor =
+                                              theme.accentBgLight)
+                                          }
+                                          onMouseLeave={(e) =>
+                                            (e.currentTarget.style.backgroundColor =
+                                              selectedBibleVerses.includes(
+                                                `${book} ${chapter}:${verse.verse}`,
+                                              )
+                                                ? theme.accentBgLight
+                                                : "transparent")
+                                          }
+                                          onClick={() =>
+                                            handleBibleVerseToggle(
+                                              `${book} ${chapter}:${verse.verse}`,
+                                            )
+                                          }
+                                        >
+                                          <div
+                                            className="mr-2 h-4 w-4 flex items-center justify-center"
+                                            style={{
+                                              border: `1px solid ${theme.border}`,
+                                            }}
+                                          >
+                                            {selectedBibleVerses.includes(
+                                              `${book} ${chapter}:${verse.verse}`,
+                                            ) && (
+                                              <Check
+                                                className="h-3 w-3"
+                                                style={{ color: theme.accent }}
+                                              />
+                                            )}
+                                          </div>
+                                          {verse.verse}
+                                        </button>
+                                      ))}
                                   </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ))
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        ),
+                      )
                     )}
                   </div>
                 </div>
@@ -1043,61 +1455,69 @@ export function Filters({ filterOptions, setFilterOptions, setIsFilterExpanded }
         </TabsContent>
       </Tabs>
     </motion.div>
-  )
+  );
 }
 
 interface FilterSelectProps {
-  title: string
-  value: string
-  onChange: (value: string) => void
-  options: { value: string; label: string }[]
-  icon: React.ReactNode
+  title: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  icon: React.ReactNode;
 }
 
-function FilterSelect({ title, value, onChange, options, icon }: FilterSelectProps) {
+function FilterSelect({
+  title,
+  value,
+  onChange,
+  options,
+  icon,
+}: FilterSelectProps) {
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-  
-  const theme = {
-    text: isDark ? '#e5e5e5' : '#161616',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-  };
+  const isDark = resolvedTheme === "dark";
+
+  const theme = uiTheme;
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger 
+      <SelectTrigger
+        aria-label={title}
         className="w-full transition-all duration-300 h-8 text-xs"
         style={{
-          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+          backgroundColor: isDark
+            ? "rgba(255, 255, 255, 0.05)"
+            : "rgba(0, 0, 0, 0.03)",
           border: `1px solid ${theme.border}`,
           color: theme.text,
           fontFamily: "'Manrope', sans-serif",
         }}
       >
         <div className="flex items-center">
-          {React.cloneElement(icon as React.ReactElement, { className: "h-3 w-3 mr-1" })}
+          {React.cloneElement(icon as React.ReactElement, {
+            className: "h-3 w-3 mr-1",
+          })}
           <SelectValue placeholder={title} />
         </div>
       </SelectTrigger>
-      <SelectContent 
+      <SelectContent
         style={{
-          backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          backgroundColor: isDark
+            ? "rgba(10, 10, 10, 0.95)"
+            : "rgba(255, 255, 255, 0.95)",
           border: `1px solid ${theme.border}`,
         }}
       >
         <SelectGroup>
-          <SelectLabel 
+          <SelectLabel
             className="font-semibold text-xs"
             style={{ color: theme.accent, fontFamily: "'Italiana', serif" }}
           >
             {title}
           </SelectLabel>
           {options.map((option) => (
-            <SelectItem 
-              key={option.value} 
-              value={option.value || '_empty_'}
+            <SelectItem
+              key={option.value}
+              value={option.value || "_empty_"}
               className="text-xs transition-all duration-200"
               style={{ color: theme.text, fontFamily: "'Manrope', sans-serif" }}
             >
@@ -1107,5 +1527,5 @@ function FilterSelect({ title, value, onChange, options, icon }: FilterSelectPro
         </SelectGroup>
       </SelectContent>
     </Select>
-  )
+  );
 }

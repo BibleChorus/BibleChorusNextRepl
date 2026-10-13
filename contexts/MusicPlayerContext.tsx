@@ -1,42 +1,53 @@
-import React, { createContext, useState, useContext, useRef, useEffect } from 'react';
-import axios from 'axios'; // Import axios for API calls
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import axios from "axios";
+import { toast } from "sonner";
+import {
+  findSongIndex,
+  nextSongIndex,
+  shuffleWithCurrent,
+} from "@/lib/music-queue";
 
-const shuffleArray = <T,>(array: T[]): T[] => {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-};
-
-// Define the MusicPlayerSong type
-interface MusicPlayerSong {
+export interface MusicPlayerSong {
   id: number;
   title: string;
   artist?: string;
   audioUrl: string;
+  audio_url: string;
   coverArtUrl?: string;
   duration?: number;
   lyrics?: string;
   bible_verses?: { book: string; chapter: number; verse: number }[];
   bible_translation_used?: string;
   uploaded_by: number;
-  audio_url: string; // Added to match the usage in FloatingMusicPlayer
 }
-
-type RepeatMode = 'none' | 'one' | 'all';
-
-// Add this to your MusicPlayerContext file
+type RepeatMode = "none" | "one" | "all";
+interface QueueEntry {
+  id: number;
+  key: symbol;
+  song: MusicPlayerSong;
+}
 interface MusicPlayerContextType {
   currentSong: MusicPlayerSong | null;
+  currentIndex: number;
   isPlaying: boolean;
-  playSong: (song: MusicPlayerSong, queue?: MusicPlayerSong[]) => void;
+  playSong: (
+    song: MusicPlayerSong,
+    queue?: MusicPlayerSong[],
+    queueIndex?: number,
+  ) => void;
   pause: () => void;
   resume: () => void;
   next: () => void;
   previous: () => void;
-  toggleShuffle: () => void;
+  toggleShuffle: () => Promise<void>;
   toggleRepeat: () => void;
   isShuffling: boolean;
   repeatMode: RepeatMode;
@@ -44,387 +55,429 @@ interface MusicPlayerContextType {
   audioElement: HTMLAudioElement | null;
   isMinimized: boolean;
   setIsMinimized: React.Dispatch<React.SetStateAction<boolean>>;
-  updateQueue: (newQueue: MusicPlayerSong[]) => void;
-  registerShuffleLoader: (loader: () => Promise<MusicPlayerSong[]>) => void;
-  // ... additional controls
+  updateQueue: (songs: MusicPlayerSong[]) => void;
+  registerShuffleLoader: (
+    loader: () => Promise<MusicPlayerSong[]>,
+  ) => () => void;
 }
+const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(
+  undefined,
+);
 
-const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
-
-export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // State for the playlist (queue) and playback controls
+export function MusicPlayerProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [queue, setQueue] = useState<MusicPlayerSong[]>([]);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [currentSong, setCurrentSong] = useState<MusicPlayerSong | null>(null);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [isShuffling, setIsShuffling] = useState<boolean>(false);
-  const shuffleLoaderRef = useRef<null | (() => Promise<MusicPlayerSong[]>)>(null);
-  const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
-  const [isMinimized, setIsMinimized] = useState<boolean>(false);
+  const [currentIndex, setCurrentIndex] = useState(-1);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
+    null,
+  );
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>("none");
+  const [isMinimized, setIsMinimized] = useState(false);
+  const originalQueue = useRef<QueueEntry[]>([]);
+  const queueRef = useRef<QueueEntry[]>([]);
+  const currentEntry = useRef<symbol | null>(null);
+  const currentRef = useRef<MusicPlayerSong | null>(null);
+  const indexRef = useRef(-1);
+  const playingRef = useRef(false);
+  const shufflingRef = useRef(false);
+  const repeatRef = useRef<RepeatMode>("none");
+  const shuffleLoader = useRef<(() => Promise<MusicPlayerSong[]>) | null>(null);
+  const shuffleLoading = useRef(false);
+  const queueRevision = useRef(0);
+  const countedSong = useRef<number | null>(null);
+  const playAttempt = useRef(0);
 
-  // Ref for the audio element
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const setPlayback = useCallback((playing: boolean) => {
+    playingRef.current = playing;
+    setIsPlaying(playing);
+  }, []);
+  const selectIndex = useCallback((index: number) => {
+    indexRef.current = index;
+    setCurrentIndex(index);
+  }, []);
+  const entriesForSongs = useCallback((songs: MusicPlayerSong[]) => {
+    const selected = findSongIndex(songs, currentRef.current);
+    return songs.map((song, index): QueueEntry => ({
+      id: song.id,
+      song,
+      key:
+        index === selected && currentEntry.current
+          ? currentEntry.current
+          : Symbol("queue-entry"),
+    }));
+  }, []);
+  const replaceQueue = useCallback(
+    (entries: QueueEntry[], selectedIndex?: number) => {
+      queueRef.current = entries;
+      setQueue(entries.map((entry) => entry.song));
+      selectIndex(
+        selectedIndex ??
+          entries.findIndex((entry) => entry.key === currentEntry.current),
+      );
+    },
+    [selectIndex],
+  );
 
-  // State to track if play count has been incremented for the current song
-  const [hasIncrementedPlayCount, setHasIncrementedPlayCount] = useState<boolean>(false);
-
-  // Function to increment play count
-  const incrementPlayCount = async (songId: number) => {
-    try {
-      await axios.post(`/api/songs/${songId}/increment-play-count`);
-      setHasIncrementedPlayCount(true);
-    } catch (error) {
-      console.error('Error incrementing play count:', error);
-    }
-  };
-
-  const updateQueue = (newQueue: MusicPlayerSong[]) => {
-    // If shuffle is active, shuffle the new queue
-    const queueToSet = isShuffling ? shuffleArray(newQueue) : newQueue;
-    setQueue(queueToSet);
-    if (currentSong) {
-      const newIndex = queueToSet.findIndex((s) => s.id === currentSong.id);
-      if (newIndex !== -1) {
-        setCurrentIndex(newIndex);
-      } else if (queueToSet.length > 0) {
-        // If current song is not in the new queue, reset to first song but don't auto-play
-        setCurrentIndex(0);
-        // Optionally, you could set the current song to null or the first song in queue
-        // For now, we'll keep the current song but it won't be in the queue
-      }
-    }
-  };
-
-  const registerShuffleLoader = (loader: () => Promise<MusicPlayerSong[]>) => {
-    shuffleLoaderRef.current = loader;
-  };
-
-  // Watch for playback progress to increment play count after a certain duration
-  useEffect(() => {
-    if (audioRef.current && currentSong) {
-      const audioElement = audioRef.current;
-
-      const handleTimeUpdate = () => {
-        const playedPercentage = (audioElement.currentTime / (currentSong.duration || 0)) * 100;
-        // Adjust the percentage or time threshold as needed
-        if (!hasIncrementedPlayCount && playedPercentage > 30) {
-          incrementPlayCount(currentSong.id);
-        }
-      };
-
-      audioElement.addEventListener('timeupdate', handleTimeUpdate);
-
-      return () => {
-        audioElement.removeEventListener('timeupdate', handleTimeUpdate);
-      };
-    }
-  }, [audioRef, currentSong, hasIncrementedPlayCount]);
-
-  // Reset hasIncrementedPlayCount when the song changes
-  useEffect(() => {
-    setHasIncrementedPlayCount(false);
-  }, [currentSong]);
-
-  // Play a new song (optionally with a new queue)
-  const playSong = (song: MusicPlayerSong, newQueue?: MusicPlayerSong[]) => {
-    if (newQueue) {
-      setQueue(newQueue);
-      setCurrentIndex(newQueue.findIndex((s) => s.id === song.id));
-    } else {
-      setCurrentIndex((prevIndex) => {
-        const index = queue.findIndex((s) => s.id === song.id);
-        if (index !== -1) {
-          return index;
-        } else {
-          setQueue([...queue, song]);
-          return queue.length;
-        }
-      });
-    }
-    setCurrentSong(song);
-    setIsPlaying(true);
-    if (audioRef.current) {
-      audioRef.current.src = song.audioUrl;
-      audioRef.current.play();
-    }
-  };
-
-  // Pause playback
-  const pause = () => {
-    setIsPlaying(false);
-    audioRef.current?.pause();
-  };
-
-  // Resume playback
-  const resume = () => {
-    setIsPlaying(true);
-    audioRef.current?.play();
-  };
-
-  // Play next song
-  const next = () => {
-    if (isShuffling) {
-      const randomIndex = Math.floor(Math.random() * queue.length);
-      setCurrentIndex(randomIndex);
-      setCurrentSong(queue[randomIndex]);
-      if (audioRef.current) {
-        audioRef.current.src = queue[randomIndex].audioUrl;
-        if (isPlaying) audioRef.current.play();
-      }
-    } else {
-      let nextIndex = currentIndex + 1;
-      if (nextIndex >= queue.length) {
-        if (repeatMode === 'all') {
-          nextIndex = 0;
-        } else {
-          // Stop playback at the end of the queue
-          setIsPlaying(false);
-          return;
-        }
-      }
-      setCurrentIndex(nextIndex);
-      setCurrentSong(queue[nextIndex]);
-      if (audioRef.current) {
-        audioRef.current.src = queue[nextIndex].audioUrl;
-        if (isPlaying) audioRef.current.play();
-      }
-    }
-  };
-
-  // Play previous song
-  const previous = () => {
-    if (isShuffling) {
-      const randomIndex = Math.floor(Math.random() * queue.length);
-      setCurrentIndex(randomIndex);
-      setCurrentSong(queue[randomIndex]);
-      if (audioRef.current) {
-        audioRef.current.src = queue[randomIndex].audioUrl;
-        if (isPlaying) audioRef.current.play();
-      }
-    } else {
-      let prevIndex = currentIndex - 1;
-      if (prevIndex < 0) {
-        if (repeatMode === 'all') {
-          prevIndex = queue.length - 1;
-        } else {
-          // Already at the start of the queue
-          return;
-        }
-      }
-      setCurrentIndex(prevIndex);
-      setCurrentSong(queue[prevIndex]);
-      if (audioRef.current) {
-        audioRef.current.src = queue[prevIndex].audioUrl;
-        if (isPlaying) audioRef.current.play();
-      }
-    }
-  };
-
-  // Toggle shuffle mode
-  const toggleShuffle = async () => {
-    if (!isShuffling) {
-      // Turning shuffle ON
-      if (shuffleLoaderRef.current) {
-        try {
-          // Load ALL songs from the shuffle loader (not just current queue)
-          const allSongs = await shuffleLoaderRef.current();
-          
-          // Handle empty array case
-          if (allSongs.length === 0) {
-            // If loader returns empty array and we have a current song, keep it in queue
-            if (currentSong) {
-              setQueue([currentSong]);
-              setCurrentIndex(0);
-            } else {
-              // No current song and no songs from loader - reset to empty state
-              setQueue([]);
-              setCurrentIndex(0);
-              setCurrentSong(null);
-            }
-          } else {
-            const shuffled = shuffleArray(allSongs);
-            if (currentSong) {
-              const idx = shuffled.findIndex((s: MusicPlayerSong) => s.id === currentSong.id);
-              if (idx !== -1) {
-                setQueue(shuffled);
-                setCurrentIndex(idx);
-              } else {
-                // If current song is not in the shuffled list, keep playing it but add it
-                const shuffledWithCurrent = [currentSong, ...shuffled];
-                setQueue(shuffledWithCurrent);
-                setCurrentIndex(0);
-              }
-            } else {
-              // No current song, use shuffled queue
-              setQueue(shuffled);
-              setCurrentIndex(0);
-            }
-          }
-        } catch (err) {
-          console.error('Error loading songs for shuffle:', err);
-          // Fallback to shuffling current queue
-          if (queue.length > 0) {
-            const shuffled = shuffleArray(queue);
-            setQueue(shuffled);
-            if (currentSong) {
-              const idx = shuffled.findIndex((s: MusicPlayerSong) => s.id === currentSong.id);
-              if (idx !== -1) setCurrentIndex(idx);
-            }
-          } else if (currentSong) {
-            // No queue but have current song - keep it
-            setQueue([currentSong]);
-            setCurrentIndex(0);
-          }
-        }
-      } else {
-        // No shuffle loader, just shuffle current queue
-        if (queue.length > 0) {
-          const shuffled = shuffleArray(queue);
-          setQueue(shuffled);
-          if (currentSong) {
-            const idx = shuffled.findIndex((s: MusicPlayerSong) => s.id === currentSong.id);
-            if (idx !== -1) setCurrentIndex(idx);
-          }
-        } else if (currentSong) {
-          // No queue but have current song - keep it
-          setQueue([currentSong]);
-          setCurrentIndex(0);
-        }
-      }
-    } else {
-      // Turning shuffle OFF
-      if (shuffleLoaderRef.current) {
-        try {
-          const allSongs = await shuffleLoaderRef.current();
-          
-          // Handle empty array case
-          if (allSongs.length === 0) {
-            // If loader returns empty array and we have a current song, keep it in queue
-            if (currentSong) {
-              setQueue([currentSong]);
-              setCurrentIndex(0);
-            } else {
-              // No current song and no songs from loader - reset to empty state
-              setQueue([]);
-              setCurrentIndex(0);
-              setCurrentSong(null);
-            }
-          } else {
-            if (currentSong) {
-              const idx = allSongs.findIndex((s: MusicPlayerSong) => s.id === currentSong.id);
-              if (idx !== -1) {
-                setQueue(allSongs);
-                setCurrentIndex(idx);
-              } else {
-                // If current song is not in the list, keep playing it but add it
-                const songsWithCurrent = [currentSong, ...allSongs];
-                setQueue(songsWithCurrent);
-                setCurrentIndex(0);
-              }
-            } else {
-              // No current song, use unshuffled queue
-              setQueue(allSongs);
-              setCurrentIndex(0);
-            }
-          }
-        } catch (err) {
-          console.error('Error loading songs for unshuffle:', err);
-          // Can't restore original order, keep current queue
-          // But ensure current song is preserved if queue becomes empty
-          if (queue.length === 0 && currentSong) {
-            setQueue([currentSong]);
-            setCurrentIndex(0);
-          }
-        }
-      }
-    }
-    setIsShuffling(!isShuffling);
-  };
-
-  // Toggle repeat mode
-  const toggleRepeat = () => {
-    setRepeatMode((prev) => {
-      if (prev === 'none') return 'all';
-      if (prev === 'all') return 'one';
-      return 'none';
+  const resume = useCallback(() => {
+    if (!audioElement?.src || !currentRef.current) return;
+    const attempt = ++playAttempt.current;
+    audioElement.play().catch((error) => {
+      if (attempt !== playAttempt.current) return;
+      setPlayback(false);
+      if (error?.name !== "AbortError")
+        toast.error(
+          "This song couldn’t play. Try again or choose another song.",
+        );
     });
-  };
-
-  // Handle song end event
-  useEffect(() => {
-    if (audioRef.current) {
-      const audioElement = audioRef.current;
-      const handleEnded = () => {
-        if (repeatMode === 'one') {
-          audioElement.currentTime = 0;
-          audioElement.play();
+  }, [audioElement, setPlayback]);
+  const pause = useCallback(() => {
+    playAttempt.current++;
+    audioElement?.pause();
+    setPlayback(false);
+  }, [audioElement, setPlayback]);
+  const startSong = useCallback(
+    (song: MusicPlayerSong, play: boolean, index: number) => {
+      currentRef.current = song;
+      currentEntry.current = queueRef.current[index]?.key || null;
+      setCurrentSong(song);
+      selectIndex(index);
+      countedSong.current = null;
+      if (!audioElement) return;
+      playAttempt.current++;
+      setPlayback(false);
+      audioElement.src = song.audioUrl || song.audio_url;
+      audioElement.currentTime = 0;
+      if (play) resume();
+      else audioElement.pause();
+    },
+    [audioElement, resume, selectIndex, setPlayback],
+  );
+  const playSong = useCallback(
+    (
+      song: MusicPlayerSong,
+      newQueue?: MusicPlayerSong[],
+      queueIndex?: number,
+    ) => {
+      let entries = newQueue
+        ? entriesForSongs(newQueue)
+        : [...queueRef.current];
+      const songs = entries.map((entry) => entry.song);
+      const hint = queueIndex ?? (newQueue ? -1 : indexRef.current);
+      let index = findSongIndex(songs, song, hint);
+      if (index < 0) {
+        const entry = { id: song.id, song, key: Symbol("queue-entry") };
+        if (newQueue) {
+          entries.unshift(entry);
+          index = 0;
         } else {
-          next();
+          entries.push(entry);
+          index = entries.length - 1;
+          originalQueue.current = [...originalQueue.current, entry];
         }
-      };
-      audioElement.addEventListener('ended', handleEnded);
+      }
+      if (newQueue) {
+        queueRevision.current++;
+        originalQueue.current = [...entries];
+        if (shufflingRef.current) {
+          entries = shuffleWithCurrent(entries, entries[index], index);
+          index = 0;
+        }
+      }
+      replaceQueue(entries, index);
+      startSong(song, true, index);
+    },
+    [entriesForSongs, replaceQueue, startSong],
+  );
+  const next = useCallback(() => {
+    const index = nextSongIndex(
+      queueRef.current.length,
+      indexRef.current,
+      1,
+      repeatRef.current === "all",
+    );
+    if (index !== null)
+      startSong(queueRef.current[index].song, playingRef.current, index);
+    else pause();
+  }, [startSong, pause]);
+  const previous = useCallback(() => {
+    if (audioElement && audioElement.currentTime > 3) {
+      audioElement.currentTime = 0;
+      return;
+    }
+    const index = nextSongIndex(
+      queueRef.current.length,
+      indexRef.current,
+      -1,
+      repeatRef.current === "all",
+    );
+    if (index !== null)
+      startSong(queueRef.current[index].song, playingRef.current, index);
+    else if (audioElement) audioElement.currentTime = 0;
+  }, [audioElement, startSong]);
+  const updateQueue = useCallback(
+    (songs: MusicPlayerSong[]) => {
+      queueRevision.current++;
+      const entries = entriesForSongs(songs);
+      originalQueue.current = [...entries];
+      const selected =
+        entries.find((entry) => entry.key === currentEntry.current) || null;
+      replaceQueue(
+        shufflingRef.current ? shuffleWithCurrent(entries, selected) : entries,
+      );
+    },
+    [entriesForSongs, replaceQueue],
+  );
+  const registerShuffleLoader = useCallback(
+    (loader: () => Promise<MusicPlayerSong[]>) => {
+      shuffleLoader.current = loader;
       return () => {
-        audioElement.removeEventListener('ended', handleEnded);
+        if (shuffleLoader.current === loader) shuffleLoader.current = null;
       };
+    },
+    [],
+  );
+  const toggleShuffle = useCallback(async () => {
+    if (shuffleLoading.current) return;
+    if (shufflingRef.current) {
+      replaceQueue([...originalQueue.current]);
+      shufflingRef.current = false;
+      setIsShuffling(false);
+      return;
     }
-  }, [next, repeatMode]);
+    shuffleLoading.current = true;
+    const revision = queueRevision.current;
+    const loader = shuffleLoader.current;
+    try {
+      let entries = [...queueRef.current];
+      if (loader) {
+        try {
+          const songs = await loader();
+          if (
+            queueRevision.current !== revision ||
+            shuffleLoader.current !== loader
+          )
+            return;
+          entries = entriesForSongs(songs);
+        } catch {
+          if (
+            queueRevision.current !== revision ||
+            shuffleLoader.current !== loader
+          )
+            return;
+          toast.info("Shuffling the songs already in your queue.");
+        }
+      }
+      const current = currentRef.current;
+      let selected =
+        entries.find((entry) => entry.key === currentEntry.current) || null;
+      if (current && !selected) {
+        selected = {
+          id: current.id,
+          song: current,
+          key: currentEntry.current || Symbol("queue-entry"),
+        };
+        entries.unshift(selected);
+        currentEntry.current = selected.key;
+      }
+      originalQueue.current = [...entries];
+      replaceQueue(shuffleWithCurrent(entries, selected));
+      shufflingRef.current = true;
+      setIsShuffling(true);
+    } finally {
+      shuffleLoading.current = false;
+    }
+  }, [entriesForSongs, replaceQueue]);
+  const toggleRepeat = useCallback(() => {
+    const nextMode =
+      repeatRef.current === "none"
+        ? "all"
+        : repeatRef.current === "all"
+          ? "one"
+          : "none";
+    repeatRef.current = nextMode;
+    setRepeatMode(nextMode);
+  }, []);
 
-  // Media Session API integration
   useEffect(() => {
-    if ('mediaSession' in navigator && currentSong) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: currentSong.title,
-        artist: currentSong.artist,
-        artwork: [
-          {
-            src: currentSong.coverArtUrl || '/default-cover.jpg',
-            sizes: '512x512',
-            type: 'image/jpeg',
-          },
-        ],
+    if (!audioElement) return;
+    const onPlay = () => setPlayback(true);
+    const onPause = () => setPlayback(false);
+    const onEnded = () => {
+      if (repeatRef.current === "one") {
+        countedSong.current = null;
+        audioElement.currentTime = 0;
+        resume();
+        return;
+      }
+      const index = nextSongIndex(
+        queueRef.current.length,
+        indexRef.current,
+        1,
+        repeatRef.current === "all",
+      );
+      if (index !== null) startSong(queueRef.current[index].song, true, index);
+      else {
+        playAttempt.current++;
+        setPlayback(false);
+      }
+    };
+    const onProgress = () => {
+      const song = currentRef.current;
+      const duration =
+        Number.isFinite(audioElement.duration) && audioElement.duration > 0
+          ? audioElement.duration
+          : song?.duration;
+      if (
+        !song ||
+        !duration ||
+        duration <= 0 ||
+        countedSong.current === song.id ||
+        audioElement.currentTime / duration < 0.3
+      )
+        return;
+      countedSong.current = song.id;
+      axios.post(`/api/songs/${song.id}/increment-play-count`).catch(() => {
+        /* Analytics must never interrupt music. */
       });
-
-      navigator.mediaSession.setActionHandler('play', resume);
-      navigator.mediaSession.setActionHandler('pause', pause);
-      navigator.mediaSession.setActionHandler('nexttrack', next);
-      navigator.mediaSession.setActionHandler('previoustrack', previous);
+    };
+    const onError = () => {
+      playAttempt.current++;
+      setPlayback(false);
+      toast.error("This song couldn’t play. Try again or choose another song.");
+    };
+    audioElement.addEventListener("play", onPlay);
+    audioElement.addEventListener("pause", onPause);
+    audioElement.addEventListener("ended", onEnded);
+    audioElement.addEventListener("timeupdate", onProgress);
+    audioElement.addEventListener("error", onError);
+    return () => {
+      audioElement.removeEventListener("play", onPlay);
+      audioElement.removeEventListener("pause", onPause);
+      audioElement.removeEventListener("ended", onEnded);
+      audioElement.removeEventListener("timeupdate", onProgress);
+      audioElement.removeEventListener("error", onError);
+    };
+  }, [audioElement, resume, startSong, setPlayback]);
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.mediaSession) return;
+    const session = navigator.mediaSession;
+    if (currentSong && typeof MediaMetadata !== "undefined") {
+      try {
+        session.metadata = new MediaMetadata({
+          title: currentSong.title,
+          artist: currentSong.artist,
+          artwork: [{ src: currentSong.coverArtUrl || "/default-cover.jpg" }],
+        });
+      } catch {
+        /* Unsupported artwork must not interrupt playback. */
+      }
     }
+    const handlers = {
+      play: resume,
+      pause,
+      nexttrack: next,
+      previoustrack: previous,
+    };
+    for (const [action, handler] of Object.entries(handlers)) {
+      try {
+        session.setActionHandler(
+          action as MediaSessionAction,
+          currentSong ? handler : null,
+        );
+      } catch {
+        /* Browsers support different sets of media controls. */
+      }
+    }
+    return () => {
+      for (const action of Object.keys(handlers)) {
+        try {
+          session.setActionHandler(action as MediaSessionAction, null);
+        } catch {
+          /* An unsupported action has no handler to clear. */
+        }
+      }
+    };
   }, [currentSong, resume, pause, next, previous]);
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && navigator.mediaSession)
+      navigator.mediaSession.playbackState = currentSong
+        ? isPlaying
+          ? "playing"
+          : "paused"
+        : "none";
+  }, [currentSong, isPlaying]);
+  useEffect(
+    () => () => {
+      if (!audioElement) return;
+      playAttempt.current++;
+      audioElement.pause();
+      audioElement.removeAttribute("src");
+      audioElement.load();
+      if (typeof navigator !== "undefined" && navigator.mediaSession) {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.playbackState = "none";
+      }
+    },
+    [audioElement],
+  );
 
+  const value = useMemo(
+    () => ({
+      currentSong,
+      currentIndex,
+      isPlaying,
+      playSong,
+      pause,
+      resume,
+      next,
+      previous,
+      toggleShuffle,
+      toggleRepeat,
+      isShuffling,
+      repeatMode,
+      queue,
+      audioElement,
+      isMinimized,
+      setIsMinimized,
+      updateQueue,
+      registerShuffleLoader,
+    }),
+    [
+      currentSong,
+      currentIndex,
+      isPlaying,
+      playSong,
+      pause,
+      resume,
+      next,
+      previous,
+      toggleShuffle,
+      toggleRepeat,
+      isShuffling,
+      repeatMode,
+      queue,
+      audioElement,
+      isMinimized,
+      updateQueue,
+      registerShuffleLoader,
+    ],
+  );
   return (
-    <MusicPlayerContext.Provider
-      value={{
-        currentSong,
-        isPlaying,
-        playSong,
-        pause,
-        resume,
-        next,
-        previous,
-        toggleShuffle,
-        toggleRepeat,
-        isShuffling,
-        repeatMode,
-        queue,
-        updateQueue,
-        registerShuffleLoader,
-        audioElement: audioRef.current, // Expose audio element
-        isMinimized,
-        setIsMinimized,
-        // ... other controls
-      }}
-    >
+    <MusicPlayerContext.Provider value={value}>
       {children}
-      {/* Hidden audio element */}
-      <audio ref={audioRef} />
+      <audio ref={setAudioElement} preload="metadata" />
     </MusicPlayerContext.Provider>
   );
-};
-
-export const useMusicPlayer = (): MusicPlayerContextType => {
+}
+export function useMusicPlayer() {
   const context = useContext(MusicPlayerContext);
-  if (!context) {
-    throw new Error('useMusicPlayer must be used within a MusicPlayerProvider');
-  }
+  if (!context)
+    throw new Error("useMusicPlayer must be used within a MusicPlayerProvider");
   return context;
-};
+}

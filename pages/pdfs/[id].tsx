@@ -1,33 +1,46 @@
-import { GetServerSideProps } from 'next';
-import React, { useEffect, useState, useCallback } from 'react';
-import Head from 'next/head';
-import db from '@/db';
-import { parsePostgresArray } from '@/lib/utils';
-import { Pdf, PdfComment, PdfNote } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { CommentList } from '@/components/PdfComments/CommentList';
-import Image from 'next/image';
-import { NewCommentForm } from '@/components/PdfComments/NewCommentForm';
-import { NotesSection } from '@/components/PdfNotes/NotesSection';
-import { useAuth } from '@/contexts/AuthContext';
-import { ThumbsUp, ThumbsDown, Headphones, FileText, Share2, Sparkles, BookOpen, MessageSquare, ArrowLeft, Pencil } from 'lucide-react';
-import apiClient from '@/lib/apiClient';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
-import Link from 'next/link';
+import { CommentList } from "@/components/PdfComments/CommentList";
+import { NewCommentForm } from "@/components/PdfComments/NewCommentForm";
+import { NotesSection } from "@/components/PdfNotes/NotesSection";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
-  TooltipTrigger,
   TooltipContent,
-} from '@/components/ui/tooltip';
-import DOMPurify from 'isomorphic-dompurify';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { BIBLE_BOOKS } from '@/lib/constants';
-import { motion } from 'framer-motion';
-import { useTheme } from 'next-themes';
-import { FetchVersesResponse } from '@/types/api';
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useAuth } from "@/contexts/AuthContext";
+import db from "@/db";
+import apiClient from "@/lib/apiClient";
+import { BIBLE_BOOKS } from "@/lib/constants";
+import { uiTheme } from "@/lib/design-system";
+import { getAuthenticatedUser } from "@/lib/server-auth";
+import { parsePostgresArray } from "@/lib/utils";
+import { Pdf, PdfComment, PdfNote } from "@/types";
+import { FetchVersesResponse } from "@/types/api";
+import { motion } from "framer-motion";
+import DOMPurify from "isomorphic-dompurify";
+import {
+  ArrowLeft,
+  BookOpen,
+  FileText,
+  Headphones,
+  MessageSquare,
+  Pencil,
+  Share2,
+  Sparkles,
+  ThumbsDown,
+  ThumbsUp,
+} from "lucide-react";
+import type { NextApiRequest, NextApiResponse } from "next";
+import { GetServerSideProps } from "next";
+import { useTheme } from "next-themes";
+import Head from "next/head";
+import Image from "next/image";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface BibleVerse {
   book: string;
@@ -43,66 +56,23 @@ interface PdfPageProps {
   initialNotes: PdfNote[];
 }
 
-const FilmGrainOverlay: React.FC = () => {
-  return (
-    <div 
-      className="fixed inset-0 pointer-events-none opacity-[0.015]"
-      style={{
-        zIndex: 1,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
-      }}
-    />
-  );
-};
-
-interface AmbientOrbsOverlayProps {
-  isDark: boolean;
-}
-
-const AmbientOrbsOverlay: React.FC<AmbientOrbsOverlayProps> = ({ isDark }) => {
-  const orbColors = {
-    primary: isDark ? 'rgba(212, 175, 55, 0.06)' : 'rgba(191, 161, 48, 0.05)',
-    secondary: isDark ? 'rgba(160, 160, 160, 0.04)' : 'rgba(100, 100, 100, 0.03)',
-  };
-
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-      <motion.div 
-        className="absolute top-0 right-0 w-96 h-96 rounded-full"
-        style={{
-          background: orbColors.primary,
-          filter: 'blur(120px)'
-        }}
-        animate={{
-          y: [0, -30, 0],
-          x: [0, -20, 0],
-        }}
-        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div 
-        className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full"
-        style={{
-          background: orbColors.secondary,
-          filter: 'blur(120px)'
-        }}
-        animate={{
-          y: [0, 30, 0],
-          x: [0, 20, 0],
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-      />
-    </div>
-  );
-};
-
-export default function PdfPage({ pdf, bibleVerses, initialComments, initialNotes }: PdfPageProps) {
+export default function PdfPage({
+  pdf,
+  bibleVerses,
+  initialComments,
+  initialNotes,
+}: PdfPageProps) {
   const { user, getAuthToken } = useAuth();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [comments, setComments] = useState<PdfComment[]>(initialComments);
-  const [ratingCounts, setRatingCounts] = useState({ quality: 0, theology: 0, helpfulness: 0 });
-  const [notebookLmUrl, setNotebookLmUrl] = useState(pdf.notebook_lm_url || '');
-  const [summary, setSummary] = useState(pdf.summary || '');
+  const [ratingCounts, setRatingCounts] = useState({
+    quality: 0,
+    theology: 0,
+    helpfulness: 0,
+  });
+  const [notebookLmUrl, setNotebookLmUrl] = useState(pdf.notebook_lm_url || "");
+  const [summary, setSummary] = useState(pdf.summary || "");
   const [editingDetails, setEditingDetails] = useState(false);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [isLoadingVerses, setIsLoadingVerses] = useState(false);
@@ -111,40 +81,26 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
     setMounted(true);
   }, []);
 
-  const isDark = resolvedTheme === 'dark';
+  const isDark = resolvedTheme === "dark";
 
-  const theme = {
-    bg: isDark ? '#050505' : '#f8f5f0',
-    bgAlt: isDark ? '#0a0a0a' : '#f0ede6',
-    bgCard: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#e5e5e5' : '#161616',
-    textSecondary: isDark ? '#a0a0a0' : '#4a4a4a',
-    textMuted: isDark ? '#6f6f6f' : '#6f6f6f',
-    accent: isDark ? '#d4af37' : '#bfa130',
-    accentHover: isDark ? '#e5c349' : '#d4af37',
-    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-    borderLight: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-    borderHover: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
-    hoverBg: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
-    cardBorder: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-  };
+  const theme = { ...uiTheme };
 
   const handleCommentAdded = (comment: PdfComment) => {
     setComments((prev) => [comment, ...prev]);
   };
 
   const handleVote = async (
-    category: 'quality' | 'theology' | 'helpfulness',
+    category: "quality" | "theology" | "helpfulness",
     value: number,
   ) => {
     if (!user) {
-      toast.error('You need to be logged in to vote');
+      toast.error("You need to be logged in to vote");
       return;
     }
     try {
       const token = await getAuthToken();
       if (!token) {
-        toast.error('Authentication required');
+        toast.error("Authentication required");
         return;
       }
       const response = await apiClient.post(
@@ -161,10 +117,10 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
         ...prev,
         [category]: response.data.count,
       }));
-      toast.success('Vote submitted');
+      toast.success("Vote submitted");
     } catch (err) {
-      console.error('Error submitting vote', err);
-      toast.error('Failed to submit vote');
+      console.error("Error submitting vote", err);
+      toast.error("Failed to submit vote");
     }
   };
 
@@ -174,11 +130,11 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
         notebook_lm_url: notebookLmUrl || null,
         summary: summary || null,
       });
-      toast.success('Details updated');
+      toast.success("Details updated");
       setEditingDetails(false);
     } catch (err) {
-      console.error('Error updating link', err);
-      toast.error('Failed to update details');
+      console.error("Error updating link", err);
+      toast.error("Failed to update details");
     }
   };
 
@@ -198,20 +154,20 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
     if (navigator.share && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData);
-        toast.success('PDF shared successfully');
+        toast.success("PDF shared successfully");
       } catch (error) {
-        if (error instanceof Error && error.name !== 'AbortError') {
-          console.error('Error sharing PDF:', error);
-          toast.error('Failed to share PDF');
+        if (error instanceof Error && error.name !== "AbortError") {
+          console.error("Error sharing PDF:", error);
+          toast.error("Failed to share PDF");
         }
       }
     } else {
       try {
         await navigator.clipboard.writeText(`${shareText}\n${pdfUrl}`);
-        toast.success('PDF link copied to clipboard');
+        toast.success("PDF link copied to clipboard");
       } catch (error) {
-        console.error('Error copying PDF link:', error);
-        toast.error('Failed to copy PDF link');
+        console.error("Error copying PDF link:", error);
+        toast.error("Failed to copy PDF link");
       }
     }
   }, [pdf.id, pdf.title, pdf.author]);
@@ -222,12 +178,15 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
       setIsLoadingVerses(true);
       try {
         const versesToFetch = bibleVerses.map((v) => ({
-          translation: 'NASB',
+          translation: "NASB",
           book: BIBLE_BOOKS.indexOf(v.book) + 1,
           chapter: v.chapter,
           verses: [v.verse],
         }));
-        const { data } = await apiClient.post<FetchVersesResponse>('/api/fetch-verses', versesToFetch);
+        const { data } = await apiClient.post<FetchVersesResponse>(
+          "/api/fetch-verses",
+          versesToFetch,
+        );
         const fetched = data.flat().map((verse) => ({
           book: BIBLE_BOOKS[verse.book - 1],
           chapter: verse.chapter,
@@ -236,7 +195,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
         }));
         setVerses(fetched);
       } catch (error) {
-        console.error('Error fetching verses:', error);
+        console.error("Error fetching verses:", error);
       } finally {
         setIsLoadingVerses(false);
       }
@@ -250,9 +209,9 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
         <Head>
           <title>{pdf.title} | BibleChorus</title>
         </Head>
-        <div 
-          className="min-h-screen opacity-0" 
-          style={{ fontFamily: "'Manrope', sans-serif" }} 
+        <div
+          className="min-h-screen opacity-0"
+          style={{ fontFamily: "'Manrope', sans-serif" }}
         />
       </>
     );
@@ -264,39 +223,30 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
         <title>{pdf.title} | BibleChorus</title>
       </Head>
 
-      <div 
+      <div
         className="min-h-screen relative"
-        style={{ 
+        style={{
           backgroundColor: theme.bg,
           color: theme.text,
-          fontFamily: "'Manrope', sans-serif"
+          fontFamily: "'Manrope', sans-serif",
         }}
       >
-        <style jsx global>{`
-          html, body {
-            background-color: ${theme.bg} !important;
-          }
-        `}</style>
-
-        <AmbientOrbsOverlay isDark={isDark} />
-        <FilmGrainOverlay />
-
         <div className="relative" style={{ zIndex: 2 }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="relative overflow-hidden pb-8 pt-16"
+            className="relative overflow-hidden pb-8 pt-8"
           >
             <div className="container mx-auto px-6 md:px-12">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="mb-12"
+                className="mb-6"
               >
                 <Link href="/pdfs">
-                  <Button 
+                  <Button
                     variant="ghost"
                     className="h-10 px-4 rounded-none text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
                     style={{
@@ -310,33 +260,36 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                 </Link>
               </motion.div>
 
-              <div className="text-center max-w-4xl mx-auto">
+              <div className="max-w-4xl">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.1 }}
                   className="mb-6"
                 >
-                  <span 
-                    className="text-xs tracking-[0.5em] uppercase"
-                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.accent }}
+                  <span
+                    className="page-eyebrow"
+                    style={{
+                      fontFamily: "'Manrope', sans-serif",
+                      color: theme.accent,
+                    }}
                   >
                     Study Resource
                   </span>
                 </motion.div>
-                
-                <motion.h1 
+
+                <motion.h1
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
-                  className="text-4xl md:text-5xl lg:text-6xl tracking-tight mb-4"
+                  className="page-title mb-4"
                   style={{ fontFamily: "'Italiana', serif", color: theme.text }}
                 >
                   {pdf.title}
                 </motion.h1>
 
                 {pdf.author && (
-                  <motion.p 
+                  <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.3 }}
@@ -347,20 +300,20 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                   </motion.p>
                 )}
 
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.4 }}
-                  className="flex flex-wrap justify-center gap-3 mb-8"
+                  className="flex flex-wrap gap-2 mb-6"
                 >
                   {pdf.themes.map((t) => (
-                    <span 
+                    <span
                       key={t}
-                      className="px-4 py-1.5 text-[10px] tracking-[0.15em] uppercase transition-all duration-300"
-                      style={{ 
+                      className="rounded-full px-3 py-1.5 text-xs transition-colors"
+                      style={{
                         border: `1px solid ${theme.border}`,
                         color: theme.accent,
-                        backgroundColor: 'transparent'
+                        backgroundColor: "transparent",
                       }}
                     >
                       {t}
@@ -377,25 +330,25 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
             >
-              <div 
+              <div
                 className="p-8 md:p-12"
-                style={{ 
+                style={{
                   border: `1px solid ${theme.border}`,
-                  backgroundColor: theme.bgCard
+                  backgroundColor: theme.bgCard,
                 }}
               >
                 <div className="grid md:grid-cols-3 gap-8 md:gap-12">
                   {pdf.image_url && (
                     <div className="md:col-span-1">
-                      <div 
+                      <div
                         className="relative aspect-[3/4] overflow-hidden"
                         style={{ border: `1px solid ${theme.borderLight}` }}
                       >
                         <Image
                           src={
-                            pdf.image_url.startsWith('http')
+                            pdf.image_url.startsWith("http")
                               ? pdf.image_url
-                              : `${process.env.NEXT_PUBLIC_CDN_URL ?? ''}${pdf.image_url}`
+                              : `${process.env.NEXT_PUBLIC_CDN_URL ?? ""}${pdf.image_url}`
                           }
                           alt={pdf.title}
                           fill
@@ -404,19 +357,24 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                       </div>
                     </div>
                   )}
-                  
-                  <div className={pdf.image_url ? 'md:col-span-2' : 'md:col-span-3'}>
+
+                  <div
+                    className={
+                      pdf.image_url ? "md:col-span-2" : "md:col-span-3"
+                    }
+                  >
                     <div className="space-y-6">
                       <div>
-                        <p 
+                        <p
                           className="text-sm mb-2"
                           style={{ color: theme.textMuted }}
                         >
-                          Uploaded by {pdf.username} on {new Date(pdf.created_at).toLocaleDateString()}
+                          Uploaded by {pdf.username} on{" "}
+                          {new Date(pdf.created_at).toLocaleDateString()}
                         </p>
-                        
+
                         {pdf.summary && (
-                          <p 
+                          <p
                             className="text-base leading-relaxed font-light whitespace-pre-wrap"
                             style={{ color: theme.textSecondary }}
                           >
@@ -429,12 +387,16 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                         {pdf.notebook_lm_url && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Link href={pdf.notebook_lm_url} target="_blank" rel="noopener noreferrer">
+                              <Link
+                                href={pdf.notebook_lm_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
                                 <Button
                                   className="h-12 px-6 rounded-none text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
                                   style={{
                                     backgroundColor: theme.accent,
-                                    color: isDark ? '#050505' : '#ffffff',
+                                    color: isDark ? "#050505" : "#ffffff",
                                   }}
                                 >
                                   <Image
@@ -449,20 +411,25 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                               </Link>
                             </TooltipTrigger>
                             <TooltipContent>
-                              Google NotebookLM lets you ask questions and explore your PDFs.
+                              Google NotebookLM lets you ask questions and
+                              explore your PDFs.
                             </TooltipContent>
                           </Tooltip>
                         )}
-                        
+
                         {pdf.file_url && (
-                          <Link href={pdf.file_url} target="_blank" rel="noopener noreferrer">
+                          <Link
+                            href={pdf.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <Button
                               variant="outline"
                               className="h-12 px-6 rounded-none text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300"
                               style={{
                                 borderColor: theme.borderHover,
                                 color: theme.text,
-                                backgroundColor: 'transparent',
+                                backgroundColor: "transparent",
                               }}
                             >
                               <FileText className="w-4 h-4 mr-3" />
@@ -470,7 +437,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                             </Button>
                           </Link>
                         )}
-                        
+
                         <Button
                           variant="outline"
                           onClick={handleShare}
@@ -478,7 +445,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                           style={{
                             borderColor: theme.border,
                             color: theme.textSecondary,
-                            backgroundColor: 'transparent',
+                            backgroundColor: "transparent",
                           }}
                         >
                           <Share2 className="w-4 h-4 mr-3" />
@@ -487,9 +454,14 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                       </div>
 
                       {user && user.id === pdf.uploaded_by && (
-                        <div className="pt-4" style={{ borderTop: `1px solid ${theme.borderLight}` }}>
+                        <div
+                          className="pt-4"
+                          style={{
+                            borderTop: `1px solid ${theme.borderLight}`,
+                          }}
+                        >
                           {!editingDetails ? (
-                            <Button 
+                            <Button
                               variant="ghost"
                               onClick={() => setEditingDetails(true)}
                               className="h-10 px-4 rounded-none text-xs tracking-[0.15em] uppercase font-medium"
@@ -500,7 +472,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                           ) : (
                             <div className="space-y-4">
                               <div>
-                                <label 
+                                <label
                                   className="block text-xs tracking-[0.15em] uppercase mb-2"
                                   style={{ color: theme.textMuted }}
                                 >
@@ -508,7 +480,9 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                                 </label>
                                 <Input
                                   value={notebookLmUrl}
-                                  onChange={(e) => setNotebookLmUrl(e.target.value)}
+                                  onChange={(e) =>
+                                    setNotebookLmUrl(e.target.value)
+                                  }
                                   placeholder="https://notebooklm.google.com/..."
                                   className="h-12 rounded-none bg-transparent"
                                   style={{
@@ -518,7 +492,7 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                                 />
                               </div>
                               <div>
-                                <label 
+                                <label
                                   className="block text-xs tracking-[0.15em] uppercase mb-2"
                                   style={{ color: theme.textMuted }}
                                 >
@@ -536,17 +510,17 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                                 />
                               </div>
                               <div className="flex items-center gap-3">
-                                <Button 
+                                <Button
                                   onClick={handleDetailsSave}
                                   className="h-10 px-6 rounded-none text-xs tracking-[0.15em] uppercase font-medium"
                                   style={{
                                     backgroundColor: theme.accent,
-                                    color: isDark ? '#050505' : '#ffffff',
+                                    color: isDark ? "#050505" : "#ffffff",
                                   }}
                                 >
                                   Save
                                 </Button>
-                                <Button 
+                                <Button
                                   variant="ghost"
                                   onClick={() => setEditingDetails(false)}
                                   className="h-10 px-4 rounded-none text-xs tracking-[0.15em] uppercase font-medium"
@@ -564,19 +538,25 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                 </div>
               </div>
 
-              <div 
+              <div
                 className="mt-px p-8 md:p-12"
-                style={{ 
+                style={{
                   border: `1px solid ${theme.border}`,
-                  borderTop: 'none',
-                  backgroundColor: theme.bgCard
+                  borderTop: "none",
+                  backgroundColor: theme.bgCard,
                 }}
               >
                 <div className="flex items-center gap-4 mb-8">
-                  <BookOpen className="w-5 h-5" style={{ color: theme.accent }} />
-                  <h2 
+                  <BookOpen
+                    className="w-5 h-5"
+                    style={{ color: theme.accent }}
+                  />
+                  <h2
                     className="text-xs tracking-[0.3em] uppercase"
-                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
+                    style={{
+                      fontFamily: "'Manrope', sans-serif",
+                      color: theme.textSecondary,
+                    }}
                   >
                     Bible Verses
                   </h2>
@@ -586,40 +566,52 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                   <div className="flex justify-center py-12">
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                       className="w-8 h-8 rounded-full"
-                      style={{ 
+                      style={{
                         border: `1px solid ${theme.border}`,
-                        borderTopColor: theme.accent
+                        borderTopColor: theme.accent,
                       }}
                     />
                   </div>
                 ) : verses.length === 0 ? (
-                  <p className="text-sm font-light" style={{ color: theme.textMuted }}>
+                  <p
+                    className="text-sm font-light"
+                    style={{ color: theme.textMuted }}
+                  >
                     No verses linked to this document.
                   </p>
                 ) : (
                   <ScrollArea className="h-[400px] pr-4">
                     <div className="space-y-6">
                       {verses.map((v, i) => (
-                        <motion.div 
+                        <motion.div
                           key={i}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.3, delay: i * 0.05 }}
                           className="pb-6"
-                          style={{ borderBottom: `1px solid ${theme.borderLight}` }}
+                          style={{
+                            borderBottom: `1px solid ${theme.borderLight}`,
+                          }}
                         >
                           <div className="flex items-center gap-3 mb-2">
-                            <span 
+                            <span
                               className="text-sm font-medium"
-                              style={{ fontFamily: "'Italiana', serif", color: theme.accent }}
+                              style={{
+                                fontFamily: "'Italiana', serif",
+                                color: theme.accent,
+                              }}
                             >
                               {`${v.book} ${v.chapter}:${v.verse}`}
                             </span>
                             <Link
                               href={{
-                                pathname: '/listen',
+                                pathname: "/listen",
                                 query: {
                                   bibleBooks: v.book,
                                   bibleChapters: `${v.book}:${v.chapter}`,
@@ -631,13 +623,18 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                               className="p-1.5 transition-colors duration-300"
                               style={{ border: `1px solid ${theme.border}` }}
                             >
-                              <Headphones className="w-3 h-3" style={{ color: theme.textMuted }} />
+                              <Headphones
+                                className="w-3 h-3"
+                                style={{ color: theme.textMuted }}
+                              />
                             </Link>
                           </div>
-                          <div 
+                          <div
                             className="text-sm leading-relaxed font-light"
                             style={{ color: theme.textSecondary }}
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(v.text) }} 
+                            dangerouslySetInnerHTML={{
+                              __html: DOMPurify.sanitize(v.text),
+                            }}
                           />
                         </motion.div>
                       ))}
@@ -646,97 +643,117 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                 )}
               </div>
 
-              <div 
+              <div
                 className="mt-px p-8 md:p-12"
-                style={{ 
+                style={{
                   border: `1px solid ${theme.border}`,
-                  borderTop: 'none',
-                  backgroundColor: theme.bgCard
+                  borderTop: "none",
+                  backgroundColor: theme.bgCard,
                 }}
               >
                 <div className="flex items-center gap-4 mb-8">
-                  <Sparkles className="w-5 h-5" style={{ color: theme.accent }} />
-                  <h2 
+                  <Sparkles
+                    className="w-5 h-5"
+                    style={{ color: theme.accent }}
+                  />
+                  <h2
                     className="text-xs tracking-[0.3em] uppercase"
-                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
+                    style={{
+                      fontFamily: "'Manrope', sans-serif",
+                      color: theme.textSecondary,
+                    }}
                   >
                     Ratings
                   </h2>
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-4">
-                  {(['quality', 'theology', 'helpfulness'] as const).map((cat) => (
-                    <div 
-                      key={cat} 
-                      className="flex items-center justify-between p-4"
-                      style={{ border: `1px solid ${theme.borderLight}` }}
-                    >
-                      <span 
-                        className="text-sm capitalize"
-                        style={{ color: theme.text }}
+                  {(["quality", "theology", "helpfulness"] as const).map(
+                    (cat) => (
+                      <div
+                        key={cat}
+                        className="flex items-center justify-between p-4"
+                        style={{ border: `1px solid ${theme.borderLight}` }}
                       >
-                        {cat}
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <Button
-                          aria-label={`Upvote ${cat}`}
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleVote(cat, 1)}
-                          className="h-8 w-8 p-0 rounded-none transition-all duration-300"
-                          style={{ border: `1px solid ${theme.border}` }}
-                        >
-                          <ThumbsUp className="h-3.5 w-3.5" style={{ color: theme.accent }} />
-                        </Button>
-                        <span 
-                          className="text-sm font-medium min-w-[24px] text-center"
+                        <span
+                          className="text-sm capitalize"
                           style={{ color: theme.text }}
                         >
-                          {ratingCounts[cat]}
+                          {cat}
                         </span>
-                        <Button
-                          aria-label={`Downvote ${cat}`}
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleVote(cat, -1)}
-                          className="h-8 w-8 p-0 rounded-none transition-all duration-300"
-                          style={{ border: `1px solid ${theme.border}` }}
-                        >
-                          <ThumbsDown className="h-3.5 w-3.5" style={{ color: theme.textMuted }} />
-                        </Button>
+                        <div className="flex items-center gap-3">
+                          <Button
+                            aria-label={`Upvote ${cat}`}
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleVote(cat, 1)}
+                            className="h-8 w-8 p-0 rounded-none transition-all duration-300"
+                            style={{ border: `1px solid ${theme.border}` }}
+                          >
+                            <ThumbsUp
+                              className="h-3.5 w-3.5"
+                              style={{ color: theme.accent }}
+                            />
+                          </Button>
+                          <span
+                            className="text-sm font-medium min-w-[24px] text-center"
+                            style={{ color: theme.text }}
+                          >
+                            {ratingCounts[cat]}
+                          </span>
+                          <Button
+                            aria-label={`Downvote ${cat}`}
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleVote(cat, -1)}
+                            className="h-8 w-8 p-0 rounded-none transition-all duration-300"
+                            style={{ border: `1px solid ${theme.border}` }}
+                          >
+                            <ThumbsDown
+                              className="h-3.5 w-3.5"
+                              style={{ color: theme.textMuted }}
+                            />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ),
+                  )}
                 </div>
               </div>
 
-              <div 
+              <div
                 className="mt-px p-8 md:p-12"
-                style={{ 
+                style={{
                   border: `1px solid ${theme.border}`,
-                  borderTop: 'none',
-                  backgroundColor: theme.bgCard
+                  borderTop: "none",
+                  backgroundColor: theme.bgCard,
                 }}
               >
                 <div className="flex items-center gap-4 mb-8">
-                  <MessageSquare className="w-5 h-5" style={{ color: theme.accent }} />
-                  <h2 
+                  <MessageSquare
+                    className="w-5 h-5"
+                    style={{ color: theme.accent }}
+                  />
+                  <h2
                     className="text-xs tracking-[0.3em] uppercase"
-                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
+                    style={{
+                      fontFamily: "'Manrope', sans-serif",
+                      color: theme.textSecondary,
+                    }}
                   >
                     Comments
                   </h2>
                 </div>
 
                 {user ? (
-                  <NewCommentForm 
-                    pdfId={pdf.id} 
-                    onCommentAdded={handleCommentAdded} 
+                  <NewCommentForm
+                    pdfId={pdf.id}
+                    onCommentAdded={handleCommentAdded}
                     theme={theme}
                     isDark={isDark}
                   />
                 ) : (
-                  <p 
+                  <p
                     className="text-sm font-light mb-6"
                     style={{ color: theme.textMuted }}
                   >
@@ -753,27 +770,30 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
                 />
               </div>
 
-              <div 
+              <div
                 className="mt-px p-8 md:p-12"
-                style={{ 
+                style={{
                   border: `1px solid ${theme.border}`,
-                  borderTop: 'none',
-                  backgroundColor: theme.bgCard
+                  borderTop: "none",
+                  backgroundColor: theme.bgCard,
                 }}
               >
                 <div className="flex items-center gap-4 mb-8">
                   <Pencil className="w-5 h-5" style={{ color: theme.accent }} />
-                  <h2 
+                  <h2
                     className="text-xs tracking-[0.3em] uppercase"
-                    style={{ fontFamily: "'Manrope', sans-serif", color: theme.textSecondary }}
+                    style={{
+                      fontFamily: "'Manrope', sans-serif",
+                      color: theme.textSecondary,
+                    }}
                   >
                     My Notes
                   </h2>
                 </div>
 
-                <NotesSection 
-                  initialNotes={initialNotes} 
-                  pdfId={pdf.id} 
+                <NotesSection
+                  initialNotes={initialNotes}
+                  pdfId={pdf.id}
                   theme={theme}
                   isDark={isDark}
                 />
@@ -789,44 +809,61 @@ export default function PdfPage({ pdf, bibleVerses, initialComments, initialNote
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string };
   try {
-    const pdf = await db('pdfs')
-      .join('users', 'pdfs.uploaded_by', 'users.id')
-      .where('pdfs.id', id)
-      .select('pdfs.*', 'users.username')
+    const pdf = await db("pdfs")
+      .join("users", "pdfs.uploaded_by", "users.id")
+      .where("pdfs.id", id)
+      .select("pdfs.*", "users.username")
       .first();
 
     if (!pdf) {
       return { notFound: true };
     }
 
-    if (typeof pdf.themes === 'string' || Array.isArray(pdf.themes)) {
+    const viewer = await getAuthenticatedUser(
+      context.req as NextApiRequest,
+      context.res as NextApiResponse,
+    );
+    if (!pdf.is_public && Number(pdf.uploaded_by) !== viewer?.id) {
+      return { notFound: true };
+    }
+
+    if (typeof pdf.themes === "string" || Array.isArray(pdf.themes)) {
       pdf.themes = parsePostgresArray(pdf.themes);
     } else {
       pdf.themes = [];
     }
 
-    const verses = await db('pdf_verses')
-      .join('bible_verses', 'pdf_verses.verse_id', 'bible_verses.id')
-      .where('pdf_verses.pdf_id', id)
-      .select('bible_verses.book', 'bible_verses.chapter', 'bible_verses.verse');
+    const verses = await db("pdf_verses")
+      .join("bible_verses", "pdf_verses.verse_id", "bible_verses.id")
+      .where("pdf_verses.pdf_id", id)
+      .select(
+        "bible_verses.book",
+        "bible_verses.chapter",
+        "bible_verses.verse",
+      );
 
-    verses.sort((a: { book: string; chapter: number; verse: number }, b: { book: string; chapter: number; verse: number }) => {
-      const bookDiff =
-        BIBLE_BOOKS.indexOf(a.book) - BIBLE_BOOKS.indexOf(b.book);
-      if (bookDiff !== 0) return bookDiff;
-      if (a.chapter !== b.chapter) return a.chapter - b.chapter;
-      return a.verse - b.verse;
-    });
+    verses.sort(
+      (
+        a: { book: string; chapter: number; verse: number },
+        b: { book: string; chapter: number; verse: number },
+      ) => {
+        const bookDiff =
+          BIBLE_BOOKS.indexOf(a.book) - BIBLE_BOOKS.indexOf(b.book);
+        if (bookDiff !== 0) return bookDiff;
+        if (a.chapter !== b.chapter) return a.chapter - b.chapter;
+        return a.verse - b.verse;
+      },
+    );
 
-    const comments = await db('pdf_comments')
-      .join('users', 'pdf_comments.user_id', 'users.id')
-      .where('pdf_comments.pdf_id', id)
-      .select('pdf_comments.*', 'users.username')
-      .orderBy('pdf_comments.created_at', 'asc');
+    const comments = await db("pdf_comments")
+      .join("users", "pdf_comments.user_id", "users.id")
+      .where("pdf_comments.pdf_id", id)
+      .select("pdf_comments.*", "users.username")
+      .orderBy("pdf_comments.created_at", "asc");
 
-    const notes = await db('pdf_notes')
-      .where('pdf_id', id)
-      .select();
+    const notes = viewer
+      ? await db("pdf_notes").where({ pdf_id: id, user_id: viewer.id }).select()
+      : [];
 
     return {
       props: {
@@ -837,7 +874,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     };
   } catch (error) {
-    console.error('Error fetching PDF:', error);
+    console.error("Error fetching PDF:", error);
     return { notFound: true };
   }
 };

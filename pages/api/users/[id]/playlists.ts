@@ -1,3 +1,4 @@
+import { getAuthenticatedUser } from '@/lib/server-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '@/db';
 
@@ -7,6 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     try {
+      const viewer = await getAuthenticatedUser(req, res);
       let query = db('playlists')
         .select('playlists.*')
         .leftJoin('user_playlist_library', function() {
@@ -28,6 +30,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               });
         });
       }
+
+      if (viewer?.id !== Number(id)) query = query.andWhere('playlists.is_public', true);
 
       // Add distinct to avoid duplicate results
       query = query.distinct('playlists.id');
